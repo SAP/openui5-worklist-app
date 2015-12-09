@@ -2,7 +2,7 @@
 
 # openui5-worklist-app
 
-> [OpenUI5](https://github.com/SAP/openui5) worklist skeleton app using Grunt & Bower
+> [OpenUI5](https://github.com/SAP/openui5) worklist skeleton app using Grunt & Bower.  The SAPUI5 Worklist Application template implements a typical worklist floorplan, one of the design patterns that is specified by the [SAP Fiori Design Guidelines](https://experience.sap.com/fiori-design/). It includes generic application functionality and tests that can be easily extended with custom functionality if needed. You can find more documentation on this template [here](https://sapui5.hana.ondemand.com/#docs/guide/a77f2d29299247f8a3e30226507b1765.html).
 
 ## Getting started
 
