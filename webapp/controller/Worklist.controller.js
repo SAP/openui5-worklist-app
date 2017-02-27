@@ -91,19 +91,14 @@ sap.ui.define([
 				this._showObject(oEvent.getSource());
 			},
 
+
 			/**
-			 * Navigates back in the browser history, if the entry was created by this app.
-			 * If not, it navigates to the Fiori Launchpad home page.
+			 * Event handler for navigating back.
+			 * We navigate back in the browser historz
 			 * @public
 			 */
-			onNavBack : function () {
-				var oHistory = sap.ui.core.routing.History.getInstance(),
-					sPreviousHash = oHistory.getPreviousHash();
-
-				if (sPreviousHash !== undefined) {
-					// The history contains a previous entry
-					history.go(-1);
-				}
+			onNavBack : function() {
+				history.go(-1);
 			},
 
 
