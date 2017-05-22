@@ -10,31 +10,31 @@
   * If working behind a proxy, you need to configure it properly (HTTP_PROXY / HTTPS_PROXY / NO_PROXY environment variables)
 2. Install grunt-cli and bower globally
 
-   ```sh
+```sh
 npm install grunt-cli bower -g
 ```
 3. Clone the repository and navigate into it
 
-   ```sh
+```sh
 git clone https://github.com/SAP/openui5-worklist-app.git
 cd openui5-worklist-app
 ```
 
 1. Install all npm dependencies
 
-   ```sh
+```sh
 npm install
 ```
 
 1. Install all bower dependencies
 
-   ```sh
+```sh
 bower install
 ```
 
 5. Run grunt to lint, build and run a local server (have a look into `Gruntfile.js` to see all the tasks).
 
-   ```sh
+```sh
 grunt
 ```
 
