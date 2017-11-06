@@ -30,7 +30,7 @@ sap.ui.define([
 					iShouldSeeTheShareEmailButton : function () {
 						return this.waitFor({
 							viewName : sViewName,
-							controlType : "sap.m.Button",
+							id : "shareEmailButton",
 							matchers : new PropertyStrictEquals({
 								name : "icon",
 								value : "sap-icon://email"
