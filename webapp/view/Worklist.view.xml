@@ -6,9 +6,10 @@
 
 	<semantic:FullscreenPage
 		id="page"
+		semanticRuleSet="Optimized"
 		navButtonPress="onNavBack"
 		showNavButton="true"
-		title="{i18n>worklistViewTitle}">
+		title="{i18n>worklistTitle}">
 		<semantic:content>
 			<Table
 				id="table"

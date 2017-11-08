@@ -6,6 +6,7 @@
 
 	<semantic:FullscreenPage
 		id="page"
+		semanticRuleSet="Optimized"
 		navButtonPress="onNavBack"
 		showNavButton="true"
 		title="{i18n>objectTitle}"
@@ -17,12 +18,12 @@
 				id="objectHeader"
 				title="{Name}"
 				number="{
-							path: 'UnitNumber',
-							formatter: '.formatter.numberUnit'
+					path: 'UnitNumber',
+					formatter: '.formatter.numberUnit'
 				}"
 				numberUnit="{UnitOfMeasure}">
 			</ObjectHeader>
- 		</semantic:content>
+		</semantic:content>
 
 		<semantic:sendEmailAction>
 			<semantic:SendEmailAction id="shareEmail" press="onShareEmailPress"/>
