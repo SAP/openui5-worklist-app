@@ -1,3 +1,4 @@
+/*global location history */
 sap.ui.define([
 		"sap/ui/demo/worklist/controller/BaseController",
 		"sap/ui/model/json/JSONModel",
@@ -28,15 +29,13 @@ sap.ui.define([
 				// so it can be restored later on. Busy handling on the table is
 				// taken care of by the table itself.
 				iOriginalBusyDelay = oTable.getBusyIndicatorDelay();
-				this._oTable = oTable;
 				// keeps the search state
-				this._oTableSearchState = [];
+				this._aTableSearchState = [];
 
 				// Model used to manipulate control states
 				oViewModel = new JSONModel({
 					worklistTableTitle : this.getResourceBundle().getText("worklistTableTitle"),
-					saveAsTileTitle: this.getResourceBundle().getText("worklistViewTitle"),
-					shareOnJamTitle: this.getResourceBundle().getText("worklistViewTitle"),
+					shareOnJamTitle: this.getResourceBundle().getText("worklistTitle"),
 					shareSendEmailSubject: this.getResourceBundle().getText("shareSendEmailWorklistSubject"),
 					shareSendEmailMessage: this.getResourceBundle().getText("shareSendEmailWorklistMessage", [location.href]),
 					tableNoDataText : this.getResourceBundle().getText("tableNoDataText"),
@@ -91,7 +90,6 @@ sap.ui.define([
 				this._showObject(oEvent.getSource());
 			},
 
-
 			/**
 			 * Event handler for navigating back.
 			 * We navigate back in the browser historz
@@ -110,13 +108,13 @@ sap.ui.define([
 					// refresh the list binding.
 					this.onRefresh();
 				} else {
-					var oTableSearchState = [];
+					var aTableSearchState = [];
 					var sQuery = oEvent.getParameter("query");
 
 					if (sQuery && sQuery.length > 0) {
-						oTableSearchState = [new Filter("Name", FilterOperator.Contains, sQuery)];
+						aTableSearchState = [new Filter("Name", FilterOperator.Contains, sQuery)];
 					}
-					this._applySearch(oTableSearchState);
+					this._applySearch(aTableSearchState);
 				}
 
 			},
@@ -127,7 +125,8 @@ sap.ui.define([
 			 * @public
 			 */
 			onRefresh : function () {
-				this._oTable.getBinding("items").refresh();
+				var oTable = this.byId("table");
+				oTable.getBinding("items").refresh();
 			},
 
 			/* =========================================================== */
@@ -148,14 +147,15 @@ sap.ui.define([
 
 			/**
 			 * Internal helper method to apply both filter and search state together on the list binding
-			 * @param {object} oTableSearchState an array of filters for the search
+			 * @param {sap.ui.model.Filter[]} aTableSearchState An array of filters for the search
 			 * @private
 			 */
-			_applySearch: function(oTableSearchState) {
-				var oViewModel = this.getModel("worklistView");
-				this._oTable.getBinding("items").filter(oTableSearchState, "Application");
+			_applySearch: function(aTableSearchState) {
+				var oTable = this.byId("table"),
+					oViewModel = this.getModel("worklistView");
+				oTable.getBinding("items").filter(aTableSearchState, "Application");
 				// changes the noDataText of the list in case there are no filter results
-				if (oTableSearchState.length !== 0) {
+				if (aTableSearchState.length !== 0) {
 					oViewModel.setProperty("/tableNoDataText", this.getResourceBundle().getText("worklistNoDataWithSearchText"));
 				}
 			}
