@@ -1,7 +1,11 @@
 /*global QUnit*/
 
 sap.ui.define([
-	"sap/ui/test/opaQunit"
+	"sap/ui/test/opaQunit",
+	"./pages/Worklist",
+	"./pages/Browser",
+	"./pages/NotFound",
+	"./pages/App"
 ], function (opaTest) {
 	"use strict";
 
@@ -41,17 +45,16 @@ sap.ui.define([
 		When.onTheBrowser.iPressOnTheBackwardsButton();
 
 		// Assertions
-		Then.onTheNotFoundPage.iShouldSeeResourceNotFound().
-			and.iTeardownMyAppFrame();
+		Then.onTheNotFoundPage.iShouldSeeResourceNotFound();
+
+		// Cleanup
+		Then.iTeardownMyAppFrame();
 	});
 
 	opaTest("Should see the 'Object not found' page if an invalid object id has been called", function (Given, When, Then) {
 		Given.iStartMyApp({
 			hash: "/Objects/SomeInvalidObjectId"
 		});
-
-		//Actions
-		When.onTheNotFoundPage.iLookAtTheScreen();
 
 		// Assertions
 		Then.onTheNotFoundPage.iShouldSeeObjectNotFound();
@@ -63,8 +66,10 @@ sap.ui.define([
 		When.onTheNotFoundPage.iPressTheObjectNotFoundShowWorklistLink();
 
 		// Assertions
-		Then.onTheWorklistPage.iShouldSeeTheTable().
-			and.iTeardownMyAppFrame();
+		Then.onTheWorklistPage.iShouldSeeTheTable();
+
+		// Cleanup
+		Then.iTeardownMyAppFrame();
 	});
 
 });

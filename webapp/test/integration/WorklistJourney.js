@@ -1,7 +1,9 @@
 /*global QUnit*/
 
 sap.ui.define([
-	"sap/ui/test/opaQunit"
+	"sap/ui/test/opaQunit",
+	"./pages/Worklist",
+	"./pages/App"
 ], function (opaTest) {
 	"use strict";
 
@@ -10,9 +12,6 @@ sap.ui.define([
 	opaTest("Should see the table with all entries", function (Given, When, Then) {
 		// Arrangements
 		Given.iStartMyApp();
-
-		//Actions
-		When.onTheWorklistPage.iLookAtTheScreen();
 
 		// Assertions
 		Then.onTheWorklistPage.theTableShouldHaveAllEntries().
@@ -33,7 +32,10 @@ sap.ui.define([
 		When.onTheWorklistPage.iTypeSomethingInTheSearchThatCannotBeFoundAndTriggerRefresh();
 
 		// Assertions
-		Then.onTheWorklistPage.theTableHasEntries().and.iTeardownMyAppFrame();
+		Then.onTheWorklistPage.theTableHasEntries();
+
+		// Cleanup
+		Then.iTeardownMyAppFrame();
 	});
 
 	opaTest("Should see the busy indicator on app view while worklist view metadata is loaded", function (Given, When, Then) {
@@ -41,9 +43,6 @@ sap.ui.define([
 		Given.iStartMyApp({
 			delay: 5000
 		});
-
-		//Actions
-		When.onTheWorklistPage.iLookAtTheScreen();
 
 		// Assertions
 		Then.onTheAppPage.iShouldSeeTheBusyIndicatorForTheWholeApp();
@@ -54,8 +53,10 @@ sap.ui.define([
 		When.onTheAppPage.iWaitUntilTheAppBusyIndicatorIsGone();
 
 		// Assertions
-		Then.onTheWorklistPage.iShouldSeeTheWorklistTableBusyIndicator().
-			and.iTeardownMyAppFrame();
+		Then.onTheWorklistPage.iShouldSeeTheWorklistTableBusyIndicator();
+
+		// Cleanup
+		Then.iTeardownMyAppFrame();
 	});
 
 });

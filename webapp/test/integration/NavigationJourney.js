@@ -1,7 +1,11 @@
 /*global QUnit*/
 
 sap.ui.define([
-	"sap/ui/test/opaQunit"
+	"sap/ui/test/opaQunit",
+	"./pages/Worklist",
+	"./pages/Browser",
+	"./pages/Object",
+	"./pages/App"
 ], function (opaTest) {
 	"use strict";
 
@@ -11,14 +15,11 @@ sap.ui.define([
 		// Arrangements
 		Given.iStartMyApp();
 
-		//Actions
-		When.onTheWorklistPage.iLookAtTheScreen();
-
 		// Assertions
 		Then.onTheWorklistPage.iShouldSeeTheTable();
 	});
 
-	opaTest("Should react on hashchange", function (Given, When, Then) {
+	opaTest("Should react on hash change", function (Given, When, Then) {
 		// Actions
 		When.onTheWorklistPage.iRememberTheItemAtPosition(2);
 		When.onTheBrowser.iChangeTheHashToTheRememberedItem();
@@ -30,7 +31,7 @@ sap.ui.define([
 
 	opaTest("Should go back to the TablePage", function (Given, When, Then) {
 		// Actions
-		When.onTheObjectPage.iPressTheBackButton();
+		When.onTheBrowser.iPressOnTheBackwardsButton();
 
 		// Assertions
 		Then.onTheWorklistPage.iShouldSeeTheTable();
@@ -58,33 +59,21 @@ sap.ui.define([
 		When.onTheBrowser.iPressOnTheForwardsButton();
 
 		// Assertions
-		Then.onTheObjectPage.iShouldSeeTheRememberedObject().
-			and.iTeardownMyAppFrame();
+		Then.onTheObjectPage.iShouldSeeTheRememberedObject();
+
+		// Cleanup
+		Then.iTeardownMyAppFrame();
 	});
-
-	opaTest("Should see a busy indication while loading the metadata", function (Given, When, Then) {
-		// Arrangements
-		Given.iStartMyApp({
-			delay: 10000
-		});
-
-		//Actions
-		When.onTheWorklistPage.iLookAtTheScreen();
-
-		// Assertions
-		Then.onTheAppPage.iShouldSeeTheBusyIndicatorForTheWholeApp().
-			and.iTeardownMyAppFrame();
-	});
-
 
 	opaTest("Start the App and simulate metadata error: MessageBox should be shown", function (Given, When, Then) {
 		//Arrangement
 		Given.iStartMyAppOnADesktopToTestErrorHandler("metadataError=true");
 
 		//Assertions
-		Then.onTheAppPage.iShouldSeeTheMessageBox().
-			and.iTeardownMyAppFrame();
+		Then.onTheAppPage.iShouldSeeTheMessageBox();
 
+		// Cleanup
+		Then.iTeardownMyAppFrame();
 	});
 
 	opaTest("Start the App and simulate bad request error: MessageBox should be shown", function (Given, When, Then) {
@@ -92,9 +81,10 @@ sap.ui.define([
 		Given.iStartMyAppOnADesktopToTestErrorHandler("errorType=serverError");
 
 		//Assertions
-		Then.onTheAppPage.iShouldSeeTheMessageBox().
-			and.iTeardownMyAppFrame();
+		Then.onTheAppPage.iShouldSeeTheMessageBox();
 
+		// Cleanup
+		Then.iTeardownMyAppFrame();
 	});
 
 });
