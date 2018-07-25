@@ -13,5 +13,4 @@ sap.ui.define([
 		viewNamespace: "sap.ui.demo.worklist.view.",
 		autoWait: true
 	});
-
 });
