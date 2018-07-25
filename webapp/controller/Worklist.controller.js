@@ -1,3 +1,4 @@
+/*global location history */
 sap.ui.define([
 		"sap/ui/demo/worklist/controller/BaseController",
 		"sap/ui/model/json/JSONModel",
@@ -88,7 +89,6 @@ sap.ui.define([
 				// The source is the list item that got pressed
 				this._showObject(oEvent.getSource());
 			},
-
 
 			/**
 			 * Event handler for navigating back.
