@@ -23,7 +23,7 @@ module.exports = function(config) {
 					bindingSyntax: 'complex',
 					compatVersion: 'edge',
 					preload: 'async',
-					resourceroots: {'sap.ui.demo.todo': './base'}
+					resourceroots: {'sap.ui.demo.worklist': './base'}
 				},
 				tests: [
 					'sap/ui/demo/worklist/test/unit/allTests',
