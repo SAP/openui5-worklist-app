@@ -2,35 +2,46 @@
 
 sap.ui.define([
 	"sap/ui/test/opaQunit",
+	"sap/ui/demo/worklist/localService/mockserver",
 	"./pages/Worklist",
 	"./pages/Browser",
 	"./pages/Object",
 	"./pages/App"
-], function (opaTest) {
+], function (opaTest, mockserver) {
 	"use strict";
 
-	QUnit.module("Object");
+	QUnit.module("Object", {
+		beforeEach: function() {
+			mockserver.init({
+				// By default it takes 1 second for busy indicators to show up
+				// Adding extra delay allows testing them
+				delay: 2000
+			});
+		},
+		afterEach: function() {
+			mockserver.shutdown();
+		}
+	});
 
 	opaTest("Should remember the first item", function (Given, When, Then) {
 		// Arrangements
 		Given.iStartMyApp();
 
-		//Actions
+		// Actions
 		When.onTheWorklistPage.iRememberTheItemAtPosition(1);
 
 		// Assertions
 		Then.onTheWorklistPage.theTitleShouldDisplayTheTotalAmountOfItems();
 
 		// Cleanup
-		Then.iTeardownMyAppFrame();
+		Then.iTeardownMyApp();
 	});
 
 	opaTest("Should start the app with remembered item", function (Given, When, Then) {
 		// Arrangements
-		Given.iRestartTheAppWithTheRememberedItem({
-			delay: 1000
-		});
-		//Actions
+		Given.iRestartTheAppWithTheRememberedItem();
+
+		// Actions
 		When.onTheAppPage.iWaitUntilTheAppBusyIndicatorIsGone();
 
 		// Assertions
@@ -40,8 +51,7 @@ sap.ui.define([
 		and.theObjectViewShouldContainOnlyFormattedUnitNumbers();
 
 		// Cleanup
-		Then.iTeardownMyAppFrame();
-
+		Then.iTeardownMyApp();
 	});
 
 });

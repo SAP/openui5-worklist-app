@@ -5,7 +5,7 @@ sap.ui.define([
 
 	return Opa5.extend("sap.ui.demo.worklist.test.integration.pages.Common", {
 
-		createAWaitForAnEntitySet : function  (oOptions) {
+		createAWaitForAnEntitySet: function (oOptions) {
 			return {
 				success: function () {
 					var bMockServerAvailable = false,
@@ -28,7 +28,7 @@ sap.ui.define([
 			};
 		},
 
-		theUnitNumbersShouldHaveTwoDecimals : function (sControlType, sViewName, sSuccessMsg, sErrMsg) {
+		theUnitNumbersShouldHaveTwoDecimals: function (sControlType, sViewName, sSuccessMsg, sErrMsg) {
 			var rTwoDecimalPlaces =  /^-?\d+\.\d{2}$/;
 
 			return this.waitFor({
@@ -44,7 +44,7 @@ sap.ui.define([
 			});
 		},
 
-		getMockServer : function () {
+		getMockServer: function () {
 			return new Promise(function (success) {
 				Opa5.getWindow().sap.ui.require(["sap/ui/demo/worklist/localService/mockserver"], function (mockserver) {
 					success(mockserver.getMockServer());

@@ -2,20 +2,28 @@
 
 sap.ui.define([
 	"sap/ui/test/opaQunit",
+	"sap/ui/demo/worklist/localService/mockserver",
 	"./pages/Worklist",
 	"./pages/Browser",
 	"./pages/NotFound",
 	"./pages/App"
-], function (opaTest) {
+], function (opaTest, mockserver) {
 	"use strict";
 
-	QUnit.module("NotFound");
+	QUnit.module("NotFound", {
+		beforeEach: function() {
+			mockserver.init();
+		},
+		afterEach: function() {
+			mockserver.shutdown();
+		}
+	});
 
 	opaTest("Should see the resource not found page when changing to an invalid hash", function (Given, When, Then) {
-		//Arrangement
+		// Arrangements
 		Given.iStartMyApp();
 
-		//Actions
+		// Actions
 		When.onTheWorklistPage.iWaitUntilTheTableIsLoaded();
 		When.onTheBrowser.iChangeTheHashToSomethingInvalid();
 
@@ -24,7 +32,7 @@ sap.ui.define([
 	});
 
 	opaTest("Clicking the 'Show my worklist' link on the 'Resource not found' page should bring me back to the worklist", function (Given, When, Then) {
-		//Actions
+		// Actions
 		When.onTheAppPage.iWaitUntilTheAppBusyIndicatorIsGone();
 		When.onTheNotFoundPage.iPressTheNotFoundShowWorklistLink();
 
@@ -33,7 +41,7 @@ sap.ui.define([
 	});
 
 	opaTest("Should see the not found text for no search results", function (Given, When, Then) {
-		//Actions
+		// Actions
 		When.onTheWorklistPage.iSearchForSomethingWithNoResults();
 
 		// Assertions
@@ -41,14 +49,14 @@ sap.ui.define([
 	});
 
 	opaTest("Clicking the back button should take me back to the not found page", function (Given, When, Then) {
-		//Actions
+		// Actions
 		When.onTheBrowser.iPressOnTheBackwardsButton();
 
 		// Assertions
 		Then.onTheNotFoundPage.iShouldSeeResourceNotFound();
 
 		// Cleanup
-		Then.iTeardownMyAppFrame();
+		Then.iTeardownMyApp();
 	});
 
 	opaTest("Should see the 'Object not found' page if an invalid object id has been called", function (Given, When, Then) {
@@ -61,7 +69,7 @@ sap.ui.define([
 	});
 
 	opaTest("Clicking the 'Show my worklist' link on the 'Object not found' page should bring me back to the worklist", function (Given, When, Then) {
-		//Actions
+		// Actions
 		When.onTheAppPage.iWaitUntilTheAppBusyIndicatorIsGone();
 		When.onTheNotFoundPage.iPressTheObjectNotFoundShowWorklistLink();
 
@@ -69,7 +77,7 @@ sap.ui.define([
 		Then.onTheWorklistPage.iShouldSeeTheTable();
 
 		// Cleanup
-		Then.iTeardownMyAppFrame();
+		Then.iTeardownMyApp();
 	});
 
 });

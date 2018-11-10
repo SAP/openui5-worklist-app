@@ -2,14 +2,22 @@
 
 sap.ui.define([
 	"sap/ui/test/opaQunit",
+	"sap/ui/demo/worklist/localService/mockserver",
 	"./pages/Worklist",
 	"./pages/Browser",
 	"./pages/Object",
 	"./pages/App"
-], function (opaTest) {
+], function (opaTest, mockserver) {
 	"use strict";
 
-	QUnit.module("Navigation");
+	QUnit.module("Navigation", {
+		beforeEach: function() {
+			mockserver.init();
+		},
+		afterEach: function() {
+			mockserver.shutdown();
+		}
+	});
 
 	opaTest("Should see the objects list", function (Given, When, Then) {
 		// Arrangements
@@ -62,29 +70,41 @@ sap.ui.define([
 		Then.onTheObjectPage.iShouldSeeTheRememberedObject();
 
 		// Cleanup
-		Then.iTeardownMyAppFrame();
+		Then.iTeardownMyApp();
+	});
+
+	QUnit.module("Service errors", {
+		beforeEach: function() {
+			mockserver.init({
+				forceMetadataError: true,
+				forceRequestError: true
+			});
+		},
+		afterEach: function() {
+			mockserver.shutdown();
+		}
 	});
 
 	opaTest("Start the App and simulate metadata error: MessageBox should be shown", function (Given, When, Then) {
-		//Arrangement
-		Given.iStartMyAppOnADesktopToTestErrorHandler("metadataError=true");
+		// Arrangement
+		Given.iStartMyApp();
 
-		//Assertions
-		Then.onTheAppPage.iShouldSeeTheMessageBox();
+		// Assertions
+		Then.onTheAppPage.iShouldSeeTheServiceErrorMessageBox();
 
 		// Cleanup
-		Then.iTeardownMyAppFrame();
+		Then.iTeardownMyApp();
 	});
 
 	opaTest("Start the App and simulate bad request error: MessageBox should be shown", function (Given, When, Then) {
-		//Arrangement
-		Given.iStartMyAppOnADesktopToTestErrorHandler("errorType=serverError");
+		// Arrangement
+		Given.iStartMyApp();
 
-		//Assertions
-		Then.onTheAppPage.iShouldSeeTheMessageBox();
+		// Assertions
+		Then.onTheAppPage.iShouldSeeTheServiceErrorMessageBox();
 
 		// Cleanup
-		Then.iTeardownMyAppFrame();
+		Then.iTeardownMyApp();
 	});
 
 });

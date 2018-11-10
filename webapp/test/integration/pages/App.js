@@ -47,14 +47,17 @@ sap.ui.define([
 					});
 				},
 
-				iShouldSeeTheMessageBox : function () {
+				iShouldSeeTheServiceErrorMessageBox : function () {
 					return this.waitFor({
-						searchOpenDialogs : true,
+						id: "serviceErrorMessageBox",
 						controlType : "sap.m.Dialog",
 						autoWait: false,
 						matchers : new PropertyStrictEquals({ name: "type", value: "Message"}),
-						success : function () {
+						success : function (oDialog) {
 							Opa5.assert.ok(true, "The correct MessageBox was shown");
+							// It's needed to close the error dialog just in case another one is
+							// going to be opened in following tests, as its ID is always the same
+							oDialog.close()
 						}
 					});
 				}

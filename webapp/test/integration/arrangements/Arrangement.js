@@ -3,38 +3,23 @@ sap.ui.define([
 ], function(Opa5) {
 	"use strict";
 
-	function getFrameUrl (sHash, sUrlParameters) {
-		var sUrl = sap.ui.require.toUrl("sap/ui/demo/worklist/test/mockServer.html");
-		sUrlParameters = sUrlParameters ? "?" + sUrlParameters : "";
-
-		if (sHash) {
-			sHash = "#" + (sHash.indexOf("/") === 0 ? sHash.substring(1) : sHash);
-		} else {
-			sHash = "";
-		}
-
-		return sUrl + sUrlParameters + sHash;
-	}
-
 	return Opa5.extend("sap.ui.demo.worklist.test.integration.arrangements.Arrangement", {
 
 		iStartMyApp: function (oOptions) {
-			var sUrlParameters;
 			oOptions = oOptions || {};
 
-			// Start the app with a minimal delay to make tests run fast but still async to discover basic timing issues
-			var iDelay = oOptions.delay || 50;
-
-			sUrlParameters = "serverDelay=" + iDelay;
-
-			this.iStartMyAppInAFrame(getFrameUrl(oOptions.hash, sUrlParameters));
+			this.iStartMyUIComponent({
+				componentConfig: {
+					name: "sap.ui.demo.worklist",
+					async: true
+				},
+				hash: oOptions.hash
+			});
 		},
 
-		iStartMyAppOnADesktopToTestErrorHandler: function (sParam) {
-			this.iStartMyAppInAFrame(getFrameUrl("", sParam));
-		},
+		iRestartTheAppWithTheRememberedItem: function (oOptions) {
+			oOptions = oOptions || {};
 
-		iRestartTheAppWithTheRememberedItem : function (oOptions) {
 			var sObjectId;
 			this.waitFor({
 				success : function () {
