@@ -34,8 +34,8 @@ sap.ui.define([
 					sMetadataUrl = sap.ui.require.toUrl(_sAppModulePath + oMainDataSource.settings.localUri),
 					// ensure there is a trailing slash
 					sMockServerUrl = /.*\/$/.test(oMainDataSource.uri) ? oMainDataSource.uri : oMainDataSource.uri + "/",
-					bForceMetadataError = oOptions.forceMetadataError || false,
-					bForceRequestError = oOptions.forceRequestError || false,
+					bForceMetadataError = !!oOptions.forceMetadataError,
+					bForceRequestError = !!oOptions.forceRequestError,
 					iErrorCode = oOptions.errorCode || 500,
 					iDelay = oOptions.delay || 1000;
 
