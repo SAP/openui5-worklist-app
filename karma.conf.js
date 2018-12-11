@@ -12,7 +12,8 @@ module.exports = function(config) {
 		frameworks: ['qunit', 'openui5'],
 
 		openui5: {
-			path: 'http://localhost:8080/resources/sap-ui-core.js'
+			path: 'http://localhost:8080/resources/sap-ui-core.js',
+			useMockServer : true
 		},
 
 		client: {
@@ -20,7 +21,6 @@ module.exports = function(config) {
 				config: {
 					theme: 'sap_belize',
 					language: 'EN',
-					bindingSyntax: 'complex',
 					animation: false,
 					compatVersion: 'edge',
 					async: true,
