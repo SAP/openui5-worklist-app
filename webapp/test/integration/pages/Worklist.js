@@ -48,7 +48,7 @@ sap.ui.define([
 
 		onTheWorklistPage : {
 			baseClass : Common,
-			actions : jQuery.extend({
+			actions : Object.assign({
 				iPressATableItemAtPosition : function (iPosition) {
 					return this.waitFor(createWaitForItemAtPosition({
 						position : iPosition,
@@ -81,15 +81,6 @@ sap.ui.define([
 						},
 						actions : new Press(),
 						errorMessage : "The Table does not have a trigger"
-					});
-				},
-
-				iWaitUntilTheTableIsLoaded : function () {
-					return this.waitFor({
-						id : sTableId,
-						viewName : sViewName,
-						matchers : [ new AggregationFilled({name : "items"}) ],
-						errorMessage : "The Table has not been loaded"
 					});
 				},
 
@@ -146,20 +137,11 @@ sap.ui.define([
 
 				iTypeSomethingInTheSearchThatCannotBeFoundAndTriggerRefresh : function () {
 					var fnEnterTextAndFireRefreshButtonPressedOnSearchField = function (oSearchField) {
-						// set the search field value as EnterText action triggers a search event
+						// set the search field value directly as EnterText action triggers a search event
 						oSearchField.setValue(sSomethingThatCannotBeFound);
 
-						// compose a simulated refresh button click event
-						/*eslint-disable new-cap */
-						var oEvent = jQuery.Event("touchend");
-						/*eslint-enable new-cap */
-						oEvent.originalEvent = {refreshButtonPressed: true, id: oSearchField.getId()};
-						oEvent.target = oSearchField;
-						oEvent.srcElement = oSearchField;
-						jQuery.extend(oEvent, oEvent.originalEvent);
-
-						// fire the search
-						oSearchField.fireSearch(oEvent);
+						// fire the search to simulate a refresh button press
+						oSearchField.fireSearch({refreshButtonPressed: true});
 					};
 					return this.iSearchForValueWithActions(fnEnterTextAndFireRefreshButtonPressedOnSearchField);
 				},
@@ -174,7 +156,7 @@ sap.ui.define([
 
 			}, shareOptions.createActions(sViewName)),
 
-			assertions: jQuery.extend({
+			assertions: Object.assign({
 
 				iShouldSeeTheTable : function () {
 					return this.waitFor({

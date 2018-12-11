@@ -21,12 +21,13 @@ module.exports = function(config) {
 					theme: 'sap_belize',
 					language: 'EN',
 					bindingSyntax: 'complex',
+					animation: false,
 					compatVersion: 'edge',
-					preload: 'async',
+					async: true,
 					resourceroots: {'sap.ui.demo.worklist': './base'}
 				},
 				tests: [
-					'sap/ui/demo/worklist/test/unit/allTests',
+					'sap/ui/demo/worklist/test/unit/AllTests',
 					'sap/ui/demo/worklist/test/integration/AllJourneys'
 				]
 			},
@@ -38,7 +39,9 @@ module.exports = function(config) {
 
 		// list of files / patterns to load in the browser
 		files: [
-			{ pattern: '**', included: false, served: true, watched: true }
+			{ pattern: '**', included: false, served: true, watched: true },
+			"http://localhost:8080/resources/sap/ui/thirdparty/sinon.js",
+			"http://localhost:8080/resources/sap/ui/thirdparty/sinon-qunit.js"
 		],
 
 		// test results reporter to use
@@ -64,7 +67,7 @@ module.exports = function(config) {
 
 		// Continuous Integration mode
 		// if true, Karma captures browsers, runs the tests and exits
-		singleRun: false,
+		singleRun: false
 
 	});
 };

@@ -16,7 +16,6 @@ sap.ui.define([
 		Given.iStartMyApp();
 
 		//Actions
-		When.onTheWorklistPage.iWaitUntilTheTableIsLoaded();
 		When.onTheBrowser.iChangeTheHashToSomethingInvalid();
 
 		// Assertions
@@ -48,13 +47,12 @@ sap.ui.define([
 		Then.onTheNotFoundPage.iShouldSeeResourceNotFound();
 
 		// Cleanup
-		Then.iTeardownMyAppFrame();
+		Then.iTeardownMyApp();
 	});
 
 	opaTest("Should see the 'Object not found' page if an invalid object id has been called", function (Given, When, Then) {
-		Given.iStartMyApp({
-			hash: "/Objects/SomeInvalidObjectId"
-		});
+		//Arrangement
+		Given.iStartMyApp({hash : "Objects/SomeInvalidObjectId"});
 
 		// Assertions
 		Then.onTheNotFoundPage.iShouldSeeObjectNotFound();
@@ -69,7 +67,7 @@ sap.ui.define([
 		Then.onTheWorklistPage.iShouldSeeTheTable();
 
 		// Cleanup
-		Then.iTeardownMyAppFrame();
+		Then.iTeardownMyApp();
 	});
 
 });
