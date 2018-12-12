@@ -10,7 +10,7 @@ module.exports = function(config) {
 		frameworks: ['qunit', 'openui5'],
 
 		openui5: {
-			path: 'https://openui5nightly.hana.ondemand.com/resources/sap-ui-core.js',
+			path: 'http://localhost:8080/resources/sap-ui-core.js',
 			useMockServer : true
 
 		},
