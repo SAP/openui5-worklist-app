@@ -1,19 +1,18 @@
-// Karma configuration
-// Generated on Wed Jun 13 2018 14:38:44 GMT+0200 (CEST)
+/* global module*/
 
 module.exports = function(config) {
+	"use strict";
+
 	config.set({
 
-		// base path that will be used to resolve all patterns (eg. files, exclude)
 		basePath: 'webapp',
 
-		// frameworks to use
-		// available frameworks: https://npmjs.org/browse/keyword/karma-adapter
 		frameworks: ['qunit', 'openui5'],
 
 		openui5: {
-			path: 'http://localhost:8080/resources/sap-ui-core.js',
+			path: 'https://openui5nightly.hana.ondemand.com/resources/sap-ui-core.js',
 			useMockServer : true
+
 		},
 
 		client: {
@@ -29,7 +28,10 @@ module.exports = function(config) {
 				tests: [
 					'sap/ui/demo/worklist/test/unit/AllTests',
 					'sap/ui/demo/worklist/test/integration/AllJourneys'
-				]
+				],
+				mockserver: {
+					metadataURL: '/base/localService/metadata.xml'
+				}
 			},
 			clearContext: false,
 			qunit: {
@@ -37,37 +39,25 @@ module.exports = function(config) {
 			}
 		},
 
-		// list of files / patterns to load in the browser
 		files: [
-			{ pattern: '**', included: false, served: true, watched: true },
+			{ pattern: '**', included: false, served: true, watched: true},
 			"http://localhost:8080/resources/sap/ui/thirdparty/sinon.js",
 			"http://localhost:8080/resources/sap/ui/thirdparty/sinon-qunit.js"
 		],
 
-		// test results reporter to use
-		// possible values: 'dots', 'progress'
-		// available reporters: https://npmjs.org/browse/keyword/karma-reporter
 		reporters: ['progress'],
 
-		// level of logging
-		// possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
 		logLevel: config.LOG_INFO,
 
-		// level of browser logging
 		browserConsoleLogOptions: {
 			level: 'warn'
 		},
 
-		// enable / disable watching file and executing tests whenever any file changes
 		autoWatch: true,
 
-		// start these browsers
-		// available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
 		browsers: ['Chrome'],
 
-		// Continuous Integration mode
-		// if true, Karma captures browsers, runs the tests and exits
 		singleRun: false
-
 	});
+
 };
