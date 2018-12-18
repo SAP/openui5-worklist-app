@@ -22,26 +22,28 @@ sap.ui.define([
 		Then.onTheWorklistPage.theTitleShouldDisplayTheTotalAmountOfItems();
 
 		// Cleanup
-		Then.iTeardownMyAppFrame();
+		Then.iTeardownMyApp();
 	});
 
 	opaTest("Should start the app with remembered item", function (Given, When, Then) {
 		// Arrangements
 		Given.iRestartTheAppWithTheRememberedItem({
-			delay: 1000
+			delay: 1000,
+			autoWait: false
 		});
+
 		//Actions
 		When.onTheAppPage.iWaitUntilTheAppBusyIndicatorIsGone();
 
 		// Assertions
 		Then.onTheObjectPage.iShouldSeeTheObjectViewsBusyIndicator().
-		and.theObjectViewsBusyIndicatorDelayIsRestored().
-		and.iShouldSeeTheRememberedObject().
-		and.theObjectViewShouldContainOnlyFormattedUnitNumbers();
+			and.theObjectViewsBusyIndicatorDelayIsRestored().
+			and.iShouldSeeTheRememberedObject().
+			and.theObjectViewShouldContainOnlyFormattedUnitNumbers();
 
 		// Cleanup
-		Then.iTeardownMyAppFrame();
-
+		Then.iTeardownMyApp();
 	});
+
 
 });

@@ -4,7 +4,7 @@ sap.ui.define([
 	"sap/ui/test/matchers/PropertyStrictEquals",
 	"./Common",
 	"./shareOptions"
-], function(Opa5, Press, PropertyStrictEquals, Common, shareOptions) {
+], function (Opa5, Press, PropertyStrictEquals, Common, shareOptions) {
 	"use strict";
 
 	var sViewName = "Object";
@@ -13,7 +13,7 @@ sap.ui.define([
 		onTheObjectPage: {
 			baseClass : Common,
 
-			actions : jQuery.extend({
+			actions : Object.assign({
 				iPressTheBackButton : function () {
 					return this.waitFor({
 						id : "page",
@@ -25,7 +25,7 @@ sap.ui.define([
 
 			}, shareOptions.createActions(sViewName)),
 
-			assertions: jQuery.extend({
+			assertions: Object.assign({
 
 				iShouldSeeTheRememberedObject : function () {
 					return this.waitFor({
@@ -50,9 +50,10 @@ sap.ui.define([
 					return this.waitFor({
 						id : "page",
 						viewName : sViewName,
-						matchers : function (oPage) {
-							return oPage.getBusy();
-						},
+						matchers: new PropertyStrictEquals({
+							name : "busy",
+							value: true
+						}),
 						autoWait: false,
 						success : function (oPage) {
 							Opa5.assert.ok(oPage.getBusy(), "The object view is busy");
@@ -65,9 +66,10 @@ sap.ui.define([
 					return this.waitFor({
 						id : "page",
 						viewName : sViewName,
-						matchers : function (oPage) {
-							return !oPage.getBusy();
-						},
+						matchers: new PropertyStrictEquals({
+							name : "busy",
+							value: false
+						}),
 						autoWait: false,
 						success : function (oPage) {
 							Opa5.assert.ok(!oPage.getBusy(), "The object view is not busy");
