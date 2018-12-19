@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/SAP/openui5-worklist-app.svg?branch=master)](https://travis-ci.org/SAP/openui5-worklist-app)
 ![OpenUI5 logo](http://openui5.org/images/OpenUI5_new_big_side.png)
 
 # openui5-worklist-app
@@ -5,6 +6,7 @@
 [UI5 Build and Development Tooling](https://github.com/SAP/ui5-tooling). 
 This template implements a typical worklist floorplan, one of the design patterns that is specified by the [SAP Fiori Design Guidelines](https://experience.sap.com/fiori-design/). 
 It includes generic application functionality and tests that can be easily extended. You can find more documentation on this template [here](https://openui5.hana.ondemand.com/#/topic/a77f2d29299247f8a3e30226507b1765).
+You can also see the [template](http://sap.github.io/openui5-worklist-app/test/mockServer.html) live.
 
 ## Prerequisites
 The **UI5 build and development tooling command line interface (UI5 CLI)** has to be installed.
