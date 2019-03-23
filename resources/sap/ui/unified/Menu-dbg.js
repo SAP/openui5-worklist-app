@@ -1,5 +1,5 @@
 /*!
- * UI development toolkit for HTML5 (OpenUI5)
+ * OpenUI5
  * (c) Copyright 2009-2019 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
@@ -59,7 +59,7 @@ sap.ui.define([
 	 * @implements sap.ui.core.IContextMenu
 	 *
 	 * @author SAP SE
-	 * @version 1.61.2
+	 * @version 1.63.0
 	 * @since 1.21.0
 	 *
 	 * @constructor
@@ -596,6 +596,8 @@ sap.ui.define([
 		oEvent.stopPropagation();
 	};
 
+	Menu.prototype.onsapnextmodifiers = Menu.prototype.onsapnext;
+
 	Menu.prototype.onsapprevious = function(oEvent){
 		//left or up (RTL: right or up)
 		if (oEvent.keyCode != KeyCodes.ARROW_UP) {
@@ -615,6 +617,8 @@ sap.ui.define([
 		oEvent.preventDefault();
 		oEvent.stopPropagation();
 	};
+
+	Menu.prototype.onsappreviousmodifiers = Menu.prototype.onsapprevious;
 
 	Menu.prototype.onsaphome = function(oEvent){
 		//Go to the first selectable item
@@ -721,7 +725,7 @@ sap.ui.define([
 			return;
 		}
 		var oItem = this.getItemByDomRef(oEvent.target);
-		if (!this.bOpen || !oItem || oItem == this.oHoveredItem) {
+		if (!this.bOpen || !oItem) {
 			return;
 		}
 
@@ -805,7 +809,9 @@ sap.ui.define([
 		var isInMenuHierarchy = false,
 		// before we were relaying on Popup.touchEnabled, but the logic in the Popup was changed
 		// and touchEnabled wasn't valid anymore for Combi devices, which caused the Menu to close automatically right after it was opened
-			touchEnabled = Device.support.touch;
+		// check for if the device is combi was added because of change in the Chrome70 browser version where the touch events are "disabled" by default
+		// e.g. document.ontouchstart returns false
+		touchEnabled = Device.support.touch || Device.system.combi;
 
 		this.bIgnoreOpenerDOMRef = false;
 

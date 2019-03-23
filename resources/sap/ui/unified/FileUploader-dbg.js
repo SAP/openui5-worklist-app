@@ -1,5 +1,5 @@
 /*!
- * UI development toolkit for HTML5 (OpenUI5)
+ * OpenUI5
  * (c) Copyright 2009-2019 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
@@ -59,7 +59,7 @@ sap.ui.define([
 	 * @implements sap.ui.core.IFormContent, sap.ui.unified.IProcessableBlobs
 	 *
 	 * @author SAP SE
-	 * @version 1.61.2
+	 * @version 1.63.0
 	 *
 	 * @constructor
 	 * @public
@@ -1683,10 +1683,14 @@ sap.ui.define([
 					aFileUpload.push('multiple ');
 				}
 			}
-			if (this.getMimeType() && window.File) {
-				var aMimeTypes = this.getMimeType();
-				var sMimeTypes = aMimeTypes.join(",");
-				aFileUpload.push('accept="' + sMimeTypes + '" ');
+			if ((this.getMimeType() || this.getFileType()) && window.File) {
+				var aMimeTypes = this.getMimeType() || [];
+				var aFileTypes = this.getFileType() || [];
+				aFileTypes = aFileTypes.map(function(item) {
+					return item.indexOf(".") === 0 ? item : "." + item;
+				});
+				var sAcceptedTypes = aFileTypes.concat(aMimeTypes).join(",");
+				aFileUpload.push('accept="' + sAcceptedTypes + '" ');
 			}
 			aFileUpload.push('>');
 

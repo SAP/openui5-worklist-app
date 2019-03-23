@@ -1,5 +1,5 @@
 /*
- * ! UI development toolkit for HTML5 (OpenUI5)
+ * ! OpenUI5
  * (c) Copyright 2009-2019 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
@@ -26,7 +26,7 @@ sap.ui.define([
 		* @extends sap.ui.core.Element
 		*
 		* @author SAP SE
-		* @version 1.61.2
+		* @version 1.63.0
 		*
 		* @constructor
 		* @public
@@ -175,8 +175,8 @@ sap.ui.define([
 			}
 		};
 
-		GroupElement.prototype.setProperty = function () {
-			Element.prototype.setProperty.apply(this, arguments);
+		GroupElement.prototype.setProperty = function (sName, oValue) {
+			Element.prototype.setProperty.call(this, sName, oValue, true);
 
 			var oGroup = this.getParent();
 			if (!oGroup) {

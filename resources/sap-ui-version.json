@@ -1,37 +1,37 @@
 {
 	"name": "openui5-worklist-app",
 	"version": "0.1.0",
-	"buildTimestamp": 1547821691846,
+	"buildTimestamp": 1553302800559,
 	"scmRevision": "",
 	"libraries": [
 		{
 			"name": "sap.ui.layout",
-			"version": "1.61.2",
-			"buildTimestamp": 1547821691846,
+			"version": "1.63.0",
+			"buildTimestamp": 1553302800559,
 			"scmRevision": ""
 		},
 		{
 			"name": "sap.ui.core",
-			"version": "1.61.2",
-			"buildTimestamp": 1547821691846,
+			"version": "1.63.0",
+			"buildTimestamp": 1553302800559,
 			"scmRevision": ""
 		},
 		{
 			"name": "sap.ui.unified",
-			"version": "1.61.2",
-			"buildTimestamp": 1547821691846,
+			"version": "1.63.0",
+			"buildTimestamp": 1553302800559,
 			"scmRevision": ""
 		},
 		{
 			"name": "sap.f",
-			"version": "1.61.2",
-			"buildTimestamp": 1547821691846,
+			"version": "1.63.0",
+			"buildTimestamp": 1553302800559,
 			"scmRevision": ""
 		},
 		{
 			"name": "sap.m",
-			"version": "1.61.2",
-			"buildTimestamp": 1547821691846,
+			"version": "1.63.0",
+			"buildTimestamp": 1553302800559,
 			"scmRevision": ""
 		}
 	]

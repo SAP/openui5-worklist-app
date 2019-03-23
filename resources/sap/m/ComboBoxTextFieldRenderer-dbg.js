@@ -1,14 +1,15 @@
 /*!
- * UI development toolkit for HTML5 (OpenUI5)
+ * OpenUI5
  * (c) Copyright 2009-2019 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
 	'./InputBaseRenderer',
 	'sap/ui/core/Renderer',
-	'sap/ui/core/LabelEnablement'
+	'sap/ui/core/LabelEnablement',
+	'sap/ui/Device'
 ],
-	function(InputBaseRenderer, Renderer, LabelEnablement) {
+	function(InputBaseRenderer, Renderer, LabelEnablement, Device) {
 		"use strict";
 
 		/**
@@ -69,6 +70,19 @@ sap.ui.define([
 			var mAccessibilityState = InputBaseRenderer.getAccessibilityState.call(this, oControl);
 			mAccessibilityState.autocomplete = "both";
 			return mAccessibilityState;
+		};
+		/**
+		 * Returns the inner aria describedby ids for the accessibility.
+		 *
+		 * @param {sap.ui.core.Control} oControl an object representation of the control.
+		 * @returns {String|undefined}
+		 */
+		ComboBoxTextFieldRenderer.getAriaDescribedBy = function(oControl) {
+			var sAriaDescribedBy = InputBaseRenderer.getAriaDescribedBy.apply(this, arguments);
+			if (Device.browser.msie) {
+				return (sAriaDescribedBy || "") + " " + oControl.oInvisibleText.getId();
+			}
+			return sAriaDescribedBy;
 		};
 
 		/**

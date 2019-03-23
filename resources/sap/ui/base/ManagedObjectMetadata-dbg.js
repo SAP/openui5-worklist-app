@@ -1,5 +1,5 @@
 /*!
- * UI development toolkit for HTML5 (OpenUI5)
+ * OpenUI5
  * (c) Copyright 2009-2019 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
@@ -75,7 +75,7 @@ function(
 	 *
 	 *
 	 * @author Frank Weigel
-	 * @version 1.61.2
+	 * @version 1.63.0
 	 * @since 0.8.6
 	 * @alias sap.ui.base.ManagedObjectMetadata
 	 * @public
@@ -176,6 +176,7 @@ function(
 		this.bindable = !!info.bindable;
 		this.deprecated = !!info.deprecated || false;
 		this.visibility = info.visibility || 'public';
+		this.byValue = info.byValue === true; // non-boolean values reserved for the future
 		this.selector = typeof info.selector === "string" ? info.selector : null;
 		this.appData = remainder(this, info);
 		this._oParent = oClass;

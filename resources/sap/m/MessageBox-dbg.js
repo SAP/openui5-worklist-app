@@ -1,5 +1,5 @@
 /*!
- * UI development toolkit for HTML5 (OpenUI5)
+ * OpenUI5
  * (c) Copyright 2009-2019 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
@@ -17,7 +17,8 @@ sap.ui.define([
 	'sap/ui/core/library',
 	'sap/ui/core/Control',
 	'sap/m/library',
-	"sap/ui/thirdparty/jquery"
+	"sap/ui/thirdparty/jquery",
+	'sap/ui/core/theming/Parameters'
 ],
 		function(
 			Button,
@@ -31,7 +32,8 @@ sap.ui.define([
 			coreLibrary,
 			Control,
 			library,
-			jQuery
+			jQuery,
+			Parameters
 		) {
 			"use strict";
 
@@ -189,6 +191,9 @@ sap.ui.define([
 			(function () {
 				var Action = MessageBox.Action,
 						Icon = MessageBox.Icon,
+						//set the information icon according to the used theme
+						bInformationIconUsed = Parameters.get("_sap_m_Message_Box_Information_Icon") === "true",
+						sSrcIcon = bInformationIconUsed ? "message-information" : "hint",
 						mClasses = {
 							"INFORMATION": "sapMMessageBoxInfo",
 							"WARNING": "sapMMessageBoxWarning",
@@ -198,7 +203,7 @@ sap.ui.define([
 							"STANDARD":  "sapMMessageBoxStandard"
 						},
 						mIcons = {
-							"INFORMATION": IconPool.getIconURI("message-information"),
+							"INFORMATION": IconPool.getIconURI(sSrcIcon),
 							"WARNING": IconPool.getIconURI("message-warning"),
 							"ERROR": IconPool.getIconURI("message-error"),
 							"SUCCESS": IconPool.getIconURI("message-success"),

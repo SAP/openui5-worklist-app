@@ -1,5 +1,5 @@
 /*!
- * UI development toolkit for HTML5 (OpenUI5)
+ * OpenUI5
  * (c) Copyright 2009-2019 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
@@ -44,6 +44,11 @@ sap.ui.define([
 
 		this._renderTopArea(oRm, oDynamicPageTitleState);
 		this._renderMainArea(oRm, oDynamicPageTitleState);
+
+		if (oDynamicPageTitleState.hasSnappedTitleOnMobile) {
+			this._renderSnappedTitleOnMobile(oRm, oDynamicPageTitleState);
+		}
+
 		oRm.renderControl(oDynamicPageTitleState.expandButton);
 
 		oRm.write("</div>");
@@ -152,7 +157,7 @@ sap.ui.define([
 			oRm.addClass("sapFDynamicPageTitleMainHeadingSnappedExpandContent");
 			oRm.writeClasses();
 			oRm.write(">");
-			if (oDynamicPageTitleState.hasSnappedContent) {
+			if (oDynamicPageTitleState.hasSnappedContent && !oDynamicPageTitleState.hasSnappedTitleOnMobile) {
 				DynamicPageTitleRenderer._renderSnappedContent(oRm, oDynamicPageTitleState);
 			}
 			if (oDynamicPageTitleState.hasExpandedContent) {
@@ -257,6 +262,20 @@ sap.ui.define([
 		oRm.writeClasses();
 		oRm.write(">");
 		oDynamicPageTitleState.snappedContent.forEach(oRm.renderControl, oRm);
+		oRm.write("</div>");
+	};
+
+	DynamicPageTitleRenderer._renderSnappedTitleOnMobile = function (oRm, oDynamicPageTitleState) {
+		oRm.write("<div");
+		oRm.writeAttributeEscaped("id", oDynamicPageTitleState.id + "-snapped-title-on-mobile-wrapper");
+		if (!oDynamicPageTitleState.isSnapped) {
+			oRm.addClass("sapUiHidden");
+		}
+		oRm.addClass("sapFDynamicPageTitleSnappedTitleOnMobile");
+		oRm.writeClasses();
+		oRm.write(">");
+		oRm.renderControl(oDynamicPageTitleState.snappedTitleOnMobileContext);
+		oRm.renderControl(oDynamicPageTitleState.snappedTitleOnMobileIcon);
 		oRm.write("</div>");
 	};
 
