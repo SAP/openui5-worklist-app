@@ -12,7 +12,7 @@ It includes generic application functionality and tests that can be easily exten
 * [Live Demo](http://sap.github.io/openui5-worklist-app/test/mockServer.html)
 * [Documentation](https://openui5.hana.ondemand.com/#/topic/a77f2d29299247f8a3e30226507b1765)
 * [SAP Fiori Design Guidelines](https://experience.sap.com/fiori-design/)
-* [UI5 Build and Development Tooling](https://github.com/SAP/ui5-tooling). 
+* [UI5 Tooling](https://github.com/SAP/ui5-tooling). 
 * [OpenUI5](https://github.com/SAP/openui5)
 
 ## Prerequisites
