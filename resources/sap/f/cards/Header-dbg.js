@@ -11,7 +11,8 @@ sap.ui.define([
 	"sap/ui/Device",
 	'sap/f/cards/Data',
 	'sap/ui/model/json/JSONModel',
-	"sap/f/cards/HeaderRenderer"
+	"sap/f/cards/HeaderRenderer",
+	"sap/f/cards/ActionEnablement"
 ], function (
 	library,
 	Control,
@@ -20,7 +21,8 @@ sap.ui.define([
 	Device,
 	Data,
 	JSONModel,
-	HeaderRenderer
+	HeaderRenderer,
+	ActionEnablement
 ) {
 	"use strict";
 
@@ -35,15 +37,25 @@ sap.ui.define([
 	 * @class
 	 * A control used to group a set of card attributes in a header.
 	 *
+	 * <h3>Overview</h3>
+	 * The <code>Header</code> displays general information about the card.
+	 * You can configure the title, subtitle, status text and icon, using properties.
+	 *
+	 * <h3>Usage</h3>
+	 * You should always set a title.
+	 * To show a KPI or any numeric information, use {@link sap.f.cards.NumericHeader NumericHeader} instead.
+	 *
 	 * @extends sap.ui.core.Control
+	 * @implements sap.f.cards.IHeader
 	 *
 	 * @author SAP SE
-	 * @version 1.63.0
+	 * @version 1.64.0
 	 *
 	 * @constructor
-	 * @private
-	 * @since 1.62
+	 * @public
+	 * @since 1.64
 	 * @alias sap.f.cards.Header
+	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var Header = Control.extend("sap.f.cards.Header", {
 		metadata: {
@@ -104,6 +116,18 @@ sap.ui.define([
 				 */
 				press: {}
 			}
+		},
+		constructor: function (vId, mSettings) {
+			if (typeof vId !== "string") {
+				mSettings = vId;
+			}
+
+			if (mSettings && mSettings.serviceManager) {
+				this._oServiceManager = mSettings.serviceManager;
+				delete mSettings.serviceManager;
+			}
+
+			Control.apply(this, arguments);
 		}
 	});
 
@@ -207,9 +231,10 @@ sap.ui.define([
 	 * @private
 	 * @static
 	 * @param {Object} mConfiguration A map containing the header configuration options
+	 * @param {Object} oServiceManager A service manager instance to handle services
 	 * @return {sap.f.cards.Header} The created Header
 	 */
-	Header.create = function(mConfiguration) {
+	Header.create = function(mConfiguration, oServiceManager) {
 		var mSettings = {
 			title: mConfiguration.title,
 			subtitle: mConfiguration.subTitle
@@ -223,6 +248,10 @@ sap.ui.define([
 
 		if (mConfiguration.status) {
 			mSettings.statusText = mConfiguration.status.text;
+		}
+
+		if (oServiceManager) {
+			mSettings.serviceManager = oServiceManager;
 		}
 
 		var oHeader = new Header(mSettings);
@@ -242,8 +271,8 @@ sap.ui.define([
 			Data.fetch(oRequest).then(function (data) {
 				oModel.setData(data);
 				oModel.refresh();
-				this.fireEvent("_updated");
-			}.bind(this)).catch(function (oError) {
+				oHeader.fireEvent("_updated");
+			}).catch(function (oError) {
 				// TODO: Handle errors. Maybe add error message
 			});
 		}
@@ -255,6 +284,8 @@ sap.ui.define([
 
 		// TODO Check if model is destroyed when header is destroyed
 	};
+
+	ActionEnablement.enrich(Header);
 
 	return Header;
 });

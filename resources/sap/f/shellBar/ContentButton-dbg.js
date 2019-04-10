@@ -5,9 +5,12 @@
  */
 
 // Provides control sap.f.shellBar.ContentButton
-sap.ui.define(['sap/m/Button', 'sap/f/shellBar/ContentButtonRenderer'],
-function(Button, ContentButtonRenderer) {
+sap.ui.define(['sap/f/library', 'sap/m/Button', 'sap/f/shellBar/ContentButtonRenderer'],
+function(library, Button, ContentButtonRenderer) {
 	"use strict";
+
+	// shortcut for sap.f.AvatarSize
+	var AvatarSize = library.AvatarSize;
 
 	/**
 	 * Constructor for a new <code>ContentButton</code>.
@@ -21,7 +24,7 @@ function(Button, ContentButtonRenderer) {
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.63.0
+	 * @version 1.64.0
 	 *
 	 * @constructor
 	 * @private
@@ -41,7 +44,7 @@ function(Button, ContentButtonRenderer) {
 	});
 
 	oContentButton.prototype.setAvatar = function (oAvatar) {
-		oAvatar.setDisplaySize(sap.f.AvatarSize.XS);
+		oAvatar.setDisplaySize(AvatarSize.XS);
 		return this.setAggregation("avatar", oAvatar);
 	};
 

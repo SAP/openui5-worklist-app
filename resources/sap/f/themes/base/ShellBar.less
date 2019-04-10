@@ -11,6 +11,12 @@
 	box-sizing: border-box;
 	overflow: hidden;
 
+	.sapFShellBarTitleHidden {
+		position: absolute;
+		top: -10000px;
+		left: -10000px;
+	}
+
 	.sapFShellBarOTB {
 		height: 3rem;
 		padding-left: 0;
@@ -18,6 +24,10 @@
 
 		:first-child {
 			margin-left: 0;
+		}
+
+		:first-child.sapFShellBarHomeIcon {
+			margin-left: 1px;
 		}
 
 		.sapUiHiddenPlaceholder:first-child + * {
@@ -54,6 +64,7 @@
 			margin-top: 0.05rem;
 			margin-left: 0.05rem;
 			width: auto !important;
+			max-width: none !important;
 			height: 2rem;
 		}
 		.sapMBtnInner::after {
@@ -68,17 +79,57 @@
 		height: 2rem;
 	}
 
-	.sapMImg.CPImage {
+	.CPImage {
 		width: ~"@{_sap_f_ShellBar_CoPilotWidth}px";
-		&:hover {
-			transition: transform 0.30s;
-			transform: scale(1.1);
-			outline: none;
+		height: ~"@{_sap_f_ShellBar_CoPilotWidth}px";
+		overflow: hidden;
+		cursor: pointer;
+		outline: none;
+		html[data-sap-ui-animation='on'] & {
+			&:hover {
+				transition: transform 0.30s;
+				transform: scale(1.1);
+			}
+			&:active {
+				transition: transform 0.05s;
+				transform: scale(1.2);
+			}
 		}
-		&:active {
-			transition: transform 0.05s;
-			transform: scale(1.2);
+		html[data-sap-ui-animation='off'] & {
+			&:hover {
+				transform: scale(1.1);
+			}
+			&:active {
+				transform: scale(1.2);
+			}
+		}
+		.color1 {
+			stop-color: #00B8F3;
+		}
+		.color2 {
+			stop-color: #1C61BA;
+		}
+		&:focus {
+			outline: 1px dotted @sapUiContentFocusColor;
+			outline-offset: -3px;
+		}
+		html[data-sap-ui-browser^="ed"] &:focus {
+			outline-style: dashed;
+		}
+		html[data-sap-ui-browser^="ie"] &:focus {
 			outline: none;
+			position: relative;
+		}
+		html[data-sap-ui-browser^="ie"] &:focus:before {
+			content: " ";
+			box-sizing: border-box;
+			width: 100%;
+			height: 100%;
+			position: absolute;
+			left: 0;
+			top: 0;
+			border: 1px dashed @sapUiContentFocusColor;
+			pointer-events: none;
 		}
 	}
 
@@ -167,5 +218,49 @@
 		.sapMMenuBtn .sapMBtnIconFirst .sapMBtnIcon {
 			padding-right: 0.75rem;
 		}
+	}
+}
+
+.sapFButtonNotifications[data-notifications],
+.sapFShellBarOverflowButton[data-notifications] {
+	overflow: visible;
+	&:after
+	{
+		content: attr(data-notifications);
+		position: absolute;
+		top: 0.125rem;
+		right: -0.125rem;
+
+		box-sizing: border-box;
+		padding: 0 0.3125rem;
+		border-radius: 1.125rem;
+		height: 1.125rem;
+		max-width: 3.75rem;
+
+		line-height: 1.125rem;
+		font-size: 0.6875rem;
+		font-family: @sapUiFontFamily;
+
+		background-color: @sapUiContentBadgeBackground;
+		border-color: @sapUiContentBadgeBackground;
+		color: @sapUiShellTextColor;
+
+		text-overflow: ellipsis;
+		overflow: hidden;
+
+	}
+}
+
+.sapFButtonNotifications ~ .sapFShellBarOverflowButton,
+.sapFButtonNotifications[data-notifications=""],
+.sapFShellBarOverflowButton[data-notifications=""] {
+	&:after {
+		display: none;
+	}
+}
+
+.sapFShellBar:not(.sapFShellBarNotifications) {
+	.sapFShellBarOverflowButton[data-notifications]:after {
+		display: none;
 	}
 }

@@ -14,7 +14,8 @@ sap.ui.define([
 		"sap/m/ProgressIndicator",
 		"sap/m/ObjectIdentifier",
 		"sap/m/ObjectStatus",
-		"sap/f/Avatar"
+		"sap/f/Avatar",
+		"sap/f/cards/ActionEnablement"
 	], function (
 		ResponsiveTable,
 		BaseContent,
@@ -25,7 +26,8 @@ sap.ui.define([
 		ProgressIndicator,
 		ObjectIdentifier,
 		ObjectStatus,
-		Avatar
+		Avatar,
+		ActionEnablement
 	) {
 		"use strict";
 
@@ -47,7 +49,7 @@ sap.ui.define([
 		 * @extends sap.f.cards.BaseContent
 		 *
 		 * @author SAP SE
-		 * @version 1.63.0
+		 * @version 1.64.0
 		 *
 		 * @constructor
 		 * @experimental
@@ -58,6 +60,13 @@ sap.ui.define([
 		var TableContent = BaseContent.extend("sap.f.cards.TableContent", {
 			renderer: {}
 		});
+
+		TableContent.prototype.exit = function () {
+			if (this._oItemTemplate) {
+				this._oItemTemplate.destroy();
+				this._oItemTemplate = null;
+			}
+		};
 
 		TableContent.prototype._getTable = function () {
 
@@ -77,32 +86,37 @@ sap.ui.define([
 			return oTable;
 		};
 
-		TableContent.prototype.setConfiguration = function (oContent) {
+		TableContent.prototype.setConfiguration = function (oConfiguration) {
 			BaseContent.prototype.setConfiguration.apply(this, arguments);
 
-			if (!oContent) {
+			if (!oConfiguration) {
 				return;
 			}
 
-			if (oContent.columns) {
-				this._setColumns(oContent.columns);
+			if (oConfiguration.row && oConfiguration.row.columns) {
+				this._setColumns(oConfiguration.row);
 			}
 		};
 
-		TableContent.prototype._setColumns = function (aColumns) {
+		TableContent.prototype._setColumns = function (oRow) {
 			var aCells = [],
-				oTable = this._getTable();
+				oTable = this._getTable(),
+				aColumns = oRow.columns;
 
 			aColumns.forEach(function (oColumn) {
 				this._getTable().addColumn(new Column({ header: new Text({ text: oColumn.label }) }));
 				aCells.push(this._createCell(oColumn));
 			}.bind(this));
 
+			this._oItemTemplate = new ColumnListItem({
+				cells: aCells
+			});
+
+			this._attachActions(oRow, this._oItemTemplate);
+
 			oTable.bindItems({
 				path: this.getBindingContext().getPath(),
-				template: new ColumnListItem({
-					cells: aCells
-				})
+				template: this._oItemTemplate
 			});
 		};
 
@@ -156,6 +170,8 @@ sap.ui.define([
 				});
 			}
 		};
+
+		ActionEnablement.enrich(TableContent);
 
 		return TableContent;
 });

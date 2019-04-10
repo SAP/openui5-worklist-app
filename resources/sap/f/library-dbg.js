@@ -19,7 +19,7 @@ sap.ui.define(["sap/ui/base/DataType",
 	// delegate further initialization of this library to the Core
 	sap.ui.getCore().initLibrary({
 		name : "sap.f",
-		version: "1.63.0",
+		version: "1.64.0",
 		dependencies : ["sap.ui.core", "sap.m", "sap.ui.layout"],
 		designtime: "sap/f/designtime/library.designtime",
 		interfaces: [
@@ -34,6 +34,9 @@ sap.ui.define(["sap/ui/base/DataType",
 		],
 		controls: [
 			"sap.f.Avatar",
+			"sap.f.cards.Header",
+			"sap.f.cards.NumericHeader",
+			"sap.f.cards.NumericSideIndicator",
 			"sap.f.Card",
 			"sap.f.CardContainer",
 			"sap.f.DynamicPage",
@@ -95,7 +98,7 @@ sap.ui.define(["sap/ui/base/DataType",
 	 * @namespace
 	 * @alias sap.f
 	 * @author SAP SE
-	 * @version 1.63.0
+	 * @version 1.64.0
 	 * @public
 	 */
 	var thisLib = sap.f;
@@ -443,16 +446,18 @@ sap.ui.define(["sap/ui/base/DataType",
 	 * @public
 	 * @interface
 	 * @name sap.f.cards.IHeader
+	 * @ui5-metamodel This interface also will be described in the UI5 (legacy) designtime metamodel
 	 */
 
 	/**
-	 * Interface for controls suitable for sap.f.ShellBar additionalContent aggregation
+	 * Interface for controls suitable for the <code>additionalContent</code> aggregation of <code>{@link sap.f.ShellBar}</code>.
 	 *
 	 * @since 1.63
-	 * @experimental Since 1.63. This Interface is experimental and provides only limited functionality. It can be removed in future versions.
+	 * @name sap.f.IShellBar
+	 * @experimental Since 1.63, that provides only limited functionality. Also, it can be removed in future versions.
 	 * @public
 	 * @interface
-	 * @name sap.f.IShellBar
+	 * @ui5-metamodel This interface also will be described in the UI5 (legacy) designtime metamodel
 	 */
 
 	return thisLib;

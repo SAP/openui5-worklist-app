@@ -18,7 +18,7 @@ sap.ui.define(['sap/ui/core/LayoutData'],
 		 * @class
 		 * Holds layout data for a CardContainer.
 		 * @extends sap.ui.core.LayoutData
-		 * @version 1.63.0
+		 * @version 1.64.0
 		 *
 		 * @constructor
 		 * @since 1.62

@@ -5,6 +5,7 @@
  */
 sap.ui.define([
 	'sap/ui/core/Control',
+	"sap/f/cards/ActionEnablement",
 	'sap/m/NumericContent',
 	'sap/m/Text',
 	'sap/f/cards/Data',
@@ -13,6 +14,7 @@ sap.ui.define([
 	"sap/f/cards/NumericHeaderRenderer"
 ], function (
 		Control,
+		ActionEnablement,
 		NumericContent,
 		Text,
 		Data,
@@ -28,17 +30,28 @@ sap.ui.define([
 	 * @param {object} [mSettings] Initial settings for the new control
 	 *
 	 * @class
-	 * A control used to group a set of card numeric attributes in a header.
+	 * A control used to group a set of card attributes in a header.
+	 *
+	 * <h3>Overview</h3>
+	 * The <code>NumericHeader</code> shows general information about the card and allows the configuration of a numeric value visualization.
+	 * You can configure the title, subtitle, status text and icon, using properties.
+	 *
+	 * <h3>Usage</h3>
+	 * To show only basic information, use {@link sap.f.cards.Header Header} instead.
+	 * It is possible to add more side number indicators, using the <code>sideIndicators</code> aggregation.
+	 * You should always set a title.
+	 * You should always have a maximum of two side indicators.
 	 *
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.63.0
+	 * @version 1.64.0
 	 *
 	 * @constructor
-	 * @private
-	 * @since 1.62
+	 * @public
+	 * @since 1.64
 	 * @alias sap.f.cards.NumericHeader
+	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var NumericHeader = Control.extend("sap.f.cards.NumericHeader", {
 		metadata: {
@@ -71,7 +84,7 @@ sap.ui.define([
 				 * Financial characters can be used for currencies and counters. The International System of Units (SI) prefixes can be used.
 				 * If the unit contains more than three characters, only the first three characters are displayed.
 				 */
-				unit: { "type": "string", group : "Data" },
+				scale: { "type": "string", group : "Data" },
 
 				/**
 				 * The direction of the trend arrow. Shows deviation for the value of the main number indicator.
@@ -79,7 +92,9 @@ sap.ui.define([
 				trend: { "type": "sap.m.DeviationIndicator", group: "Appearance", defaultValue : "None" },
 
 				/**
-				 * The semantic color which represents the state of the main number indicator
+				 * The semantic color which represents the state of the main number indicator.
+				 * @experimental since 1.64
+				 * Disclaimer: this property is in a beta state - incompatible API changes may be done before its official public release. Use at your own discretion.
 				 */
 				state: { "type": "sap.m.ValueColor", group: "Appearance", defaultValue : "Neutral" },
 
@@ -89,10 +104,11 @@ sap.ui.define([
 				details: { "type": "string", group: "Appearance" }
 			},
 			aggregations: {
+
 				/**
 				 * Additional side number indicators. For example "Deviation" and "Target". Not more than two side indicators should be used.
 				 */
-				sideIndicators: { type: "sap.f.cards.NumericSideIndicator", multiple: true }, // TODO limit to 2, or describe in doc
+				sideIndicators: { type: "sap.f.cards.NumericSideIndicator", multiple: true },
 
 				/**
 				 * Used to display title text
@@ -117,7 +133,7 @@ sap.ui.define([
 				/**
 				 * Displays the main number indicator
 				 */
-				_mainIndicator: { type: "sap.m.NumericContent", multiple: false }
+				_mainIndicator: { type: "sap.m.NumericContent", multiple: false, visibility: "hidden" }
 			},
 			events: {
 
@@ -126,6 +142,18 @@ sap.ui.define([
 				 */
 				press: {}
 			}
+		},
+		constructor: function (vId, mSettings) {
+			if (typeof vId !== "string") {
+				mSettings = vId;
+			}
+
+			if (mSettings && mSettings.serviceManager) {
+				this._oServiceManager = mSettings.serviceManager;
+				delete mSettings.serviceManager;
+			}
+
+			Control.apply(this, arguments);
 		}
 	});
 
@@ -201,8 +229,8 @@ sap.ui.define([
 	 * @param {string} sValue The text of the title
 	 * @return {sap.f.cards.NumericHeader} <code>this</code> pointer for chaining
 	 */
-	NumericHeader.prototype.setUnit = function(sValue) {
-		this.setProperty("unit", sValue, true);
+	NumericHeader.prototype.setScale = function(sValue) {
+		this.setProperty("scale", sValue, true);
 		this._getMainIndicator().setScale(sValue);
 		return this;
 	};
@@ -328,6 +356,7 @@ sap.ui.define([
 			oControl = new NumericContent({
 				id: this.getId() + "-mainIndicator",
 				withMargin: false,
+				nullifyValue: false,
 				animateTextChange: false,
 				truncateValueTo: 5
 			});
@@ -335,6 +364,10 @@ sap.ui.define([
 		}
 
 		return oControl;
+	};
+
+	NumericHeader.prototype.ontap = function () {
+		this.firePress();
 	};
 
 	/**
@@ -345,7 +378,7 @@ sap.ui.define([
 	 * @param {map} mConfiguration A map containing the header configuration options.
 	 * @return {sap.f.cards.NumericHeader} The created NumericHeader
 	 */
-	NumericHeader.create = function(mConfiguration) {
+	NumericHeader.create = function(mConfiguration, oServiceManager) {
 		var mSettings = {
 			title: mConfiguration.title,
 			subtitle: mConfiguration.subTitle,
@@ -355,7 +388,7 @@ sap.ui.define([
 
 		if (mConfiguration.mainIndicator) {
 			mSettings.number = mConfiguration.mainIndicator.number;
-			mSettings.unit = mConfiguration.mainIndicator.unit;
+			mSettings.scale = mConfiguration.mainIndicator.unit;
 			mSettings.trend = mConfiguration.mainIndicator.trend;
 			mSettings.state = mConfiguration.mainIndicator.state; // TODO convert ValueState to ValueColor
 		}
@@ -364,6 +397,10 @@ sap.ui.define([
 			mSettings.sideIndicators = mConfiguration.sideIndicators.map(function (mIndicator) { // TODO validate that it is an array and with no more than 2 elements
 				return new NumericSideIndicator(mIndicator);
 			});
+		}
+
+		if (oServiceManager) {
+			mSettings.serviceManager = oServiceManager;
 		}
 
 		var oHeader = new NumericHeader(mSettings);
@@ -395,8 +432,8 @@ sap.ui.define([
 			Data.fetch(oRequest).then(function (data) {
 				oModel.setData(data);
 				oModel.refresh();
-				this.fireEvent("_updated");
-			}.bind(this)).catch(function (oError) {
+				oHeader.fireEvent("_updated");
+			}).catch(function (oError) {
 				// TODO: Handle errors. Maybe add error message
 			});
 		}
@@ -440,6 +477,8 @@ sap.ui.define([
 
 		return sSideIndicatorIds;
 	};
+
+	ActionEnablement.enrich(NumericHeader);
 
 	return NumericHeader;
 });

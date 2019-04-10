@@ -66,7 +66,7 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.63.0
+	 * @version 1.64.0
 	 *
 	 * @constructor
 	 * @public
@@ -434,8 +434,6 @@ sap.ui.define([
 	 */
 	Avatar.prototype._onImageLoad = function() {
 		//we need to remove fallback content
-		this.$().find(this._sImageFallbackType === AvatarType.Initials ?
-			 ".sapFAvatarInitialsHolder" : ".sapUiIcon").addClass('sapUiHidden');
 		delete this.preloadedImage;
 	};
 
@@ -445,6 +443,11 @@ sap.ui.define([
 	 * @private
 	 */
 	 Avatar.prototype._onImageError = function() {
+		 var sFallBackType = this._getImageFallbackType();
+
+		 this.$().removeClass("sapFAvatarImage")
+				.addClass("sapFAvatar" + sFallBackType);
+
 		delete this.preloadedImage;
 	};
 

@@ -19,7 +19,8 @@ sap.ui.define([
 	"sap/base/Log",
 	"sap/ui/core/HTML",
 	"sap/ui/core/Icon",
-	"sap/ui/Device"
+	"sap/ui/Device",
+    "sap/ui/events/KeyCodes"
 ], function(
 	library,
 	Control,
@@ -34,7 +35,8 @@ sap.ui.define([
 	Log,
 	HTML,
 	Icon,
-	Device
+	Device,
+	KeyCodes
 ) {
 	"use strict";
 
@@ -83,7 +85,7 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.63.0
+	 * @version 1.64.0
 	 *
 	 * @constructor
 	 * @public
@@ -542,12 +544,18 @@ sap.ui.define([
 		this.fireEvent("_titleMouseOut");
 	};
 
+	DynamicPageTitle.prototype.onkeyup = function (oEvent) {
+		if (oEvent && oEvent.which === KeyCodes.SPACE && !oEvent.shiftKey) {
+			this.onsapenter(oEvent);
+		}
+	};
+
 	/**
 	 * Fires the <code>DynamicPageTitle</code> press event.
 	 * @param {jQuery.Event} oEvent The SPACE keyboard key press event object
 	 */
 	DynamicPageTitle.prototype.onsapspace = function (oEvent) {
-		this.onsapenter(oEvent);
+		oEvent.preventDefault();
 	};
 
 	/**
@@ -1059,21 +1067,9 @@ sap.ui.define([
 			this.$mainArea.toggleClass("sapUiHidden", !bExpanded);
 			this.$().toggleClass("sapContrast", !bExpanded);
 		} else {
-			// Snapped content
-			if (exists(this.getSnappedContent())) {
-				this.$snappedWrapper.toggleClass("sapUiHidden", bExpanded);
-				this.$snappedWrapper.parent().toggleClass("sapFDynamicPageTitleMainSnapContentVisible", !bExpanded);
-			}
-
 			// Snapped heading
 			if (exists(this.getSnappedHeading())) {
 				this.$snappedHeadingWrapper.toggleClass("sapUiHidden", bExpanded);
-			}
-
-			// Expanded content
-			if (exists(this.getExpandedContent())) {
-				this.$expandWrapper.toggleClass("sapUiHidden", !bExpanded);
-				this.$expandWrapper.parent().toggleClass("sapFDynamicPageTitleMainExpandContentVisible", bExpanded);
 			}
 
 			// Expanded heading
@@ -1084,6 +1080,19 @@ sap.ui.define([
 			if (bUserInteraction && oldExpandedState !== bExpanded) {
 				this.fireEvent("stateChange", {isExpanded: bExpanded});
 			}
+		}
+
+
+		// Snapped content
+		if (exists(this.getSnappedContent())) {
+			this.$snappedWrapper.toggleClass("sapUiHidden", bExpanded);
+			this.$snappedWrapper.parent().toggleClass("sapFDynamicPageTitleMainSnapContentVisible", !bExpanded);
+		}
+
+		// Expanded content
+		if (exists(this.getExpandedContent())) {
+			this.$expandWrapper.toggleClass("sapUiHidden", !bExpanded);
+			this.$expandWrapper.parent().toggleClass("sapFDynamicPageTitleMainExpandContentVisible", bExpanded);
 		}
 	};
 
@@ -1385,8 +1394,13 @@ sap.ui.define([
 
 			oFocusSpan.onfocusin = this._addFocusClass.bind(this);
 			oFocusSpan.onfocusout = this._removeFocusClass.bind(this);
-			oFocusSpan.onsapselect = function () {
+			oFocusSpan.onsapenter = function () {
 				this.fireEvent("_titlePress");
+			}.bind(this);
+			oFocusSpan.onkeyup = function (oEvent) {
+				if (oEvent && oEvent.which === KeyCodes.SPACE && !oEvent.shiftKey) {
+					this.fireEvent("_titlePress");
+				}
 			}.bind(this);
 
 			this.setAggregation("_focusSpan", oFocusSpan, true);

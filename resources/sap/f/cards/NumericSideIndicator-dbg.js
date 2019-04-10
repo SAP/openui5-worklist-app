@@ -25,12 +25,13 @@ sap.ui.define([
 		 * @extends sap.ui.core.Control
 		 *
 		 * @author SAP SE
-		 * @version 1.63.0
+		 * @version 1.64.0
 		 *
 		 * @constructor
-		 * @private
-		 * @since 1.62
+		 * @public
+		 * @since 1.64
 		 * @alias sap.f.cards.NumericSideIndicator
+		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		var NumericSideIndicator = Control.extend("sap.f.cards.NumericSideIndicator", {
 			metadata: {

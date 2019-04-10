@@ -26,9 +26,10 @@ sap.ui.define([],
 			oRm.write(">");
 
 			var oTitle = oControl.getAggregation("_title");
-			oTitle.addStyleClass("sapFCardHeaderSITitle");
-			oRm.renderControl(oTitle);
-
+			if (oTitle) {
+				oTitle.addStyleClass("sapFCardHeaderSITitle");
+				oRm.renderControl(oTitle);
+			}
 			oRm.write("<div");
 			oRm.addClass("sapFCardHeaderSINumber");
 			oRm.writeClasses();
