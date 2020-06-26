@@ -1,53 +1,58 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2019 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
 	"sap/ui/core/Renderer",
-	"sap/m/ListBaseRenderer",
-	"sap/ui/layout/cssgrid/GridLayoutBase"
-], function (Renderer, ListBaseRenderer, GridLayoutBase) {
+	"sap/m/ListBaseRenderer"
+], function (Renderer, ListBaseRenderer) {
 	"use strict";
 
 	/**
-	 * GridListRenderer renderer
+	 * GridListRenderer renderer.
 	 * @namespace
 	 */
 	var GridListRenderer = Renderer.extend(ListBaseRenderer);
+	GridListRenderer.apiVersion = 2;
 
-	// List Hook
-	GridListRenderer.renderContainerAttributes = function (rm, oControl) {
-		rm.addClass("sapFGridList");
+	/**
+	 * This hook method is called to render container attributes.
+	 * @override
+	 */
+	GridListRenderer.renderContainerAttributes = function (oRM, oControl) {
 		ListBaseRenderer.renderContainerAttributes.apply(this, arguments);
-	};
-
-	// List Hook
-	GridListRenderer.renderListStartAttributes = function (rm, oControl) {
-		ListBaseRenderer.renderListStartAttributes.apply(this, arguments);
-		this.renderGrid(rm, oControl);
+		oRM.class("sapFGridList");
 	};
 
 	/**
-	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
+	 * This hook method is called to render list tag
+	 * @override
+	 */
+	GridListRenderer.renderListStartAttributes = function (oRM, oControl) {
+		ListBaseRenderer.renderListStartAttributes.apply(this, arguments);
+		this.renderGridAttributes(oRM, oControl);
+	};
+
+	/**
+	 * Adds classes for grid stylings.
 	 *
 	 * @param {sap.ui.core.RenderManager} rm the RenderManager that can be used for writing to the render output buffer
 	 * @param {sap.ui.core.Control} oControl an object representation of the control that should be rendered
 	 */
-	GridListRenderer.renderGrid = function (rm, oControl) {
+	GridListRenderer.renderGridAttributes = function (oRM, oControl) {
 		var oGridLayout = oControl.getGridLayoutConfiguration();
 		if (oGridLayout) {
-			oGridLayout.renderSingleGridLayout(rm);
+			oGridLayout.renderSingleGridLayout(oRM);
 		} else {
-			rm.addClass("sapFGridListDefault");
+			oRM.class("sapFGridListDefault");
 		}
 
 		if (oControl.isGrouped()) {
-			rm.addClass("sapFGridListGroup");
+			oRM.class("sapFGridListGroup");
 		}
 	};
 
-return GridListRenderer;
-
-});
+	return GridListRenderer;
+}, /* bExport= */ true);
