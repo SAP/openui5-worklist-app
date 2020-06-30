@@ -9,7 +9,7 @@ sap.ui.define([
 	aMockservers.push(mockserver.init());
 	
 	// load configure sap.m with async load
-	sap.ui.getCore().loadLibrary("sap.ui.core", {async: true});
+	sap.ui.getCore().loadLibrary("sap.m", {async: true});
 
 	Promise.all(aMockservers).catch(function (oError) {
 		sap.ui.require(["sap/m/MessageBox"], function(MessageBox){
