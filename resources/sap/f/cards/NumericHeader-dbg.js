@@ -1,24 +1,22 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
-	'sap/ui/core/Control',
-	'sap/m/NumericContent',
-	'sap/m/Text',
-	"sap/f/cards/NumericSideIndicator",
+	"./BaseHeader",
+	"sap/m/NumericContent",
+	"sap/m/Text",
 	"sap/f/cards/NumericHeaderRenderer",
 	"sap/ui/core/Core"
 ], function (
-		Control,
-		NumericContent,
-		Text,
-		NumericSideIndicator,
-		NumericHeaderRenderer,
-		Core
-	) {
-		"use strict";
+	BaseHeader,
+	NumericContent,
+	Text,
+	NumericHeaderRenderer,
+	Core
+) {
+	"use strict";
 
 	/**
 	 * Constructor for a new <code>NumericHeader</code>.
@@ -30,7 +28,7 @@ sap.ui.define([
 	 * Displays general information in the header of the {@link sap.f.Card} and allows the
 	 * configuration of a numeric value visualization.
 	 *
-	 * You can configure the title, subtitle, status text and icon, using the provided properties.
+	 * You can configure the title, subtitle, and status text, using the provided properties.
 	 * To add more side number indicators, use the <code>sideIndicators</code> aggregation.
 	 *
 	 * <b>Notes:</b>
@@ -40,10 +38,10 @@ sap.ui.define([
 	 * <li>To show only basic information, use {@link sap.f.cards.Header Header} instead.</li>
 	 * </ul>
 	 *
-	 * @extends sap.ui.core.Control
+	 * @extends sap.f.cards.BaseHeader
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @constructor
 	 * @public
@@ -51,7 +49,7 @@ sap.ui.define([
 	 * @alias sap.f.cards.NumericHeader
 	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var NumericHeader = Control.extend("sap.f.cards.NumericHeader", {
+	var NumericHeader = BaseHeader.extend("sap.f.cards.NumericHeader", {
 		metadata: {
 			library: "sap.f",
 			interfaces: ["sap.f.cards.IHeader"],
@@ -105,16 +103,14 @@ sap.ui.define([
 				/**
 				 * Additional text which adds more details to what is shown in the numeric header.
 				 */
-				details: { "type": "string", group: "Appearance" }
-			},
-			aggregations: {
+				details: { "type": "string", group: "Appearance" },
 
 				/**
-				 * Defines the toolbar.
-				 * @experimental Since 1.75
-				 * @since 1.75
+				 * The alignment of the side indicators.
 				 */
-				toolbar: { type: "sap.ui.core.Control", multiple: false },
+				 sideIndicatorsAlignment: { "type": "sap.f.cards.NumericHeaderSideIndicatorsAlignment", group: "Appearance", defaultValue : "Begin" }
+			},
+			aggregations: {
 
 				/**
 				 * Additional side number indicators. For example "Deviation" and "Target". Not more than two side indicators should be used.
@@ -153,7 +149,8 @@ sap.ui.define([
 				 */
 				press: {}
 			}
-		}
+		},
+		renderer: NumericHeaderRenderer
 	});
 
 	/**
@@ -161,21 +158,17 @@ sap.ui.define([
 	 * @private
 	 */
 	NumericHeader.prototype.init = function () {
+		BaseHeader.prototype.init.apply(this, arguments);
+
 		this._oRb = Core.getLibraryResourceBundle("sap.f");
 
 		this.data("sap-ui-fastnavgroup", "true", true); // Define group for F6 handling
 	};
 
 	NumericHeader.prototype.exit = function () {
-		this._oRb = null;
-	};
+		BaseHeader.prototype.exit.apply(this, arguments);
 
-	/**
-	 * Called before the control is rendered.
-	 * @private
-	 */
-	NumericHeader.prototype.onBeforeRendering = function () {
-		this._setAccessibilityAttributes();
+		this._oRb = null;
 	};
 
 	/**
@@ -183,7 +176,7 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @param {string} sValue The text of the title
-	 * @return {sap.f.cards.NumericHeader} <code>this</code> pointer for chaining
+	 * @return {this} <code>this</code> pointer for chaining
 	 */
 	NumericHeader.prototype.setTitle = function(sValue) {
 		this.setProperty("title", sValue, true);
@@ -196,7 +189,7 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @param {string} sValue The text of the subtitle
-	 * @return {sap.f.cards.NumericHeader} <code>this</code> pointer for chaining
+	 * @return {this} <code>this</code> pointer for chaining
 	 */
 	NumericHeader.prototype.setSubtitle = function(sValue) {
 		this.setProperty("subtitle", sValue, true);
@@ -209,7 +202,7 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @param {string} sValue The value of the unit of measurement
-	 * @return {sap.f.cards.NumericHeader} <code>this</code> pointer for chaining
+	 * @return {this} <code>this</code> pointer for chaining
 	 */
 	NumericHeader.prototype.setUnitOfMeasurement = function(sValue) {
 		this.setProperty("unitOfMeasurement", sValue, true);
@@ -222,7 +215,7 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @param {string} sValue The text of the details
-	 * @return {sap.f.cards.NumericHeader} <code>this</code> pointer for chaining
+	 * @return {this} <code>this</code> pointer for chaining
 	 */
 	NumericHeader.prototype.setDetails = function(sValue) {
 		this.setProperty("details", sValue, true);
@@ -235,7 +228,7 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @param {string} sValue A string representation of the number
-	 * @return {sap.f.cards.NumericHeader} <code>this</code> pointer for chaining
+	 * @return {this} <code>this</code> pointer for chaining
 	 */
 	NumericHeader.prototype.setNumber = function(sValue) {
 		this.setProperty("number", sValue, true);
@@ -248,7 +241,7 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @param {string} sValue The text of the title
-	 * @return {sap.f.cards.NumericHeader} <code>this</code> pointer for chaining
+	 * @return {this} <code>this</code> pointer for chaining
 	 */
 	NumericHeader.prototype.setScale = function(sValue) {
 		this.setProperty("scale", sValue, true);
@@ -261,7 +254,7 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @param {sap.m.DeviationIndicator} sValue The direction of the trend arrow
-	 * @return {sap.f.cards.NumericHeader} <code>this</code> pointer for chaining
+	 * @return {this} <code>this</code> pointer for chaining
 	 */
 	NumericHeader.prototype.setTrend = function(sValue) {
 		this.setProperty("trend", sValue, true);
@@ -274,7 +267,7 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @param {sap.m.ValueColor} sValue The semantic color which represents the state
-	 * @return {sap.f.cards.NumericHeader} <code>this</code> pointer for chaining
+	 * @return {this} <code>this</code> pointer for chaining
 	 */
 	NumericHeader.prototype.setState = function(sValue) {
 		this.setProperty("state", sValue, true);
@@ -392,7 +385,7 @@ sap.ui.define([
 	 */
 	NumericHeader.prototype.ontap = function (oEvent) {
 		var srcControl = oEvent.srcControl;
-		if (srcControl && srcControl.getId().indexOf('overflowButton') > -1) { // better way?
+		if (srcControl && srcControl.getId().indexOf("overflowButton") > -1) { // better way?
 			return;
 		}
 
@@ -412,33 +405,46 @@ sap.ui.define([
 	 * @private
 	 * @returns {string} IDs of controls
 	 */
-	NumericHeader.prototype._getHeaderAccessibility = function () {
-		var sTitleId = this._getTitle() ? this._getTitle().getId() : "",
-			sSubtitleId = this._getSubtitle() ? this._getSubtitle().getId() : "",
-			sStatusTextId = this.getStatusText() ? this.getId() + "-status" : "",
-			sUnitOfMeasureId = this._getUnitOfMeasurement() ? this._getUnitOfMeasurement().getId() : "",
-			sSideIndicatorsId = this.getSideIndicators() ? this._getSideIndicatorIds() : "",
-			sDetailsId = this._getDetails() ? this._getDetails().getId() : "",
-			sMainIndicatorId = this._getMainIndicator() ? this._getMainIndicator().getId() : "";
+	NumericHeader.prototype._getAriaLabelledBy = function () {
+		var sCardTypeId = "",
+			sTitleId = "",
+			sSubtitleId = "",
+			sStatusTextId = "",
+			sUnitOfMeasureId = this._getUnitOfMeasurement().getId(),
+			sMainIndicatorId = "",
+			sSideIndicatorsIds = this._getSideIndicatorIds(),
+			sDetailsId = "",
+			sIds;
 
-			return sTitleId + " " + sSubtitleId + " " + sStatusTextId + " " + sUnitOfMeasureId + " " + sMainIndicatorId + sSideIndicatorsId + " " + sDetailsId;
-	};
-
-	/**
-	 * Sets accessibility to the header to the header.
-	 *
-	 * @private
-	 */
-	NumericHeader.prototype._setAccessibilityAttributes = function () {
-		if (this.hasListeners("press")) {
-			this._sAriaRole = 'button';
-			this._sAriaHeadingLevel = undefined;
-			this._sAriaRoleDescritoion = this._oRb.getText("ARIA_ROLEDESCRIPTION_INTERACTIVE_CARD_HEADER");
-		} else {
-			this._sAriaRole = 'heading';
-			this._sAriaHeadingLevel = '3';
-			this._sAriaRoleDescritoion = this._oRb.getText("ARIA_ROLEDESCRIPTION_CARD_HEADER");
+		if (this.getParent() && this.getParent()._ariaText) {
+			sCardTypeId = this.getParent()._ariaText.getId();
 		}
+
+		if (this.getTitle()) {
+			sTitleId = this._getTitle().getId();
+		}
+
+		if (this.getSubtitle()) {
+			sSubtitleId = this._getSubtitle().getId();
+		}
+
+		if (this.getStatusText()) {
+			sStatusTextId = this.getId() + "-status";
+		}
+
+		if (this.getDetails()) {
+			sDetailsId = this._getDetails().getId();
+		}
+
+		if (this.getNumber() || this.getScale()) {
+			sMainIndicatorId = this._getMainIndicator().getId();
+		}
+
+		sIds = sCardTypeId + " " + sTitleId + " " + sSubtitleId + " " + sStatusTextId + " " + sUnitOfMeasureId + " " + sMainIndicatorId + " " + sSideIndicatorsIds + " " + sDetailsId;
+
+		// remove whitespace from both sides
+		// and merge the consecutive spaces into one
+		return sIds.replace(/ {2,}/g, ' ').trim();
 	};
 
 	/**
@@ -448,12 +454,9 @@ sap.ui.define([
 	 * @returns {string} IDs of controls
 	 */
 	NumericHeader.prototype._getSideIndicatorIds = function () {
-		var sSideIndicatorIds = "";
-		this.getSideIndicators().forEach(function(oSideIndicator) {
-			sSideIndicatorIds += " " + oSideIndicator.getId();
-		});
-
-		return sSideIndicatorIds;
+		return this.getSideIndicators()
+			.map(function(oSideIndicator) { return oSideIndicator.getId(); })
+			.join(" ");
 	};
 
 	NumericHeader.prototype.isLoading = function () {
@@ -464,7 +467,7 @@ sap.ui.define([
 		var aMyArgs = Array.prototype.slice.apply(arguments);
 		aMyArgs.unshift("press");
 
-		Control.prototype.attachEvent.apply(this, aMyArgs);
+		BaseHeader.prototype.attachEvent.apply(this, aMyArgs);
 
 		this.invalidate();
 
@@ -475,11 +478,30 @@ sap.ui.define([
 		var aMyArgs = Array.prototype.slice.apply(arguments);
 		aMyArgs.unshift("press");
 
-		Control.prototype.detachEvent.apply(this, aMyArgs);
+		BaseHeader.prototype.detachEvent.apply(this, aMyArgs);
 
 		this.invalidate();
 
 		return this;
+	};
+
+	/**
+	 * Returns if the control is inside a sap.f.GridContainer
+	 *
+	 * @private
+	 */
+	NumericHeader.prototype._isInsideGridContainer = function() {
+		var oParent = this.getParent();
+		if (!oParent) {
+			return false;
+		}
+
+		oParent = oParent.getParent();
+		if (!oParent) {
+			return false;
+		}
+
+		return oParent.isA("sap.f.GridContainer");
 	};
 
 	return NumericHeader;

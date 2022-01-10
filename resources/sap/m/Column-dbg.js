@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -46,7 +46,7 @@ sap.ui.define([
 	 * @extends sap.ui.core.Element
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @constructor
 	 * @public
@@ -130,8 +130,14 @@ sap.ui.define([
 
 			/**
 			 * Set <code>true</code> to merge repeating/duplicate cells into one cell block. See <code>mergeFunctionName</code> property to customize.
-			 * <b>Note:</b> Merging only happens at the rendering of the <code>sap.m.Table</code> control, subsequent changes on the cell or item do not have any effect on the merged state of the cells, therefore this feature should not be used together with two-way binding.
+			 *
+			 * <b>Note:</b>
+			 * Merging only happens when rendering the <code>sap.m.Table</code> control, subsequent changes on the cell or item do not have any
+			 * effect on the merged state of the cells, therefore this feature should not be used together with two-way binding.
 			 * This property is ignored if any column is configured to be shown as a pop-in.
+			 * Merging is not supported if the <code>items</code> aggregation of the <code>sap.m.Table</code> control is
+			 * bound to an {@link sap.ui.model.odata.v4.ODataModel OData V4 model}.
+			 *
 			 * @since 1.16
 			 */
 			mergeDuplicates : {type : "boolean", group : "Behavior", defaultValue : false},
@@ -294,6 +300,10 @@ sap.ui.define([
 
 		// inform parent delayed
 		setTimeout(function() {
+			// make sure that the column is visible
+			if (!this.getVisible()) {
+				return;
+			}
 			this.fireEvent("media", this);
 			this.informTable("Resize");
 		}.bind(this), 0);
@@ -347,8 +357,8 @@ sap.ui.define([
 	 * Returns CSS alignment according to column hAlign setting or given parameter
 	 * for Begin/End values checks the locale settings
 	 *
-	 * @param {String} [sAlign] TextAlign enumeration
-	 * @return {String} left|center|right
+	 * @param {string} [sAlign] TextAlign enumeration
+	 * @return {string} left|center|right
 	 * @protected
 	 */
 	Column.prototype.getCssAlign = function(sAlign) {
@@ -387,6 +397,14 @@ sap.ui.define([
 		this._index = +nIndex;
 	};
 
+	/**
+	 * Gets the rendering index of the column
+	 *
+	 * @protected
+	 */
+	Column.prototype.getIndex = function() {
+		return this._index;
+	};
 
 	/**
 	 * Sets the order of the column
@@ -443,7 +461,7 @@ sap.ui.define([
 	 * Display or hide the column from given table
 	 * This does not set the visibility property of the column
 	 *
-	 * @param {Object} oTableDomRef Table DOM reference
+	 * @param {Element} oTableDomRef Table DOM reference
 	 * @param {boolean} [bDisplay] whether visible or not
 	 * @protected
 	 */
@@ -455,7 +473,7 @@ sap.ui.define([
 		// go with native we need speed
 		var i = this._index + 1,
 			parent =  this.getParent(),
-			display = bDisplay ? "table-cell" : "none",
+			display = bDisplay && !this.isHidden() ? "table-cell" : "none",
 			header = oTableDomRef.querySelector("tr > th:nth-child(" + i + ")"),
 			cells = oTableDomRef.querySelectorAll("tr > td:nth-child(" + i + ")"),
 			length = cells.length;
@@ -477,50 +495,6 @@ sap.ui.define([
 		}
 	};
 
-	Column.prototype.setWidth = function(sWidth) {
-		var oTable = this.getTable();
-		if (!oTable) {
-			return this.setProperty("width", sWidth);
-		}
-
-		if (this.getWidth() === sWidth) {
-			return this;
-		}
-
-		var bAutoPopinMode = oTable.getAutoPopinMode();
-
-		// suppress invalidation if autoPopinMode is set to true
-		// avoids multiple calling of function _configureAutoPopin in Table control
-		this.setProperty("width", sWidth, bAutoPopinMode);
-		if (bAutoPopinMode) {
-			var $this = this.$();
-			$this.css("width", sWidth);
-			$this.attr("data-sap-width", sWidth);
-		}
-		this.informTable("RecalculateAutoPopin", true);
-		return this;
-	};
-
-	Column.prototype.setImportance = function(sImportance) {
-		if (this.getImportance() === sImportance) {
-			return this;
-		}
-
-		this.setProperty("importance", sImportance, true);
-		this.informTable("RecalculateAutoPopin", true);
-		return this;
-	};
-
-	Column.prototype.setAutoPopinWidth = function(fWidth) {
-		if (this.getAutoPopinWidth() === fWidth) {
-			return this;
-		}
-
-		this.setProperty("autoPopinWidth", fWidth, true);
-		this.informTable("RecalculateAutoPopin", true);
-		return this;
-	};
-
 	Column.prototype.setVisible = function(bVisible) {
 		if (bVisible == this.getVisible()) {
 			return this;
@@ -528,12 +502,13 @@ sap.ui.define([
 
 		var oParent = this.getParent(),
 			oTableDomRef = oParent && oParent.getTableDomRef && oParent.getTableDomRef(),
-			bSupressInvalidate = oTableDomRef && this._index >= 0;
+			bSupressInvalidate = oTableDomRef && this._index >= 0 && !oParent.getAutoPopinMode() && !this._bForcedColumn;
 
-		this.setProperty("visible", bVisible, bSupressInvalidate);
 		if (bSupressInvalidate) {
-			this.informTable("RecalculateAutoPopin", true);
+			this.setProperty("visible", bVisible, bSupressInvalidate);
 			this.setDisplay(oTableDomRef, bVisible);
+		} else {
+			this.setProperty("visible", bVisible);
 		}
 
 		return this;
@@ -571,6 +546,8 @@ sap.ui.define([
 	 * Checks the given width is known screen size
 	 */
 	Column.prototype.setMinScreenWidth = function(sWidth) {
+		sWidth = sWidth || "";
+
 		// check if setting the old value
 		if (sWidth == this.getMinScreenWidth()) {
 			return this;
@@ -582,14 +559,7 @@ sap.ui.define([
 		// set internal values
 		this._setMinScreenWidth(sWidth);
 
-		var oTable = this.getTable();
-		if (!oTable) {
-			return this.setProperty("minScreenWidth", sWidth);
-		}
-
-		// suppress invalidation if autoPopinMode is set to true
-		// avoids multiple calling of function _configureAutoPopin in Table control
-		return this.setProperty("minScreenWidth", sWidth, oTable.getAutoPopinMode());
+		return this.setProperty("minScreenWidth", sWidth);
 	};
 
 	/*
@@ -665,7 +635,7 @@ sap.ui.define([
 	 * Sets the last value of the column if mergeDuplicates property is true
 	 *
 	 * @param {any} value Any Value
-	 * @returns {sap.m.Column}
+	 * @returns {this}
 	 * @since 1.16
 	 * @protected
 	 */
@@ -679,7 +649,7 @@ sap.ui.define([
 	/**
 	 * Clears the last value of the column if mergeDuplicates property is true
 	 *
-	 * @returns {sap.m.Column}
+	 * @returns {this}
 	 * @since 1.20.4
 	 * @protected
 	 */
@@ -711,7 +681,7 @@ sap.ui.define([
 	// hence overwriting the getFocusDomRef to restore the focus on the active column header
 	Column.prototype.getFocusDomRef = function() {
 		var oParent = this.getParent();
-		if (oParent && oParent.bActiveHeaders) {
+		if (oParent && (oParent.bActiveHeaders || oParent.bFocusableHeaders)) {
 			var oColumnDomRef = this.getDomRef();
 			if (oColumnDomRef) {
 				return oColumnDomRef.firstChild;

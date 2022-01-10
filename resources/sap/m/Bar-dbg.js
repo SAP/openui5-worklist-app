@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -22,7 +22,8 @@ sap.ui.define([
 	// shortcut for sap.m.BarDesign
 	var BarDesign = library.BarDesign;
 
-
+	// shortcut for sap.m.TitleAlignment
+	var TitleAlignment = library.TitleAlignment;
 
 	/**
 	 * Constructor for a new <code>Bar</code>.
@@ -55,7 +56,7 @@ sap.ui.define([
 	 * @implements sap.m.IBar
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @constructor
 	 * @public
@@ -90,7 +91,18 @@ sap.ui.define([
 			 * Determines the design of the bar. If set to auto, it becomes dependent on the place where the bar is placed.
 			 * @since 1.22
 			 */
-			design : {type : "sap.m.BarDesign", group : "Appearance", defaultValue : BarDesign.Auto}
+			design : {type : "sap.m.BarDesign", group : "Appearance", defaultValue : BarDesign.Auto},
+
+			/**
+			 * Specifies the Title alignment (theme specific).
+			 * If set to <code>TitleAlignment.None</code>, the automatic title alignment depending on the theme settings will be disabled.
+			 * If set to <code>TitleAlignment.Auto</code>, the Title will be aligned as it is set in the theme (if not set, the default value is <code>center</code>);
+			 * Other possible values are <code>TitleAlignment.Start</code> (left or right depending on LTR/RTL), and <code>TitleAlignment.Center</code> (centered)
+			 * @since 1.85
+			 * @public
+			 */
+			titleAlignment : {type : "sap.m.TitleAlignment", group : "Misc", defaultValue : TitleAlignment.None}
+
 		},
 		aggregations : {
 
@@ -121,7 +133,19 @@ sap.ui.define([
 	}});
 
 	Bar.prototype.onBeforeRendering = function() {
+		var sCurrentAlignment = this.getTitleAlignment(),
+			sAlignment;
+
 		this._removeAllListeners();
+
+		// title alignment
+		for (sAlignment in TitleAlignment) {
+			if (sAlignment !== sCurrentAlignment) {
+				this.removeStyleClass("sapMBarTitleAlign" + sAlignment);
+			} else {
+				this.addStyleClass("sapMBarTitleAlign" + sAlignment);
+			}
+		}
 	};
 
 	Bar.prototype.onAfterRendering = function() {
@@ -133,6 +157,7 @@ sap.ui.define([
 	 */
 	Bar.prototype.init = function() {
 		this.data("sap-ui-fastnavgroup", "true", true); // Define group for F6 handling
+		this._sPrevTitleAlignmentClass = "";
 	};
 
 	/**
@@ -196,7 +221,7 @@ sap.ui.define([
 		this._removeAllListeners();
 
 		var bContentLeft = !!this.getContentLeft().length,
-			bContentMiddle = !!this.getContentMiddle().length,
+			bContentMiddle = !!this.getContentMiddle().length || (this._oflexBox && !!this._oflexBox.getItems().length),
 			bContentRight = !!this.getContentRight().length;
 
 		//Invisible bars also do not need resize listeners
@@ -256,11 +281,8 @@ sap.ui.define([
 		// reset to default
 		this._$RightBar.css({ width : "" });
 		this._$LeftBar.css({ width : "" });
-		if (Device.browser.msie) {
-			this._$MidBarPlaceHolder.css({ position : "", width : ""});
-		} else {
-			this._$MidBarPlaceHolder.css({ position : "", width : "", visibility: "hidden"});
-		}
+		this._$MidBarPlaceHolder.css({ position : "", width : "", visibility: "hidden"});
+
 		var iRightBarWidth = this._$RightBar.outerWidth(true);
 		//right bar is bigger than the bar - only show the right bar
 		if (iRightBarWidth > iBarWidth) {
@@ -313,44 +335,47 @@ sap.ui.define([
 		var iMidBarPlaceholderWidth = this._$MidBarPlaceHolder.outerWidth(true),
 			bRtl = sap.ui.getCore().getConfiguration().getRTL(),
 			sLeftOrRight = bRtl ? "right" : "left",
-			oMidBarCss = { visibility : "" };
+			sRightOrLeft = bRtl ? "left" : "right",
+			oMidBarCss = { visibility : "" },
+			aContentLeftControls = this.getContentLeft().filter(function(oControl) { return oControl.getVisible(); }),
+			aContentRightControls = this.getContentRight().filter(function(oControl) { return oControl.getVisible(); }),
+			iContentLeftPadding = aContentLeftControls.length ? 0 : parseInt(this._$LeftBar.css('padding-' + sLeftOrRight)),
+			iContentRightPadding = aContentRightControls.length ? 0 : parseInt(this._$RightBar.css('padding-' + sRightOrLeft));
+
 		if (this.getEnableFlexBox()) {
 
 			iMidBarPlaceholderWidth = iBarWidth - iLeftBarWidth - iRightBarWidth - parseInt(this._$MidBarPlaceHolder.css('margin-left')) - parseInt(this._$MidBarPlaceHolder.css('margin-right'));
 
 			oMidBarCss.position = "absolute";
-			oMidBarCss.width = iMidBarPlaceholderWidth + "px";
-			oMidBarCss[sLeftOrRight] = iLeftBarWidth;
+			oMidBarCss.width = iMidBarPlaceholderWidth + iContentLeftPadding + iContentRightPadding + "px";
+			oMidBarCss[sLeftOrRight] = iLeftBarWidth - iContentLeftPadding;
 
 			//calculation for flex is done
 			return oMidBarCss;
-
 		}
 
 		var iSpaceBetweenLeftAndRight = iBarWidth - iLeftBarWidth - iRightBarWidth,
-
 			iMidBarStartingPoint = (iBarWidth / 2) - (iMidBarPlaceholderWidth / 2),
 			bLeftContentIsOverlapping = iLeftBarWidth > iMidBarStartingPoint,
-
 			iMidBarEndPoint = (iBarWidth / 2) + (iMidBarPlaceholderWidth / 2),
-			bRightContentIsOverlapping = (iBarWidth - iRightBarWidth) < iMidBarEndPoint;
+			bRightContentIsOverlapping = (iBarWidth - iRightBarWidth) < iMidBarEndPoint,
+			sTitleAlignment = this.getTitleAlignment();
 
-			if (this._$MidBarPlaceHolder.closest(".sapMBarTitleStart").length > 0 ||
-				(iSpaceBetweenLeftAndRight > 0 && (bLeftContentIsOverlapping || bRightContentIsOverlapping))) {
-
-			//Left or Right content is overlapping the Middle content or there is Title alignment class (sapMBarTitleStart) set
+		if ((sTitleAlignment !== TitleAlignment.None && sTitleAlignment !== TitleAlignment.Center) ||
+			(iSpaceBetweenLeftAndRight > 0 && (bLeftContentIsOverlapping || bRightContentIsOverlapping))) {
+			//Left or Right content is overlapping the Middle content or there is Title alignment "Center" or "None" set
 
 			// place the middle positioned element directly next to the end of left content area
 			oMidBarCss.position = "absolute";
 
 			//Use the remaining space
-			oMidBarCss.width = iSpaceBetweenLeftAndRight + "px";
+			oMidBarCss.width = iSpaceBetweenLeftAndRight + iContentLeftPadding + iContentRightPadding + "px";
 
-			oMidBarCss.left = bRtl ? iRightBarWidth : iLeftBarWidth;
+			//Set left or right depending on LTR/RTL
+			oMidBarCss[sLeftOrRight] = iLeftBarWidth - iContentLeftPadding;
 		}
 
 		return oMidBarCss;
-
 	};
 
 	/**
@@ -369,7 +394,7 @@ sap.ui.define([
 		// Chrome browser has a problem in providing the correct div size when image inside does not have width explicitly set
 		//since ff version 24 the calculation is correct, since we don't support older versions we won't check it
 		// Edge also works correctly with this calculation unlike IE
-		if (Device.browser.webkit || Device.browser.firefox || Device.browser.edge) {
+		if (Device.browser.webkit || Device.browser.firefox) {
 
 			for (i = 0; i < aContainerChildren.length; i++) {
 
@@ -464,6 +489,7 @@ sap.ui.define([
 	 *
 	 * @returns {Object} with all available contexts
 	 * @protected
+	 * @function
 	 */
 	Bar.prototype.getContext = BarInAnyContentEnabler.prototype.getContext;
 
@@ -473,6 +499,7 @@ sap.ui.define([
 	 * Implementation of the IBar interface.
 	 * @returns {boolean} isContextSensitive
 	 * @protected
+	 * @function
 	 */
 	Bar.prototype.isContextSensitive = BarInAnyContentEnabler.prototype.isContextSensitive;
 
@@ -481,12 +508,15 @@ sap.ui.define([
 	 * @param {sap.m.IBarHTMLTag} sTag The HTML tag of the root element
 	 * @returns {sap.m.IBar} this for chaining
 	 * @protected
+	 * @function
 	 */
 	Bar.prototype.setHTMLTag = BarInAnyContentEnabler.prototype.setHTMLTag;
+
 	/**
 	 * Gets the HTML tag of the root element.
 	 * @returns {sap.m.IBarHTMLTag} The HTML-tag
 	 * @protected
+	 * @function
 	 */
 	Bar.prototype.getHTMLTag  = BarInAnyContentEnabler.prototype.getHTMLTag;
 
@@ -494,6 +524,7 @@ sap.ui.define([
 	 * Sets classes and HTML tag according to the context of the page. Possible contexts are header, footer and subheader.
 	 * @returns {sap.m.IBar} <code>this</code> for chaining
 	 * @protected
+	 * @function
 	 */
 	Bar.prototype.applyTagAndContextClassFor  = BarInAnyContentEnabler.prototype.applyTagAndContextClassFor;
 
@@ -501,6 +532,7 @@ sap.ui.define([
 	 * Sets classes according to the context of the page. Possible contexts are header, footer and subheader.
 	 * @returns {sap.m.IBar} <code>this</code> for chaining
 	 * @protected
+	 * @function
 	 */
 	Bar.prototype._applyContextClassFor  = BarInAnyContentEnabler.prototype._applyContextClassFor;
 
@@ -508,6 +540,7 @@ sap.ui.define([
 	 * Sets HTML tag according to the context of the page. Possible contexts are header, footer and subheader.
 	 * @returns {sap.m.IBar} <code>this</code> for chaining
 	 * @protected
+	 * @function
 	 */
 	Bar.prototype._applyTag  = BarInAnyContentEnabler.prototype._applyTag;
 
@@ -518,6 +551,7 @@ sap.ui.define([
 	 * @param {string} sContext allowed values are header, footer, subheader.
 	 * @returns {object|null}
 	 * @private
+	 * @function
 	 */
 	Bar.prototype._getContextOptions  = BarInAnyContentEnabler.prototype._getContextOptions;
 
@@ -527,6 +561,7 @@ sap.ui.define([
 	 * @param {string} sRole AccessibilityRole of the root Element
 	 * @returns {sap.m.IBar} <code>this</code> to allow method chaining
 	 * @private
+	 * @function
 	 */
 	Bar.prototype._setRootAccessibilityRole = BarInAnyContentEnabler.prototype._setRootAccessibilityRole;
 
@@ -535,6 +570,7 @@ sap.ui.define([
 	 *
 	 * @returns {string} Accessibility role
 	 * @private
+	 * @function
 	 */
 	Bar.prototype._getRootAccessibilityRole = BarInAnyContentEnabler.prototype._getRootAccessibilityRole;
 
@@ -545,6 +581,7 @@ sap.ui.define([
 	 * @param {string} sLevel aria-level attribute of the root Element
 	 * @returns {sap.m.IBar} <code>this</code> to allow method chaining
 	 * @private
+	 * @function
 	 */
 	Bar.prototype._setRootAriaLevel = BarInAnyContentEnabler.prototype._setRootAriaLevel;
 
@@ -554,6 +591,7 @@ sap.ui.define([
 	 * This is only needed if <code>sap.m.Bar</code> has role="heading"
 	 * @returns {string} aria-level
 	 * @private
+	 * @function
 	 */
 	Bar.prototype._getRootAriaLevel = BarInAnyContentEnabler.prototype._getRootAriaLevel;
 

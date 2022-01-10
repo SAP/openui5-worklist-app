@@ -1,14 +1,15 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
 	"./_AnnotationHelperBasics",
 	"sap/base/Log",
-	"sap/ui/thirdparty/jquery"
-], function (_AnnotationHelperBasics, Log, jQuery) {
+	"sap/base/util/deepExtend",
+	"sap/base/util/extend"
+], function (_AnnotationHelperBasics, Log, deepExtend, extend) {
 	"use strict";
 
 	var oBoolFalse = { "Bool" : "false" },
@@ -184,10 +185,10 @@ sap.ui.define([
 			if (sTypeClass === "EntitySet" && oExtension.value === sNonDefaultValue) {
 				// potentially nested structure so do deep copy
 				if (bDeepCopy) {
-					jQuery.extend(true, o, mV2ToV4[oExtension.name]);
+					deepExtend(o, mV2ToV4[oExtension.name]);
 				} else {
 					// Warning: Passing false for the first argument is not supported!
-					jQuery.extend(o, mV2ToV4[oExtension.name]);
+					extend(o, mV2ToV4[oExtension.name]);
 				}
 			}
 		},
@@ -973,7 +974,7 @@ sap.ui.define([
 						String : sSchemaVersion
 					};
 				}
-				jQuery.extend(oSchema, oAnnotations[oSchema.namespace]);
+				extend(oSchema, oAnnotations[oSchema.namespace]);
 
 				Utils.visitParents(oSchema, oAnnotations, "association",
 					function (oAssociation, mChildAnnotations) {
@@ -990,7 +991,10 @@ sap.ui.define([
 				// annotations are already lifted up and can be used for calculating entity
 				// set annotations which are based on V2 annotations on entity properties
 				Utils.visitParents(oSchema, oAnnotations, "entityType", Utils.visitEntityType);
+			});
 
+			aSchemas.forEach(function (oSchema) {
+				// visit entity container after all entity types of all schemas are visited
 				Utils.visitParents(oSchema, oAnnotations, "entityContainer",
 					function (oEntityContainer, mChildAnnotations) {
 						Utils.visitChildren(oEntityContainer.associationSet, mChildAnnotations);
@@ -1048,7 +1052,7 @@ sap.ui.define([
 					fnCallback(oChild);
 				}
 				// merge V4 annotations after child annotations are processed
-				jQuery.extend(oChild, mChildAnnotations[oChild.name || oChild.role]);
+				extend(oChild, mChildAnnotations[oChild.name || oChild.role]);
 			});
 		},
 
@@ -1089,8 +1093,7 @@ sap.ui.define([
 			oFunctionImport.parameter.forEach(
 				function (oParam) {
 					Utils.liftSAPData(oParam);
-					jQuery.extend(oParam,
-						mAnnotations[oFunctionImport.name + "/" + oParam.name]);
+					extend(oParam, mAnnotations[oFunctionImport.name + "/" + oParam.name]);
 				}
 			);
 		},
@@ -1126,7 +1129,7 @@ sap.ui.define([
 
 				fnCallback(oParent, mChildAnnotations);
 				// merge V4 annotations after child annotations are processed
-				jQuery.extend(oParent, oAnnotations[sQualifiedName]);
+				extend(oParent, oAnnotations[sQualifiedName]);
 			}
 
 			if (!aParents) {

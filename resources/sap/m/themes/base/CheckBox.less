@@ -14,7 +14,7 @@
 	text-align: left;
 	padding: 0 0 0 3rem;
 
-	&:not(.sapMCbBgDis) {
+	&:not(.sapMCbBgDis):not(.sapMCbDisplayOnly) {
 		&:hover,
 		.sapMCbLabel:hover {
 			cursor: pointer;
@@ -165,11 +165,6 @@ html[data-sap-ui-browser^=ff] .sapMCbBg > input {
 	position: absolute;
 }
 
-/* this needed for ie9 in multi select list */
-.sapMLIBSelectM > .sapMCb {
-	width: 3rem;
-}
-
 /* Read only */
 .sapMCbRo .sapMCbBg {
 	background-color: @sapUiFieldReadOnlyBackground;
@@ -236,7 +231,7 @@ html[data-sap-ui-browser^=ff] .sapMCbBg > input {
 		height: 0.75rem;
 		width: 0.75rem;
 		line-height: 0.75rem;
-		font-size: 0.625rem;
+		font-size: 0.75rem;
 		border-radius: 0;
 	}
 

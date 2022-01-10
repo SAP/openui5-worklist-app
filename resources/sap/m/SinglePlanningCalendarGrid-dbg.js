@@ -1,13 +1,8 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
-
-// Ensure that sap.ui.unified is loaded before the module dependencies will be required.
-// Loading it synchronously is the only compatible option and doesn't harm when sap.ui.unified
-// already has been loaded asynchronously (e.g. via a dependency declared in the manifest)
-sap.ui.getCore().loadLibrary("sap.ui.unified");
 
 // Provides control sap.m.SinglePlanningCalendarGrid.
 sap.ui.define([
@@ -26,9 +21,9 @@ sap.ui.define([
 		'sap/ui/unified/calendar/DatesRow',
 		'sap/ui/unified/calendar/CalendarDate',
 		'sap/ui/unified/calendar/CalendarUtils',
+		'sap/ui/unified/DateTypeRange',
 		'sap/ui/events/KeyCodes',
 		'./SinglePlanningCalendarGridRenderer',
-		'sap/ui/Device',
 		'sap/ui/core/delegate/ItemNavigation',
 		"sap/ui/thirdparty/jquery",
 		'./PlanningCalendarLegend'
@@ -49,9 +44,9 @@ sap.ui.define([
 		DatesRow,
 		CalendarDate,
 		CalendarUtils,
+		DateTypeRange,
 		KeyCodes,
 		SinglePlanningCalendarGridRenderer,
-		Device,
 		ItemNavigation,
 		jQuery,
 		PlanningCalendarLegend
@@ -64,7 +59,6 @@ sap.ui.define([
 			BLOCKER_ROW_HEIGHT_COMPACT = 25,
 			HALF_HOUR_MS = 3600000 / 2,
 			ONE_MIN_MS = 60 * 1000,
-			MILLISECONDS_IN_A_DAY = 86400000,
 			// Day view only - indicates the special dates
 			// 3px height the marker itself + 2x2px on its top and bottom both on cozy & compact
 			DAY_MARKER_HEIGHT_PX = 7,
@@ -102,7 +96,7 @@ sap.ui.define([
 		 * @extends sap.ui.core.Control
 		 *
 		 * @author SAP SE
-		 * @version 1.79.0
+		 * @version 1.96.2
 		 *
 		 * @constructor
 		 * @private
@@ -315,7 +309,7 @@ sap.ui.define([
 					},
 
 					/**
-					 * Fired when a grid cell is focused.
+					 * Fired when a grid cell is pressed.
 					 * @since 1.65
 					 */
 					cellPress: {
@@ -588,16 +582,21 @@ sap.ui.define([
 					}
 
 					var oDragSession = oEvent.getParameter("dragSession"),
-						$SPCGridOverlay = this.$().find(".sapMSinglePCOverlay"),
+						oDragControl = oDragSession.getDragControl(),
+						oEventTarget = oEvent.getParameter("browserEvent") && oEvent.getParameter("browserEvent").target || null;
+
+					oDragControl._sAppointmentPartSuffix = oEventTarget && oEventTarget.id ? oEventTarget.id.replace(oDragControl.getId() + "-", "") : "";
+
+					var	$SPCGridOverlay = this.$().find(".sapMSinglePCOverlay"),
 						$Indicator = jQuery(oDragSession.getIndicator()),
-						$DraggedControl = oDragSession.getDragControl().$();
+						$DraggedControl = oDragControl.$();
 
 					if (this._isResizeHandleBottomMouseDownTarget) {
-						oDragSession.setData("bottomHandle", "true");
+						oDragSession.setComplexData("bottomHandle", "true");
 					}
 
 					if (this._isResizeHandleTopMouseDownTarget) {
-						oDragSession.setData("topHandle", "true");
+						oDragSession.setComplexData("topHandle", "true");
 					}
 
 					$Indicator.addClass("sapUiDnDIndicatorHide");
@@ -619,9 +618,8 @@ sap.ui.define([
 						});
 					});
 
-					if (!Device.browser.msie && !Device.browser.edge) {
-						oEvent.getParameter("browserEvent").dataTransfer.setDragImage(getResizeGhost(), 0, 0);
-					}
+					oEvent.getParameter("browserEvent").dataTransfer.setDragImage(getResizeGhost(), 0, 0);
+
 				}.bind(this),
 
 				/**
@@ -642,7 +640,7 @@ sap.ui.define([
 						iVariableBoundaryY,
 						mDraggedControlConfig;
 
-					if (!oAppointmentStartingBoundaries) {
+						if (!oAppointmentStartingBoundaries) {
 						oAppointmentStartingBoundaries = {
 							top: oAppointmentRef.offsetTop,
 							bottom: oAppointmentRef.offsetTop + oAppointmentRef.getBoundingClientRect().height,
@@ -665,7 +663,6 @@ sap.ui.define([
 					};
 
 					oDragSession.getDragControl().$().css(mDraggedControlConfig);
-
 					if (!oDragSession.getIndicator()) {
 						setTimeout(fnHideIndicator, 0);
 					} else {
@@ -687,7 +684,7 @@ sap.ui.define([
 						oAppointment.getStartDate(),
 						oAppointment.getEndDate(),
 						iIndex,
-						oDragSession.getData("bottomHandle")
+						oDragSession.getComplexData("bottomHandle")
 					);
 
 					this.$().find(".sapMSinglePCOverlay").removeClass("sapMSinglePCOverlayDragging");
@@ -726,6 +723,7 @@ sap.ui.define([
 						return;
 					}
 
+					var oBrowserEvent = oEvent.getParameter("browserEvent");
 					var $SPCGridOverlay = this.$().find(".sapMSinglePCOverlay");
 
 					setTimeout(function () {
@@ -738,9 +736,38 @@ sap.ui.define([
 						jQuery(".sapUiDnDDragging").removeClass("sapUiDnDDragging");
 					});
 
-					if (!Device.browser.msie && !Device.browser.edge) {
-						oEvent.getParameter("browserEvent").dataTransfer.setDragImage(getResizeGhost(), 0, 0);
+					oBrowserEvent.dataTransfer.setDragImage(getResizeGhost(), 0, 0);
+
+					var oGrid = oEvent.getParameter("target"),
+						aIntervalPlaceholders = oGrid.getAggregation("_intervalPlaceholders"),
+						oFirstIntervalRectangle = aIntervalPlaceholders[0].getDomRef().getBoundingClientRect(),
+						iIntervalHeight = oFirstIntervalRectangle.height,
+						iIntervalIndexOffset = Math.floor((oFirstIntervalRectangle.top - oGrid.getDomRef().getBoundingClientRect().top) / iIntervalHeight),
+						oDragSession = oEvent.getParameter("dragSession"),
+						iIndexInColumn  = Math.floor(oBrowserEvent.offsetY / iIntervalHeight) - iIntervalIndexOffset,
+						iIntervalIndex,
+						oCurrentIntervalBoundingRectangle;
+
+					if (this._iColumns === 1) {
+						iIntervalIndex = iIndexInColumn;
+					} else {
+						var iHeaderSize = 64,
+							iBordersWidth = 2,
+							iIntervalWidth = Math.floor(aIntervalPlaceholders[0].getDomRef().getBoundingClientRect().width) - iBordersWidth,
+							iColumnsFromStart = Math.floor(Math.floor((oBrowserEvent.offsetX - iHeaderSize)) / iIntervalWidth),
+							iIntervalsInColumn = aIntervalPlaceholders.length / this._iColumns;
+
+						iIntervalIndex = iIndexInColumn + ((iColumnsFromStart) * iIntervalsInColumn);
 					}
+
+					if	(iIntervalIndex < 0) {
+						iIntervalIndex = 0;
+					}
+
+					oCurrentIntervalBoundingRectangle = aIntervalPlaceholders[iIntervalIndex].getDomRef().getBoundingClientRect();
+
+					oDragSession.setComplexData("startingRectsDropArea", {top: Math.ceil(iIndexInColumn * iIntervalHeight), left: oCurrentIntervalBoundingRectangle.left});
+					oDragSession.setComplexData("startingDropDate", aIntervalPlaceholders[iIntervalIndex].getDate());
 				}.bind(this),
 
 				dragEnter: function (oEvent) {
@@ -919,7 +946,7 @@ sap.ui.define([
 		 * @private
 		 */
 		SinglePlanningCalendarGrid.prototype._appFocusHandler = function(oEvent, iDirection) {
-			var oTarget = sap.ui.getCore().byId(oEvent.target.id);
+			var oTarget = sap.ui.getCore().byId(oEvent.target.id) || this._findSrcControl(oEvent);
 
 			if (oTarget && oTarget.isA("sap.ui.unified.CalendarAppointment")) {
 				this.fireAppointmentSelect({
@@ -993,6 +1020,12 @@ sap.ui.define([
 				aVisibleAppsInDay,
 				i, j;
 
+			// directly focus appointment part, if there is any selected
+			if (this._sSelectedAppointment) {
+				this._sSelectedAppointment.focus();
+				return this;
+			}
+
 			// Search amongst the visible blockers
 			for (i = 0; i < aVisibleBlockers.length; ++i) {
 				if (aVisibleBlockers[i].getId() === oFocusInfo.id) {
@@ -1045,6 +1078,7 @@ sap.ui.define([
 		 */
 		SinglePlanningCalendarGrid.prototype._toggleAppointmentSelection = function (oAppointment, bRemoveOldSelection) {
 			var aChangedApps = [],
+				oAppointmentDomRef = oAppointment && oAppointment.getDomRef(),
 				aAppointments,
 				iAppointmentsLength,
 				i;
@@ -1064,6 +1098,9 @@ sap.ui.define([
 			if (oAppointment) {
 				oAppointment.setProperty("selected", !oAppointment.getSelected());
 				aChangedApps.push(oAppointment);
+				this._sSelectedAppointment = oAppointment.getSelected() && oAppointmentDomRef ? oAppointment : undefined;
+			} else {
+				this._sSelectedAppointment = undefined;
 			}
 
 			return aChangedApps;
@@ -1074,7 +1111,7 @@ sap.ui.define([
 		 * the next or preveous day or week
 		 *
 		 * @param {sap.ui.unified.CalendarDate} oCellStartDate The start date the cell or the visible part of the appointment
-		 * @param {integer} iDirection The key the was pressed
+		 * @param {int} iDirection The key the was pressed
 		 * @returns {boolean} Idicator if the gird border is reached
 		 * @private
 		 */
@@ -1167,13 +1204,33 @@ sap.ui.define([
 			}
 		};
 
+		SinglePlanningCalendarGrid.prototype._findSrcControl = function (oEvent) {
+			// data-sap-ui-related - This is a relation to appointment object.
+			// This is the connection between the DOM Element and the Object representing an appointment.
+			var $targetElement = oEvent.target,
+				$targetsParentElement = $targetElement.parentElement,
+				sAppointmentId;
+			if (!$targetsParentElement) {
+				return oEvent.srcControl;
+			} else if ($targetsParentElement.classList.contains("sapUiCalendarRowApps")) {
+				sAppointmentId = $targetsParentElement.getAttribute("data-sap-ui-related");
+			} else {
+				sAppointmentId = $targetElement.getAttribute("data-sap-ui-related");
+			}
+
+			// finding the appointment
+			return this.getAppointments().find(function (oAppointment) {
+				return oAppointment.sId === sAppointmentId;
+			});
+		};
+
 		/**
 		 * Helper function handling <code>keydown</code> or <code>tap</code> event on the grid.
 		 *
 		 * @param {jQuery.Event} oEvent The event object.
 		 */
 		SinglePlanningCalendarGrid.prototype._fireSelectionEvent = function (oEvent) {
-			var oAppointment = oEvent.srcControl,
+			var oControl = this._findSrcControl(oEvent),
 				oGridCell = oEvent.target;
 
 			if (oEvent.target.classList.contains("sapMSinglePCRow") ||
@@ -1188,10 +1245,23 @@ sap.ui.define([
 					appointment: undefined,
 					appointments: this._toggleAppointmentSelection(undefined, true)
 				});
-			} else if (oAppointment && oAppointment.isA("sap.ui.unified.CalendarAppointment")) {
+			} else if (oControl && oControl.isA("sap.ui.unified.CalendarAppointment")) {
+
+				// add suffix in appointment
+				if (oGridCell.parentElement && oGridCell.parentElement.getAttribute("id")) {
+					var sTargetId = oGridCell.parentElement.getAttribute("id");
+
+					// data-sap-ui-related - This is a relation to appointment object.
+					// This is the connection between the DOM Element and the Object representing an appointment.
+					var sBaseIDPart = oGridCell.parentElement.getAttribute("data-sap-ui-related");
+					var sSuffix = sTargetId.replace(sBaseIDPart + "-", "");
+
+					oControl._setAppointmentPartSuffix(sSuffix);
+				}
+
 				this.fireAppointmentSelect({
-					appointment: oAppointment,
-					appointments: this._toggleAppointmentSelection(oAppointment, !(oEvent.ctrlKey || oEvent.metaKey))
+					appointment: oControl,
+					appointments: this._toggleAppointmentSelection(oControl, !(oEvent.ctrlKey || oEvent.metaKey))
 				});
 			}
 		};
@@ -1234,7 +1304,9 @@ sap.ui.define([
 			if (!this.getEndHour()) {
 				iEndHour = LAST_HOUR_OF_DAY;
 			}
-
+			if (iStartHour > iEndHour) {
+				 return iStartHour <= iHour || iHour < iEndHour;
+			}
 			return iStartHour <= iHour && iHour < iEndHour;
 		};
 
@@ -1921,7 +1993,7 @@ sap.ui.define([
 		 * those controls.
 		 *
 		 * @param {sap.ui.core.Control} oControl - The Control that gets rendered by the RenderManager
-		 * @param {Object} mAriaProps - The mapping of "aria-" prefixed attributes
+		 * @param {object} mAriaProps - The mapping of "aria-" prefixed attributes
 		 * @protected
 		 */
 		SinglePlanningCalendarGrid.prototype.enhanceAccessibilityState = function(oControl, mAriaProps) {
@@ -1950,37 +2022,14 @@ sap.ui.define([
 		};
 
 		/**
-		 * Returns whether the appointment starts at 00:00 and ends in 00:00 on any day in the future.
+		 * Returns whether an appointment starts at 00:00 and ends in 00:00 on any day in the future.
 		 *
 		 * @param {Object} oAppStartDate - Start date of the appointment
 		 * @param {Object} oAppEndDate - End date of the appointment
 		 * @returns {boolean}
 		 */
 		SinglePlanningCalendarGrid.prototype.isAllDayAppointment = function(oAppStartDate, oAppEndDate) {
-			var bStartDateHours = oAppStartDate.getHours() === 0,
-				bStartDateMinutes = oAppStartDate.getMinutes() === 0,
-				bStartDateSeconds = oAppStartDate.getSeconds() === 0,
-				bStartDateMilliseconds = oAppStartDate.getMilliseconds() === 0,
-				bStartTimeIs0000 = bStartDateHours && bStartDateMinutes && bStartDateSeconds && bStartDateMilliseconds,
-				bAllDay = false;
-
-			if (bStartTimeIs0000) {
-				bAllDay = this._isEndTime0000(oAppStartDate, oAppEndDate);
-			}
-
-			return bAllDay;
-		};
-
-		/**
-		 * When we're inside this method we know for sure that the start time is 00:00.
-		 * It returns whether the end time is also 00:00.
-		 *
-		 * @param {Object} oAppStartDate - Start date of the appointment
-		 * @param {Object} oAppEndDate - End date of the appointment
-		 * @returns {boolean}
-		 */
-		SinglePlanningCalendarGrid.prototype._isEndTime0000 = function(oAppStartDate, oAppEndDate) {
-			return (oAppEndDate.getTime() - oAppStartDate.getTime()) % MILLISECONDS_IN_A_DAY === 0;
+			return CalendarUtils._isMidnight(oAppStartDate) && CalendarUtils._isMidnight(oAppEndDate);
 		};
 
 		SinglePlanningCalendarGrid.prototype._createBlockersDndPlaceholders = function (oStartDate, iColumns) {
@@ -2032,6 +2081,24 @@ sap.ui.define([
 			return oPlaceholder;
 		};
 
+		SinglePlanningCalendarGrid.prototype._getSpecialDates = function(){
+			var specialDates = this.getSpecialDates();
+			for (var i = 0; i < specialDates.length; i++) {
+				var bNeedsSecondTypeAdding = specialDates[i].getSecondaryType() === unifiedLibrary.CalendarDayType.NonWorking
+					&& specialDates[i].getType() !== unifiedLibrary.CalendarDayType.NonWorking;
+				if (bNeedsSecondTypeAdding) {
+					var newSpecialDate = new DateTypeRange();
+					newSpecialDate.setType(unifiedLibrary.CalendarDayType.NonWorking);
+					newSpecialDate.setStartDate(specialDates[i].getStartDate());
+					if (specialDates[i].getEndDate()) {
+						newSpecialDate.setEndDate(specialDates[i].getEndDate());
+					}
+					specialDates.push(newSpecialDate);
+				}
+			}
+			return specialDates;
+		};
+
 		function getResizeGhost() {
 			var $ghost = jQuery("<span></span>").addClass("sapUiCalAppResizeGhost");
 			$ghost.appendTo(document.body);
@@ -2043,16 +2110,19 @@ sap.ui.define([
 
 		var IntervalPlaceholder = Control.extend("sap.m.SinglePlanningCalendarGrid._internal.IntervalPlaceholder", {
 			metadata: {
+				library: "sap.m",
 				properties: {
 					date : {type : "object", group : "Data"}
 				}
 			},
-			renderer: function(oRm, oControl) {
-				oRm.write("<div");
-				oRm.writeControlData(oControl);
-				oRm.addClass("sapMSinglePCPlaceholder");
-				oRm.writeClasses();
-				oRm.write("></div>");
+			renderer: {
+				apiVersion: 2,
+				render: function(oRm, oControl) {
+					oRm.openStart("div", oControl)
+						.class("sapMSinglePCPlaceholder")
+						.openEnd()
+						.close("div");
+				}
 			}
 		});
 

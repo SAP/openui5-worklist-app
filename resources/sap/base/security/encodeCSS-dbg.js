@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(["sap/base/strings/toHex"], function(toHex) {
@@ -9,6 +9,7 @@ sap.ui.define(["sap/base/strings/toHex"], function(toHex) {
 	/**
 	 * RegExp and escape function for CSS escaping
 	 */
+	// eslint-disable-next-line no-control-regex -- special characters are really needed here!
 	var rCSS = /[\x00-\x2f\x3a-\x40\x5b-\x60\x7b-\xff\u2028\u2029][0-9A-Fa-f]?/g;
 
 	var fnCSS = function(sChar) {

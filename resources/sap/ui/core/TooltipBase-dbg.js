@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -31,79 +31,81 @@ sap.ui.define([
 	 * @class
 	 * Abstract class that can be extended in order to implement any extended tooltip. For example, RichTooltip Control is based on it. It provides the opening/closing behavior and the main "text" property.
 	 * @extends sap.ui.core.Control
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @public
 	 * @alias sap.ui.core.TooltipBase
 	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var TooltipBase = Control.extend("sap.ui.core.TooltipBase", /** @lends sap.ui.core.TooltipBase.prototype */ { metadata : {
+	var TooltipBase = Control.extend("sap.ui.core.TooltipBase", /** @lends sap.ui.core.TooltipBase.prototype */ {
+		metadata : {
+			"abstract" : true,
+			library : "sap.ui.core",
+			properties : {
 
-		"abstract" : true,
-		library : "sap.ui.core",
-		properties : {
+				/**
+				 * The text that is shown in the tooltip that extends the TooltipBase class, for example in RichTooltip.
+				 */
+				text : {type : "string", group : "Misc", defaultValue : ""},
 
-			/**
-			 * The text that is shown in the tooltip that extends the TooltipBase class, for example in RichTooltip.
-			 */
-			text : {type : "string", group : "Misc", defaultValue : ""},
+				/**
+				 * Optional. Open Duration in milliseconds.
+				 */
+				openDuration : {type : "int", group : "Behavior", defaultValue : 200},
 
-			/**
-			 * Optional. Open Duration in milliseconds.
-			 */
-			openDuration : {type : "int", group : "Behavior", defaultValue : 200},
+				/**
+				 * Optional. Close Duration in milliseconds.
+				 */
+				closeDuration : {type : "int", group : "Behavior", defaultValue : 200},
 
-			/**
-			 * Optional. Close Duration in milliseconds.
-			 */
-			closeDuration : {type : "int", group : "Behavior", defaultValue : 200},
+				/**
+				 * Optional. My position defines which position on the extended tooltip being positioned to align with the target control.
+				 */
+				myPosition : {type : "sap.ui.core.Dock", group : "Behavior", defaultValue : 'begin top'},
 
-			/**
-			 * Optional. My position defines which position on the extended tooltip being positioned to align with the target control.
-			 */
-			myPosition : {type : "sap.ui.core.Dock", group : "Behavior", defaultValue : 'begin top'},
+				/**
+				 * Optional. At position defines which position on the target control to align the positioned tooltip.
+				 */
+				atPosition : {type : "sap.ui.core.Dock", group : "Behavior", defaultValue : 'begin bottom'},
 
-			/**
-			 * Optional. At position defines which position on the target control to align the positioned tooltip.
-			 */
-			atPosition : {type : "sap.ui.core.Dock", group : "Behavior", defaultValue : 'begin bottom'},
+				/**
+				 * Optional. Offset adds these left-top values to the calculated position.
+				 * Example: "10 3".
+				 */
+				offset : {type : "string", group : "Behavior", defaultValue : '10 3'},
 
-			/**
-			 * Optional. Offset adds these left-top values to the calculated position.
-			 * Example: "10 3".
-			 */
-			offset : {type : "string", group : "Behavior", defaultValue : '10 3'},
+				/**
+				 * Optional. Collision - when the positioned element overflows the window in some direction, move it to an alternative position.
+				 */
+				collision : {type : "sap.ui.core.Collision", group : "Behavior", defaultValue : 'flip'},
 
-			/**
-			 * Optional. Collision - when the positioned element overflows the window in some direction, move it to an alternative position.
-			 */
-			collision : {type : "sap.ui.core.Collision", group : "Behavior", defaultValue : 'flip'},
+				/**
+				 * Opening delay of the tooltip in milliseconds
+				 */
+				openDelay : {type : "int", group : "Misc", defaultValue : 500},
 
-			/**
-			 * Opening delay of the tooltip in milliseconds
-			 */
-			openDelay : {type : "int", group : "Misc", defaultValue : 500},
+				/**
+				 * Closing delay of the tooltip in milliseconds
+				 */
+				closeDelay : {type : "int", group : "Misc", defaultValue : 100}
+			},
+			events : {
 
-			/**
-			 * Closing delay of the tooltip in milliseconds
-			 */
-			closeDelay : {type : "int", group : "Misc", defaultValue : 100}
+				/**
+				 * This event is fired when the Tooltip has been closed
+				 * @since 1.11.0
+				 */
+				closed : {}
+			}
 		},
-		events : {
-
-			/**
-			 * This event is fired when the Tooltip has been closed
-			 * @since 1.11.0
-			 */
-			closed : {}
-		}
-	}});
+		renderer: null // this control has no renderer (it is abstract)
+	});
 
 
 	/**
-	 * Return the popup to use but do not expose it to the outside.
-	 * @type sap.ui.commons.Popup
-	 * @return The popup to use
+	 * Determines the popup to use but do not expose it to the outside.
+	 *
+	 * @returns {sap.ui.core.Popup} The popup to use
 	 * @private
 	 */
 	TooltipBase.prototype._getPopup = function() {
@@ -184,12 +186,15 @@ sap.ui.define([
 	};
 
 	/**
-	 *	Check if the parameter is a standard browser Tooltip.
-	 * @return {boolean} - true if the Tooltip is a standard tooltip type of string. False if not a string or empty.
+	 * Check if the parameter is a standard browser Tooltip.
+	 *
+	 * @param {string|sap.ui.core.TooltipBase} vTooltip The tooltip can be either a simple string or a subclass of
+	 *  {@link sap.ui.core.TooltipBase}.
+	 * @return {boolean} <code>true</code> if the Tooltip is a standard tooltip type of string. <code>false</code> if not a string or empty.
 	 * @private
 	 */
-	TooltipBase.prototype.isStandardTooltip = function(oTooltip) {
-		return typeof oTooltip === "string"  &&  !!oTooltip.trim();
+	TooltipBase.prototype.isStandardTooltip = function(vTooltip) {
+		return typeof vTooltip === "string"  &&  !!vTooltip.trim();
 	};
 
 	/**
@@ -339,9 +344,6 @@ sap.ui.define([
 				return;
 			}
 
-			// Tooltip will be displayed. Ensure the content is rendered. As this is no control, the popup will not take care of rendering.
-			sap.ui.getCore().getRenderManager().render(this, sap.ui.getCore().getStaticAreaRef(), true);
-
 			// Open popup
 			var oDomRef = oSC.getDomRef();
 			oPopup.setContent(this);
@@ -416,9 +418,6 @@ sap.ui.define([
 		this.aStoredTooltips = null;
 	};
 
-	/* Store reference to original setParent function */
-	TooltipBase.prototype._setParent = TooltipBase.prototype.setParent;
-
 	/**
 	 * Defines the new parent of this TooltipBase using {@link sap.ui.core.Element#setParent}.
 	 * Additionally closes the Tooltip.
@@ -433,7 +432,7 @@ sap.ui.define([
 		if (_oPopup && _oPopup.isOpen()) {
 			this.closePopup();
 		}
-		this._setParent.apply(this, arguments);
+		Control.prototype.setParent.apply(this, arguments);
 	};
 	/**
 	 * Handle the key down event Ctrl+i and ESCAPE.

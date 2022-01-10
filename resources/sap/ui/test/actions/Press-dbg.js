@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -27,6 +27,12 @@ sap.ui.define([
 	 * There are some basic controls for which OPA5 has defined <code>Press</code> control
 	 * adapters. For more information, see {@link sap.ui.test.actions.Press.controlAdapters}.
 	 *
+	 * @param {string}
+	 *            [sId] Optional ID for the new instance; generated automatically if
+	 *            no non-empty ID is given. Note: this can be omitted, no matter
+	 *            whether <code>mSettings</code> are given or not!
+	 * @param {object}
+	 *            [mSettings] Optional object with initial settings for the new instance
 	 * @extends sap.ui.test.actions.Action
 	 * @public
 	 * @name sap.ui.test.actions.Press

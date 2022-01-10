@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
-sap.ui.define(["sap/ui/Device","sap/ui/dom/denormalizeScrollLeftRTL","sap/ui/thirdparty/jquery"],function(e,r,i){"use strict";var s=function(i){var s=this.get(0);if(s){if(i===undefined){if(e.browser.msie||e.browser.edge){return s.scrollWidth-s.scrollLeft-s.clientWidth}else if(e.browser.firefox||e.browser.safari&&e.browser.version>=10){return s.scrollWidth+s.scrollLeft-s.clientWidth}else if(e.browser.webkit){return s.scrollLeft}else{return s.scrollLeft}}else{s.scrollLeft=r(i,s);return this}}};i.fn.scrollLeftRTL=s;return i});
+sap.ui.define(["sap/ui/dom/denormalizeScrollLeftRTL","sap/ui/util/_FeatureDetection","sap/ui/thirdparty/jquery"],function(t,e,i){"use strict";var r;if(e.initialScrollPositionIsZero()){r=function(t){return t.scrollWidth+t.scrollLeft-t.clientWidth}}else{r=function(t){return t.scrollLeft}}var n=function(e){var i=this.get(0);if(i){if(e===undefined){return r(i)}else{i.scrollLeft=t(e,i);return this}}};i.fn.scrollLeftRTL=n;return i});

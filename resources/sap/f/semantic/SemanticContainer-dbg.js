@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -8,10 +8,10 @@
 * Provides a private class <code>sap.f.semantic.SemanticContainer</code>.
 */
 sap.ui.define([
-	"sap/ui/base/Metadata",
+	"sap/ui/base/Object",
 	"./SemanticConfiguration",
 	"sap/base/Log"
-], function(Metadata, SemanticConfiguration, Log) {
+], function(BaseObject, SemanticConfiguration, Log) {
 	"use strict";
 
 	/**
@@ -24,7 +24,7 @@ sap.ui.define([
 	* @alias sap.f.semantic.SemanticContainer
 	* @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	*/
-	var SemanticContainer = Metadata.createClass("sap.f.semantic.SemanticContainer", {
+	var SemanticContainer = BaseObject.extend("sap.f.semantic.SemanticContainer", {
 		constructor : function(oContainer, oParent) {
 			if (!oContainer) {
 				Log.error("SemanticContainer :: missing argument - container reference", this);
@@ -33,6 +33,9 @@ sap.ui.define([
 
 			this._oContainer = oContainer;
 			this._oParent = oParent;
+		},
+		getInterface: function() {
+			return this; // no facade
 		}
 	});
 
@@ -59,7 +62,7 @@ sap.ui.define([
 	 * defined in <code>sap.f.semantic.SemanticConfiguration</code>.
 	 *
 	 * @param {sap.f.semantic.SemanticControl} oControl
-	 * @returns {Boolean}
+	 * @returns {boolean}
 	 */
 	SemanticContainer.prototype._shouldBePreprocessed = function(oControl) {
 		var sType = (oControl._getType && oControl._getType()) || oControl.getMetadata().getName();
@@ -108,7 +111,7 @@ sap.ui.define([
 	/**
 	* Determines if the <code>SemanticControl</code> is a <code>sap.f.semantic.MainAction</code>.
 	*
-	* @returns {Boolean}
+	* @returns {boolean}
 	*/
 	SemanticContainer.prototype._isMainAction = function(oControl) {
 		return SemanticConfiguration.isMainAction(oControl.getMetadata().getName());
@@ -118,7 +121,7 @@ sap.ui.define([
 	* Determines if the <code>SemanticControl</code> is a <code>Navigation</code> action,
 	* such as  <code>sap.f.semantic.FullScreenAction</code> and <code>sap.f.semantic.CloseAction</code>.
 	*
-	* @returns {Boolean}
+	* @returns {boolean}
 	*/
 	SemanticContainer.prototype._isNavigationAction = function(oControl) {
 		return SemanticConfiguration.isNavigationAction(oControl.getMetadata().getName());

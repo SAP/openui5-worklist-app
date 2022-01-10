@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -13,12 +13,12 @@
 
 // Provides class sap.m.semantic.SemanticConfiguration
 sap.ui.define([
-	"sap/ui/base/Metadata",
+	"sap/ui/base/Object",
 	"sap/m/library",
 	"sap/m/OverflowToolbarLayoutData",
 	"sap/ui/core/IconPool",
 	"sap/ui/core/InvisibleText"
-], function(Metadata, library, OverflowToolbarLayoutData, IconPool, InvisibleText) {
+], function(BaseObject, library, OverflowToolbarLayoutData, IconPool, InvisibleText) {
 	"use strict";
 
 	// shortcut for sap.m.ButtonType
@@ -36,15 +36,17 @@ sap.ui.define([
 	 * Constructor for an sap.m.semantic.SemanticConfiguration.
 	 *
 	 * @class Defines the visual properties and positioning for each supported semantic type
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 * @private
 	 * @since 1.30.0
 	 * @alias sap.m.semantic.SemanticConfiguration
 	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 
-	var SemanticConfiguration = Metadata.createClass("sap.m.semantic.SemanticConfiguration", {
-
+	var SemanticConfiguration = BaseObject.extend("sap.m.semantic.SemanticConfiguration", {
+		getInterface: function() {
+			return this; // no facade
+		}
 	});
 
 	/*
@@ -324,7 +326,7 @@ sap.ui.define([
 			getEventDelegates: function(oContext) {
 				return {
 					onAfterRendering: function () {
-						this.$().attr({"aria-haspopup": true});
+						this.$().attr({"aria-haspopup": "listbox"});
 					}.bind(oContext)
 				};
 			},
@@ -353,6 +355,13 @@ sap.ui.define([
 					tooltip: oBundle.getText("SEMANTIC_CONTROL_FILTER")
 				};
 			},
+			getEventDelegates: function(oContext) {
+				return {
+					onAfterRendering: function () {
+						this.$().attr({"aria-haspopup": "listbox"});
+					}.bind(oContext)
+				};
+			},
 			constraints: "IconOnly"
 		};
 
@@ -376,13 +385,14 @@ sap.ui.define([
 				return {
 					icon: IconPool.getIconURI("group-2"),
 					type: "IconOnly",
-					autoAdjustWidth: true
+					autoAdjustWidth: true,
+					tooltip: oBundle.getText("SEMANTIC_CONTROL_GROUP")
 				};
 			},
 			getEventDelegates: function(oContext) {
 				return {
 					onAfterRendering: function () {
-						this.$().attr({"aria-haspopup": true});
+						this.$().attr({"aria-haspopup": "listbox"});
 					}.bind(oContext)
 				};
 			},
@@ -462,8 +472,6 @@ sap.ui.define([
 		oTypeConfigs["sap.m.semantic.MessagesIndicator"] = {
 			position: SemanticConfiguration.prototype._PositionInPage.footerLeft,
 			getSettings: function() {
-				var sTooltipId = InvisibleText.getStaticId("sap.m", "SEMANTIC_CONTROL_MESSAGES_INDICATOR");
-
 				return {
 					icon: IconPool.getIconURI("message-popup"),
 					text: {
@@ -473,7 +481,6 @@ sap.ui.define([
 						}
 					},
 					tooltip: oBundle.getText("SEMANTIC_CONTROL_MESSAGES_INDICATOR"),
-					ariaLabelledBy: sTooltipId,
 					type: ButtonType.Emphasized,
 					visible: {
 						path: "message>/",

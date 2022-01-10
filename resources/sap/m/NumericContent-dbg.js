@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -25,6 +25,7 @@ sap.ui.define([
 		"cs": 4,
 		"da": 4,
 		"de": 8,
+		"de-de": 8,
 		"de_at": 8,
 		"de_ch": 8,
 		"el": 4,
@@ -93,6 +94,9 @@ sap.ui.define([
 		"zh_tw": 6
 	};
 
+	var DeviationIndicator = library.DeviationIndicator,
+		ValueColor = library.ValueColor;
+
 	/**
 	 * Constructor for a new sap.m.GenericTile control.
 	 *
@@ -103,7 +107,7 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 * @since 1.34
 	 *
 	 * @public
@@ -155,7 +159,7 @@ sap.ui.define([
 				 * Updates the size of the control. If not set, then the default size is applied based on the device tile.
 				 * @deprecated Since version 1.38.0. The NumericContent control has now a fixed size, depending on the used media (desktop, tablet or phone).
 				 */
-				"size": {type: "sap.m.Size", group: "Appearance", defaultValue: "Auto"},
+				"size": {type: "sap.m.Size", group: "Appearance", defaultValue: "Auto", deprecated: true},
 
 				/**
 				 * The number of characters of the <code>value</code> property to display.
@@ -346,7 +350,6 @@ sap.ui.define([
 		var sValue = this.getValue();
 		var sScale = this.getScale();
 		var sEmptyValue;
-		var sMeaning = this._rb.getText(("SEMANTIC_COLOR_" + this.getValueColor()).toUpperCase());
 		var sAltText = "";
 		if (this.getNullifyValue()) {
 			sEmptyValue = "0";
@@ -362,12 +365,15 @@ sap.ui.define([
 		} else {
 			sAltText = sAltText.concat(sEmptyValue);
 		}
-		sAltText = sAltText.concat("\n");
-		if (this.getIndicator() && this.getIndicator() !== library.DeviationIndicator.None) {
-			sAltText = sAltText.concat(this._rb.getText(("NUMERICCONTENT_DEVIATION_" + this.getIndicator()).toUpperCase()));
+		if (this.getIndicator() && this.getIndicator() !== DeviationIndicator.None) {
 			sAltText = sAltText.concat("\n");
+			sAltText = sAltText.concat(this._rb.getText(("NUMERICCONTENT_DEVIATION_" + this.getIndicator()).toUpperCase()));
 		}
-		sAltText = sAltText.concat(sMeaning);
+		if (this.getValueColor() !== ValueColor.None) {
+			var sMeaning = this._rb.getText(("SEMANTIC_COLOR_" + this.getValueColor()).toUpperCase());
+			sAltText = sAltText.concat("\n");
+			sAltText = sAltText.concat(sMeaning);
+		}
 		return sAltText;
 	};
 

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -21,9 +21,6 @@ sap.ui.define([
 
 	// shortcut for sap.ui.core.VerticalAlign
 	var VerticalAlign = coreLibrary.VerticalAlign;
-
-	// shortcut for sap.m.PopinLayout
-	var PopinLayout = library.PopinLayout;
 
 	/**
 	 * ColumnListItem renderer.
@@ -162,7 +159,7 @@ sap.ui.define([
 				bRenderCell = true,
 				oCell = aCells[oColumn.getInitialOrder()];
 
-			if (!oCell || !oColumn.getVisible() || oColumn.isPopin()) {
+			if (!oColumn.getVisible() || !oCell || oColumn.isPopin()) {
 				// update the visible index of the column
 				oColumn.setIndex(-1);
 				return;
@@ -174,7 +171,10 @@ sap.ui.define([
 
 			// check column properties
 			if (oColumn) {
-				rm.class(oColumn.getStyleClass(true));
+				var aStyleClass = oColumn.getStyleClass(true).split(" ");
+				aStyleClass && aStyleClass.forEach(function(sClassName) {
+					rm.class(sClassName);
+				});
 
 				// aria for virtual keyboard mode
 				oHeader = oColumn.getHeader();
@@ -228,6 +228,15 @@ sap.ui.define([
 		}, this);
 	};
 
+	ColumnListItemRenderer.renderDummyCell = function(rm, oTable) {
+		rm.openStart("td");
+		rm.class("sapMListTblDummyCell");
+		rm.attr("role", "presentation");
+		rm.attr("aria-hidden", "true");
+		rm.openEnd();
+		rm.close("td");
+	};
+
 	ColumnListItemRenderer.applyAriaLabelledBy = function(oHeader, oCell) {
 		/* add the header as an aria-labelled by association for the cells if it does not already exists */
 		/* only set the header text to the aria-labelledby association if the header is a textual control and visible */
@@ -268,14 +277,10 @@ sap.ui.define([
 
 		// cell
 		rm.openStart("td", oLI.getId() + "-subcell");
-		rm.attr("colspan", oTable.getColSpan());
+		rm.class("sapMListTblSubRowCell");
+		rm.attr("colspan", oTable.shouldRenderDummyColumn() ? oTable.getColSpan() + 1 : oTable.getColSpan());
 
 		var sPopinLayout = oTable.getPopinLayout();
-		// overwrite sPopinLayout=Block to avoid additional margin-top in IE and Edge
-		if (Device.browser.msie || (Device.browser.edge && Device.browser.version < 16)) {
-			sPopinLayout = PopinLayout.Block;
-		}
-
 		rm.attr("aria-labelledby", this.getAriaAnnouncement(null, "TABLE_POPIN_ROLE_DESCRIPTION"));
 		rm.openEnd();
 
@@ -299,13 +304,16 @@ sap.ui.define([
 				return;
 			}
 
-			var sStyleClass = oColumn.getStyleClass(),
+			var aStyleClass = oColumn.getStyleClass().split(" "),
 				sPopinDisplay = oColumn.getPopinDisplay();
 
 			/* row start */
 			rm.openStart("div");
 			rm.class("sapMListTblSubCntRow");
-			sStyleClass && rm.class(sStyleClass);
+
+			aStyleClass && aStyleClass.forEach(function(sClassName) {
+				rm.class(sClassName);
+			});
 			rm.openEnd();
 
 			/* header cell */
@@ -318,7 +326,7 @@ sap.ui.define([
 				rm.close("div");
 
 				rm.openStart("div").class("sapMListTblSubCntSpr").openEnd();
-				rm.text(":");
+				rm.text(Core.getLibraryResourceBundle("sap.m").getText("TABLE_POPIN_LABEL_COLON"));
 				rm.close("div");
 			}
 
@@ -352,6 +360,26 @@ sap.ui.define([
 	 * @param {sap.m.ListItemBase} [oLI] List item
 	 */
 	ColumnListItemRenderer.addLegacyOutlineClass = function(rm, oLI) {
+		var oTable = oLI.isA("sap.m.Table") ? oLI : oLI.getTable();
+		if (oTable && !oTable.hasPopin() && oTable.shouldRenderDummyColumn()) {
+			rm.class("sapMTableRowCustomFocus");
+		}
+	};
+
+	ColumnListItemRenderer.renderContentLatter = function(rm, oLI) {
+		var oTable = oLI.getTable();
+
+		if (oTable && oTable.shouldRenderDummyColumn()) {
+			if (!oTable.hasPopin()) {
+				ListItemBaseRenderer.renderContentLatter.apply(this, arguments);
+				ColumnListItemRenderer.renderDummyCell(rm, oTable);
+			} else {
+				ColumnListItemRenderer.renderDummyCell(rm, oTable);
+				ListItemBaseRenderer.renderContentLatter.apply(this, arguments);
+			}
+		} else {
+			ListItemBaseRenderer.renderContentLatter.apply(this, arguments);
+		}
 	};
 
 	return ColumnListItemRenderer;

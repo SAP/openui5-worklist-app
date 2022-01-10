@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(["sap/base/Log"], function(Log) {
@@ -11,6 +11,7 @@ sap.ui.define(["sap/base/Log"], function(Log) {
 	 * @private
 	 * @experimental
 	 * @since 1.33
+	 * @deprecated Since 1.90. Use a {@link sap.ui.core.routing.async.Targets async.Targets} instead
 	 */
 	return {
 

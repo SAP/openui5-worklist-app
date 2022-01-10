@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*
@@ -42,7 +42,7 @@ sap.ui.define(["sap/ui/performance/trace/FESR", "sap/base/Log"], function(FESR, 
 		// TODO this should be part of a Configuration
 		// *********** Include E2E-Trace Scripts *************
 		if (/sap-ui-xx-e2e-trace=(true|x|X)/.test(location.search)) {
-			sap.ui.requireSync("sap/ui/core/support/trace/E2eTraceLib");
+			sap.ui.require(["sap/ui/core/support/trace/E2eTraceLib"]);
 		}
 	};
 });

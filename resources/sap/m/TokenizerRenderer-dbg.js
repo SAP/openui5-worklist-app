@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(['sap/ui/Device', 'sap/ui/core/InvisibleText'],
@@ -44,9 +44,11 @@ sap.ui.define(['sap/ui/Device', 'sap/ui/core/InvisibleText'],
 		var aTokens = oControl.getTokens();
 		if (!aTokens.length) {
 			oRm.class("sapMTokenizerEmpty");
+			oRm.attr("aria-hidden", "true");
 		}
 
 		oRm.style("max-width", oControl.getMaxWidth());
+
 		var sPixelWdth = oControl.getWidth();
 		if (sPixelWdth) {
 			oRm.style("width", sPixelWdth);
@@ -83,9 +85,13 @@ sap.ui.define(['sap/ui/Device', 'sap/ui/core/InvisibleText'],
 			oControl._bCopyToClipboardSupport = true;
 		}
 
-		oRm.openStart("div");
-		oRm.attr("id", oControl.getId() + "-scrollContainer");
+		oRm.openStart("div", oControl.getId() + "-scrollContainer");
 		oRm.class("sapMTokenizerScrollContainer");
+
+		if (oControl.getHiddenTokensCount() === oControl.getTokens().length) {
+			oRm.class("sapMTokenizerScrollContainerNoVisibleTokens");
+		}
+
 		oRm.openEnd();
 
 		TokenizerRenderer._renderTokens(oRm, oControl);
@@ -106,14 +112,8 @@ sap.ui.define(['sap/ui/Device', 'sap/ui/core/InvisibleText'],
 			tokens = oControl.getTokens(),
 			length = tokens.length;
 
-		if (oControl.getReverseTokens()) {
-			for (i = length - 1; i > -1; i--) {
-				oRm.renderControl(tokens[i]);
-			}
-		} else {
-			for (i = 0; i < length; i++) {
-				oRm.renderControl(tokens[i]);
-			}
+		for (i = 0; i < length; i++) {
+			oRm.renderControl(tokens[i]);
 		}
 	};
 
@@ -126,7 +126,9 @@ sap.ui.define(['sap/ui/Device', 'sap/ui/core/InvisibleText'],
 	TokenizerRenderer._renderIndicator = function(oRm, oControl){
 		oRm.openStart("span");
 		oRm.class("sapMTokenizerIndicator");
-		oRm.class("sapUiHidden");
+		if (oControl.getHiddenTokensCount() === 0) {
+			oRm.class("sapUiHidden");
+		}
 		oRm.openEnd().close("span");
 	};
 

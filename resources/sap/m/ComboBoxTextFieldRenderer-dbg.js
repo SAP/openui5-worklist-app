@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -50,21 +50,6 @@ sap.ui.define([
 		 *
 		 */
 		ComboBoxTextFieldRenderer.getAriaRole = function() {};
-
-
-		/**
-		 * Returns the inner aria describedby ids for the accessibility.
-		 *
-		 * @param {sap.ui.core.Control} oControl an object representation of the control.
-		 * @returns {String|undefined}
-		 */
-		ComboBoxTextFieldRenderer.getAriaDescribedBy = function(oControl) {
-			var sAriaDescribedBy = InputBaseRenderer.getAriaDescribedBy.apply(this, arguments);
-			if (Device.browser.msie) {
-				return (sAriaDescribedBy || "") + " " + oControl.oInvisibleText.getId();
-			}
-			return sAriaDescribedBy;
-		};
 
 		/**
 		 * Add extra styles for input container.

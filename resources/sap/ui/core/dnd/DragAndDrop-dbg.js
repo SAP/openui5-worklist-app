@@ -1,17 +1,16 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
 	"sap/ui/Device",
 	"../UIArea",
-	'sap/base/util/extend',
 	"sap/ui/thirdparty/jquery",
 	// jQuery Plugin "control"
 	"sap/ui/dom/jquery/control"
 ],
-function(Device, UIArea, extend, jQuery) {
+function(Device, UIArea, jQuery) {
 	"use strict";
 
 	/**
@@ -31,7 +30,6 @@ function(Device, UIArea, extend, jQuery) {
 		aValidDropInfos = [],		// valid DropInfos configured for the current drop target
 		oDragSession = null,		// stores active drag session throughout a drag activity
 		$DropIndicator,				// drop position indicator
-		$DropIndicatorWrapper,		//  drop position indicator wrapper
 		$GhostContainer,			// container to place custom ghosts
 		sCalculatedDropPosition,	// calculated position of the drop action relative to the valid dropped control.
 		iTargetEnteringTime,		// timestamp of drag enter
@@ -79,7 +77,7 @@ function(Device, UIArea, extend, jQuery) {
 	}
 
 	function setDragGhost(oDragControl, oEvent) {
-		if (Device.browser.msie || !oDragControl || !oDragControl.getDragGhost) {
+		if (!oDragControl || !oDragControl.getDragGhost) {
 			return;
 		}
 
@@ -105,10 +103,7 @@ function(Device, UIArea, extend, jQuery) {
 			mIndicatorConfig,
 			oDataTransfer = oEvent.originalEvent.dataTransfer,
 			setTransferData = function(sType, sData) {
-				// set to original dataTransfer object if type is supported by the current browser (non-text causes error in IE+Edge)
-				if (oDataTransfer && sType == "text" || (Device.browser != "msie" && Device.browser != "edge")) {
-					oDataTransfer.setData(sType, sData);
-				}
+				oDataTransfer.setData(sType, sData);
 			};
 
 		/**
@@ -129,8 +124,7 @@ function(Device, UIArea, extend, jQuery) {
 		return /** @lends sap.ui.core.dnd.DragSession */ {
 			/**
 			 * Sets string data with any MIME type.
-			 * <b>Note:</b> This works in all browsers, apart from Internet Explorer and Microsoft Edge. It also works if you navigate between
-			 * different windows.
+			 * <b>Note:</b> This works if you navigate between different windows.
 			 *
 			 * @param {string} sKey The key of the data
 			 * @param {string} sData Data
@@ -155,8 +149,7 @@ function(Device, UIArea, extend, jQuery) {
 
 			/**
 			 * Sets string data with plain text MIME type.
-			 * <b>Note:</b> This works in all browsers, including Internet Explorer and Microsoft Edge. It also works if you navigate between
-			 * different windows.
+			 * <b>Note:</b> This works if you navigate between different windows.
 			 *
 			 * @param {string} sData Data
 			 * @public
@@ -181,8 +174,7 @@ function(Device, UIArea, extend, jQuery) {
 
 			/**
 			 * Sets any type of data (even functions, pointers, anything non-serializable) with any MIME type.
-			 * This works in all browsers, including Internet Explorer and Microsoft Edge, but only within a UI5 application within the same
-			 * window/frame.
+			 * <b>Note:</b> This works only within a UI5 application within the same window/frame.
 			 *
 			 * @param {string} sKey The key of the data
 			 * @param {any} vData Data
@@ -275,7 +267,7 @@ function(Device, UIArea, extend, jQuery) {
 			/**
 			 * Returns the calculated position of the drop action relative to the valid dropped control.
 			 *
-			 * @returns {String}
+			 * @returns {string}
 			 * @protected
 			 */
 			getDropPosition: function() {
@@ -296,25 +288,15 @@ function(Device, UIArea, extend, jQuery) {
 			return $DropIndicator;
 		}
 
-		// not adding the div wrapper around DndIndicator as it prevents IE from scrolling
-		if (!Device.browser.msie) {
-			$DropIndicatorWrapper = jQuery("<div class='sapUiDnDIndicatorWrapper'></div>");
-		}
-
 		$DropIndicator = jQuery("<div class='sapUiDnDIndicator'></div>");
-
-		if (!$DropIndicatorWrapper) {
-			jQuery(sap.ui.getCore().getStaticAreaRef()).append($DropIndicator);
-		} else {
-			jQuery(sap.ui.getCore().getStaticAreaRef()).append($DropIndicatorWrapper);
-			$DropIndicator.appendTo($DropIndicatorWrapper);
-		}
+		jQuery(sap.ui.getCore().getStaticAreaRef()).append($DropIndicator);
 		return $DropIndicator;
 	}
 
 	function hideDropIndicator() {
 		if ($DropIndicator) {
-			$DropIndicator.removeAttr("style").hide();
+			$DropIndicator.removeAttr("style");
+			$DropIndicator.hide();
 			mLastIndicatorStyle = {};
 		}
 	}
@@ -422,7 +404,8 @@ function(Device, UIArea, extend, jQuery) {
 			mLastIndicatorStyle.height != mStyle.height) {
 			$Indicator.attr("data-drop-layout", sDropLayout);
 			$Indicator.attr("data-drop-position", sDropPosition);
-			$Indicator.css(extend(mStyle, mIndicatorConfig)).show();
+			$Indicator.css(Object.assign(mStyle, mIndicatorConfig));
+			$Indicator.show();
 			mLastIndicatorStyle = mStyle;
 		}
 
@@ -523,7 +506,7 @@ function(Device, UIArea, extend, jQuery) {
 		// text selection workaround since preventDefault on dragstart does not help
 		// https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/10375756/
 		// https://bugzilla.mozilla.org/show_bug.cgi?id=800050
-		if ((Device.browser.msie || Device.browser.firefox || Device.browser.edge) && isSelectableElement(oEvent.target)) {
+		if ((Device.browser.firefox) && isSelectableElement(oEvent.target)) {
 			oDraggableAncestorNode = jQuery(oEvent.target).closest("[data-sap-ui-draggable=true]").prop("draggable", false)[0];
 		}
 	};
@@ -593,8 +576,10 @@ function(Device, UIArea, extend, jQuery) {
 		// set dragging class of the drag source
 		addStyleClass(oDragControl, "sapUiDnDDragging");
 
-		// prevent HTML element from scrolling during drag-and-drop
-		jQuery("html").addClass("sapUiDnDNoScrolling");
+		// prevent HTML element from scrolling during drag-and-drop if the drag control is already in a scroll container
+		if (jQuery(oEvent.target).closest(".sapUiScrollDelegate")[0]) {
+			jQuery("html").addClass("sapUiDnDNoScrolling");
+		}
 	};
 
 	DnD.onbeforedragenter = function(oEvent) {

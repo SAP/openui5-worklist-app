@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -42,6 +42,11 @@ sap.ui.define([
 	ResponsiveSplitterRenderer.renderPaginator = function (oRm, oRespSplitter) {
 		var iMaxPageCount = oRespSplitter._getMaxPageCount(),
 			aPages = oRespSplitter.getAggregation("_pages") || [];
+
+		// Render paginator when there are more than one pages.
+		if (iMaxPageCount <= 1) {
+			return;
+		}
 
 		oRm.openStart("div")
 			.attr("role", "navigation")

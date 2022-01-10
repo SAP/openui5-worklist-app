@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -309,22 +309,6 @@ sap.ui.define([
 						system: Device.system.SYSTEMTYPE.DESKTOP,
 						browserName: Device.browser.BROWSER.CHROME,
 						browserVersion: 49
-					});
-					aSupportedEnv.push({
-						system: Device.system.SYSTEMTYPE.DESKTOP,
-						browserName: Device.browser.BROWSER.INTERNET_EXPLORER,
-						browserVersion: 11
-					});
-					aSupportedEnv.push({
-						system: Device.system.SYSTEMTYPE.DESKTOP,
-						browserName: Device.browser.BROWSER.EDGE,
-						browserVersion: 80
-					});
-					aSupportedEnv.push({
-						system: Device.system.SYSTEMTYPE.DESKTOP,
-						os: Device.os.OS.WINDOWS,
-						browserName: Device.browser.BROWSER.FIREFOX,
-						browserVersion: 74
 					});
 					aSupportedEnv.push({
 						system: Device.system.SYSTEMTYPE.DESKTOP,

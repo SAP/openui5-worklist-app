@@ -1,10 +1,11 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define([], function () {
+sap.ui.define(['./library'],
+		function (library) {
 	"use strict";
 
 	/**
@@ -14,6 +15,9 @@ sap.ui.define([], function () {
 	var IconTabHeaderRenderer = {
 		apiVersion: 2
 	};
+
+	// shortcut for sap.m.TabsOverflowMode
+	var TabsOverflowMode = library.TabsOverflowMode;
 
 	/**
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
@@ -36,17 +40,13 @@ sap.ui.define([], function () {
 
 		var oIconTabBar = oControl.getParent(),
 			bUpperCase = oIconTabBar && oIconTabBar.isA('sap.m.IconTabBar') && oIconTabBar.getUpperCase(),
-			oAriaTexts = oControl._oAriaTexts;
+			mAriaTexts = oControl.getAriaTexts() || {};
 
 		// render wrapper div
 		oRM.openStart("div", oControl)
 			.class("sapMITH")
 			.class("sapContrastPlus")
 			.class("sapMITHBackgroundDesign" + oControl.getBackgroundDesign());
-
-		if (aItems.length) {
-			oRM.class("sapMITHOverflowList");
-		}
 
 		// Check for upperCase property on IconTabBar
 		if (bUpperCase) {
@@ -63,21 +63,32 @@ sap.ui.define([], function () {
 
 		if (bInLine) {
 			oRM.class("sapMITBInLine");
+			oRM.class("sapMITBTextOnly");
 		}
 
 		oRM.accessibilityState(oControl, {
 			role: "navigation"
 		});
 
-		if (oAriaTexts.headerLabel) {
+		if (mAriaTexts.headerLabel) {
 			oRM.accessibilityState(oControl, {
-				label: oAriaTexts.headerLabel
+				label: mAriaTexts.headerLabel
 			});
 		}
 
 		oRM.openEnd();
 
-		if (oAriaTexts.headerDescription) {
+		if (aItems.length && oControl.getTabsOverflowMode() === TabsOverflowMode.StartAndEnd) {
+			oRM.openStart("div")
+				.class("sapMITHStartOverflow")
+				.openEnd();
+
+			oControl._getStartOverflow().render(oRM);
+
+			oRM.close("div");
+		}
+
+		if (mAriaTexts.headerDescription) {
 			oRM.renderControl(oControl._getInvisibleHeadText());
 		}
 
@@ -89,7 +100,7 @@ sap.ui.define([], function () {
 			orientation: "horizontal"
 		});
 
-		if (oAriaTexts.headerDescription) {
+		if (mAriaTexts.headerDescription) {
 			oRM.accessibilityState({
 				describedby: oControl._getInvisibleHeadText().getId()
 			});
@@ -112,7 +123,7 @@ sap.ui.define([], function () {
 
 		if (aItems.length) {
 			oRM.openStart("div")
-				.class("sapMITHOverflow")
+				.class("sapMITHEndOverflow")
 				.openEnd();
 
 			oControl._getOverflow().render(oRM);

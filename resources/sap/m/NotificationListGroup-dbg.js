@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -66,7 +66,7 @@ function(
 	 * @extends sap.m.NotificationListBase
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @constructor
 	 * @public
@@ -170,6 +170,8 @@ function(
 					var isCollapsed = !this.getCollapsed();
 					this.setCollapsed(isCollapsed);
 					this.fireOnCollapse({collapsed: isCollapsed});
+
+					this.getAggregation("_collapseButton").focus();
 				}.bind(this)
 			});
 

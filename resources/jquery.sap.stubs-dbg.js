@@ -1,10 +1,9 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-/* global console */
 sap.ui.define(["sap/base/Log", "sap/base/util/defineLazyProperty", "sap/ui/thirdparty/jquery"],
 	function(Log, defineLazyProperty, jQuery) {
 	"use strict";
@@ -150,7 +149,6 @@ sap.ui.define(["sap/base/Log", "sap/base/util/defineLazyProperty", "sap/ui/third
 					"fesr",
 					"passport"
 				],
-				"jquery.sap.unicode": ["isStringNFC"],
 				"jquery.sap.xml": [
 					"parseXML",
 					"serializeXML",
@@ -220,7 +218,8 @@ sap.ui.define(["sap/base/Log", "sap/base/util/defineLazyProperty", "sap/ui/third
 					name: sTargetName + sProperty
 				};
 			});
-			sap.ui.requireSync(sModule);
+
+			sap.ui.requireSync(sModule); // legacy-relevant: lazy loading stubs for legacy APIs
 			return oTarget[sProperty];
 		};
 	}

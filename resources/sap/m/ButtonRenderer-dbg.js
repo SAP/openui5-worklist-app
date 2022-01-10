@@ -1,25 +1,34 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
-	'sap/ui/Device',
 	'sap/ui/core/library',
 	'sap/ui/core/IconPool',
+	'sap/ui/core/ShortcutHintsMixin',
 	'sap/m/library',
 	'sap/ui/core/InvisibleText'
 ],
 
-	function(Device, coreLibrary, IconPool, library, InvisibleText) {
+	function(coreLibrary, IconPool, ShortcutHintsMixin, library, InvisibleText) {
 	"use strict";
 
 	// shortcut for sap.m.ButtonType
 	var ButtonType = library.ButtonType;
 
+	// shortcut for sap.m.ButtonAccessibilityType
+	var ButtonAccessibilityType = library.ButtonAccessibilityType;
+
 	// shortcut for sap.ui.core.TextDirection
 	var TextDirection = coreLibrary.TextDirection;
+
+	// shortcut for sap.m.BadgeState
+	var BadgeState = library.BadgeState;
+
+	// shortcut for sap.ui.core.aria.HasPopup
+	var AriaHasPopup = coreLibrary.aria.HasPopup;
 
 	/**
 	 * Button renderer.
@@ -40,15 +49,15 @@ sap.ui.define([
 	ButtonRenderer.render = function(oRm, oButton) {
 
 		// get control properties
+		var sButtonId = oButton.getId();
 		var sType = oButton.getType();
 		var bEnabled = oButton.getEnabled();
 		var sWidth = oButton.getWidth();
 		var sTooltip = oButton._getTooltip();
 		var sText = oButton._getText();
 		var sTextDir = oButton.getTextDirection();
-		var bIE_Edge = Device.browser.internet_explorer || Device.browser.edge;
 		// render bdi tag only if the browser is different from IE and Edge since it is not supported there
-		var bRenderBDI = (sTextDir === TextDirection.Inherit) && !bIE_Edge;
+		var bRenderBDI = (sTextDir === TextDirection.Inherit);
 
 		// get icon from icon pool
 		var sBackURI = IconPool.getIconURI("nav-back");
@@ -69,28 +78,7 @@ sap.ui.define([
 		}
 
 		//ARIA attributes
-		var mAccProps = {};
-
-		var sTooltipId = oButton.getId() + "-tooltip";
-
-		var sTextId = ButtonRenderer.getButtonTypeAriaLabelId(sType);
-		if (sTextId && sTooltip) {
-			mAccProps["describedby"] = {value: sTooltipId + " " + sTextId, append: true};
-		} else if (sTextId) {
-			mAccProps["describedby"] = {value: sTextId, append: true};
-		} else if (sTooltip) {
-			mAccProps["describedby"] = {value: sTooltipId, append: true};
-		}
-
-		// add reference only to the text content of the button
-		// so it can be read otherwise it causes the issue reported in BCP: 168022332, 1970225991
-		if (oButton._determineSelfReferencePresence()) {
-			mAccProps["labelledby"] = { value: oButton.getId() + "-content", append: true };
-		}
-
-		// prevent rendering of aria-disabled attribute
-		// no matter what state we have in the control
-		mAccProps["disabled"] = null;
+		var mAccProps = ButtonRenderer.generateAccProps(oButton);
 
 		//descendants (e.g. ToggleButton) callback
 		if (this.renderAccessibilityAttributes) {
@@ -118,7 +106,7 @@ sap.ui.define([
 		}
 
 		// add tooltip if available
-		if (sTooltip) {
+		if (sTooltip && !ShortcutHintsMixin.isDOMIDRegistered(sButtonId)) {
 			oRm.attr("title", sTooltip);
 		}
 
@@ -142,7 +130,7 @@ sap.ui.define([
 		oRm.openEnd();
 
 		// start inner button tag
-		oRm.openStart("span", oButton.getId() + "-inner");
+		oRm.openStart("span", sButtonId + "-inner");
 
 		// button style class
 		if (!oButton._isUnstyled()) {
@@ -157,10 +145,6 @@ sap.ui.define([
 		// check if button is focusable (not disabled)
 		if (bEnabled) {
 			oRm.class("sapMFocusable");
-			// special focus handling for IE
-			if (bIE_Edge) {
-				oRm.class("sapMIE");
-			}
 		}
 
 		if (!oButton._isUnstyled()) {
@@ -208,7 +192,7 @@ sap.ui.define([
 
 		// write button text
 		if (sText) {
-			oRm.openStart("span", oButton.getId() + "-content");
+			oRm.openStart("span", sButtonId + "-content");
 			oRm.class("sapMBtnContent");
 			// check if textDirection property is not set to default "Inherit" and add "dir" attribute
 			if (sTextDir !== TextDirection.Inherit) {
@@ -217,7 +201,7 @@ sap.ui.define([
 			oRm.openEnd();
 
 			if (bRenderBDI) {
-				oRm.openStart("bdi", oButton.getId() + "-BDI-content");
+				oRm.openStart("bdi", sButtonId + "-BDI-content");
 				oRm.openEnd();
 			}
 			oRm.text(sText);
@@ -232,20 +216,12 @@ sap.ui.define([
 			this.writeImgHtml(oRm, oButton);
 		}
 
-		// special handling for IE focus outline
-		if (bIE_Edge && bEnabled) {
-			oRm.openStart("span");
-			oRm.class("sapMBtnFocusDiv");
-			oRm.openEnd();
-			oRm.close("span");
-		}
-
 		// end inner button tag
 		oRm.close("span");
 
 		// add tooltip if available
 		if (sTooltip) {
-			oRm.openStart("span", sTooltipId);
+			oRm.openStart("span", sButtonId + "-tooltip");
 			oRm.class("sapUiInvisibleText");
 			oRm.openEnd();
 			oRm.text(sTooltip);
@@ -267,6 +243,21 @@ sap.ui.define([
 	 * @private
 	 */
 	ButtonRenderer.writeImgHtml = function(oRm, oButton) {
+		var sType = oButton.getType(),
+			bHasExplicitIcon = oButton.getIcon(),
+			bIsBackType = (sType === ButtonType.Back) || (sType === ButtonType.Up);
+
+		// Avoid duplicated rendering of the default Back/Up icon. Due to legacy
+		// reasons, those types are different than the others and can have 2 icons
+		// at the same time - here we render the one that's explicitly provided.
+		//
+		// If such isn't provided, our button will get the default icon for its type.
+		// However, because Back/Up's default icon is already rendered, two identical
+		// icons will appear unless we escape this here.
+		if (!bHasExplicitIcon && bIsBackType) {
+			return;
+		}
+
 		oRm.renderControl(oButton._getImage(
 			oButton.getId() + "-img",
 			oButton._getAppliedIcon(),
@@ -311,6 +302,97 @@ sap.ui.define([
 
 	ButtonRenderer.getButtonTypeAriaLabelId = function(sType) {
 		return InvisibleText.getStaticId("sap.m", mARIATextKeys[sType]);
+	};
+
+	ButtonRenderer.getBadgeTextId = function(oButton) {
+		return oButton._oBadgeData && oButton._oBadgeData.value !== "" && oButton._oBadgeData.state !== BadgeState.Disappear ? oButton._getBadgeInvisibleText().getId() : "";
+	};
+
+	ButtonRenderer.generateAccProps = function (oButton) {
+		var sText = oButton._getText(),
+			sHasPopupType = oButton.getAriaHasPopup(),
+			mAccProps;
+
+		if (sText) {
+			mAccProps = ButtonRenderer.generateTextButtonAccProps(oButton);
+		} else {
+			mAccProps = ButtonRenderer.generateIconOnlyButtonAccProps(oButton);
+		}
+
+		// prevent rendering of aria-disabled attribute to avoid having
+		// both aria-disabled and disabled at the same time
+		mAccProps["disabled"] = null;
+
+		mAccProps["haspopup"] = (sHasPopupType === AriaHasPopup.None) ? null : sHasPopupType.toLowerCase();
+
+		return mAccProps;
+	};
+
+	ButtonRenderer.generateIconOnlyButtonAccProps = function (oButton) {
+		var sTypeId = ButtonRenderer.getButtonTypeAriaLabelId(oButton.getType()),
+			sBadgeTextId = this.getBadgeTextId(oButton),
+			sTooltip = oButton._getTooltip(),
+			sTooltipId = oButton.getId() + "-tooltip", // Icon-only buttons will always have a tooltip
+			sAccessibilityType = oButton._determineAccessibilityType(),
+			mAccProps = {},
+			sDescription;
+
+		switch (sAccessibilityType) {
+			case ButtonAccessibilityType.Default:
+				mAccProps["label"] = { value: sTooltip, append: true };
+				break;
+			case ButtonAccessibilityType.Described:
+				mAccProps["label"] = { value: sTooltip, append: true };
+
+				sDescription = (sTypeId + " " + sBadgeTextId).trim();
+				sDescription && (mAccProps["describedby"] = { value: sDescription, append: true });
+				break;
+			case ButtonAccessibilityType.Labelled:
+				mAccProps["describedby"] = { value: sTooltipId, append: true };
+				break;
+			case ButtonAccessibilityType.Combined:
+				mAccProps["describedby"] = { value: (sTooltipId + " " + sTypeId + " " + sBadgeTextId).trim(), append: true };
+				break;
+			default:
+				break;
+		}
+
+		return mAccProps;
+	};
+
+	ButtonRenderer.generateTextButtonAccProps = function (oButton) {
+		var sButtonId = oButton.getId(),
+			sTypeId = ButtonRenderer.getButtonTypeAriaLabelId(oButton.getType()),
+			sBadgeTextId = this.getBadgeTextId(oButton),
+			sTooltipId = oButton._getTooltip() ? sButtonId + "-tooltip" : "", // Don't assign if empty (to ease conditions in the switch)
+			sInnerTextId = sButtonId + "-content",
+			sAccessibilityType = oButton._determineAccessibilityType(),
+			bPlaceSelfReference = oButton._determineSelfReferencePresence(),
+			mAccProps = {},
+			sDescription;
+
+		switch (sAccessibilityType) {
+			case ButtonAccessibilityType.Default:
+				sTooltipId && (mAccProps["describedby"] = { value: sTooltipId, append: true });
+				break;
+			case ButtonAccessibilityType.Described:
+				sDescription = (sTooltipId + " " + sTypeId + " " + sBadgeTextId).trim();
+				sDescription && (mAccProps["describedby"] = { value: sDescription, append: true });
+				break;
+			case ButtonAccessibilityType.Labelled:
+				bPlaceSelfReference && (mAccProps["labelledby"] = { value: sInnerTextId, append: true });
+				sTooltipId && (mAccProps["describedby"] = { value: sTooltipId, append: true });
+				break;
+			case ButtonAccessibilityType.Combined:
+				sDescription = (sTooltipId + " " + sTypeId + " " + sBadgeTextId).trim();
+				sDescription && (mAccProps["describedby"] = { value: sDescription, append: true });
+				bPlaceSelfReference && (mAccProps["labelledby"] = { value: sInnerTextId, append: true });
+				break;
+			default:
+				break;
+		}
+
+		return mAccProps;
 	};
 
 	return ButtonRenderer;

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(["sap/base/Log"], function(Log) {
@@ -52,7 +52,11 @@ sap.ui.define(["sap/base/Log"], function(Log) {
 			return this._alignTargetsInfo(vTargets).reduce(function(oPromise, oTargetInfo) {
 				var oTargetCreateInfo = {
 					prefix: oTargetInfo.prefix,
-					propagateTitle: oTargetInfo.propagateTitle || false
+					propagateTitle: oTargetInfo.propagateTitle || false,
+					ignoreInitialHash: oTargetInfo.ignoreInitialHash,
+					placeholder: oTargetInfo.placeholder,
+					repeatedRoute: oTargetInfo.repeatedRoute,
+					routeRelevant: oTargetInfo.routeRelevant || false
 				};
 
 				// gather view infos while processing Promise chain
@@ -64,6 +68,33 @@ sap.ui.define(["sap/base/Log"], function(Log) {
 			}, oSequencePromise).then(function() {
 				return aViewInfos;
 			});
+		},
+
+		/**
+		 * Adds a target to the route's config
+		 * @param {object} oTargetInfo the object containing information about the single target
+		 * @private
+		 */
+		_addDynamicTargetToRoute : function(oTargetInfo) {
+			if (this._oRouter) {
+				var sRouteToConnect = this._oRouter._getLastMatchedRouteName();
+				var oRoute, bSameTargetFound;
+
+				if (sRouteToConnect) {
+					oRoute = this._oRouter.getRoute(sRouteToConnect);
+
+					if (oRoute && oRoute._oConfig && oRoute._oConfig.target) {
+						bSameTargetFound = this._alignTargetsInfo(oRoute._oConfig.target).some(function(oCompareTargetInfo) {
+							return oCompareTargetInfo.name === oTargetInfo.name;
+						});
+
+						if (!bSameTargetFound) {
+							oRoute._oConfig.dynamicTarget = oRoute._oConfig.dynamicTarget || [];
+							oRoute._oConfig.dynamicTarget.push(oTargetInfo);
+						}
+					}
+				}
+			}
 		},
 
 		/**
@@ -83,6 +114,9 @@ sap.ui.define(["sap/base/Log"], function(Log) {
 				oTarget = this.getTarget(sName);
 
 			if (oTarget !== undefined) {
+				if (oTargetInfo.routeRelevant) {
+					this._addDynamicTargetToRoute(oTargetInfo);
+				}
 				return oTarget._display(vData, oSequencePromise, oTargetCreateInfo);
 			} else {
 				var sErrorMessage = "The target with the name \"" + sName + "\" does not exist!";

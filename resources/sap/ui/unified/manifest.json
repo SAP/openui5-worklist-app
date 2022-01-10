@@ -1,11 +1,11 @@
 {
-  "_version": "1.9.0",
+  "_version": "1.21.0",
   "sap.app": {
     "id": "sap.ui.unified",
     "type": "library",
     "embeds": [],
     "applicationVersion": {
-      "version": "1.79.0"
+      "version": "1.96.2"
     },
     "title": "Unified controls intended for both, mobile and desktop scenarios",
     "description": "Unified controls intended for both, mobile and desktop scenarios",
@@ -22,15 +22,68 @@
   },
   "sap.ui5": {
     "dependencies": {
-      "minUI5Version": "1.79",
+      "minUI5Version": "1.96",
       "libs": {
         "sap.ui.core": {
-          "minVersion": "1.79.0"
+          "minVersion": "1.96.2"
         }
       }
     },
     "library": {
-      "i18n": "messagebundle.properties",
+      "i18n": {
+        "bundleUrl": "messagebundle.properties",
+        "supportedLocales": [
+          "",
+          "ar",
+          "bg",
+          "ca",
+          "cs",
+          "cy",
+          "da",
+          "de",
+          "el",
+          "en",
+          "en-GB",
+          "en-US-sappsd",
+          "en-US-saprigi",
+          "en-US-saptrc",
+          "es",
+          "es-MX",
+          "et",
+          "fi",
+          "fr",
+          "fr-CA",
+          "hi",
+          "hr",
+          "hu",
+          "id",
+          "it",
+          "iw",
+          "ja",
+          "kk",
+          "ko",
+          "lt",
+          "lv",
+          "ms",
+          "nl",
+          "no",
+          "pl",
+          "pt",
+          "pt-PT",
+          "ro",
+          "ru",
+          "sh",
+          "sk",
+          "sl",
+          "sv",
+          "th",
+          "tr",
+          "uk",
+          "vi",
+          "zh-CN",
+          "zh-TW"
+        ]
+      },
       "content": {
         "controls": [
           "sap.ui.unified.calendar.DatesRow",
@@ -76,10 +129,13 @@
           "sap.ui.unified.CalendarAppointmentVisualization",
           "sap.ui.unified.CalendarDayType",
           "sap.ui.unified.CalendarIntervalType",
+          "sap.ui.unifief.CalendarAppointmentHeight",
+          "sap.ui.unifief.CalendarAppointmentRoundWidth",
           "sap.ui.unified.ColorPickerDisplayMode",
           "sap.ui.unified.ColorPickerMode",
           "sap.ui.unified.ContentSwitcherAnimation",
           "sap.ui.unified.GroupAppointmentsMode",
+          "sap.ui.unified.FileUploaderHttpRequestMethod",
           "sap.ui.unified.StandardCalendarLegendItem"
         ],
         "interfaces": [

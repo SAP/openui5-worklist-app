@@ -1,14 +1,19 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
+	'sap/ui/core/library',
 	"sap/ui/core/Core"
 ], function(
+	coreLibrary,
 	Core
 ) {
 	"use strict";
+
+	// shortcut for sap.ui.core.aria.HasPopup
+	var AriaHasPopup = coreLibrary.aria.HasPopup;
 
 	/**
 	 * This class is used to maintain all the accessibility roles, tooltips, etc., needed for the ShellBar control life cycle.
@@ -25,6 +30,12 @@ sap.ui.define([
 		this.oRb = Core.getLibraryResourceBundle("sap.f");
 	};
 
+	Accessibility.AriaHasPopup = {
+		MENU: AriaHasPopup.Menu,
+		PRODUCTS: AriaHasPopup.Menu,
+		PROFILE: AriaHasPopup.Menu,
+		NOTIFICATIONS: AriaHasPopup.Dialog
+	};
 	Accessibility.prototype._controlDelegate = {
 		onBeforeRendering: function () {
 			this.attachDelegates();
@@ -32,14 +43,13 @@ sap.ui.define([
 	};
 
 	Accessibility.prototype.attachDelegates = function () {
+		var oAvatar = this._oControl.getProfile();
+
 		this._oDelegateSecondTitle = {
 			onAfterRendering: this.onAfterRenderingSecondTitle
 		};
 		this._oDelegateSearch = {
 			onAfterRendering: this.onAfterRenderingSearch
-		};
-		this._oDelegateNotifications = {
-			onAfterRendering: this.onAfterRenderingNotifications
 		};
 		this._oDelegateAvatar = {
 			onAfterRendering: this.onAfterRenderingAvatar
@@ -61,11 +71,8 @@ sap.ui.define([
 		if (this._oControl._oSearch) {
 			this._oControl._oSearch.addDelegate(this._oDelegateSearch, false, this);
 		}
-		if (this._oControl._oNotifications) {
-			this._oControl._oNotifications.addDelegate(this._oDelegateNotifications, false, this);
-		}
-		if (this._oControl._oAvatarButton) {
-			this._oControl._oAvatarButton.addDelegate(this._oDelegateAvatar, false, this);
+		if (oAvatar) {
+			oAvatar.addDelegate(this._oDelegateAvatar, false, this);
 		}
 		if (this._oControl._oProductSwitcher) {
 			this._oControl._oProductSwitcher.addDelegate(this._oDelegateProducts, false, this);
@@ -101,7 +108,6 @@ sap.ui.define([
 			sAriaLabel = sNotificationsNumber ? sNotificationsNumber + " " + sTooltip : sTooltip;
 
 		this._oControl._oNotifications.setTooltip(sAriaLabel);
-		this._oControl._oNotifications.$().attr("aria-label", sAriaLabel);
 	};
 
 	Accessibility.prototype.onAfterRenderingSecondTitle = function () {
@@ -115,18 +121,8 @@ sap.ui.define([
 		this._oControl._oSearch.$().attr("aria-label", this.getEntityTooltip("SEARCH"));
 	};
 
-	Accessibility.prototype.onAfterRenderingNotifications = function () {
-		var $oNotifications = this._oControl._oNotifications.$(),
-			sTooltip = this.getEntityTooltip("NOTIFICATIONS"),
-			sNotificationsNubmer = this._oControl._oNotifications.data("notifications"),
-			sAriaLabel = sNotificationsNubmer ? sNotificationsNubmer + " " + sTooltip : sTooltip;
-
-		$oNotifications.attr("aria-label", sAriaLabel);
-		$oNotifications.attr("aria-haspopup", "dialog");
-	};
-
 	Accessibility.prototype.onAfterRenderingAvatar = function () {
-		var $oAvatar = this._oControl._oAvatarButton.$();
+		var $oAvatar = this._oControl.getProfile().$();
 
 		$oAvatar.attr("aria-label", this.getEntityTooltip("PROFILE"));
 		$oAvatar.attr("aria-haspopup", "menu");
@@ -136,7 +132,6 @@ sap.ui.define([
 		var $oProducts = this._oControl._oProductSwitcher.$();
 
 		$oProducts.attr("aria-label", this.getEntityTooltip("PRODUCTS"));
-		$oProducts.attr("aria-haspopup", "menu");
 	};
 
 	Accessibility.prototype.onAfterRenderingNavButton = function () {
@@ -147,10 +142,10 @@ sap.ui.define([
 		var $oMenuButton = this._oControl._oMenuButton.$();
 
 		$oMenuButton.attr("aria-label", this.getEntityTooltip("MENU"));
-		$oMenuButton.attr("aria-haspopup", "menu");
 	};
 
 	Accessibility.prototype.exit = function () {
+		var oAvatar = this._oControl.getProfile();
 		// Detach Event Delegates
 		if (this._oControl) {
 			this._oControl.removeDelegate(this._controlDelegate);
@@ -161,11 +156,8 @@ sap.ui.define([
 		if (this._oControl._oSearch) {
 			this._oControl._oSearch.removeDelegate(this._oDelegateSearch);
 		}
-		if (this._oControl._oNotifications) {
-			this._oControl._oNotifications.removeDelegate(this._oDelegateNotifications);
-		}
-		if (this._oControl._oAvatarButton) {
-			this._oControl._oAvatarButton.removeDelegate(this._oDelegateAvatar);
+		if (oAvatar) {
+			oAvatar.removeDelegate(this._oDelegateAvatar);
 		}
 		if (this._oControl._oProductSwitcher) {
 			this._oControl._oProductSwitcher.removeDelegate(this._oDelegateProducts);

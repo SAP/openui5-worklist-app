@@ -1,29 +1,26 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
-	'sap/ui/core/Core',
 	'./Template',
 	'./TemplateControl',
 	'sap/ui/thirdparty/handlebars',
 	'sap/ui/base/ManagedObject',
 	'sap/base/util/ObjectPath',
 	"sap/base/security/encodeXML",
-	"sap/ui/thirdparty/jquery",
-	"sap/base/util/isEmptyObject"
+	"sap/base/util/isEmptyObject",
+	'sap/ui/core/Core' // provides sap.ui.getCore()
 ],
 	function(
-		Core,
 		Template,
 		TemplateControl,
 		Handlebars,
 		ManagedObject,
 		ObjectPath,
 		encodeXML,
-		jQuery,
 		isEmptyObject
 	) {
 	"use strict";
@@ -49,14 +46,16 @@ sap.ui.define([
 	 * @extends sap.ui.core.tmpl.Template
 	 * @abstract
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 * @alias sap.ui.core.tmpl.HandlebarsTemplate
 	 * @since 1.15
 	 * @deprecated since 1.56
 	 */
 	var HandlebarsTemplate = Template.extend("sap.ui.core.tmpl.HandlebarsTemplate", /** @lends sap.ui.core.tmpl.HandlebarsTemplate.prototype */
 	{
-
+		metadata: {
+			library: "sap.ui.core"
+		},
 		constructor : function(sId, mSettings) {
 			Template.apply(this, arguments);
 		}

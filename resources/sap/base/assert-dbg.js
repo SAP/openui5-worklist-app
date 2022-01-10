@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(["./Log"], function(Log) {
@@ -30,12 +30,7 @@ sap.ui.define(["./Log"], function(Log) {
 		if (!bResult) {
 			var sMessage = typeof vMessage === "function" ? vMessage() : vMessage;
 			/*eslint-disable no-console */
-			if (console && console.assert) {
-				console.assert(bResult, sMessage);
-			} else {
-				// console is not always available (IE, FF) and IE doesn't support console.assert
-				Log.debug("[Assertions] " + sMessage);
-			}
+			console.assert(bResult, sMessage);
 			/*eslint-enable no-console */
 		}
 	};

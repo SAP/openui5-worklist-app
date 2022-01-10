@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -29,16 +29,6 @@ sap.ui.define([
 ], function ($, UI5Object, UI5Element, View, Ancestor, MatcherFactory,
 			MatcherPipeline, _OpaLogger) {
 
-		var oMatcherFactory = new MatcherFactory();
-		var oMatcherPipeline = new MatcherPipeline();
-		var aControlSelectorsForMatchingControls = [
-			"id",
-			"viewName",
-			"viewId",
-			"controlType",
-			"searchOpenDialogs"
-		];
-
 		/**
 		 * @class A Plugin to search UI5 controls.
 		 *
@@ -51,6 +41,7 @@ sap.ui.define([
 
 			constructor : function() {
 				this._oLogger = _OpaLogger.getLogger("sap.ui.test.Opa5");
+				this._oMatcherFactory = new MatcherFactory();
 			},
 
 			/**
@@ -156,7 +147,8 @@ sap.ui.define([
 				var sViewName = oView.getViewName();
 				var sFragmentPrefix = oOptions.fragmentId ? oOptions.fragmentId + OpaPlugin.VIEW_ID_DELIMITER : "";
 
-				if ($.isArray(oOptions.id)) {
+				// first check for exact Ids, to skip searching through all the view's controls if possible
+				if (Array.isArray(oOptions.id)) {
 					var aControls = [];
 					var aUnmatchedIds = [];
 					oOptions.id.map(function (sId) {
@@ -170,20 +162,41 @@ sap.ui.define([
 						}
 					});
 
-					var sUnmatchedLog = aUnmatchedIds.length ? ". Found no controls matching the subset of IDs " + aUnmatchedIds : "";
-					this._oLogger.debug("Found " + aControls.length + " controls with ID contained in " + oOptions.id + " in view '" + sViewName + "'" + sUnmatchedLog);
+					this._oLogger.debug("Found " + aControls.length + " controls with ID contained in " + oOptions.id + " in view '" + sViewName + "'" +
+						aUnmatchedIds.length ? ". Found no controls matching the subset of IDs " + aUnmatchedIds : "");
+
+					if (aControls.length && oOptions.controlType) {
+						var aControlsWithCorrectType = this._filterUniqueControlsByCondition(aControls, makeTypeFilterFn(oOptions.controlType));
+						this._oLogger.debug("Found " + (aControlsWithCorrectType.length ? aControlsWithCorrectType.length : "no") + " controls in view '" + sViewName +
+							"' with control type matching '" + oOptions.sOriginalControlType + "' and ID contained in " + oOptions.id);
+						if (aControlsWithCorrectType.length !== aControls.length) {
+							this._oLogger.error("Some results don't match the desired controlType '" + oOptions.sOriginalControlType +
+								"'. Please double check the expected controlType - this might lead to unexpected test results!");
+						}
+					}
 					return aControls;
 				}
 
 				if (bSearchForSingleControl) {
 					var sId = sFragmentPrefix + oOptions.id;
 					var oControl = oView.byId(sId) || null;
-					this._oLogger.debug("Found " + (oControl ? "" : "no ") + "control with ID '" + sId + "' in view '" + sViewName + "'");
-					return oControl;
+					if (oControl) {
+						if (makeTypeFilterFn(oOptions.controlType)(oControl)) {
+							this._oLogger.debug("Found control with ID '" + sId + "' and controlType '" + oOptions.sOriginalControlType + "' in view '" + sViewName + "'");
+						} else {
+							this._oLogger.error("Found control with ID '" + sId + "' in view '" + sViewName + "' but it does not have required controlType '" +
+								oOptions.sOriginalControlType + "'. Please double check the expected controlType - this might lead to unexpected test results!");
+						}
+						return oControl;
+					} else {
+						this._oLogger.debug("Found no control with ID '" + sId + "' in view '" + sViewName + "'");
+						return oControl;
+					}
 				}
 
+				// if not exact Id is given, start a thorough search
 				var aAllControlsOfTheView = this.getAllControlsWithTheParent(oView, oOptions.controlType, oOptions.sOriginalControlType);
-				var bMatchById = $.type(oOptions.id) === "regexp";
+				var bMatchById = this._isRegExp(oOptions.id);
 
 				if (bMatchById) {
 					aAllControlsOfTheView = aAllControlsOfTheView.filter(function (oControl) {
@@ -216,7 +229,8 @@ sap.ui.define([
 
 			// get control in static area that matches a control type, ID (string, array, regex), viewId, viewName, fragmentId
 			_getControlsInStaticArea: function (oOptions) {
-				var vControls = this._getControlsInContainer($("#sap-ui-static")) || [];
+				var oStaticArea = $(sap.ui.getCore().getStaticAreaRef());
+				var vControls = this._getControlsInContainer(oStaticArea) || [];
 
 				if (oOptions.id) {
 					vControls = this._filterUniqueControlsByCondition(vControls, function (oControl) {
@@ -237,10 +251,10 @@ sap.ui.define([
 						if (typeof oOptions.id === "string") {
 							bIdMatches = sUnprefixedControlId === oOptions.id;
 						}
-						if ($.type(oOptions.id) === "regexp") {
+						if (this._isRegExp(oOptions.id)) {
 							bIdMatches = oOptions.id.test(sUnprefixedControlId);
 						}
-						if ($.isArray(oOptions.id)) {
+						if (Array.isArray(oOptions.id)) {
 							bIdMatches = oOptions.id.filter(function (sId) {
 								return sId === sUnprefixedControlId;
 							}).length > 0;
@@ -256,8 +270,7 @@ sap.ui.define([
 				if (vControls.length && oOptions.controlType) {
 					var hasExpectedType = makeTypeFilterFn(oOptions.controlType);
 					vControls = this._filterUniqueControlsByCondition(vControls, hasExpectedType);
-
-					this._oLogger.debug("Found " + (vControls.length ? vControls.length : "no") + " controls in the static area with control type matching '" + oOptions.controlType + "'");
+					this._oLogger.debug("Found " + (vControls.length ? vControls.length : "no") + " controls in the static area with control type matching '" + oOptions.sOriginalControlType + "'");
 				}
 
 				if (oOptions.id && typeof oOptions.id === "string") {
@@ -293,9 +306,13 @@ sap.ui.define([
 				}
 			},
 
+			_isRegExp: function (rRegExp) {
+				// can't use instanceof because the regexp may be created in the parent frame
+				return Object.prototype.toString.call(rRegExp) === "[object RegExp]";
+			},
+
 			/**
 			 * Find a control matching the provided options
-			 * autowait and Interactable matcher will be enforced if neccessary
 			 * @param {object} [oOptions] a map of options used to describe the control you are looking for.
 			 * @param {string} [oOptions.viewName] Controls will only be searched inside this view (ie: the view (as a control) has to be an ancestor of the control)
 			 * If a control ID is given, the control will be found using the byId function of the view.
@@ -303,8 +320,11 @@ sap.ui.define([
 			 * If a control ID is given, the control will be found using the byId function of the view.
 			 * @param {string|string[]} [oOptions.id] The ID of one or multiple controls. This can be a global ID or an ID used together with viewName. See the documentation of this parameter.
 			 * @param {boolean} [oOptions.visible=true] should the control have a visible DOM reference
-			 * @param {boolean} [oOptions.interactable=false] @since 1.34 should the control match the interactable matcher {@link sap.ui.test.matchers.Interactable}.
+			 * @param {boolean} [oOptions.interactable=false] @since 1.34 should the control be interactable and enabled.
+			 * When true, only interactable and enabled controls will be matched. For details, see the {@link sap.ui.test.matchers.Interactable} matcher.
 			 * @param {boolean} [oOptions.enabled=false] @since 1.66 should the control be enabled.
+			 * If interactable is true, enabled will also be true, unless declared otherwise.
+			 * @param {boolean} [oOptions.editable=false] @since 1.80 should the control be editable.
 			 * @param {boolean} [oOptions.searchOpenDialogs] Only controls in the static UI area of UI5 are searched.
 			 * @param {string|function} [oOptions.controlType] @since 1.40 match all controls of a certain type
 			 * It is usually combined with viewName or searchOpenDialogs. If no control matches the type, an empty array will be returned. Examples:
@@ -361,12 +381,13 @@ sap.ui.define([
 					return vResult;
 				}
 
-				var oStateMatchers = oMatcherFactory.getStateMatchers({
+				var oStateMatchers = this._oMatcherFactory.getStateMatchers({
 					visible: oOptions.visible, // true by default
 					interactable: oOptions.interactable, // false by default
-					enabled: typeof oOptions.enabled === "undefined" ? oOptions.interactable : oOptions.enabled // by default, true when interactable, false elsewise
+					enabled: typeof oOptions.enabled === "undefined" ? oOptions.interactable : oOptions.enabled, // by default, true when interactable, false elsewise
+					editable: typeof oOptions.editable === "undefined" ? false : oOptions.editable // false by default
 				});
-				var vPipelineResult = oMatcherPipeline.process({
+				var vPipelineResult = OpaPlugin._oMatcherPipeline.process({
 					control: vResult,
 					matchers: oStateMatchers
 				});
@@ -374,7 +395,7 @@ sap.ui.define([
 				// all controls are filtered out
 				if (!vPipelineResult) {
 					// backwards compatible - return empty array in this case
-					if ($.isArray(vResult)) {
+					if (Array.isArray(vResult)) {
 						return [];
 					}
 					// Single control - return null
@@ -403,7 +424,7 @@ sap.ui.define([
 				// when on the root level of oOptions, these options are already processed (see _filterControlsByCondition) and should not be processed again,
 				// as this results in error when no controls are passed to the matcher pipeline (see _filterControlsByMatchers)
 				// - the pipeline should still be executed because there could be custom matchers
-				["interactable", "visible", "enabled"].forEach(function (sProp) {
+				["interactable", "visible", "enabled", "editable"].forEach(function (sProp) {
 					delete oFilterOptions[sProp];
 				});
 
@@ -423,9 +444,9 @@ sap.ui.define([
 				// conditions in which no control was found and return value should be the special marker FILTER_FOUND_NO_CONTROLS
 				var aControlsNotFoundConditions = [
 					typeof oOptions.id === "string" && !vControl, // search for single control by string ID
-					$.type(oOptions.id) === "regexp" && !vControl.length, // search by regex ID
-					$.isArray(oOptions.id) && (!vControl || vControl.length !== oOptions.id.length), // search by array of IDs
-					oOptions.controlType && $.isArray(vControl) && !vControl.length, // search by control type globally
+					this._isRegExp(oOptions.id) && !vControl.length, // search by regex ID
+					Array.isArray(oOptions.id) && (!vControl || vControl.length !== oOptions.id.length), // search by array of IDs
+					oOptions.controlType && Array.isArray(vControl) && !vControl.length, // search by control type globally
 					!oOptions.id && (oOptions.viewName || oOptions.viewId || oOptions.searchOpenDialogs) && !vControl.length // search by control type in view or staic area
 				];
 
@@ -436,7 +457,7 @@ sap.ui.define([
 			// instantiate any matchers with declarative syntax and run controls through matcher pipeline
 			_filterControlsByMatchers: function (oOptions, vControl) {
 				var oOptionsWithMatchers = $.extend({}, oOptions);
-				var aMatchers = oMatcherFactory.getFilteringMatchers(oOptionsWithMatchers);
+				var aMatchers = this._oMatcherFactory.getFilteringMatchers(oOptionsWithMatchers);
 				var bPluginLooksForControls = this._isLookingForAControl(oOptions);
 				var vResult = null;
 
@@ -447,7 +468,7 @@ sap.ui.define([
 				 * success: function (sFoo) {}
 				 */
 				if ((vControl || !bPluginLooksForControls) && aMatchers.length) {
-					vResult = oMatcherPipeline.process({
+					vResult = OpaPlugin._oMatcherPipeline.process({
 						matchers: aMatchers,
 						control: vControl
 					});
@@ -463,7 +484,7 @@ sap.ui.define([
 			},
 
 			/**
-			 * Find a control by its global ID
+			 * Find a control by its global ID.
 			 *
 			 * @param {object} oOptions a map of match conditions. Must contain an id property
 			 * @param {string|string[]} [oOptions.id] required - ID to match. Can be string, regex or array
@@ -473,9 +494,6 @@ sap.ui.define([
 			 *     <li>if a oOptions.id is a string, will return the single matching control or null if no controls match</li>
 			 *     <li>otherwise, will return an array of matching controls, or an empty array, if no controls match</li>
 			 * </ul>
-			 *
-			 * @param oOptions must contain ID property of type string, regex or array of strings; optionally it can contain a controlType property.
-			 * @returns {sap.ui.core.Element|sap.ui.core.Element[]|null} all controls matched by the regex or the control matched by the string or null
 			 * @public
 			 */
 			getControlByGlobalId : function (oOptions) {
@@ -496,7 +514,7 @@ sap.ui.define([
 				}
 
 				var aMatchIds = [];
-				var bMatchById = $.type(oOptions.id) === "regexp";
+				var bMatchById = this._isRegExp(oOptions.id);
 
 				if (bMatchById) {
 					//Performance critical
@@ -505,7 +523,7 @@ sap.ui.define([
 							aMatchIds.push(sId);
 						}
 					});
-				} else if ($.isArray(oOptions.id)) {
+				} else if (Array.isArray(oOptions.id)) {
 					aMatchIds = oOptions.id;
 				}
 
@@ -568,7 +586,7 @@ sap.ui.define([
 			 */
 			_isLookingForAControl : function (oOptions) {
 				return Object.keys(oOptions).some(function (sKey) {
-					return aControlSelectorsForMatchingControls.indexOf(sKey) !== -1 && !!oOptions[sKey];
+					return OpaPlugin._aControlSelectorsForMatchingControls.indexOf(sKey) !== -1 && !!oOptions[sKey];
 				});
 			},
 
@@ -645,6 +663,15 @@ sap.ui.define([
 				return oElement instanceof fnControlType;
 			};
 		}
+
+		OpaPlugin._oMatcherPipeline = new MatcherPipeline();
+		OpaPlugin._aControlSelectorsForMatchingControls = [
+			"id",
+			"viewName",
+			"viewId",
+			"controlType",
+			"searchOpenDialogs"
+		];
 
 		/**
 		 * marker for a return type

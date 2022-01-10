@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -46,6 +46,14 @@ sap.ui.define(['sap/ui/core/Renderer', './CalendarRenderer'],
 
 		if (iDays > oCal._iDaysMonthHead) {
 			oRm.class("sapUiCalIntHead");
+		}
+
+		if (oCal.getShowDayNamesLine()) {
+			oRm.class("sapUiCalWithDayNamesLine");
+		}
+
+		if (oCal.getShowWeekNumbers()) {
+			oRm.class("sapUiCalWithWeekNumbers");
 		}
 
 	};

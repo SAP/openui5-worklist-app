@@ -1,18 +1,18 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides control sap.ui.core.search.OpenSearchProvider.
 sap.ui.define([
-	'sap/ui/core/library',
 	'./SearchProvider',
 	"sap/base/Log",
 	"sap/base/security/encodeURL",
-	"sap/ui/thirdparty/jquery"
+	"sap/ui/thirdparty/jquery",
+	'sap/ui/core/library' // ensure that required DataTypes are available
 ],
-	function(library, SearchProvider, Log, encodeURL, jQuery) {
+	function(SearchProvider, Log, encodeURL, jQuery) {
 	"use strict";
 
 
@@ -26,7 +26,7 @@ sap.ui.define([
 	 * @class
 	 * A SearchProvider which uses the OpenSearch protocol (either JSON or XML).
 	 * @extends sap.ui.core.search.SearchProvider
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @public
 	 * @alias sap.ui.core.search.OpenSearchProvider

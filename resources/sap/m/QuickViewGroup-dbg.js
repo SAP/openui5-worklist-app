@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -22,7 +22,7 @@ sap.ui.define([
 	* @extends sap.ui.core.Element
 	*
 	* @author SAP SE
-	* @version 1.79.0
+	* @version 1.96.2
 	*
 	* @constructor
 	* @public
@@ -72,9 +72,8 @@ sap.ui.define([
 
 	["setModel", "bindAggregation", "setAggregation", "insertAggregation", "addAggregation",
 		"removeAggregation", "removeAllAggregation", "destroyAggregation"].forEach(function (sFuncName) {
-			Group.prototype["_" + sFuncName + "Old"] = Group.prototype[sFuncName];
 			Group.prototype[sFuncName] = function () {
-				var result = Group.prototype["_" + sFuncName + "Old"].apply(this, arguments);
+				var result = Element.prototype[sFuncName].apply(this, arguments);
 
 				var oPage = this.getParent();
 				if (oPage) {

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -15,6 +15,26 @@ sap.ui.define(function() {
 	 * @alias sap.ui.core.mvc.ViewRenderer
 	 */
 	var ViewRenderer = {
+		apiVersion: 2
+	};
+
+	/**
+	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
+	 *
+	 * @param {sap.ui.core.RenderManager} rm the RenderManager that can be used for writing to the Render-Output-Buffer
+	 * @param {sap.ui.core.Control} oControl an object representation of the control that should be rendered
+	 */
+	ViewRenderer.render = function(rm, oControl) {
+		rm.openStart("div", oControl);
+		rm.class("sapUiView");
+		ViewRenderer.addDisplayClass(rm, oControl);
+		rm.style("width", oControl.getWidth());
+		rm.style("height", oControl.getHeight());
+		rm.openEnd();
+
+		oControl.getContent().forEach(rm.renderControl, rm);
+
+		rm.close("div");
 	};
 
 	ViewRenderer.addDisplayClass = function(rm, oControl) {

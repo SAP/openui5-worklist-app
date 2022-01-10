@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -13,8 +13,7 @@ sap.ui.define(['./Control', "sap/base/Log"],
 	/**
 	 * This class is only here for compatibility reasons. LBI works automatically with all controls
 	 *
-	 * @returns {sap.ui.core.LocalBusyIndicatorSupport}
-	 * @constructor
+	 * @function
 	 * @private
 	 * @deprecated
 	 * @alias sap.ui.core.LocalBusyIndicatorSupport

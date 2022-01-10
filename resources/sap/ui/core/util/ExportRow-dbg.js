@@ -1,12 +1,15 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides class sap.ui.core.util.ExportRow
-sap.ui.define(['sap/ui/base/ManagedObject', './ExportCell'],
-	function(ManagedObject, ExportCell) {
+sap.ui.define([
+	'sap/ui/base/ManagedObject',
+	'./ExportCell' // convenience dependency for legacy code that uses global names
+],
+	function(ManagedObject) {
 	'use strict';
 
 	/**
@@ -20,7 +23,7 @@ sap.ui.define(['sap/ui/base/ManagedObject', './ExportCell'],
 	 * @extends sap.ui.base.ManagedObject
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 * @since 1.22.0
 	 *
 	 * @public

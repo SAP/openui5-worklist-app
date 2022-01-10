@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -24,7 +24,6 @@ sap.ui.define(['sap/ui/core/library'],
 			 *
 			 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the Render-Output-Buffer
 			 * @param {sap.ui.core.Control} oMessagePage an object representation of the control that should be rendered
-			 * @returns {sap.m.MessagePageRenderer} this instance for chaining
 			 */
 			MessagePageRenderer.render = function(oRm, oMessagePage) {
 				this.startOpeningDiv(oRm, oMessagePage);
@@ -40,6 +39,7 @@ sap.ui.define(['sap/ui/core/library'],
 
 			MessagePageRenderer.startOpeningDiv = function(oRm, oMessagePage) {
 				oRm.openStart("div", oMessagePage);
+				oRm.attr("aria-roledescription", oMessagePage._sAriaRoleDescription);
 				oRm.class("sapMMessagePage");
 
 				if (oMessagePage.getTextDirection() !== TextDirection.Inherit) {

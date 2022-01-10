@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -44,7 +44,6 @@ sap.ui.define(["sap/ui/Device"], function(Device) {
 			oRM.openStart("div", oControl.getId() + "-label");
 			oRM.class("sapMTimePickerContainerLabel");
 			oRM.openEnd();
-			oRM.style("display", "block");
 			oRM.text(sLabelText);
 			oRM.close("div");
 		}

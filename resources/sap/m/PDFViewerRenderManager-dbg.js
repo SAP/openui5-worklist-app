@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -79,7 +79,7 @@ sap.ui.define([
 					}
 
 					var oPopup = new Dialog(sPopupId, oOptions);
-					oPopup.addStyleClass("sapUiPopupWithPadding");
+					oPopup.addStyleClass("sapUiContentPadding");
 
 					that._objectsRegister[sPopupFactoryFunctionName] = function () {
 						return oPopup;
@@ -110,10 +110,10 @@ sap.ui.define([
 				});
 
 				oPopup.setShowHeader(true);
-				if (!!this.getPopupHeaderTitle()) {
+				if (this.getPopupHeaderTitle()) {
 					oPopup.setTitle(this.getPopupHeaderTitle());
 				}
-				if (!!this.getTitle()) {
+				if (this.getTitle()) {
 					oPopup.setTitle(this.getTitle());
 				}
 			};

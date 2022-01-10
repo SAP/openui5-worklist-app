@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*
@@ -146,9 +146,8 @@ sap.ui.define(['sap/base/Log', 'sap/ui/thirdparty/URI', 'sap/base/util/now'
 				fnStart = this.start;
 
 				// wrap and instrument XHR
-				/* eslint-disable no-native-reassign, no-undef*/
+				/* eslint-disable-next-line no-global-assign */
 				XMLHttpRequest = function() {
-				/* eslint-enable no-native-reassign, no-undef*/
 					var oXHR = new fnXHR(),
 						fnOpen = oXHR.open,
 						sMeasureId;
@@ -164,9 +163,8 @@ sap.ui.define(['sap/base/Log', 'sap/ui/thirdparty/URI', 'sap/base/util/now'
 					return oXHR;
 				};
 			} else {
-				/* eslint-disable no-native-reassign, no-undef*/
+				/* eslint-disable-next-line no-global-assign */
 				XMLHttpRequest = fnXHR;
-				/* eslint-enable no-native-reassign, no-undef*/
 			}
 
 			return bActive;
@@ -490,7 +488,7 @@ sap.ui.define(['sap/base/Log', 'sap/ui/thirdparty/URI', 'sap/base/util/now'
 		 * }</code>
 		 *
 		 * @param {function} [fnFilter] a filter function that returns true if the passed measurement should be added to the result
-		 * @param {boolean|undefined} [bCompleted] Optional parameter to determine if either completed or incomplete measurements should be returned (both if not set or undefined)
+		 * @param {boolean} [bCompleted] Optional parameter to determine if either completed or incomplete measurements should be returned (both if not set or undefined)
 		 * @param {string[]} [aCategories] The function returns only measurements which match these specified categories
 		 *
 		 * @return {module:sap/ui/performance/Measurement.Entry[]} filtered array with measurements containing id, info and start-timestamp, end-timestamp, time, duration, categories (false if error)

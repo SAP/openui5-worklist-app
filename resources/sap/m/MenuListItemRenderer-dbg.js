@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -38,7 +38,7 @@ sap.ui.define(['./ListItemBaseRenderer', 'sap/ui/core/Renderer', 'sap/m/library'
 				rm.openStart("div");
 				rm.class("sapUiMnuDivL");
 				rm.openEnd();
-				rm.close();
+				rm.close("div");
 				rm.voidStart("hr").voidEnd();
 				rm.openStart("div");
 				rm.class("sapUiMnuDivR");
@@ -66,12 +66,17 @@ sap.ui.define(['./ListItemBaseRenderer', 'sap/ui/core/Renderer', 'sap/m/library'
 			if (oLI.getIcon()) {
 				rm.class("sapMSLIIcon");
 			}
+
 			if (oLI.getType() == ListType.Detail || oLI.getType() == ListType.DetailAndActive) {
 				rm.class("sapMSLIDetail");
 			}
 
 			if (oLI._hasSubItems()) {
 				rm.class("sapMMenuLIHasChildren");
+			}
+
+			if (!oLI.getEnabled()) {
+				rm.class("sapMMLIDisabled");
 			}
 		};
 

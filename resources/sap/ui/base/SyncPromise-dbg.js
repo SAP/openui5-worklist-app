@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -169,7 +169,8 @@ sap.ui.define([], function () {
 		 * Marks this {@link sap.ui.base.SyncPromise} as caught and informs the optional
 		 * {@link sap.ui.base.SyncPromise.listener}. Basically, it has the same effect as
 		 * {@link #catch}, but with less overhead. Use it together with {@link #isRejected} and
-		 * {@link #getResult} in cases where the rejection is turned into <code>throw</code>.
+		 * {@link #getResult} in cases where the rejection is turned into <code>throw</code>; or
+		 * simply use {@link #unwrap} instead.
 		 */
 		this.caught = function () {
 			if (!bCaught) {
@@ -266,11 +267,11 @@ sap.ui.define([], function () {
 			return this.then(function (vResult) {
 				return SyncPromise.resolve(fnOnFinally()).then(function () {
 					return vResult;
-				});
+				}).unwrap(); // Note: avoids unnecessary micro task
 			}, function (vReason) {
 				return SyncPromise.resolve(fnOnFinally()).then(function () {
 					throw vReason;
-				});
+				}).unwrap(); // Note: avoids unnecessary micro task
 			});
 		}
 
@@ -329,7 +330,8 @@ sap.ui.define([], function () {
 	/**
 	 * Unwraps this {@link sap.ui.base.SyncPromise} by returning the current result if this promise
 	 * is already fulfilled, returning the wrapped thenable if this promise is still pending, or
-	 * throwing the reason if this promise is already rejected.
+	 * throwing the reason if this promise is already rejected. This {@link sap.ui.base.SyncPromise}
+	 * is marked as {@link #caught}.
 	 *
 	 * @returns {any|Promise}
 	 *   The result in case this {@link sap.ui.base.SyncPromise} is already fulfilled, or the
@@ -340,8 +342,8 @@ sap.ui.define([], function () {
 	 * @see #getResult
 	 */
 	SyncPromise.prototype.unwrap = function () {
+		this.caught(); // make sure it will never count as uncaught
 		if (this.isRejected()) {
-			this.caught();
 			throw this.getResult();
 		}
 		return this.getResult();
@@ -401,12 +403,8 @@ sap.ui.define([], function () {
 	 * @see step 2.3.3. of https://promisesaplus.com
 	 */
 	SyncPromise.isThenable = function (vValue) {
-		// "typeof vValue.then" returns "unknown" in IE if the getter for "then" throws an error; to
-		// get 100% code coverage also in IE assign vValue.then to a variable before using typeof
-		var fnThen;
-
 		try {
-			return !!hasThen(vValue) && (fnThen = vValue.then) && typeof fnThen === "function";
+			return !!hasThen(vValue) && typeof vValue.then === "function";
 		} catch (e) {
 			// "2.3.3.2. If retrieving the property x.then results in a thrown exception e,..."
 			// ...we should not call this a proper "thenable"

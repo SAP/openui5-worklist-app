@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(function() {
@@ -15,6 +15,7 @@ sap.ui.define(function() {
 	 * @param {object} mObject - Object to be extracted
 	 * @returns {Array.<*>} - array of object values, if object does not contain values, an empty array will be returned
 	 * @public
+	 * @deprecated as of version 1.90. Use the <code>Object.values</code> instead.
 	 */
 	var fnValues = function values(mObject) {
 		// Default is always an empty array
@@ -26,22 +27,7 @@ sap.ui.define(function() {
 			return [];
 		}
 
-		// Object.values is not supported in IE
-		if (typeof Object.values === 'function') {
 			return Object.values(mObject);
-		}
-
-		if (typeof mObject === 'string') {
-			return mObject.split('');
-		}
-
-		if (typeof mObject !== 'object') {
-			return [];
-		}
-
-		return Object.keys(mObject).map(function (vValue) {
-			return mObject[vValue];
-		});
 	};
 
 	return fnValues;

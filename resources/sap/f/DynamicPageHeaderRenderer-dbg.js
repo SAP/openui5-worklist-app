@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -28,7 +28,7 @@ sap.ui.define([], function () {
 			sBackgroundDesign = oDynamicPageHeader.getBackgroundDesign();
 
 		// Dynamic Page Layout Header Root DOM Element.
-		oRm.openStart("header", oDynamicPageHeader);
+		oRm.openStart("section", oDynamicPageHeader);
 		oRm.accessibilityState({
 			role: "region"
 		});
@@ -58,7 +58,7 @@ sap.ui.define([], function () {
 			oRm.renderControl(oDynamicPageHeaderState.pinButton);
 		}
 
-		oRm.close("header");
+		oRm.close("section");
 	};
 
 	DynamicPageHeaderRenderer._renderHeaderContent = function (oRm, oDynamicPageHeaderState) {

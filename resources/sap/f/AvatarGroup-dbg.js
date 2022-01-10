@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -97,7 +97,7 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @constructor
 	 * @public
@@ -235,6 +235,10 @@ sap.ui.define([
 	};
 
 	AvatarGroup.prototype.onThemeChanged = function () {
+		if (!this.getDomRef()) {
+			return;
+		}
+
 		this._onResize();
 	};
 
@@ -371,13 +375,16 @@ sap.ui.define([
 	 * @private
 	 */
 	AvatarGroup.prototype._getAvatarMargin = function (sAvatarDisplaySize) {
-		var sGroupType = this.getGroupType();
+		var sGroupType = this.getGroupType(),
+			iMargin;
 
 		if (sGroupType === AvatarGroupType.Group) {
-			return AVATAR_MARGIN_GROUP[sAvatarDisplaySize];
+			iMargin = AVATAR_MARGIN_GROUP[sAvatarDisplaySize];
 		} else {
-			return AVATAR_MARGIN_INDIVIDUAL[sAvatarDisplaySize];
+			iMargin = AVATAR_MARGIN_INDIVIDUAL[sAvatarDisplaySize];
 		}
+
+		return iMargin;
 	};
 
 	/**

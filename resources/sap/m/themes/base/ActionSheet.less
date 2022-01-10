@@ -30,14 +30,14 @@
 	text-align: start;
 }
 
-html[data-sap-ui-browser^=ie] .sapMActionSheetButton > .sapMBtnInner,
-html[data-sap-ui-browser^=ed] .sapMActionSheetButton > .sapMBtnInner {
-	text-align: left;
+.sapMActionSheetButton.sapMBtn:not(.sapMActionSheetCancelButton) > .sapMBtnInner {
+	justify-content: flex-start;
 }
 
-html[dir=rtl][data-sap-ui-browser^=ie] .sapMActionSheetButton > .sapMBtnInner,
-html[dir=rtl][data-sap-ui-browser^=ed] .sapMActionSheetButton > .sapMBtnInner {
-	text-align: right;
+.sapMActionSheetDialogWithTitle .sapMBarMiddle .sapMBarPH {
+	// The left/right padding should be 1rem, but there is already 0.25rem right/left padding from the Dialog title
+	padding: 0 0.75rem 0.5rem;
+	justify-content: flex-start;
 }
 
 /* ====== BEGIN ====== */
@@ -63,21 +63,6 @@ html[dir=rtl][data-sap-ui-browser^=ed] .sapMActionSheetButton > .sapMBtnInner {
 	text-align: center;
 }
 
-.sapMActionSheetDialog .sapMBar.sapMHeader-CTX > .sapMBarMiddle {
-	text-align: start;
-	padding: 0 1rem;
-}
-
-html[data-sap-ui-browser^=ie] .sapMActionSheetDialog .sapMBar.sapMHeader-CTX > .sapMBarMiddle, /* TODO remove after the end of support for Internet Explorer */
-html[data-sap-ui-browser^=ed] .sapMActionSheetDialog .sapMBar.sapMHeader-CTX > .sapMBarMiddle {
-	text-align: left;
-}
-
-html[dir=rtl][data-sap-ui-browser^=ie] .sapMActionSheetDialog .sapMBar.sapMHeader-CTX > .sapMBarMiddle, /* TODO remove after the end of support for Internet Explorer */
-html[dir=rtl][data-sap-ui-browser^=ed] .sapMActionSheetDialog .sapMBar.sapMHeader-CTX > .sapMBarMiddle {
-	text-align: right;
-}
-
 .sapMActionSheetDialog .sapMBar.sapMHeader-CTX > .sapMBarMiddle > .sapMBarPH > .sapMDialogTitle {
 	color: contrast(fade(@sapUiBlockLayerBackground, 60), @sapUiGroupTitleTextColor, @sapUiContentContrastTextColor, @sapUiContentContrastTextThreshold);
 	font-size: @sapMFontMediumSize;
@@ -91,7 +76,7 @@ html[dir=rtl][data-sap-ui-browser^=ed] .sapMActionSheetDialog .sapMBar.sapMHeade
 	padding: 0.25rem 0.5rem;
 }
 
-.sapMActionSheetDialog.sapMDialogPhone .sapMIBar.sapMHeader-CTX {
+.sapMDialog.sapMActionSheetDialog.sapMDialogPhone .sapMIBar.sapMHeader-CTX {
 	background: transparent;
 	box-shadow: none;
 }

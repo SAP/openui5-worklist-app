@@ -1,12 +1,12 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/unified/calendar/CalendarDate', 'sap/ui/unified/CalendarLegend', 'sap/ui/unified/CalendarLegendRenderer',
-	'sap/ui/core/library', 'sap/ui/unified/library', "sap/base/Log", 'sap/ui/core/InvisibleText'],
-	function(CalendarUtils, CalendarDate, CalendarLegend, CalendarLegendRenderer, coreLibrary, library, Log, InvisibleText) {
+	'sap/ui/core/library', 'sap/ui/unified/library', "sap/base/Log", 'sap/ui/core/InvisibleText', "sap/ui/core/format/DateFormat", "sap/ui/core/Locale"],
+	function(CalendarUtils, CalendarDate, CalendarLegend, CalendarLegendRenderer, coreLibrary, library, Log, InvisibleText, DateFormat, Locale) {
 	"use strict";
 
 
@@ -199,7 +199,7 @@ sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/unified/calendar
 		}
 		var aWeekDaysWide = oLocaleData.getDaysStandAlone("wide", sCalendarType);
 
-		if (oMonth.getShowWeekNumbers()) {
+		if (oMonth.getShowWeekNumbers() && sCalendarType !== CalendarType.Islamic) { // on Islamic primary calendar week numbers are not shown, do not add dummy cell
 			this.renderDummyCell(oRm, "sapUiCalWH", true, "columnheader");
 		}
 
@@ -270,13 +270,13 @@ sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/unified/calendar
 				oRm.openEnd();
 
 				if (bWeekNum) {
-					this._renderWeekNumber(oRm, aDays[i], oHelper);
+					this._renderWeekNumber(oRm, aDays[i], oHelper, oMonth);
 				}
 			}
 
 			this.renderDay(oRm, oMonth, aDays[i], oHelper, true, bWeekNum, -1);
 
-			if (i % 7 === 6) {
+			if (i % 7 === 6 || i === iLength - 1) {
 				oRm.close("div");
 			}
 		}
@@ -301,7 +301,7 @@ sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/unified/calendar
 		oRm.class("sapUiCalDummy");
 		oRm.style("visibility", bVisible ? "visible" : "hidden");
 		oRm.attr("role", sRole);
-		oRm.attr("tabindex", "-1");
+		oRm.attr("aria-label", sap.ui.getCore().getLibraryResourceBundle("sap.ui.unified").getText("CALENDAR_WEEK"));
 		oRm.openEnd();
 		oRm.close('div');
 	};
@@ -330,6 +330,7 @@ sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/unified/calendar
 				oToday: CalendarDate.fromLocalJSDate(new Date(), oMonth.getPrimaryCalendarType()),
 				sId: oMonth.getId(),
 				oFormatLong: oMonth._getFormatLong(),
+				sPrimaryCalendarType: oMonth.getPrimaryCalendarType(),
 				sSecondaryCalendarType: oMonth._getSecondaryCalendarType(),
 				oLegend: undefined
 			};
@@ -373,7 +374,9 @@ sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/unified/calendar
 				describedby: ""
 			},
 			bBeforeFirstYear = oDay._bBeforeFirstYear,
-			sAriaType = "";
+			sAriaType = "",
+			oLegend = oHelper.oLegend,
+			sNonWorkingDayText;
 
 		var sYyyymmdd = oMonth._oFormatYyyymmdd.format(oDay.toUTCJSDate(), true);
 		var iWeekDay = oDay.getDay();
@@ -381,7 +384,7 @@ sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/unified/calendar
 		var aDayTypes = oMonth._getDateTypes(oDay);
 		var bEnabled = oMonth._checkDateEnabled(oDay);
 		var i = 0;
-
+		var bShouldBeMarkedAsSpecialDate = oMonth._isSpecialDateMarkerEnabled(oDay);
 		// Days before 0001.01.01 should be disabled.
 		if (bBeforeFirstYear) {
 			bEnabled = false;
@@ -426,19 +429,35 @@ sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/unified/calendar
 			mAccProps["describedby"] = mAccProps["describedby"] + " " + oHelper.sId + "-End";
 		}
 
-		aDayTypes.forEach(function(oDayType) {
-			if (oDayType.type !== CalendarDayType.None) {
-				if (oDayType.type === CalendarDayType.NonWorking) {
-					oRm.class("sapUiCalItemWeekEnd");
-					return;
+		if (bShouldBeMarkedAsSpecialDate) {
+			aDayTypes.forEach(function(oDayType) {
+				if (oDayType.type !== CalendarDayType.None) {
+					if (oDayType.type === CalendarDayType.NonWorking) {
+						oRm.class("sapUiCalItemWeekEnd");
+						sNonWorkingDayText = this._addNonWorkingDayText(mAccProps);
+						return;
+					}
+					oRm.class("sapUiCalItem" + oDayType.type);
+					sAriaType = oDayType.type;
+					if (oDayType.tooltip) {
+						oRm.attr('title', oDayType.tooltip);
+					}
 				}
-				oRm.class("sapUiCalItem" + oDayType.type);
-				sAriaType = oDayType.type;
-				if (oDayType.tooltip) {
-					oRm.attr('title', oDayType.tooltip);
-				}
+			}.bind(this));
+		}
+
+
+		if (!sNonWorkingDayText) { // if sNonWorkingDayText exists, it is already included above as specialDate of type NonWorking
+			if (oHelper.aNonWorkingDays) { // check if there are nonWorkingDays passed and add text to them
+				oHelper.aNonWorkingDays.forEach(function (iNonWorkingDay) {
+					if (oDay.getDay() === iNonWorkingDay) {
+						this._addNonWorkingDayText(mAccProps);
+					}
+				}.bind(this));
+			} else if (oDay.getDay() === oHelper.iWeekendStart || oDay.getDay() === oHelper.iWeekendEnd) { // otherwise add the text to the NonWorkigDays from the locale
+				this._addNonWorkingDayText(mAccProps);
 			}
-		});
+		}
 
 
 		//oMonth.getDate() is a public date object, so it is always considered local timezones.
@@ -473,7 +492,7 @@ sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/unified/calendar
 		mAccProps["label"] = mAccProps["label"] + oHelper.oFormatLong.format(oDay.toUTCJSDate(), true);
 
 		if (sAriaType !== "") {
-			CalendarLegendRenderer.addCalendarTypeAccInfo(mAccProps, sAriaType, oHelper.oLegend);
+			CalendarLegendRenderer.addCalendarTypeAccInfo(mAccProps, sAriaType, oLegend);
 		}
 
 		if (oHelper.sSecondaryCalendarType) {
@@ -483,7 +502,7 @@ sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/unified/calendar
 		oRm.accessibilityState(null, mAccProps);
 		oRm.openEnd(); // div element
 
-		if (aDayTypes[0]){ //if there's a special date, render it
+		if (aDayTypes[0] && bShouldBeMarkedAsSpecialDate){ //if there's a special date inside current month, render it
 			oRm.openStart("div");
 			oRm.class("sapUiCalSpecialDate");
 			if (aDayTypes[0].color) { // if there's a custom color, render it
@@ -496,7 +515,7 @@ sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/unified/calendar
 
 		oRm.openStart("span");
 		oRm.class("sapUiCalItemText");
-		if (!!aDayTypes[0] && aDayTypes[0].color) {
+		if (aDayTypes[0] && aDayTypes[0].color) {
 			oRm.class("sapUiCalItemTextCustomColor");
 		}
 		oRm.openEnd(); // span
@@ -527,9 +546,21 @@ sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/unified/calendar
 
 	};
 
-	MonthRenderer._renderWeekNumber = function(oRm, oDay, oHelper) {
-		var iWeekNumber = CalendarUtils.calculateWeekNumber(oDay.toUTCJSDate(), oHelper.iYear, oHelper.sLocale, oHelper.oLocaleData),
-			sId = oHelper.sId + "-WNum-" + iWeekNumber;
+	/**
+	 * Includes additional text to the DOM indicating that the day is non-working
+	 *
+	 * @param {Object} mAccProps The accessibility properties for the day to be rendered.
+	 * @returns {string} sText The text for the non-working day from the bundle
+	 */
+	MonthRenderer._addNonWorkingDayText = function (mAccProps) {
+		var sText = sap.ui.getCore().getLibraryResourceBundle("sap.ui.unified").getText("LEGEND_NON_WORKING_DAY") + " ";
+		mAccProps["label"] += sText;
+		return sText;
+	};
+
+	MonthRenderer._renderWeekNumber = function(oRm, oDay, oHelper, oMonth) {
+		var iWeekNumber = oMonth._calculateWeekNumber(oDay);
+		var sId = oHelper.sId + "-WNum-" + iWeekNumber;
 
 		// add week number - inside first day of the week to allow better position and make it easier for ItemNavigation
 		oRm.openStart("div", sId);

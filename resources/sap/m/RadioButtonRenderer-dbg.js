@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -50,7 +50,7 @@ sap.ui.define([
 			bEnabled = oRadioButton.getEnabled(),
 			bNonEditableParent = !oRadioButton.getProperty("editableParent"),
 			bNonEditable = !oRadioButton.getEditable() || bNonEditableParent,
-			oValueState = oRadioButton.getValueState();
+			sValueState = oRadioButton.getValueState();
 
 		oRM.openStart("div", oRadioButton)
 			.class("sapMRb");
@@ -86,20 +86,8 @@ sap.ui.define([
 			oRM.class("sapMRbRo");
 		}
 
-		if (oValueState === ValueState.Error) {
-			oRM.class("sapMRbErr");
-		}
-
-		if (oValueState === ValueState.Warning) {
-			oRM.class("sapMRbWarn");
-		}
-
-		if (oValueState === ValueState.Success) {
-			oRM.class("sapMRbSucc");
-		}
-
-		if (oValueState === ValueState.Information) {
-			oRM.class("sapMRbInfo");
+		if (!this.isButtonReadOnly(oRadioButton)) {
+			this.addValueStateClass(oRM, sValueState);
 		}
 
 		if (bEnabled) {
@@ -206,6 +194,25 @@ sap.ui.define([
 			return (sTooltipText ? sTooltipText + " - " : "") + sValueStateText;
 		} else {
 			return ValueStateSupport.enrichTooltip(oRadioButton, sTooltipText);
+		}
+	};
+
+	RadioButtonRenderer.addValueStateClass = function (oRM, sValueState) {
+		switch (sValueState) {
+			case ValueState.Error:
+				oRM.class("sapMRbErr");
+				break;
+			case ValueState.Warning:
+				oRM.class("sapMRbWarn");
+				break;
+			case ValueState.Success:
+				oRM.class("sapMRbSucc");
+				break;
+			case ValueState.Information:
+				oRM.class("sapMRbInfo");
+				break;
+			default:
+				break;
 		}
 	};
 

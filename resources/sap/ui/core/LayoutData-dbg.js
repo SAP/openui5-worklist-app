@@ -1,12 +1,12 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides control sap.ui.core.LayoutData.
-sap.ui.define(['./Element', './library', "sap/ui/thirdparty/jquery"],
-	function(Element, library, jQuery) {
+sap.ui.define(['./Element', "sap/ui/thirdparty/jquery", './library'],
+	function(Element, jQuery) {
 	"use strict";
 
 
@@ -23,7 +23,7 @@ sap.ui.define(['./Element', './library', "sap/ui/thirdparty/jquery"],
 	 * @extends sap.ui.core.Element
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @public
 	 * @alias sap.ui.core.LayoutData

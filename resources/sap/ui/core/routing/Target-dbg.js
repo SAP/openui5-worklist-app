@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -24,6 +24,47 @@ sap.ui.define([
 		Log
 	) {
 		"use strict";
+
+		/**
+		 * This class resolves the property binding of the 'title' option.
+		 *
+		 * @class
+		 * @param {object} mSettings configuration object for the TitleProvider
+		 * @param {object} mSettings.target Target for which the TitleProvider is created
+		 * @private
+		 * @extends sap.ui.core.Control
+		 */
+		var TitleProvider = Control.extend("sap.ui.core.routing.Target.TitleProvider", /** @lends sap.ui.core.routing.TitleProvider.prototype */ {
+			metadata: {
+				library: "sap.ui.core",
+				properties: {
+					/**
+					 * The title text provided by this class
+					 */
+					title: {
+						type: "string",
+						group: "Data",
+						defaultValue: null
+					}
+				}
+			},
+			constructor: function(mSettings) {
+				this._oTarget = mSettings.target;
+				delete mSettings.target;
+				Control.prototype.constructor.call(this, mSettings);
+			},
+			setTitle: function(sTitle) {
+				// Setting title property should not trigger two way change in model
+				this.setProperty("title", sTitle, true);
+
+				if (this._oTarget._bIsDisplayed && sTitle) {
+					this._oTarget.fireTitleChanged({
+						name: this._oTarget._oOptions._name,
+						title: sTitle
+					});
+				}
+			}
+		});
 
 		/**
 		 * <b>Don't call this constructor directly</b>, use {@link sap.ui.core.routing.Targets} instead, it will create instances of a Target.<br/>
@@ -117,6 +158,19 @@ sap.ui.define([
 			 */
 
 			/**
+			 * Suspends the object which is loaded by the target.
+			 *
+			 * Currently this function stops the router of the component when the object which is loaded by this target
+			 * is an instance of UIComponent. This is done only when the target is already loaded. When the target is
+			 * not loaded yet or still being loaded, the router of the component isn't stopped.
+			 *
+			 * @return {sap.ui.core.routing.Target} The 'this' to chain the call
+			 * @name sap.ui.core.routing.Target#suspend
+			 * @function
+			 * @public
+			 */
+
+			/**
 			 * Will be fired when a target is displayed
 			 *
 			 * Could be triggered by calling the display function or by the @link sap.ui.core.routing.Router when a target is referenced in a matching route.
@@ -130,6 +184,7 @@ sap.ui.define([
 			 * @param {object} oEvent.getParameters.control The control that now contains the view in the controlAggregation
 			 * @param {object} oEvent.getParameters.config The options object passed to the constructor {@link sap.ui.core.routing.Target#constructor}
 			 * @param {object} oEvent.getParameters.data The data passed into the {@link sap.ui.core.routing.Target#display} function
+			 * @param {object} oEvent.getParameters.routeRelevant=false Whether the target is relevant to the matched route or not
 			 * @public
 			 */
 
@@ -148,7 +203,7 @@ sap.ui.define([
 			 *            [oListener] Context object to call the event handler with. Defaults to this
 			 *            <code>sap.ui.core.routing.Target</code> itself
 			 *
-			 * @returns {sap.ui.core.routing.Target} Reference to <code>this</code> in order to allow method chaining
+			 * @returns {this} Reference to <code>this</code> in order to allow method chaining
 			 * @public
 			 */
 			attachDisplay : function(oData, fnFunction, oListener) {
@@ -163,7 +218,7 @@ sap.ui.define([
 			 *
 			 * @param {function} fnFunction The function to be called, when the event occurs
 			 * @param {object} [oListener] Context object on which the given function had to be called
-			 * @returns {sap.ui.core.routing.Target} Reference to <code>this</code> in order to allow method chaining
+			 * @returns {this} Reference to <code>this</code> in order to allow method chaining
 			 * @public
 			 */
 			detachDisplay : function(fnFunction, oListener) {
@@ -174,7 +229,7 @@ sap.ui.define([
 			 * Fires event {@link #event:created created} to attached listeners.
 			 *
 			 * @param {object} [oParameters] Parameters to pass along with the event
-			 * @returns {sap.ui.core.routing.Target} Reference to <code>this</code> in order to allow method chaining
+			 * @returns {this} Reference to <code>this</code> in order to allow method chaining
 			 * @protected
 			 */
 			fireDisplay : function(oParameters) {
@@ -223,7 +278,7 @@ sap.ui.define([
 			 *            Context object to call the event handler with. Defaults to this
 			 *            <code>sap.ui.core.routing.Target</code> itself
 			 *
-			 * @returns {sap.ui.core.routing.Target} Reference to <code>this</code> in order to allow method chaining
+			 * @returns {this} Reference to <code>this</code> in order to allow method chaining
 			 * @private
 			 */
 			attachTitleChanged : function(oData, fnFunction, oListener) {
@@ -249,7 +304,7 @@ sap.ui.define([
 			 *
 			 * @param {function} fnFunction The function to be called, when the event occurs
 			 * @param {object} [oListener] Context object on which the given function had to be called
-			 * @returns {sap.ui.core.routing.Target} Reference to <code>this</code> in order to allow method chaining
+			 * @returns {this} Reference to <code>this</code> in order to allow method chaining
 			 * @private
 			 */
 			detachTitleChanged : function(fnFunction, oListener) {
@@ -360,47 +415,6 @@ sap.ui.define([
 			M_EVENTS : {
 				DISPLAY : "display",
 				TITLE_CHANGED : "titleChanged"
-			}
-		});
-
-		/**
-		 * This class resolves the property binding of the 'title' option.
-		 *
-		 * @class
-		 * @param {object} mSettings configuration object for the TitleProvider
-		 * @param {object} mSettings.target Target for which the TitleProvider is created
-		 * @private
-		 * @extends sap.ui.core.Control
-		 */
-		var TitleProvider = Control.extend("sap.ui.core.routing.Target.TitleProvider", /** @lends sap.ui.core.routing.TitleProvider.prototype */ {
-			metadata: {
-				library: "sap.ui.core",
-				properties: {
-					/**
-					 * The title text provided by this class
-					 */
-					title: {
-						type: "string",
-						group: "Data",
-						defaultValue: null
-					}
-				}
-			},
-			constructor: function(mSettings) {
-				this._oTarget = mSettings.target;
-				delete mSettings.target;
-				Control.prototype.constructor.call(this, mSettings);
-			},
-			setTitle: function(sTitle) {
-				// Setting title property should not trigger two way change in model
-				this.setProperty("title", sTitle, true);
-
-				if (this._oTarget._bIsDisplayed && sTitle) {
-					this._oTarget.fireTitleChanged({
-						name: this._oTarget._oOptions._name,
-						title: sTitle
-					});
-				}
 			}
 		});
 

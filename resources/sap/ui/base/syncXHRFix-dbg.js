@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*
@@ -100,7 +100,8 @@ sap.ui.define([], function() {
 						aArgs = [fnWrappedHandler, 0].concat(arguments);
 						_timeout.apply(window, aArgs);
 					} else {
-						fnHandler = typeof vHandler !== "function" ? new Function(vHandler) : vHandler; // eslint-disable-line no-new-func
+						// eslint-disable-next-line no-new-func
+						fnHandler = typeof vHandler !== "function" ? new Function(vHandler) : vHandler; // legacy-relevant
 						fnHandler.apply(window, arguments);
 					}
 				};
@@ -217,9 +218,12 @@ sap.ui.define([], function() {
 								case "send":
 									return function() {
 										bSyncRequestOngoing = bSync;
-										vProp.apply(oTarget, arguments);
-										iReadyState = oTarget.readyState;
-										bSyncRequestOngoing = false;
+										try {
+											vProp.apply(oTarget, arguments);
+										} finally {
+											iReadyState = oTarget.readyState;
+											bSyncRequestOngoing = false;
+										}
 									};
 							}
 							// All functions need to be wrapped, so they are called on the correct object

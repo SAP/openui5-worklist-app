@@ -1,19 +1,21 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
 	"sap/ui/core/Renderer",
 	"./YearPickerRenderer",
-	'./CalendarDate',
-	'sap/ui/core/date/UniversalDate'
+	"./CalendarDate",
+	"sap/ui/core/date/UniversalDate",
+	"sap/ui/unified/calendar/CalendarUtils"
 ],	function(
 	Renderer,
 	YearPickerRenderer,
 	CalendarDate,
-	UniversalDate
+	UniversalDate,
+	CalendarUtils
 ) {
 	"use strict";
 
@@ -34,12 +36,13 @@ sap.ui.define([
 			role: "grid",
 			readonly: "true",
 			multiselectable: false,
-			label: sap.ui.getCore().getLibraryResourceBundle("sap.ui.unified").getText("YEAR_RANGE_PICKER")
+			roledescription: sap.ui.getCore().getLibraryResourceBundle("sap.ui.unified").getText("YEAR_RANGE_PICKER")
 		};
 	};
 
 	YearRangePickerRenderer.renderCells = function(oRm, oYRP) {
-		var oSelectedDate = new CalendarDate(oYRP._getDate(), oYRP.getPrimaryCalendarType()),
+		var oDate = oYRP.getProperty("_middleDate") ? oYRP.getProperty("_middleDate") : oYRP._getDate(),
+			oSelectedDate = new CalendarDate(oDate, oYRP.getPrimaryCalendarType()),
 			oFirstDate = new CalendarDate(oSelectedDate, oYRP.getPrimaryCalendarType()),
 			oSecondDate,
 			sFirstYear = "",
@@ -89,7 +92,10 @@ sap.ui.define([
 			oRm.style("width", sWidth);
 			oRm.accessibilityState(null, mAccProps);
 			oRm.openEnd(); // div element
-
+			if (CalendarUtils._isBetween(oYRP._oDate, oFirstDate, oSecondDate, true)) {
+				// calculate in which year range is the selected year in order to focus it after rendering
+				oYRP._iSelectedIndex = i;
+			}
 			// to render era in Japanese, UniversalDate is used, since CalendarDate.toUTCJSDate() will convert the date in Gregorian
 			sFirstYear = oYRP._oYearFormat.format(UniversalDate.getInstance(oFirstDate.toUTCJSDate(), oFirstDate.getCalendarType()), true);
 			sSecondYear = oYRP._oYearFormat.format(UniversalDate.getInstance(oSecondDate.toUTCJSDate(), oSecondDate.getCalendarType()), true);

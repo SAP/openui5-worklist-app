@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 // Provides control sap.m.TabStripItem.
@@ -25,7 +25,7 @@ sap.ui.define(["./library", "sap/ui/core/Item", "sap/ui/base/ManagedObject", "sa
 		 * @extends sap.ui.core.Item
 		 *
 		 * @author SAP SE
-		 * @version 1.79.0
+		 * @version 1.96.2
 		 *
 		 * @constructor
 		 * @private
@@ -254,7 +254,7 @@ sap.ui.define(["./library", "sap/ui/core/Item", "sap/ui/base/ManagedObject", "sa
 		 * Property setter for the icon
 		 *
 		 * @param {sap.ui.core.URI} sIcon - new value of the Icon property
-		 * @return {sap.m.TabStripItem} this to allow method chaining
+		 * @return {this} this to allow method chaining
 		 * @public
 		 */
 		TabStripItem.prototype.setIcon = function(sIcon) {
@@ -293,7 +293,7 @@ sap.ui.define(["./library", "sap/ui/core/Item", "sap/ui/base/ManagedObject", "sa
 		/**
 		 * Function is called when image control needs to be loaded.
 		 *
-		 * @return {sap.m.TabStripItem} this to allow method chaining
+		 * @returns {sap.ui.core.Control} the aggregated image
 		 * @private
 		 */
 		TabStripItem.prototype._getImage = function () {

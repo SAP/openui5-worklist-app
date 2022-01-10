@@ -1,30 +1,33 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides control sap.m.IconTabBarSelectList.
 sap.ui.define([
-	'./library',
-	'sap/ui/core/Control',
-	"sap/ui/core/Core",
-	'sap/ui/core/delegate/ItemNavigation',
-	'./IconTabBarDragAndDropUtil',
-	'sap/ui/core/dnd/DropPosition',
-	'./IconTabBarSelectListRenderer',
+	"./library",
+	"./IconTabBarDragAndDropUtil",
+	"./IconTabBarSelectListRenderer",
+	"sap/ui/core/Control",
+	"sap/ui/core/delegate/ItemNavigation",
+	"sap/ui/core/theming/Parameters",
+	"sap/ui/core/library",
 	"sap/ui/thirdparty/jquery"
 ], function(
 	library,
-	Control,
-	Core,
-	ItemNavigation,
 	IconTabBarDragAndDropUtil,
-	DropPosition,
 	IconTabBarSelectListRenderer,
+	Control,
+	ItemNavigation,
+	Parameters,
+	coreLibrary,
 	jQuery
 ) {
 	"use strict";
+
+	// shortcut for sap.ui.core.dnd.DropPosition
+	var DropPosition = coreLibrary.dnd.DropPosition;
 
 	/**
 	 * Constructor for a new <code>sap.m.IconTabBarSelectList</code>.
@@ -37,7 +40,7 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @constructor
 	 * @private
@@ -116,6 +119,13 @@ sap.ui.define([
 	 */
 	IconTabBarSelectList.prototype.onAfterRendering = function () {
 		this._initItemNavigation();
+
+		// notify items that they are rendered
+		this.getItems().forEach(function (oItem) {
+			if (oItem._onAfterParentRendering) {
+				oItem._onAfterParentRendering();
+			}
+		});
 	};
 
 	/**
@@ -194,6 +204,31 @@ sap.ui.define([
 	};
 
 	/**
+	 * Returns the IconTabHeader instance which holds all the TabFilters.
+	 */
+	IconTabBarSelectList.prototype._getIconTabHeader = function () {
+		return this._oIconTabHeader;
+	};
+
+	IconTabBarSelectList.prototype._getParams = function () {
+		var mParams = Object.assign({
+			"_sap_m_IconTabBar_SelectListItem_PaddingLeft": "0.5rem",
+			"_sap_m_IconTabBar_SelectListItem_PaddingLeftAdditional": "0"
+		}, Parameters.get({
+			name: [
+				"_sap_m_IconTabBar_SelectListItem_PaddingLeft",
+				"_sap_m_IconTabBar_SelectListItem_PaddingLeftAdditional"
+			],
+			callback: this.invalidate.bind(this)
+		}));
+
+		return {
+			fNestedItemPaddingLeft: Number.parseFloat(mParams["_sap_m_IconTabBar_SelectListItem_PaddingLeft"]),
+			fAdditionalPadding: Number.parseFloat(mParams["_sap_m_IconTabBar_SelectListItem_PaddingLeftAdditional"])
+		};
+	};
+
+	/**
 	 * Handles tap event.
 	 * @private
 	 */
@@ -254,7 +289,7 @@ sap.ui.define([
 			oContext = oDroppedControl._getRealTab().getParent(),
 			allowedNestingLevel = this._oIconTabHeader.getMaxNestingLevel();
 
-		if (this._oTabFilter._bIsOverflow) {
+		if (this._oTabFilter._isOverflow()) {
 			oContext = this._oIconTabHeader;
 		}
 
@@ -289,14 +324,22 @@ sap.ui.define([
 
 		var oTabToBeMoved = oEvent.srcControl,
 			iKeyCode = oEvent.keyCode,
-			iIndexBeforeMove = this.indexOfItem(oTabToBeMoved);
+			iIndexBeforeMove = this.indexOfItem(oTabToBeMoved),
+			oContext = this;
 
-		IconTabBarDragAndDropUtil.moveItem.call(this, oTabToBeMoved, iKeyCode, this.getItems().length - 1);
+		IconTabBarDragAndDropUtil.moveItem.call(oContext, oTabToBeMoved, iKeyCode, oContext.getItems().length - 1);
+
 		this._initItemNavigation();
 		oTabToBeMoved.$().trigger("focus");
 
-		if (iIndexBeforeMove !== this.indexOfItem(oTabToBeMoved)) {
+		if (iIndexBeforeMove === this.indexOfItem(oTabToBeMoved)) {
+			return;
+		}
+		oContext = oTabToBeMoved._getRealTab().getParent();
+		if (this._oTabFilter._isOverflow() && oTabToBeMoved._getRealTab()._getNestedLevel() === 1) {
 			this._oIconTabHeader._moveTab(oTabToBeMoved._getRealTab(), iKeyCode, this._oIconTabHeader.getItems().length - 1);
+		} else {
+			IconTabBarDragAndDropUtil.moveItem.call(oContext, oTabToBeMoved._getRealTab(), iKeyCode, oContext.getItems().length - 1);
 		}
 	};
 

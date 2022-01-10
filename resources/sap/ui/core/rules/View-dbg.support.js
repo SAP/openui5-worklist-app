@@ -1,19 +1,27 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
  * Defines support rules related to the view.
  */
-sap.ui.define(["sap/ui/support/library", "sap/ui/core/Element", "sap/ui/thirdparty/jquery", "sap/base/util/isEmptyObject"],
-	function(SupportLib, Element, jQuery, isEmptyObject) {
+sap.ui.define(["sap/ui/support/library", "sap/ui/core/Element", "sap/ui/thirdparty/jquery", "sap/base/util/isEmptyObject", "sap/ui/base/DataType"],
+	function(SupportLib, Element, jQuery, isEmptyObject, DataType) {
 	"use strict";
 
 	// shortcuts
 	var Categories = SupportLib.Categories; // Accessibility, Performance, Memory, ...
 	var Severity = SupportLib.Severity; // Hint, Warning, Error
 	var Audiences = SupportLib.Audiences; // Control, Internal, Application
+
+	var isDefaultValue = function (oPropertyMetadata, vValue) {
+		if (oPropertyMetadata.defaultValue !== null) {
+			return oPropertyMetadata.defaultValue === vValue;
+		}
+
+		return vValue === DataType.getType(oPropertyMetadata.type).getDefaultValue();
+	};
 
 	//**********************************************************
 	// Rule Definitions
@@ -33,7 +41,7 @@ sap.ui.define(["sap/ui/support/library", "sap/ui/core/Element", "sap/ui/thirdpar
 		resolution: "Define the XML view as '<mvc:View ...>' and configure the XML namepspace as 'xmlns:mvc=\"sap.ui.core.mvc\"'",
 		resolutionurls: [{
 			text: "Documentation: Namespaces in XML Views",
-			href: "https://sapui5.hana.ondemand.com/#docs/guide/2421a2c9fa574b2e937461b5313671f0.html"
+			href: "https://sapui5.hana.ondemand.com/#/topic/2421a2c9fa574b2e937461b5313671f0"
 		}],
 		check: function(oIssueManager, oCoreFacade, oScope) {
 			var aXMLViews = oScope.getElements().filter(function (oControl) { return oControl.getMetadata().getName() === "sap.ui.core.mvc.XMLView"; });
@@ -66,7 +74,7 @@ sap.ui.define(["sap/ui/support/library", "sap/ui/core/Element", "sap/ui/thirdpar
 		resolution: "Set the namespace of the control library that holds most of the controls you use as default namespace (e.g. xmlns=\"sap.m\")",
 		resolutionurls: [{
 			text: "Documentation: Namespaces in XML Views",
-			href: "https://sapui5.hana.ondemand.com/#docs/guide/2421a2c9fa574b2e937461b5313671f0.html"
+			href: "https://sapui5.hana.ondemand.com/#/topic/2421a2c9fa574b2e937461b5313671f0"
 		}],
 		check: function(oIssueManager, oCoreFacade, oScope) {
 			var aXMLViews = oScope.getElements().filter(function (oControl) { return oControl.getMetadata().getName() === "sap.ui.core.mvc.XMLView"; });
@@ -161,7 +169,7 @@ sap.ui.define(["sap/ui/support/library", "sap/ui/core/Element", "sap/ui/thirdpar
 		resolution: "Remove the unused namespaces from the view definition",
 		resolutionurls: [{
 			text: "Documentation: Namespaces in XML Views",
-			href: "https://sapui5.hana.ondemand.com/#docs/guide/2421a2c9fa574b2e937461b5313671f0.html"
+			href: "https://sapui5.hana.ondemand.com/#/topic/2421a2c9fa574b2e937461b5313671f0"
 		}],
 		check: function(oIssueManager, oCoreFacade, oScope) {
 			var aXMLViews = oScope.getElements().filter(function (oControl) { return oControl.getMetadata().getName() === "sap.ui.core.mvc.XMLView"; });
@@ -178,11 +186,8 @@ sap.ui.define(["sap/ui/support/library", "sap/ui/core/Element", "sap/ui/thirdpar
 						&& sLocalName !== "xmlns:support"
 						&& sLocalName !== "mvc"
 						&& sFullName.indexOf("schemas.sap.com") < 0) {
-							var oContent = jQuery(oXMLView._xContent)[0];
 							// get the xml code of the view as a string
-							// The outerHTML doesn't work with IE, so we used
-							// the XMLSerializer instead
-							var sContent = new XMLSerializer().serializeToString(oContent);
+							var sContent = jQuery(oXMLView._xContent)[0].outerHTML;
 
 							// check if there is a reference of this namespace inside the view
 							if (!sContent.match("<" + sLocalName + ":") && !sContent.match(" " + sLocalName + ":")) {
@@ -226,18 +231,53 @@ sap.ui.define(["sap/ui/support/library", "sap/ui/core/Element", "sap/ui/thirdpar
 				for (var sProperty in mProperties) {
 					// if property is deprecated and it is set to a different from the default value
 					// Checks only the deprecated properties with defaultValue property is not null
-					if (mProperties[sProperty].deprecated
-						&& mProperties[sProperty].defaultValue != oElement.getProperty(sProperty)
-						&& mProperties[sProperty].defaultValue !== null) {
+					if (mProperties[sProperty].deprecated &&
+						!isDefaultValue(mProperties[sProperty], oElement.getProperty(sProperty))) {
 
 						oIssueManager.addIssue({
 							severity: Severity.Medium,
-							details: "Deprecated property '" + sProperty + "' is used for element '" + oElement.getId() + "'.",
+							details: "Deprecated property '" + sProperty + "' is used for element '" + oElement.getId()
+								+ "'. Default value: '" + mProperties[sProperty].defaultValue + "' and current value: '"
+								+ oElement.getProperty(sProperty) + "'",
 							context: {
 								id: oElement.getId()
 							}
 						});
 					}
+				}
+			});
+		}
+	};
+
+	/**
+	 * Checks for deprecated controls
+	 */
+	var oDeprecatedElementRule = {
+		id: "deprecatedElement",
+		audiences: [Audiences.Application],
+		categories: [Categories.Functionality],
+		enabled: true,
+		minversion: "1.38",
+		title: "Usage of deprecated element",
+		description: "Using deprecated controls should be avoided, because they are not maintained anymore",
+		resolution: "Refer to the API of the element which element should be used instead.",
+		resolutionurls: [{
+			text: "API Reference",
+			href: "https://sapui5.hana.ondemand.com/#/api/deprecated"
+		}],
+		check: function(oIssueManager, oCoreFacade, oScope) {
+			oScope.getElementsByClassName(Element).forEach(function(oElement) {
+
+				var oMetadata = oElement.getMetadata();
+
+				if (oMetadata.isDeprecated()) {
+					oIssueManager.addIssue({
+						severity: Severity.Medium,
+						details: "Deprecated element '" + oElement.getId() + "' is used.",
+						context: {
+							id: oElement.getId()
+						}
+					});
 				}
 			});
 		}
@@ -369,6 +409,7 @@ sap.ui.define(["sap/ui/support/library", "sap/ui/core/Element", "sap/ui/thirdpar
 		oXMLViewLowerCaseControl,
 		oXMLViewUnusedNamespaces,
 		oDeprecatedPropertyRule,
+		oDeprecatedElementRule,
 		oDeprecatedAggregationRule,
 		oDeprecatedAssociationRule,
 		oDeprecatedEventRule

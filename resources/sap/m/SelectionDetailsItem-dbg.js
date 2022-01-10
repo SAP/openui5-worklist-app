@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -12,7 +12,8 @@ sap.ui.define([
 	"sap/m/Button",
 	"sap/m/OverflowToolbar",
 	"sap/m/ToolbarSpacer",
-	"sap/ui/base/Interface"
+	"sap/ui/base/Interface",
+	"./SelectionDetailsListItemRenderer"
 ],
 	function(
 		Element,
@@ -21,14 +22,17 @@ sap.ui.define([
 		Button,
 		OverflowToolbar,
 		ToolbarSpacer,
-		Interface
+		Interface,
+		SelectionDetailsListItemRenderer
 	) {
 	"use strict";
 
 	/**
 	 * @private
 	 */
-	var SelectionDetailsListItem = ListItemBase.extend("sap.m.SelectionDetailsListItem");
+	var SelectionDetailsListItem = ListItemBase.extend("sap.m.SelectionDetailsListItem", {
+		renderer: SelectionDetailsListItemRenderer
+	});
 
 	SelectionDetailsListItem.prototype.onBeforeRendering = function() {
 		var sType;
@@ -54,7 +58,7 @@ sap.ui.define([
 	 * @extends sap.ui.core.Element
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @constructor
 	 * @protected

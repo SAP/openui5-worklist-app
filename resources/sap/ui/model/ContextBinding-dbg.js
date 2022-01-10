@@ -1,9 +1,9 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
-
+/*eslint-disable max-len */
 // Provides an abstraction for list bindings
 sap.ui.define(['./Binding'],
 	function(Binding) {
@@ -35,36 +35,28 @@ sap.ui.define(['./Binding'],
 		},
 
 		metadata : {
-			 publicMethods : [
-			 // methods
-				"getElementContext"
-			 ]
+			publicMethods : [
+				// methods
+				"getBoundContext"
+			]
 		}
 	});
 
 	/**
-	 * Check whether this Binding would provide new values and in case it changed,
-	 * inform interested parties about this.
+	 * Check whether this Binding would provide new values and in case it changed, inform interested
+	 * parties about this.
 	 *
-	 * @param {boolean} bForceupdate
+	 * @param {boolean} bForceupdate Ignored in this method
 	 */
 	ContextBinding.prototype.checkUpdate = function(bForceupdate) {
 		// nothing to do here, data changes can not change the context
 	};
 
 	/**
-	 * Refreshes the binding, check whether the model data has been changed and fire change event
-	 * if this is the case. For server side models this should refetch the data from the server.
-	 *
-	 * @param {boolean} bForceUpdate Does not have any effect on this binding
-	 *
-	 * @public
-	 */
-
-	/**
 	 * Return the bound context.
 	 *
-	 * @returns {sap.ui.model.Context} Context object used by this context binding or <code>null</code>
+	 * @returns {sap.ui.model.Context}
+	 *   Context object used by this context binding or <code>null</code>
 	 * @public
 	 */
 	ContextBinding.prototype.getBoundContext = function() {

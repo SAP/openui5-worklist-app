@@ -1,9 +1,9 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
-
+/*eslint-disable max-len */
 // Provides the base implementation for all composite type implementations
 sap.ui.define(['./SimpleType'],
 	function (SimpleType) {
@@ -39,7 +39,7 @@ sap.ui.define(['./SimpleType'],
 	 *   <code>true</code>.
 	 * @extends sap.ui.model.SimpleType
 	 * @public
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 */
 	var CompositeType = SimpleType.extend("sap.ui.model.CompositeType", /** @lends sap.ui.model.CompositeType.prototype */ {
 
@@ -88,8 +88,9 @@ sap.ui.define(['./SimpleType'],
 	 * @param {array} [aCurrentValues]
 	 *   The current values of all binding parts; required if {@link #getParseWithValues} returns
 	 *   <code>true</code>
-	 * @return {any[]}
-	 *   An array of raw values
+	 * @return {any[]|any}
+	 *   An array of raw values or the raw value returned by the type's conversion object in case it
+	 *   exists, see {@link sap.ui.model.SimpleType#getModelFormat SimpleType#getModelFormat}
 	 * @throws {sap.ui.model.ParseException}
 	 *   If parsing to the model type is not possible; the message of the exception is language
 	 *   dependent as it may be displayed on the UI
@@ -115,6 +116,23 @@ sap.ui.define(['./SimpleType'],
 	 * @name sap.ui.model.CompositeType.prototype.validateValue
 	 * @public
 	 */
+
+	/**
+	 * Gets an array of indices that determine which parts of this type shall not propagate their
+	 * model messages to the attached control. Prerequisite is that the corresponding binding
+	 * supports this feature, see {@link sap.ui.model.Binding#supportsIgnoreMessages}.
+	 *
+	 * @return {number[]}
+	 *   An array of indices that determine which parts of this type shall not propagate their model
+	 *   messages to the attached control
+	 *
+	 * @public
+	 * @see sap.ui.model.Binding#supportsIgnoreMessages
+	 * @since 1.82.0
+	 */
+	CompositeType.prototype.getPartsIgnoringMessages = function () {
+		return [];
+	};
 
 	/**
 	 * Returns whether the {@link #formatValue} and {@link #parseValue} methods operate on the raw

@@ -1,18 +1,17 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // sap.ui.core.util.ResponsivePaddingsEnabler
 sap.ui.define([
-	"sap/ui/core/library",
 	"sap/base/Log",
 	'sap/ui/core/ResizeHandler',
-	"sap/ui/thirdparty/jquery"
+	"sap/ui/thirdparty/jquery",
+	"sap/ui/core/library" // ensures loading of CSS
 ],
 function (
-	library,
 	Log,
 	ResizeHandler,
 	jQuery

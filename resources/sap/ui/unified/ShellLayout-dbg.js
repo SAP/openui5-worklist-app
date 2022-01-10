@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -48,7 +48,7 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @constructor
 	 * @public
@@ -60,6 +60,7 @@ sap.ui.define([
 	var ShellLayout = Control.extend("sap.ui.unified.ShellLayout", /** @lends sap.ui.unified.ShellLayout.prototype */ { metadata : {
 
 		library : "sap.ui.unified",
+		deprecated: true,
 		properties : {
 
 			/**
@@ -467,7 +468,7 @@ sap.ui.define([
 		}
 
 		var duration = parseInt(Parameters.get("_sap_ui_unified_ShellLayout_AnimDuration"));
-		if (!this._animation || (Device.browser.internet_explorer && Device.browser.version < 10)) {
+		if (!this._animation) {
 			duration = 0;
 		}
 
@@ -502,7 +503,7 @@ sap.ui.define([
 //		this._cssWorkaroundTimer = setTimeout(function(){
 //			this._cssWorkaroundTimer = null;
 //			Log.debug("sap.ui.unified.ShellLayout: CSS Workaround applied.");
-//			jQuery("head").append("<link type='text/css' rel='stylesheet' id='" + this.getId() + "-css' href='data:text/css;base64,LnNhcFVpVWZkU2hlbGxDaHJvbWVSZXBhaW50e291dGxpbmUtY29sb3I6aW5pdGlhbDt9'/>");
+//			jQuery("head").append("<link type='text/css' rel='stylesheet' id='" + this.getId() + "-css' href='data:text/css;base64,LnNhcFVpVWZkU2hlbGxDaHJvbWVSZXBhaW50e291dGxpbmUtY29sb3I6aW5pdGlhbDt9'>");
 //			this._cssWorkaroundTimer = setTimeout(function(){
 //				this.$("css").remove();
 //			}.bind(this), 100);

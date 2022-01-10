@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -25,6 +25,9 @@ sap.ui.define([
 
 	// shortcut for sap.m.IconTabDensityMode
 	var IconTabDensityMode = library.IconTabDensityMode;
+
+	// shortcut for sap.m.TabsOverflowMode
+	var TabsOverflowMode = library.TabsOverflowMode;
 
 	/**
 	 * Constructor for a new IconTabBar.
@@ -76,6 +79,9 @@ sap.ui.define([
 	 *<li>Use an arrow (e.g. triple-chevron) as a separator to connect the steps.</li>
 	 *<li>Use counters to show the number of items in each filter.</li>
 	 *</ul>
+	 *<h3>Hierarchies</h3>
+	 * Multiple sub tabs could be placed underneath one main tab. Nesting allows deeper hierarchies with indentations to indicate the level of each nested tab.
+	 * When a tab has both sub tabs and own content its click area is split to allow the user to display the content or alternatively to expand/collapse the list of sub tabs.
 	 *<h3>Responsive Behavior</h3>
 	 *<ul>
 	 *<li>Text-only tabs are never truncated.</li>
@@ -88,7 +94,7 @@ sap.ui.define([
 	 * @implements sap.m.ObjectHeaderContainer, sap.f.IDynamicPageStickyContent
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @public
 	 * @alias sap.m.IconTabBar
@@ -167,7 +173,6 @@ sap.ui.define([
 
 			/**
 			 * Specifies the header mode.
-			 * <b>Note:</b> The Inline mode works only if no icons are set.
 			 *
 			 * @since 1.40
 			 */
@@ -186,9 +191,8 @@ sap.ui.define([
 			/**
 			 * Specifies the background color of the header.
 			 *
-			 * Depending on the theme, you can change the state of
-			 * the background color to "Solid", "Translucent", or "Transparent".
-			 * Default is "Solid".
+			 * Depending on the theme, you can change the state of the background color to "Solid", "Translucent", or "Transparent".
+			 * <b>Note:</b> In SAP Belize Deep (sap_belize_plus) theme this property should be set to "Solid".
 			 * @since 1.44
 			 */
 			headerBackgroundDesign : {type : "sap.m.BackgroundDesign", group : "Appearance", defaultValue : BackgroundDesign.Solid},
@@ -229,7 +233,17 @@ sap.ui.define([
 			 * <code>headerDescription</code> - text to serve as a description for the header.
 			 * @since 1.78
 			 */
-			ariaTexts : {type : "object", group : "Accessibility", defaultValue : null}
+			ariaTexts : {type : "object", group : "Accessibility", defaultValue : null},
+
+			/**
+			 * Specifies the overflow mode of the header.
+			 *
+			 * The default <code>End</code> mode shows as many tabs that can fit on the screen, then shows one overflow at the end
+			 * containing the remaining items.
+			 * The <code>StartAndEnd</code> is used to keep the order of tabs intact and offers two overflow tabs on both ends of the bar.
+			 * @since 1.90
+			 */
+			tabsOverflowMode: {type : "sap.m.TabsOverflowMode", group : "Behavior", defaultValue : TabsOverflowMode.End}
 		},
 		aggregations : {
 
@@ -276,6 +290,12 @@ sap.ui.define([
 					key : {type : "string"},
 
 					/**
+					 * The key of the previous selected item
+					 * @since 1.96
+					 */
+					previousKey : {type : "string"},
+
+					/**
 					 * The selected item
 					 * @deprecated As of 1.15.0, replaced by parameter <code>item</code> instead.
 					 */
@@ -316,6 +336,9 @@ sap.ui.define([
 		content: { suffix: "content" }
 	});
 
+	// List of classes to copy from IconTabBar to IconTabHeader when used as a sticky header inside a DynamicPage.
+	IconTabBar._CLASSES_TO_COPY = ["sapUiResponsiveContentPadding", "sapUiNoContentPadding", "sapUiContentPadding"];
+
 	/**
 	 * Initialization lifecycle method.
 	 *
@@ -330,7 +353,7 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @param {boolean} bExpanded New parameter value.
-	 * @return {sap.m.IconTabBar} this IconTabBar reference for chaining.
+	 * @return {this} this IconTabBar reference for chaining.
 	 */
 	IconTabBar.prototype.setExpanded = function (bExpanded) {
 		// set internal property
@@ -348,7 +371,7 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @param {sap.m.IconTabHeaderMode} mode New parameter value.
-	 * @return {sap.m.IconTabBar} this IconTabBar reference for chaining.
+	 * @return {this} this IconTabBar reference for chaining.
 	 */
 	IconTabBar.prototype.setHeaderMode = function (mode) {
 		// set internal property
@@ -364,7 +387,7 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @param {sap.m.IconTabHeaderMode} mode New parameter value.
-	 * @return {sap.m.IconTabBar} this IconTabBar reference for chaining.
+	 * @return {this} this IconTabBar reference for chaining.
 	 */
 	IconTabBar.prototype.setTabDensityMode = function (mode) {
 		// set internal property
@@ -381,7 +404,7 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @param {sap.m.BackgroundDesign} headerBackgroundDesign New parameter value.
-	 * @return {sap.m.IconTabBar} this IconTabBar reference for chaining.
+	 * @return {this} this IconTabBar reference for chaining.
 	 */
 	IconTabBar.prototype.setHeaderBackgroundDesign = function (headerBackgroundDesign) {
 		// set internal property
@@ -397,7 +420,7 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @param {boolean} value New value for enableTabReordering.
-	 * @return {sap.m.IconTabBar} this IconTabBar reference for chaining.
+	 * @return {this} this IconTabBar reference for chaining.
 	 */
 	IconTabBar.prototype.setEnableTabReordering = function (value) {
 		// set internal property
@@ -406,6 +429,42 @@ sap.ui.define([
 		this._getIconTabHeader().setEnableTabReordering(value);
 
 		return this;
+	};
+
+	/**
+	 * Sets the ariaTexts property.
+	 *
+	 * @public
+	 * @param {object} oAriaTexts New value for ariaTexts.
+	 * @returns {this} this Reference to this in order to allow method chaining
+	 */
+	IconTabBar.prototype.setAriaTexts = function (oAriaTexts) {
+		// set internal property
+		this.setProperty("ariaTexts", oAriaTexts, true);
+
+		this._getIconTabHeader().setAriaTexts(oAriaTexts);
+
+		return this;
+	};
+
+	IconTabBar.prototype.addStyleClass = function (sClass, bSuppressRerendering) {
+		var oIconTabHeader = this._getIconTabHeader();
+
+		if (IconTabBar._CLASSES_TO_COPY.indexOf(sClass) !== -1) {
+			oIconTabHeader.addStyleClass(sClass, true);
+		}
+
+		return Control.prototype.addStyleClass.apply(this, arguments);
+	};
+
+	IconTabBar.prototype.removeStyleClass = function (sClass, bSuppressRerendering) {
+		var oIconTabHeader = this._getIconTabHeader();
+
+		if (IconTabBar._CLASSES_TO_COPY.indexOf(sClass) !== -1) {
+			oIconTabHeader.removeStyleClass(sClass, true);
+		}
+
+		return Control.prototype.removeStyleClass.apply(this, arguments);
 	};
 
 	/**
@@ -431,7 +490,7 @@ sap.ui.define([
 	 *
 	 * @private
 	 * @param {boolean|undefined} bExpanded The new state of the container. If not specified, it will use the property expanded.
-	 * @return {sap.m.IconTabBar} this IconTabBar reference for chaining.
+	 * @return {this} this IconTabBar reference for chaining.
 	 */
 	IconTabBar.prototype._toggleExpandCollapse = function(bExpanded) {
 		var $content = this.$("content");
@@ -498,7 +557,7 @@ sap.ui.define([
 	 *
 	 * @private
 	 * @param {boolean} bExpanded The new state of the container.
-	 * @return {sap.m.IconTabBar} this IconTabBar reference for chaining.
+	 * @return {this} this IconTabBar reference for chaining.
 	 */
 	IconTabBar.prototype.onTransitionEnded = function(bExpanded) {
 		var $content = this.$("content"),
@@ -543,15 +602,7 @@ sap.ui.define([
 	};
 
 	IconTabBar.prototype._getStickyContent = function () {
-		var oIconTabHeader = this._getIconTabHeader();
-
-		IconTabBar._CLASSES_TO_COPY.forEach(function (sClassName) {
-			if (this.hasStyleClass(sClassName)) {
-				oIconTabHeader.addStyleClass(sClassName);
-			}
-		}.bind(this));
-
-		return oIconTabHeader;
+		return this._getIconTabHeader();
 	};
 
 	IconTabBar.prototype._returnStickyContent = function () {
@@ -574,14 +625,15 @@ sap.ui.define([
 		var oITH = this._getIconTabHeader(),
 			$ITH = oITH.$();
 
-		oITH._setAriaTexts(this.getAriaTexts());
 		oITH.setMaxNestingLevel(this.getMaxNestingLevel());
+		oITH.setTabsOverflowMode(this.getTabsOverflowMode());
 
 		if (this._bStickyContentSticked && $ITH) {
 			delete this._bStickyContentSticked;
 			this._getIconTabHeader().$().remove();
 		}
 	};
+
 	/* =========================================================== */
 	/*           begin: reflectors for header properties           */
 	/* =========================================================== */
@@ -591,7 +643,7 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @param {boolean} bValue the new value.
-	 * @returns {sap.m.IconTabBar} this IconTabBar reference for chaining.
+	 * @returns {this} this IconTabBar reference for chaining.
 	 */
 	IconTabBar.prototype.setShowSelection = function (bValue) {
 		this._getIconTabHeader().setShowSelection(bValue);
@@ -613,7 +665,7 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @param {string} sValue The new value.
-	 * @returns {sap.m.IconTabBar} this Pointer for chaining.
+	 * @returns {this} this Pointer for chaining.
 	 */
 	IconTabBar.prototype.setSelectedKey = function (sValue) {
 		this._getIconTabHeader().setSelectedKey(sValue);
@@ -645,9 +697,6 @@ sap.ui.define([
 	/* =========================================================== */
 	/*           end: reflectors for header properties             */
 	/* =========================================================== */
-
-	// List of classes to copy from IconTabBar to IconTabHeader when used as a sticky header inside a DynamicPage.
-	IconTabBar._CLASSES_TO_COPY = ["sapUiResponsiveContentPadding", "sapUiNoContentPadding", "sapUiContentPadding"];
 
 	return IconTabBar;
 });

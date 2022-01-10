@@ -3,7 +3,7 @@
 /* Base theme                                       */
 /* ================================================ */
 
-@_sap_ui_layout_ColumnLayout_formColumnMaxXL: 4;
+@_sap_ui_layout_ColumnLayout_formColumnMaxXL: 6;
 @_sap_ui_layout_ColumnLayout_formColumnMaxL: 3;
 @_sap_ui_layout_ColumnLayout_formColumnMaxM: 2;
 @_sap_ui_layout_ColumnLayout_formColumnMaxS: 1;
@@ -29,11 +29,6 @@
 .sapUiFormCL > .sapUiFormTitle > span,
 .sapUiFormCLContainer > .sapUiFormTitle > span{
 	margin-right: 0.5rem;
-}
-
-.sapUiFormCLContainer > .sapUiFormTitle > button{
-	position: absolute;
-	right: 0.25rem;
 }
 
 /* Toolbar */
@@ -197,12 +192,6 @@ html.sap-phone .sapUiFormCL > .sapUiFormCLContent > .sapUiFormCLContainer:not(:l
 	clear: both;
 }
 
-/* Label and field alignment */
-.sapUiFormCLSmallColumns .sapUiFormElementLbl:not(.sapUiFormCLCellsS12),
-.sapUiFormCLWideColumns .sapUiFormElementLbl:not(.sapUiFormCLCellsL12){
-	padding-right: 1rem;
-}
-
 /* edit mode */
 /* labels next to field */
 .sapUiFormEdit > .sapUiFormCLSmallColumns .sapUiFormElementLbl:not(.sapUiFormCLCellsS12),
@@ -243,6 +232,11 @@ html.sap-phone .sapUiFormCL > .sapUiFormCLContent > .sapUiFormCLContainer:not(:l
 html.sap-phone .sapUiFormEdit .sapUiFormCLSmallColumns .sapUiFormCLContainer:not(.sapUiFormContainerTitle):not(.sapUiFormContainerToolbar){
 	padding-top: 0;
 	margin-top: -0.125rem;
+}
+
+/* Additional styling to prevent rendering issues in Safari in combination with column-count and overflow:hidden */
+html[data-sap-ui-browser^="sf"] .sapUiFormEdit .sapUiFormCLElement {
+	transform: translateX(0);
 }
 
 /* display mode */

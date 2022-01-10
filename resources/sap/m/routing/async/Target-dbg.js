@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([], function() {
@@ -30,8 +30,11 @@ sap.ui.define([], function() {
 						transitionParameters: that._oOptions.transitionParameters,
 						eventData: vData,
 						targetControl: oViewInfo.control,
+						aggregationName: that._oOptions.controlAggregation,
 						view: oViewInfo.view,
-						preservePageInSplitContainer: that._oOptions.preservePageInSplitContainer
+						preservePageInSplitContainer: that._oOptions.preservePageInSplitContainer,
+						placeholderConfig: oViewInfo.placeholderConfig,
+						placeholderShown: oViewInfo.placeholderShown
 					});
 
 					// do not forward the route config to navigation
@@ -41,7 +44,17 @@ sap.ui.define([], function() {
 
 					return oViewInfo;
 				});
-			});
+			}, this._oOptions._name);
+		},
+
+		showPlaceholder : function(mSettings) {
+			return this._oTargetHandler.showPlaceholder(mSettings);
+		},
+		hidePlaceholder : function() {
+		/**
+		 * Overriding the hidePlaceholder to empty function because the placeholder is removed
+		 * after all targets are displayed
+		 */
 		}
 	};
 }, /* bExport= */ true);

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(["sap/ui/thirdparty/jquery"],function(e){"use strict";function t(e,t){var r=Object.getOwnPropertyDescriptor(e,t);return r&&r.value}
@@ -22,7 +22,7 @@ sap.ui.define(["sap/ui/thirdparty/jquery"],function(e){"use strict";function t(e
 		 *
 		 * http://docs.jquery.com/UI
 		 *
-		 * But since visible is modified, focusable is different too the jQuery UI version too.
+		 * But since visible is modified, focusable is different from the jQuery UI version too.
 		 */
 e.expr.pseudos.focusable=function(t){return a(t,!isNaN(e.attr(t,"tabindex")))}}if(!t(e.expr.pseudos,"sapTabbable")){
 /*!

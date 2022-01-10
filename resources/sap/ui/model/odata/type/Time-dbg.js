@@ -1,19 +1,19 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
 	"sap/base/Log",
+	"sap/base/util/extend",
 	"sap/ui/core/format/DateFormat",
 	"sap/ui/model/FormatException",
 	"sap/ui/model/ParseException",
 	"sap/ui/model/ValidateException",
-	"sap/ui/model/odata/type/ODataType",
-	"sap/ui/thirdparty/jquery"
-], function (Log, DateFormat, FormatException, ParseException, ValidateException, ODataType,
-		jQuery) {
+	"sap/ui/model/odata/type/ODataType"
+], function (Log, extend, DateFormat, FormatException, ParseException, ValidateException,
+		ODataType) {
 	"use strict";
 
 	var oDemoTime = {
@@ -51,7 +51,7 @@ sap.ui.define([
 		var oFormatOptions;
 
 		if (!oType.oFormat) {
-			oFormatOptions = jQuery.extend({strictParsing : true}, oType.oFormatOptions);
+			oFormatOptions = extend({strictParsing : true}, oType.oFormatOptions);
 			oFormatOptions.UTC = true;
 			oType.oFormat = DateFormat.getTimeInstance(oFormatOptions);
 		}
@@ -154,7 +154,7 @@ sap.ui.define([
 	 * @extends sap.ui.model.odata.type.ODataType
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @alias sap.ui.model.odata.type.Time
 	 * @param {object} [oFormatOptions]
@@ -201,13 +201,13 @@ sap.ui.define([
 			return null;
 		}
 		switch (this.getPrimitiveType(sTargetType)) {
-		case "any":
-			return oValue;
-		case "string":
-			return getFormatter(this).format(toDate(oValue));
-		default:
-			throw new FormatException("Don't know how to format " + this.getName() + " to "
-				+ sTargetType);
+			case "any":
+				return oValue;
+			case "string":
+				return getFormatter(this).format(toDate(oValue));
+			default:
+				throw new FormatException("Don't know how to format " + this.getName() + " to "
+					+ sTargetType);
 		}
 	};
 

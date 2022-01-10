@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -13,9 +13,9 @@ sap.ui.define([
 	'sap/m/ShellRenderer',
 	"sap/ui/util/Mobile",
 	"sap/base/Log",
-	"sap/ui/thirdparty/jquery"
+	"sap/ui/core/theming/Parameters"
 ],
-	function(library, Core, Control, coreLibrary, ShellRenderer, Mobile, Log, jQuery) {
+	function(library, Core, Control, coreLibrary, ShellRenderer, Mobile, Log, ThemeParameters) {
 		"use strict";
 
 
@@ -35,7 +35,7 @@ sap.ui.define([
 		 * The Shell control can be used as root element of applications. It can contain an App or a <code>SplitApp</code> control.
 		 * The Shell provides some overarching functionality for the overall application and takes care of visual adaptation, such as a frame around the App, on desktop browser platforms.
 		 * @extends sap.ui.core.Control
-		 * @version 1.79.0
+		 * @version 1.96.2
 		 *
 		 * @constructor
 		 * @public
@@ -55,6 +55,9 @@ sap.ui.define([
 
 				/**
 				 * Defines the logo to be displayed next to the App when the screen is sufficiently large.
+				 *
+				 * Note: If property value isn't set, then the logo address is taken from the theme parameters.
+				 * For reference please see: {@link sap.ui.core.theming.Parameters}
 				 */
 				logo : {type : "sap.ui.core.URI", group : "Appearance", defaultValue : null},
 
@@ -151,15 +154,15 @@ sap.ui.define([
 
 		Shell.prototype.init = function() {
 			// theme change might change the logo
-			Core.attachThemeChanged(jQuery.proxy(function(){
-				var $hdr = this.$("hdr");
-				if ($hdr.length) {
-					$hdr.find(".sapMShellLogo").remove(); // remove old logo, if present
-					var rm = Core.createRenderManager();
-					var html = ShellRenderer.getLogoImageHtml(rm, this);
-					$hdr.prepend(jQuery(html)); // insert new logo
+			Core.attachThemeChanged(function(){
+				var $hdr = this.$("hdr"),
+					sImgSrc = this._getImageSrc();
+
+				if ($hdr.length && sImgSrc) {
+					this._getImage().setSrc(sImgSrc);
+					this._getImage().rerender();
 				}
-			}, this));
+			}, this);
 
 
 			Mobile.init({
@@ -168,15 +171,21 @@ sap.ui.define([
 			});
 		};
 
+		Shell.prototype.onBeforeRendering = function() {
+			var sImgSrc = this._getImageSrc();
+			if (sImgSrc) {
+				this._getImage().setSrc(sImgSrc);
+			}
+		};
+
 		Shell.prototype.onAfterRendering = function () {
-			var ref = this.getDomRef().parentNode,
-				$ref;
+			var ref = this.getDomRef().parentNode;
+
 			// set all parent elements to 100% height this *should* be done by the application in CSS, but people tend to forget it...
 			if (ref && !ref._sapui5_heightFixed) {
 				ref._sapui5_heightFixed = true;
 				while (ref && ref !== document.documentElement) {
-					$ref = jQuery(ref);
-					if ($ref.attr("data-sap-ui-root-content")) { // some parents (e.g. Unified Shell) do this already
+					if (ref.getAttribute("data-sap-ui-root-content")) { // some parents (e.g. Unified Shell) do this already
 						break;
 					}
 					if (!ref.style.height) {
@@ -186,6 +195,12 @@ sap.ui.define([
 				}
 			}
 			this.$("content").css("height", "");
+		};
+
+		Shell.prototype.exit = function() {
+			if (this.oImg) {
+				this.oImg.destroy();
+			}
 		};
 
 		Shell.prototype.ontap = function(oEvent) {
@@ -210,7 +225,7 @@ sap.ui.define([
 			if (!sText) {
 				sText = "";
 			}
-			this.$("hdrRightTxt").text(sText).css("display", (!!sText ? "inline" : "none"));
+			this.$("hdrRightTxt").text(sText).css("display", (sText ? "inline" : "none"));
 			return this;
 		};
 
@@ -233,6 +248,23 @@ sap.ui.define([
 			this.setProperty("homeIcon", oIcons, true); // no rerendering
 			Mobile.setIcons(oIcons);
 			return this;
+		};
+
+		Shell.prototype._getImage = function() {
+			if (!this.oImg) {
+				this.oImg = new sap.m.Image(this.getId() + "-logo", {
+					decorative: false,
+					alt: sap.ui.getCore().getLibraryResourceBundle("sap.m").getText("SHELL_ARIA_LOGO")
+				});
+
+				this.oImg.addStyleClass("sapMShellLogoImg");
+			}
+
+			return this.oImg;
+		};
+
+		Shell.prototype._getImageSrc = function() {
+			return this.getLogo() ? this.getLogo() : ThemeParameters._getThemeImage();
 		};
 
 		return Shell;

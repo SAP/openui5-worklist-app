@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -37,7 +37,7 @@ sap.ui.define([
 	 * @extends sap.ui.core.dnd.DropInfo
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @public
 	 * @experimental Since 1.68 This class is experimental. The API may change.
@@ -46,7 +46,7 @@ sap.ui.define([
 	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var GridDropInfo = DropInfo.extend("sap.f.dnd.GridDropInfo", /** @lends sap.f.dnd.GridDropInfo.prototype */ { metadata: {
-		library: "sap.ui.core",
+		library: "sap.f",
 		interfaces: [
 			"sap.ui.core.dnd.IDropInfo"
 		],
@@ -72,6 +72,13 @@ sap.ui.define([
 					draggedControl: {type: "sap.ui.core.Control"}
 				}
 			}
+		},
+		events: {
+			/**
+			 * @override
+			 * @name sap.ui.core.dnd.DropInfo#drop
+			 * @param {sap.ui.core.Element} oControlEvent.getParameters.droppedControl The element on which the drag control is dropped. Could be <code>null</code> if you drop in an empty grid
+			 */
 		}
 	}});
 
@@ -110,16 +117,13 @@ sap.ui.define([
 	};
 
 	GridDropInfo.prototype.fireDragEnter = function(oEvent) {
-		if (!this._shouldEnhance()) {
+		if (!this._shouldEnhance() || this._isKeyboardEvent(oEvent)) {
 			return DropInfo.prototype.fireDragEnter.apply(this, arguments);
 		}
 
 		if (!oEvent || !oEvent.dragSession || !oEvent.dragSession.getDragControl()) {
 			return null;
 		}
-
-		// hide the original indicator
-		this._hideDefaultIndicator(oEvent);
 
 		var gridDragOver = GridDragOver.getInstance(),
 			oDragControl = oEvent.dragSession.getDragControl();
@@ -131,7 +135,8 @@ sap.ui.define([
 		gridDragOver.setCurrentContext(
 			oEvent.dragSession.getDragControl(),
 			this.getDropTarget(),
-			this.getTargetAggregation()
+			this.getTargetAggregation(),
+			oEvent.dragSession
 		);
 
 		var mDropPosition = gridDragOver.getSuggestedDropPosition();
@@ -150,7 +155,7 @@ sap.ui.define([
 	};
 
 	GridDropInfo.prototype.fireDragOver = function(oEvent) {
-		if (!this._shouldEnhance()) {
+		if (!this._shouldEnhance() || this._isKeyboardEvent(oEvent)) {
 			return DropInfo.prototype.fireDragOver.apply(this, arguments);
 		}
 
@@ -158,12 +163,9 @@ sap.ui.define([
 			return null;
 		}
 
-		// hide the original indicator
-		this._hideDefaultIndicator(oEvent);
-
 		var mDropPosition = this._suggestDropPosition(oEvent);
 
-		if (mDropPosition && oEvent.dragSession) {
+		if (mDropPosition && oEvent.dragSession && mDropPosition.targetControl) {
 			oEvent.dragSession.setDropControl(mDropPosition.targetControl);
 			// mDropPosition.position may be different than oEvent.dragSession.getDropPosition, since the second is calculated inside DragAndDrop.js.
 			// This can be fixed by having a method oEvent.dragSession.setDropPosition
@@ -177,8 +179,11 @@ sap.ui.define([
 		});
 	};
 
+	/**
+	 * @override
+	 */
 	GridDropInfo.prototype.fireDrop = function(oEvent) {
-		if (!this._shouldEnhance()) {
+		if (!this._shouldEnhance() || this._isKeyboardEvent(oEvent)) {
 			return DropInfo.prototype.fireDrop.apply(this, arguments);
 		}
 
@@ -193,7 +198,8 @@ sap.ui.define([
 		gridDragOver.setCurrentContext(
 			oDragSession.getDragControl(),
 			this.getDropTarget(),
-			this.getTargetAggregation()
+			this.getTargetAggregation(),
+			oDragSession
 		);
 
 		mDropPosition = gridDragOver.getSuggestedDropPosition();
@@ -231,6 +237,16 @@ sap.ui.define([
 	};
 
 	/**
+	 * Is the drag and drop triggered by keyboard.
+	 * @private
+	 * @param {jQuery.Event} oEvent The event which has triggered drag and drop.
+	 * @returns {boolean} True if it is triggered by keyboard. False if triggered by mouse.
+	 */
+	GridDropInfo.prototype._isKeyboardEvent = function(oEvent) {
+		return oEvent.originalEvent.type === "keydown";
+	};
+
+	/**
 	 * Suggests a drop position for the given drag event.
 	 * @private
 	 * @param {jQuery.Event} oDragEvent The drag event
@@ -246,24 +262,13 @@ sap.ui.define([
 		gridDragOver.setCurrentContext(
 			oDragEvent.dragSession.getDragControl(),
 			this.getDropTarget(),
-			this.getTargetAggregation()
+			this.getTargetAggregation(),
+			oDragEvent.dragSession
 		);
 
 		gridDragOver.handleDragOver(oDragEvent);
 
 		return gridDragOver.getSuggestedDropPosition();
-	};
-
-	/**
-	 * Hide original indicator
-	 * @private
-	 * @param {jQuery.Event} oDragEvent The drag event
-	 */
-	GridDropInfo.prototype._hideDefaultIndicator = function(oDragEvent) {
-		oDragEvent.dragSession.setIndicatorConfig({
-			visibility: "hidden",
-			position: "relative" // this prevents a scroll to appear sometimes on the page
-		});
 	};
 
 	return GridDropInfo;

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -42,7 +42,7 @@ sap.ui.define([
 	 * @extends sap.m.ListItemBase
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @constructor
 	 * @public
@@ -115,6 +115,9 @@ sap.ui.define([
 	// defines tag name
 	ColumnListItem.prototype.TagName = "tr";
 
+	// enable the ACC announcement for "not selected"
+	ColumnListItem.prototype._bAnnounceNotSelected = true;
+
 	ColumnListItem.prototype.init = function() {
 		ListItemBase.prototype.init.call(this);
 		this._bNeedsTypeColumn = false;
@@ -127,7 +130,7 @@ sap.ui.define([
 
 		var oPopin = this.hasPopin();
 		if (oPopin) {
-			this.$Popin().hover(oPopin._onMouseEnter, oPopin._onMouseLeave);
+			this.$Popin().on("mouseenter", oPopin._onMouseEnter).on("mouseleave", oPopin._onMouseLeave);
 		}
 	};
 
@@ -236,11 +239,17 @@ sap.ui.define([
 			return;
 		}
 
-		var sAnnouncement = "",
+		var aOutput = [],
 			aCells = this.getCells(),
 			aColumns = oTable.getColumns(true);
 
-		aColumns.forEach(function(oColumn) {
+		aColumns.sort(function(oCol1, oCol2) {
+			var iCol1Index = oCol1.getIndex(), iCol2Index = oCol2.getIndex(), iIndexDiff = iCol1Index - iCol2Index;
+			if (iIndexDiff == 0) { return 0; }
+		    if (iCol1Index < 0) { return 1; }
+		    if (iCol2Index < 0) { return -1; }
+		    return iIndexDiff;
+		}).forEach(function(oColumn) {
 			var oCell = aCells[oColumn.getInitialOrder()];
 			if (!oCell || !oColumn.getVisible() || (oColumn.isHidden() && !oColumn.isPopin())) {
 				return;
@@ -248,13 +257,13 @@ sap.ui.define([
 
 			var oHeader = oColumn.getHeader();
 			if (oHeader && oHeader.getVisible()) {
-				sAnnouncement += ListItemBase.getAccessibilityText(oHeader) + " ";
+				aOutput.push(ListItemBase.getAccessibilityText(oHeader) + " " + ListItemBase.getAccessibilityText(oCell, true));
+			} else {
+				aOutput.push(ListItemBase.getAccessibilityText(oCell, true));
 			}
-
-			sAnnouncement += ListItemBase.getAccessibilityText(oCell, true) + " ";
 		});
 
-		return sAnnouncement;
+		return aOutput.join(" . ").trim();
 	};
 
 	// update the aria-selected for the cells

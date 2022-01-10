@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -61,7 +61,10 @@ sap.ui.define(['sap/base/util/LoaderExtensions'], function(LoaderExtensions) {
 	 * @public
 	 */
 	Properties.prototype.getKeys = function() {
-		return this.aKeys || (this.aKeys = Object.keys(this.mProperties));
+		if (!this.aKeys) {
+			this.aKeys = Object.keys(this.mProperties);
+		}
+		return this.aKeys;
 	};
 
 	/**

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -40,7 +40,7 @@ sap.ui.define([
 	 * @extends sap.m.Avatar
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @constructor
 	 * @public
@@ -53,6 +53,7 @@ sap.ui.define([
 	var Avatar = MAvatar.extend("sap.f.Avatar", {
 		metadata: {
 			library: "sap.f",
+			deprecated: true,
 			properties: { },
 			designtime: "sap/f/designtime/Avatar.designtime"
 		},

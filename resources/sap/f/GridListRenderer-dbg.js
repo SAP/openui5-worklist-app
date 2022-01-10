@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -16,6 +16,14 @@ sap.ui.define([
 	 */
 	var GridListRenderer = Renderer.extend(ListBaseRenderer);
 	GridListRenderer.apiVersion = 2;
+
+	/**
+	 * Adds aria role to the "No Data" list item.
+	 * @override
+	 */
+	GridListRenderer.getNoDataAriaRole = function() {
+		return "option";
+	};
 
 	/**
 	 * This hook method is called to render container attributes.
@@ -44,7 +52,7 @@ sap.ui.define([
 	GridListRenderer.renderGridAttributes = function (oRM, oControl) {
 		var oGridLayout = oControl.getGridLayoutConfiguration();
 		if (oGridLayout) {
-			oGridLayout.renderSingleGridLayout(oRM);
+			oGridLayout.addGridStyles(oRM);
 		} else {
 			oRM.class("sapFGridListDefault");
 		}

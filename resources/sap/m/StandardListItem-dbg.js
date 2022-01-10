@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -13,9 +13,10 @@ sap.ui.define([
 	"./library",
 	"./ListItemBase",
 	"./Image",
-	"./StandardListItemRenderer"
+	"./StandardListItemRenderer",
+	"sap/base/Log"
 ],
-	function(coreLibrary, IconPool, ThemeParameters, Device, library, ListItemBase, Image, StandardListItemRenderer) {
+	function(coreLibrary, IconPool, ThemeParameters, Device, library, ListItemBase, Image, StandardListItemRenderer, Log) {
 	"use strict";
 
 
@@ -37,7 +38,7 @@ sap.ui.define([
 	 * @extends sap.m.ListItemBase
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @constructor
 	 * @public
@@ -84,6 +85,8 @@ sap.ui.define([
 
 			/**
 			 * Defines an additional information text.
+			 * <b>Note:</b>
+			 * A wrapping of the information text is also supported as of version 1.95, if <code>wrapping=true</code>. Although long strings are supported for the information text, it is recommended to use short strings. For more details, see {@link #getWrapping wrapping}.
 			 */
 			info : {type : "string", group : "Misc", defaultValue : null},
 
@@ -115,7 +118,9 @@ sap.ui.define([
 			 *
 			 * <b>Note:</b>
 			 *
-			 * In the desktop mode, initial rendering of the control contains 300 characters along with a button to expand and collapse the text whereas in the phone mode, the character limit is set to 100 characters.
+			 * In the desktop mode, initial rendering of the control contains 300 characters along with a button to expand and collapse the text whereas in the phone mode, the character limit is set to 100 characters.<br>
+			 * A wrapping of the information text is supported as of 1.95. But expanding and collapsing the information text is not possible.
+			 * A wrapping of the information text is disabled if <code>infoStateInverted</code> is set to <code>true</code>.
 			 * @since 1.67
 			 */
 			wrapping : {type : "boolean", group : "Behavior", defaultValue : false},
@@ -126,7 +131,19 @@ sap.ui.define([
 			 *
 			 * @since 1.74
 			 */
-			infoStateInverted : {type : "boolean", group : "Appearance", defaultValue : false}
+			infoStateInverted : {type : "boolean", group : "Appearance", defaultValue : false},
+
+			/**
+			 * This property can be used to change the default character limits for the wrapping behavior.
+			 *
+			 * If this property is set to 0, then the default character limit used by the wrapping behavior is used. For details see {@link #getWrapping wrapping}.
+			 *
+			 * <b>Note:</b>
+			 *
+			 * 0 or a positive integer must be used for this property.
+			 * @since 1.94
+			 */
+			wrapCharLimit : {type : "int", group : "Behavior", defaultValue : 0}
 		},
 		designtime: "sap/m/designtime/StandardListItem.designtime"
 	}});
@@ -149,6 +166,21 @@ sap.ui.define([
 			this._oImage = undefined;
 		}
 
+		return this;
+	};
+
+	StandardListItem.prototype.setWrapCharLimit = function(iLimit) {
+		var iOldCharLimit = this.getWrapCharLimit();
+
+		if (iOldCharLimit === iLimit) {
+		  return this;
+		}
+		if (iLimit < 0) {
+		  Log.error("The property wrapCharLimit must be 0 or greater than 0 - " + this.getId());
+		  return this;
+		}
+
+		this.setProperty("wrapCharLimit", iLimit);
 		return this;
 	};
 
@@ -195,48 +227,54 @@ sap.ui.define([
 	};
 
 	StandardListItem.prototype.getContentAnnouncement = function(oBundle) {
-		var sAnnouncement = "",
-			sInfoState = this.getInfoState(),
-			sTitle,
-			sTitlButtonText = "",
-			sDescription,
-			sDescriptionButtonText = "",
+		var sInfoState = this.getInfoState(),
+			sTitle = this.getTitle(),
+			sTitleButtonText,
+			sDescription = this.getDescription(),
+			sDescriptionButtonText,
 			oTitleButton,
-			oDescriptionButton;
+			oDescriptionButton,
+			aOutput = [],
+			sInfo = this.getInfo();
 
 		if (this.getWrapping()) {
 			oTitleButton = this.getDomRef("titleButton");
 			oDescriptionButton = this.getDomRef("descriptionButton");
-			sTitle = this._bTitleTextExpanded ? this.getTitle() : this._getCollapsedText(this.getTitle());
-			sDescription = this._bDescriptionTextExpanded ? this.getDescription() : this._getCollapsedText(this.getDescription());
+			sTitle = this._bTitleTextExpanded ? sTitle : this._getCollapsedText(sTitle);
+			sDescription = this._bDescriptionTextExpanded ? sDescription : this._getCollapsedText(sDescription);
+
+			aOutput.push(sTitle);
 
 			if (oTitleButton) {
-				sTitlButtonText = oTitleButton.textContent + " " + oBundle.getText("ACC_CTR_TYPE_BUTTON");
+				sTitleButtonText = oTitleButton.textContent + " " + oBundle.getText("ACC_CTR_TYPE_BUTTON");
+				sTitleButtonText && aOutput.push(sTitleButtonText);
 			}
+
+			aOutput.push(sDescription);
 
 			if (oDescriptionButton) {
-				sDescriptionButtonText = oDescriptionButton.textContent + " " + oBundle.getText("ACC_CTR_TYPE_BUTTON");
+				sDescriptionButtonText = oDescriptionButton.textContent + " . " + oBundle.getText("ACC_CTR_TYPE_BUTTON");
+				sDescriptionButtonText && aOutput.push(sDescriptionButtonText);
 			}
-
-			sAnnouncement += sTitle + " " + sTitlButtonText + " " + sDescription + " " + sDescriptionButtonText + " ";
 		} else {
-			sAnnouncement += this.getTitle() + " " + this.getDescription() + " ";
+			sTitle && aOutput.push(sTitle);
+			sDescription && aOutput.push(sDescription);
 		}
 
-		sAnnouncement += this.getInfo() + " ";
+		sInfo && aOutput.push(sInfo);
 
 		if (sInfoState != "None" && sInfoState != this.getHighlight()) {
-			sAnnouncement += oBundle.getText("LIST_ITEM_STATE_" + sInfoState.toUpperCase());
+			aOutput.push(oBundle.getText("LIST_ITEM_STATE_" + sInfoState.toUpperCase()));
 		}
 
-		return sAnnouncement;
+		return aOutput.join(" . ").trim();
 	};
 
 	/**
 	 * Measures the info text width.
 	 * @param {boolean} bThemeChanged Indicated whether font style should be reinitialized if theme is changed
 	 *
-	 * @returns {integer} Info text width
+	 * @returns {int} Info text width
 	 * @private
 	 */
 	StandardListItem.prototype._measureInfoTextWidth = function(bThemeChanged) {
@@ -244,34 +282,33 @@ sap.ui.define([
 			StandardListItem._themeInfo = {};
 		}
 
+		var fBaseFontSize = parseFloat(library.BaseFontSize) || 16;
+
 		if (!StandardListItem._themeInfo.sFontFamily || bThemeChanged) {
-			StandardListItem._themeInfo.sFontFamily = ThemeParameters.get("sapUiFontFamily");
+			StandardListItem._themeInfo.sFontFamily = ThemeParameters.get({
+				name: "sapUiFontFamily"
+			}) || "Arial";
 		}
 
 		if (!StandardListItem._themeInfo.sFontStyleInfoStateInverted || bThemeChanged) {
-			StandardListItem._themeInfo.sFontStyleInfoStateInverted = "bold " + parseFloat(ThemeParameters.get("sapMFontSmallSize")) * 16 + "px" + " " + StandardListItem._themeInfo.sFontFamily;
+			StandardListItem._themeInfo.sFontStyleInfoStateInverted = "bold " + parseFloat(ThemeParameters.get({
+				name: "sapMFontSmallSize"
+			}) || "0.75rem") * fBaseFontSize + "px " + StandardListItem._themeInfo.sFontFamily;
 		}
 
 		if (!StandardListItem._themeInfo.sFontStyle || bThemeChanged) {
-			StandardListItem._themeInfo.sFontStyle = parseFloat(ThemeParameters.get("sapMFontMediumSize")) * 16 + "px" + " " + StandardListItem._themeInfo.sFontFamily;
+			StandardListItem._themeInfo.sFontStyle = parseFloat(ThemeParameters.get({
+				name: "sapMFontMediumSize"
+			}) || "0.875rem") * fBaseFontSize + "px " + StandardListItem._themeInfo.sFontFamily;
 		}
 
-		if (!StandardListItem._themeInfo.iBaseFontSize || bThemeChanged) {
-			StandardListItem._themeInfo.iBaseFontSize = parseInt(library.BaseFontSize) || 16;
+		if (!StandardListItem._oCtx) {
+			StandardListItem._oCtx = document.createElement("canvas").getContext("2d");
 		}
 
-		if (!StandardListItem._oCanvas) {
-			StandardListItem._oCanvas = document.createElement("canvas");
-			StandardListItem._oCtx = StandardListItem._oCanvas.getContext("2d");
-		}
+		StandardListItem._oCtx.font = StandardListItem._themeInfo[this.getInfoStateInverted() ? "sFontStyleInfoStateInverted" : "sFontStyle"];
 
-		if (this.getInfoStateInverted()) {
-			StandardListItem._oCtx.font = StandardListItem._themeInfo.sFontStyleInfoStateInverted || "";
-		} else {
-			StandardListItem._oCtx.font = StandardListItem._themeInfo.sFontStyle || "";
-		}
-
-		return Math.ceil(StandardListItem._oCtx.measureText(this.getInfo()).width) / StandardListItem._themeInfo.iBaseFontSize;
+		return Math.ceil(StandardListItem._oCtx.measureText(this.getInfo()).width) / fBaseFontSize;
 	};
 
 	/**
@@ -297,10 +334,19 @@ sap.ui.define([
 	StandardListItem.prototype.ontap = function(oEvent) {
 		this._checkExpandCollapse(oEvent);
 
-		if (!oEvent.isMarked()) {
-			return ListItemBase.prototype.ontap.apply(this, arguments);
-		}
+		return ListItemBase.prototype.ontap.apply(this, arguments);
 	};
+
+	StandardListItem.prototype.ontouchstart = function(oEvent) {
+		var sId = oEvent.target && oEvent.target.id,
+			sStdListId = this.getId();
+
+		if (sId === sStdListId + "-titleButton" || sId === sStdListId + "-descriptionButton") {
+			oEvent.setMarked();
+		}
+
+		return ListItemBase.prototype.ontouchstart.apply(this, arguments);
+	  };
 
 	StandardListItem.prototype.onsapspace = function(oEvent) {
 		// prevent default not to scroll down, hence 2nd parameter is true
@@ -374,8 +420,11 @@ sap.ui.define([
 	 * @private
 	 */
 	StandardListItem.prototype._getCollapsedText = function(sText) {
-		var iMaxCharacters = Device.system.phone ? 100 : 300;
-		return sText.substr(0, iMaxCharacters);
+		return sText.substr(0, this._getWrapCharLimit());
+	};
+
+	StandardListItem.prototype._getWrapCharLimit = function() {
+		return this.getWrapCharLimit() || (Device.system.phone ? 100 : 300);
 	};
 
 	StandardListItem.prototype.onThemeChanged = function(oEvent) {

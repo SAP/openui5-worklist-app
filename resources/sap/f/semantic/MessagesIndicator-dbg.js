@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -10,7 +10,7 @@ sap.ui.define(['./SemanticButton'], function(SemanticButton) {
 	/**
 	* Constructor for a new <code>MessagesIndicator</code>.
 	* @param {string} [sId] ID for the new control, generated automatically if no ID is given
-	* @param {object} [mSettings] Custom initial settings for the new control
+	* @param {object} [mSettings] Optional initial settings for the new control:  a map/JSON-object with initial property values, event listeners etc. for the new object
 	*
 	* @class
 	* A semantic-specific button, eligible for the <code>messagesIndicator</code> aggregation of the
@@ -19,7 +19,7 @@ sap.ui.define(['./SemanticButton'], function(SemanticButton) {
 	* @extends sap.f.semantic.SemanticButton
 	*
 	* @author SAP SE
-	* @version 1.79.0
+	* @version 1.96.2
 	*
 	* @constructor
 	* @public

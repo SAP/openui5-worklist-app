@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -8,7 +8,7 @@ sap.ui.define([
 	"sap/base/util/uid",
 	"sap/ui/thirdparty/jquery",
 	'sap/ui/core/Component'
-], function(ComponentContainer, uid, jQueryDOM/*, Component */) {
+], function(ComponentContainer, uid, jQueryDOM, Component) {
 	"use strict";
 
 	var _loadingStarted = false,
@@ -31,8 +31,7 @@ sap.ui.define([
 				throw new Error("sap.ui.test.launchers.componentLauncher: Start was called twice without teardown. Only one component can be started at a time.");
 			}
 
-			mComponentConfig.async = true;
-			var oPromise = sap.ui.component(mComponentConfig);
+			var oPromise = Component.create(mComponentConfig);
 
 			_loadingStarted = true;
 
@@ -44,7 +43,11 @@ sap.ui.define([
 				jQueryDOM("body").append(_$Component).addClass("sapUiOpaBodyComponent");
 
 				// create and place the component into html
-				_oComponentContainer = new ComponentContainer({component: oComponent});
+				_oComponentContainer = new ComponentContainer({
+					component: oComponent,
+					height: "100%",
+					width: "100%"
+				});
 
 				_oComponentContainer.placeAt(sId);
 			});

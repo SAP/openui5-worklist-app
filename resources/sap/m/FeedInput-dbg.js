@@ -1,6 +1,6 @@
-/*!
+  /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -11,13 +11,20 @@ sap.ui.define([
 	"sap/m/TextArea",
 	"sap/m/Button",
 	"./FeedInputRenderer",
-	"sap/ui/thirdparty/jquery"
+	"sap/ui/thirdparty/jquery",
+	"sap/base/security/URLListValidator",
+	"sap/base/security/sanitizeHTML",
+	"sap/m/Avatar",
+	"sap/m/AvatarShape",
+	"sap/m/AvatarSize"
 ],
-	function(library, Control, IconPool, TextArea, Button, FeedInputRenderer, jQuery) {
+	function(library, Control, IconPool, TextArea, Button, FeedInputRenderer, jQuery, URLListValidator, sanitizeHTML0, Avatar,
+		AvatarShape, AvatarSize) {
 	"use strict";
 
 	// shortcut for sap.m.ButtonType
 	var ButtonType = library.ButtonType;
+
 
 	var MAX_ROWS = 15,
 		MIN_ROWS = 2,
@@ -33,7 +40,7 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @constructor
 	 * @public
@@ -100,6 +107,24 @@ sap.ui.define([
 			icon : {type : "sap.ui.core.URI", group : "Data", defaultValue : null},
 
 			/**
+			 * Defines the shape of the icon.
+			* @since 1.88
+			*/
+			iconDisplayShape: { type: "sap.m.AvatarShape", defaultValue: AvatarShape.Circle},
+
+			/**
+			 * Defines the initials of the icon.
+			 * @since 1.88
+			 */
+			iconInitials: { type: "string", defaultValue: "" },
+
+			/**
+			 * Defines the size of the icon.
+			 * @since 1.88
+			 */
+			iconSize: { type: "sap.m.AvatarSize", defaultValue: AvatarSize.M},
+
+			/**
 			 * If set to "true" (default), icons will be displayed. In case no icon is provided the standard placeholder will be displayed. if set to "false" icons are hidden
 			 */
 			showIcon : {type : "boolean", group : "Behavior", defaultValue : true},
@@ -111,6 +136,8 @@ sap.ui.define([
 			 * If you do not have higher resolution images, you should set the property to "false" to avoid unnecessary round-trips.
 			 *
 			 * Please be aware that this property is relevant only for images and not for icons.
+			 *
+			 * Deprecated as of version 1.88. Image is replaced by avatar.
 			 */
 			iconDensityAware : {type : "boolean", group : "Appearance", defaultValue : true},
 
@@ -126,11 +153,16 @@ sap.ui.define([
 			/**
 			 * Text for Picture which will be read by screenreader.
 			 * If a new ariaLabelForPicture is set, any previously set ariaLabelForPicture is deactivated.
-			 * @since 1.30
+			 * Deprecated as of version 1.88. This will not have any effect in code now.
 			 */
 			ariaLabelForPicture : {type : "string", group : "Accessibility", defaultValue : null}
 		},
-
+		aggregations : {
+			/**
+			* Defines the inner avatar control.
+			 */
+			_avatar: { type: "sap.m.Avatar", multiple: false, visibility: "hidden" }
+		},
 		events : {
 
 			/**
@@ -148,6 +180,135 @@ sap.ui.define([
 	}});
 
 
+	/*
+	* These are the rules for the FormattedText
+	*/
+	var _defaultRenderingRules = {
+		// rules for the allowed attributes
+		ATTRIBS: {
+			'style': 1,
+			'class': 1,
+			'a::href': 1,
+			'a::target': 1
+		},
+		// rules for the allowed tags
+		ELEMENTS: {
+			// Text Module Tags
+			'a': { cssClass: 'sapMLnk' },
+			'abbr': 1,
+			'blockquote': 1,
+			'br': 1,
+			'cite': 1,
+			'code': 1,
+			'em': 1,
+			'h1': { cssClass: 'sapMTitle sapMTitleStyleH1' },
+			'h2': { cssClass: 'sapMTitle sapMTitleStyleH2' },
+			'h3': { cssClass: 'sapMTitle sapMTitleStyleH3' },
+			'h4': { cssClass: 'sapMTitle sapMTitleStyleH4' },
+			'h5': { cssClass: 'sapMTitle sapMTitleStyleH5' },
+			'h6': { cssClass: 'sapMTitle sapMTitleStyleH6' },
+			'p': 1,
+			'pre': 1,
+			'strong': 1,
+			'span': 1,
+			'u': 1,
+
+			// List Module Tags
+			'dl': 1,
+			'dt': 1,
+			'dd': 1,
+			'ol': 1,
+			'ul': 1,
+			'li': 1
+		}
+	};
+
+	/**
+	 * Holds the internal list of allowed and evaluated HTML elements and attributes
+	 * @private
+	 */
+	FeedInput.prototype._renderingRules = _defaultRenderingRules;
+
+	/**
+	 * Sanitizes attributes on an HTML tag.
+	 *
+	 * @param {string} tagName An HTML tag name in lower case
+	 * @param {array} attribs An array of alternating names and values
+	 * @return {array} The sanitized attributes as a list of alternating names and values. Value <code>null</code> removes the attribute.
+	 * @private
+	 */
+	function fnSanitizeAttribs(tagName, attribs) {
+
+		var attr,
+			value,
+			addTarget = tagName === "a";
+		// add UI5 specific classes when appropriate
+		var cssClass = this._renderingRules.ELEMENTS[tagName].cssClass || "";
+		for (var i = 0; i < attribs.length; i += 2) {
+			// attribs[i] is the name of the tag's attribute.
+			// attribs[i+1] is its corresponding value.
+			// (i.e. <span class="foo"> -> attribs[i] = "class" | attribs[i+1] = "foo")
+			attr = attribs[i];
+			value = attribs[i + 1];
+
+			if (!this._renderingRules.ATTRIBS[attr] && !this._renderingRules.ATTRIBS[tagName + "::" + attr]) {
+				attribs[i + 1] = null;
+				continue;
+			}
+
+			// sanitize hrefs
+			if (attr == "href") { // a::href
+				if (!URLListValidator.validate(value)) {
+					attribs[i + 1] = "#";
+					addTarget = false;
+				}
+			}
+			if (attr == "target") { // a::target already exists
+				addTarget = false;
+			}
+
+			// add UI5 classes to the user defined
+			if (cssClass && attr.toLowerCase() == "class") {
+				attribs[i + 1] = cssClass + " " + value;
+				cssClass = "";
+			}
+		}
+
+		if (addTarget) {
+			attribs.push("target");
+			attribs.push("_blank");
+		}
+		// add UI5 classes, if not done before
+		if (cssClass) {
+			attribs.push("class");
+			attribs.push(cssClass);
+		}
+
+		return attribs;
+	}
+
+	function fnPolicy(tagName, attribs) {
+		return fnSanitizeAttribs.call(this, tagName, attribs);
+	}
+	/**
+	 * Sanitizes HTML tags and attributes according to a given policy.
+	 *
+	 * @param {string} sText The HTML to sanitize
+	 * @return {string} The sanitized HTML
+	 * @private
+	 */
+
+	FeedInput.prototype._sanitizeHTML = function (sText) {
+		return sanitizeHTML0(sText, {
+			tagPolicy: fnPolicy.bind(this),
+			uriRewriter: function (sUrl) {
+				// by default, we use the URLListValidator to check the URLs
+				if (URLListValidator.validate(sUrl)) {
+					return sUrl;
+				}
+			}
+		});
+	};
 
 	/////////////////////////////////// Lifecycle /////////////////////////////////////////////////////////
 
@@ -171,21 +332,12 @@ sap.ui.define([
 		if (this._oButton) {
 			this._oButton.destroy();
 		}
-		if (this._oImageControl) {
-			this._oImageControl.destroy();
+		if (this.oAvatar) {
+			this.oAvatar.destroy();
 		}
 	};
 
 	/////////////////////////////////// Properties /////////////////////////////////////////////////////////
-
-	FeedInput.prototype.setIconDensityAware = function (iIconDensityAware) {
-		this.setProperty("iconDensityAware", iIconDensityAware, true);
-		var fnClass = sap.ui.require("sap/m/Image");
-		if (this._getImageControl() instanceof fnClass) {
-			this._getImageControl().setDensityAware(iIconDensityAware);
-		}
-		return this;
-	};
 
 	FeedInput.prototype.setRows = function (iRows) {
 		var iMaxLines = this.getProperty("growingMaxLines");
@@ -319,7 +471,7 @@ sap.ui.define([
 				press : jQuery.proxy(function () {
 					this._oTextArea.focus();
 					this.firePost({
-						value : this.getValue()
+						value : this._sanitizeHTML(this.getValue())
 					});
 					this.setValue(null);
 				}, this)
@@ -344,31 +496,42 @@ sap.ui.define([
 	 */
 	FeedInput.prototype._isControlEnabled = function() {
 		var sValue = this.getValue();
-		return this.getEnabled() && jQuery.type(sValue) === "string" && sValue.trim().length > 0;
+		return this.getEnabled() && (typeof sValue === "string" || sValue instanceof String) && sValue.trim().length > 0;
 	};
 
 	/**
 	 * Lazy load feed icon image.
 	 *
 	 * @private
-	 * @returns {sap.m.Image} The image control
+	 * @returns {sap.m.Avatar} The Avatar control
 	 */
-	FeedInput.prototype._getImageControl = function() {
+	FeedInput.prototype._getAvatar = function() {
+		var sIconSrc = this.getIcon();
+		var sId = this.getId() + '-icon';
 
-		var sIconSrc = this.getIcon() || IconPool.getIconURI("person-placeholder"),
-			sImgId = this.getId() + '-icon',
-			mProperties = {
-				src : sIconSrc,
-				alt : this.getAriaLabelForPicture(),
-				densityAware : this.getIconDensityAware(),
-				decorative : false,
-				useIconTooltip: false
-			},
-			aCssClasses = ['sapMFeedInImage'];
+		this.oAvatar = this.getAggregation("_avatar");
+		if (!this.oAvatar) {
+			this.oAvatar = new Avatar({
+				id: sId,
+				src: sIconSrc,
+				displayShape: this.getIconDisplayShape(),
+				initials: this.getIconInitials(),
+				displaySize: this.getIconSize()
+			}).addStyleClass("sapMFeedInImage");
+			if (sIconSrc) {
+				this.oAvatar.addStyleClass("sapMFeedInImageBgColor");
+			}
+		} else {
+			this.oAvatar
+				.setSrc(sIconSrc)
+				.setDisplayShape(this.getIconDisplayShape())
+				.setInitials(this.getIconInitials())
+				.setDisplaySize(this.getIconSize());
+		}
 
-		this._oImageControl = library.ImageHelper.getImageControl(sImgId, this._oImageControl, this, mProperties, aCssClasses);
+		this.setAggregation("_avatar", this.oAvatar);
 
-		return this._oImageControl;
+		return this.oAvatar;
 	};
 
 	return FeedInput;

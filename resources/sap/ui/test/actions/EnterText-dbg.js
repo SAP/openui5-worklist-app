@@ -1,14 +1,15 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
+	"sap/ui/base/ManagedObject",
 	"sap/ui/test/actions/Action",
 	"sap/ui/events/KeyCodes",
 	"sap/ui/thirdparty/jquery"
-], function(Action, KeyCodes, jQueryDOM) {
+], function (ManagedObject, Action, KeyCodes, jQueryDOM) {
 	"use strict";
 
 	/**
@@ -22,6 +23,12 @@ sap.ui.define([
 	 *     <li><code>sap.m.TextArea</code></li>
 	 * </ul>
 	 *
+	 * @param {string}
+	 *            [sId] Optional ID for the new instance; generated automatically if
+	 *            no non-empty ID is given. Note: this can be omitted, no matter
+	 *            whether <code>mSettings</code> are given or not!
+	 * @param {object}
+	 *            [mSettings] Optional object with initial settings for the new instance
 	 * @extends sap.ui.test.actions.Action
 	 * @public
 	 * @name sap.ui.test.actions.EnterText
@@ -71,6 +78,13 @@ sap.ui.define([
 			publicMethods : [ "executeOn" ]
 		},
 
+		constructor: function (mSettings) {
+			if (mSettings && mSettings.text) {
+				mSettings.text = ManagedObject.escapeSettingsValue(mSettings.text);
+			}
+			Action.prototype.constructor.call(this, mSettings);
+		},
+
 		init: function () {
 			Action.prototype.init.apply(this, arguments);
 			this.controlAdapters = jQueryDOM.extend(this.controlAdapters, EnterText.controlAdapters);
@@ -93,6 +107,14 @@ sap.ui.define([
 			}
 			if (this.getText() === undefined || (!this.getClearTextFirst() && !this.getText())) {
 				this.oLogger.error("Please provide a text for this EnterText action");
+				return;
+			}
+			if (oActionDomRef.readOnly) {
+				this.oLogger.debug("Cannot enter text in control " + oControl + ": control is not editable!");
+				return;
+			}
+			if (oActionDomRef.disabled) {
+				this.oLogger.debug("Cannot enter text in control " + oControl + ": control is not enabled!");
 				return;
 			}
 

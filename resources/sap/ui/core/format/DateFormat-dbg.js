@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -143,13 +143,13 @@ sap.ui.define([
 	 *
 	 * @param {object} [oFormatOptions] Object which defines the format options
 	 * @param {string} [oFormatOptions.format] @since 1.34.0 contains pattern symbols (e.g. "yMMMd" or "Hms") which will be converted into the pattern in the used locale, which matches the wanted symbols best.
-	 *  The symbols must be in canonical order, that is: Era (G), Year (y/Y), Quarter (q/Q), Month (M/L), Week (w/W), Day-Of-Week (E/e/c), Day (d/D), Hour (h/H/k/K/j/J), Minute (m), Second (s), Timezone (z/Z/v/V/O/X/x)
+	 *  The symbols must be in canonical order, that is: Era (G), Year (y/Y), Quarter (q/Q), Month (M/L), Week (w), Day-Of-Week (E/e/c), Day (d), Hour (h/H/k/K/j/J), Minute (m), Second (s), Timezone (z/Z/v/V/O/X/x)
 	 *  See {@link http://unicode.org/reports/tr35/tr35-dates.html#availableFormats_appendItems}
 	 * @param {string} [oFormatOptions.pattern] a data pattern in LDML format. It is not verified whether the pattern represents only a date.
 	 * @param {string} [oFormatOptions.style] can be either 'short, 'medium', 'long' or 'full'. If no pattern is given, a locale dependent default date pattern of that style is used from the LocaleData class.
 	 * @param {boolean} [oFormatOptions.strictParsing] if true, by parsing it is checked if the value is a valid date
 	 * @param {boolean} [oFormatOptions.relative] if true, the date is formatted relatively to todays date if it is within the given day range, e.g. "today", "yesterday", "in 5 days"
-	 * @param {int[]} [oFormatOptions.relativeRange] the day range used for relative formatting. If oFormatOptions.relatvieScale is set to default value 'day', the relativeRange is by default [-6, 6], which means only the last 6 days, today and the next 6 days are formatted relatively. Otherwise when oFormatOptions.relativeScale is set to 'auto', all dates are formatted relatively.
+	 * @param {int[]} [oFormatOptions.relativeRange] the day range used for relative formatting. If <code>oFormatOptions.relativeScale</code> is set to default value 'day', the relativeRange is by default [-6, 6], which means only the last 6 days, today and the next 6 days are formatted relatively. Otherwise when <code>oFormatOptions.relativeScale</code> is set to 'auto', all dates are formatted relatively.
 	 * @param {string} [oFormatOptions.relativeScale="day"] if 'auto' is set, new relative time format is switched on for all Date/Time Instances. The relative scale is chosen depending on the difference between the given date and now.
 	 * @param {string} [oFormatOptions.relativeStyle="wide"] @since 1.32.10, 1.34.4 the style of the relative format. The valid values are "wide", "short", "narrow"
 	 * @param {boolean} [oFormatOptions.interval=false] @since 1.48.0 if true, the {@link sap.ui.core.format.DateFormat#format format} method expects an array with two dates as the first argument and formats them as interval. Further interval "Jan 10, 2008 - Jan 12, 2008" will be formatted as "Jan 10-12, 2008" if the 'format' option is set with necessary symbols.
@@ -171,13 +171,13 @@ sap.ui.define([
 	 *
 	 * @param {object} [oFormatOptions] Object which defines the format options
 	 * @param {string} [oFormatOptions.format] @since 1.34.0 contains pattern symbols (e.g. "yMMMd" or "Hms") which will be converted into the pattern in the used locale, which matches the wanted symbols best.
-	 *  The symbols must be in canonical order, that is: Era (G), Year (y/Y), Quarter (q/Q), Month (M/L), Week (w/W), Day-Of-Week (E/e/c), Day (d/D), Hour (h/H/k/K/j/J), Minute (m), Second (s), Timezone (z/Z/v/V/O/X/x)
+	 *  The symbols must be in canonical order, that is: Era (G), Year (y/Y), Quarter (q/Q), Month (M/L), Week (w), Day-Of-Week (E/e/c), Day (d), Hour (h/H/k/K/j/J), Minute (m), Second (s), Timezone (z/Z/v/V/O/X/x)
 	 *  See http://unicode.org/reports/tr35/tr35-dates.html#availableFormats_appendItems
 	 * @param {string} [oFormatOptions.pattern] a datetime pattern in LDML format. It is not verified whether the pattern represents a full datetime.
 	 * @param {string} [oFormatOptions.style] can be either 'short, 'medium', 'long' or 'full'. For datetime you can also define mixed styles, separated with a slash, where the first part is the date style and the second part is the time style (e.g. "medium/short"). If no pattern is given, a locale dependent default datetime pattern of that style is used from the LocaleData class.
 	 * @param {boolean} [oFormatOptions.strictParsing] if true, by parsing it is checked if the value is a valid datetime
 	 * @param {boolean} [oFormatOptions.relative] if true, the date is formatted relatively to todays date if it is within the given day range, e.g. "today", "yesterday", "in 5 days"@param {boolean} [oFormatOptions.UTC] if true, the date is formatted and parsed as UTC instead of the local timezone
-	 * @param {int[]} [oFormatOptions.relativeRange] the day range used for relative formatting. If oFormatOptions.relatvieScale is set to default value 'day', the relativeRange is by default [-6, 6], which means only the last 6 days, today and the next 6 days are formatted relatively. Otherwise when oFormatOptions.relativeScale is set to 'auto', all dates are formatted relatively.
+	 * @param {int[]} [oFormatOptions.relativeRange] the day range used for relative formatting. If <code>oFormatOptions.relativeScale</code> is set to default value 'day', the relativeRange is by default [-6, 6], which means only the last 6 days, today and the next 6 days are formatted relatively. Otherwise when <code>oFormatOptions.relativeScale</code> is set to 'auto', all dates are formatted relatively.
 	 * @param {string} [oFormatOptions.relativeScale="day"] if 'auto' is set, new relative time format is switched on for all Date/Time Instances. The relative scale is chosen depending on the difference between the given date and now.
 	 * @param {string} [oFormatOptions.relativeStyle="wide"] @since 1.32.10, 1.34.4 the style of the relative format. The valid values are "wide", "short", "narrow"
 	 * @param {boolean} [oFormatOptions.interval=false] @since 1.48.0 if true, the {@link sap.ui.core.format.DateFormat#format format} method expects an array with two dates as the first argument and formats them as interval. Further interval "Jan 10, 2008 - Jan 12, 2008" will be formatted as "Jan 10-12, 2008" if the 'format' option is set with necessary symbols.
@@ -199,13 +199,13 @@ sap.ui.define([
 	 *
 	 * @param {object} [oFormatOptions] Object which defines the format options
 	 * @param {string} [oFormatOptions.format] @since 1.34.0 contains pattern symbols (e.g. "yMMMd" or "Hms") which will be converted into the pattern in the used locale, which matches the wanted symbols best.
-	 *  The symbols must be in canonical order, that is: Era (G), Year (y/Y), Quarter (q/Q), Month (M/L), Week (w/W), Day-Of-Week (E/e/c), Day (d/D), Hour (h/H/k/K/j/J), Minute (m), Second (s), Timezone (z/Z/v/V/O/X/x)
+	 *  The symbols must be in canonical order, that is: Era (G), Year (y/Y), Quarter (q/Q), Month (M/L), Week (w), Day-Of-Week (E/e/c), Day (d), Hour (h/H/k/K/j/J), Minute (m), Second (s), Timezone (z/Z/v/V/O/X/x)
 	 *  See http://unicode.org/reports/tr35/tr35-dates.html#availableFormats_appendItems
 	 * @param {string} [oFormatOptions.pattern] a time pattern in LDML format. It is not verified whether the pattern only represents a time.
 	 * @param {string} [oFormatOptions.style] can be either 'short, 'medium', 'long' or 'full'. If no pattern is given, a locale dependent default time pattern of that style is used from the LocaleData class.
 	 * @param {boolean} [oFormatOptions.strictParsing] if true, by parsing it is checked if the value is a valid time
 	 * @param {boolean} [oFormatOptions.relative] if true, the date is formatted relatively to todays date if it is within the given day range, e.g. "today", "yesterday", "in 5 days"
-	 * @param {int[]} [oFormatOptions.relativeRange] the day range used for relative formatting. If oFormatOptions.relatvieScale is set to default value 'day', the relativeRange is by default [-6, 6], which means only the last 6 days, today and the next 6 days are formatted relatively. Otherwise when oFormatOptions.relativeScale is set to 'auto', all dates are formatted relatively.
+	 * @param {int[]} [oFormatOptions.relativeRange] the day range used for relative formatting. If <code>oFormatOptions.relativeScale</code> is set to default value 'day', the relativeRange is by default [-6, 6], which means only the last 6 days, today and the next 6 days are formatted relatively. Otherwise when <code>oFormatOptions.relativeScale</code> is set to 'auto', all dates are formatted relatively.
 	 * @param {string} [oFormatOptions.relativeScale="day"] if 'auto' is set, new relative time format is switched on for all Date/Time Instances. The relative scale is chosen depending on the difference between the given date and now.
 	 * @param {string} [oFormatOptions.relativeStyle="wide"] @since 1.32.10, 1.34.4 the style of the relative format. The valid values are "wide", "short", "narrow"
 	 * @param {boolean} [oFormatOptions.interval=false] @since 1.48.0 if true, the {@link sap.ui.core.format.DateFormat#format format} method expects an array with two dates as the first argument and formats them as interval. Further interval "Jan 10, 2008 - Jan 12, 2008" will be formatted as "Jan 10-12, 2008" if the 'format' option is set with necessary symbols.
@@ -482,7 +482,14 @@ sap.ui.define([
 				value: iFoundIndex === -1 ? null : aList[iFoundIndex]
 			};
 		},
-		parseTZ: function (sValue, bISO) {
+		/**
+		 * Parses a given timezone
+		 *
+		 * @param {string} sValue, e.g. "-0800", "-08:00", "-08"
+		 * @param {boolean} bColonSeparated whether or not the values are colon separated, e.g. "-08:00"
+		 * @returns {{tzDiff: number, length: number}}
+		 */
+		parseTZ: function (sValue, bColonSeparated) {
 			var iLength = 0;
 			var iTZFactor = sValue.charAt(0) == "+" ? -1 : 1;
 			var sPart;
@@ -493,13 +500,16 @@ sap.ui.define([
 			var iTZDiffHour = parseInt(sPart);
 			iLength += 2; //hh: 2 digits for hours
 
-			if (bISO) {
+			if (bColonSeparated) {
 				iLength++; //":"
 			}
 			sPart = this.findNumbers(sValue.substr(iLength), 2);
-			iLength += 2; //mm: 2 digits for minutes
-
-			var iTZDiff = parseInt(sPart);
+			var iTZDiff = 0;
+			// timezone pattern "X": will produce only 2 digits: "-08"
+			if (sPart) {
+				iLength += 2; //mm: 2 digits for minutes
+				iTZDiff = parseInt(sPart);
+			}
 
 			return {
 				length: iLength,
@@ -1099,17 +1109,25 @@ sap.ui.define([
 					sPM = oFormat.aDayPeriods[1];
 
 				// check whether the value is one of the ASCII variants for AM/PM
-				// for example: "am", "a.m.", "am." (and their case variants)
-				// if true, remove the '.' and compare with the defined am/pm case
+				// for example: "am", "a.m.", "am.", "a. m." (and their case variants)
+				// if true, remove the '.', the spaces and compare with the defined am/pm case
 				// insensitive
-				var rAMPM = /[aApP](?:\.)?[mM](?:\.)?/;
+				var rAMPM = /[aApP](?:\.)?[\x20\xA0]?[mM](?:\.)?/;
 				var aMatch = sValue.match(rAMPM);
 				var bVariant = (aMatch && aMatch.index === 0);
 
 				if (bVariant) {
-					sValue = aMatch[0].replace(/\./g, "").toLowerCase() + sValue.substring(aMatch[0].length);
+					sValue = aMatch[0];
+
+					// Remove normal and non-breaking spaces
+					sAM = sAM.replace(/[\x20\xA0]/g, "");
+					sPM = sPM.replace(/[\x20\xA0]/g, "");
+					sValue = sValue.replace(/[\x20\xA0]/g, "");
+
+					// Remove dots and make it lowercase
 					sAM = sAM.replace(/\./g, "").toLowerCase();
 					sPM = sPM.replace(/\./g, "").toLowerCase();
+					sValue = sValue.replace(/\./g, "").toLowerCase();
 				}
 				if (sValue.indexOf(sAM) === 0) {
 					bPM = false;
@@ -1322,11 +1340,13 @@ sap.ui.define([
 			format: function(oField, oDate, bUTC, oFormat) {
 				//TODO getTimezoneLong and getTimezoneShort does not exist on Date object
 				//-> this is a preparation for a future full timezone support (only used by unit test so far)
-				if (oField.digits > 3 && oDate.getTimezoneLong()) {
+				if (oField.digits > 3 && oDate.getTimezoneLong && oDate.getTimezoneLong()) {
 					return oDate.getTimezoneLong();
-				} else if (oDate.getTimezoneShort()) {
+				} else if (oDate.getTimezoneShort && oDate.getTimezoneShort()) {
 					return oDate.getTimezoneShort();
 				}
+
+				// valid for zzzz (fallback to OOOO)
 
 				var sTimeZone = "GMT";
 				var iTZOffset = Math.abs(oDate.getTimezoneOffset());
@@ -1354,16 +1374,16 @@ sap.ui.define([
 					iLength = 3;
 				} else if (sValue.substring(0, 2) === "UT") {
 					iLength = 2;
-				} else if (sValue.charAt(0) == "Z") {
+				} else if (sValue.charAt(0) === "Z") {
 					iLength = 1;
 					iTZDiff = 0;
 				} else {
 					return {
-						error: "cannot be parsed correcly by sap.ui.core.format.DateFormat: The given timezone is not supported!"
+						error: "cannot be parsed correctly by sap.ui.core.format.DateFormat: The given timezone is not supported!"
 					};
 				}
 
-				if (sValue.charAt(0) != "Z") {
+				if (sValue.charAt(0) !== "Z") {
 					var oParsedTZ = oParseHelper.parseTZ(sValue.substr(iLength), true);
 
 					iLength += oParsedTZ.length;
@@ -1385,7 +1405,13 @@ sap.ui.define([
 				var iMinuteOffset = iTZOffset % 60;
 				var sTimeZone = "";
 
-				if (!bUTC && iTZOffset != 0) {
+				// valid for Z-ZZZ
+				// per RFC822 a timezone always has 4 digits
+				// UTC+0: "+0000"
+				// UTC-7: "-0700"
+				// UTC+2: "+0200"
+				// https://tools.ietf.org/html/rfc822 paragraph 5.1
+				if (!bUTC) {
 					sTimeZone += (bPositiveOffset ? "-" : "+");
 					sTimeZone += String(iHourOffset).padStart(2, "0");
 					sTimeZone += String(iMinuteOffset).padStart(2, "0");
@@ -1400,6 +1426,35 @@ sap.ui.define([
 		"X": {
 			name: "timezoneISO8601",
 			format: function(oField, oDate, bUTC, oFormat) {
+				/*
+				 * Mountain Standard Time (MST, UTC-7)
+				 * X:           "-07"
+				 * XX, XXXX:    "-0700"
+				 * XXX, XXXXX:  "-07:00"
+				 */
+
+				/*
+				 * Central European Summer Time (CEST, UTC+2)
+				 * X:           "+02"
+				 * XX, XXXX:    "+0200"
+				 * XXX, XXXXX:  "+02:00"
+				 */
+
+				/*
+				 * Indian Standard Time (IST, UTC+5:30)
+				 * X:           "+0530"
+				 * XX, XXXX:    "+0530"
+				 * XXX, XXXXX:  "+05:30"
+				 */
+
+				/*
+				 * Greenwich Mean Time (GMT, UTC+0)
+				 * X:           "Z"
+				 * XX, XXXX:    "Z"
+				 * XXX, XXXXX:  "Z"
+				 */
+
+				// @see http://www.unicode.org/reports/tr35/tr35-dates.html#Time_Zone_Goals
 				var iTZOffset = Math.abs(oDate.getTimezoneOffset());
 				var bPositiveOffset = oDate.getTimezoneOffset() > 0;
 				var iHourOffset = Math.floor(iTZOffset / 60);
@@ -1409,8 +1464,12 @@ sap.ui.define([
 				if (!bUTC && iTZOffset != 0) {
 					sTimeZone += (bPositiveOffset ? "-" : "+");
 					sTimeZone += String(iHourOffset).padStart(2, "0");
-					sTimeZone += ":";
-					sTimeZone += String(iMinuteOffset).padStart(2, "0");
+					if (oField.digits > 1 || iMinuteOffset > 0) {
+						if (oField.digits === 3 || oField.digits === 5) {
+							sTimeZone += ":";
+						}
+						sTimeZone += String(iMinuteOffset).padStart(2, "0");
+					}
 				} else {
 					sTimeZone += "Z";
 				}
@@ -1418,13 +1477,13 @@ sap.ui.define([
 				return sTimeZone;
 			},
 			parse: function(sValue, oPart, oFormat, oConfig) {
-				if (sValue.charAt(0) == "Z") {
+				if (sValue.charAt(0) === "Z") {
 					return {
 						length: 1,
 						tzDiff: 0
 					};
 				} else {
-					return oParseHelper.parseTZ(sValue, true);
+					return oParseHelper.parseTZ(sValue, oPart.digits === 3 || oPart.digits === 5);
 				}
 			}
 		}
@@ -1453,6 +1512,8 @@ sap.ui.define([
 		sResult = aBuffer.join("");
 
 		if (sap.ui.getCore().getConfiguration().getOriginInfo()) {
+			// String object is created on purpose and must not be a string literal
+			// eslint-disable-next-line no-new-wrappers
 			sResult = new String(sResult);
 			sResult.originInfo = {
 				source: "Common Locale Data Repository",
@@ -1469,7 +1530,7 @@ sap.ui.define([
 	 * Format a date according to the given format options.
 	 *
 	 * @param {Date|Date[]} vJSDate the value to format
-	 * @param {boolean} bUTC whether to use UTC
+	 * @param {boolean} [bUTC=false] whether to use UTC
 	 * @return {string} the formatted output value. If an invalid date is given, an empty string is returned.
 	 * @public
 	 */
@@ -1671,7 +1732,7 @@ sap.ui.define([
 			iRepeat,
 			oDateValue;
 
-		// Try out with all possible patterns until succesfully parse has been done or the end of the array is reached
+		// Try out with all possible patterns until successfully parse has been done or the end of the array is reached
 		this.intervalPatterns.some(function(sPattern) {
 			var aFormatArray = this.parseCldrDatePattern(sPattern);
 
@@ -2200,6 +2261,21 @@ sap.ui.define([
 		return sScale;
 	};
 
+	/**
+	 * Modifies the Date and sets the values with a higher index to <code>0</code>
+	 *
+	 * @param {Date} oDate input date
+	 * @param {number} iStartIndex index of the value to set to <code>0</code>. Higher indices will also be set to <code>0</code>.
+	 * 0: FullYear
+	 * 1: Month
+	 * 2: Date
+	 * 3: Hours
+	 * 4: Minutes
+	 * 5: Seconds
+	 * 6: Milliseconds
+	 * e.g. iStartIndex <code>4</code> will set Minutes, Seconds and Milliseconds to <code>0</code>
+	 * @returns {Date} copy of the date with the modified values
+	 */
 	function cutDateFields(oDate, iStartIndex) {
 		var aFields = [
 			"FullYear",
@@ -2210,11 +2286,13 @@ sap.ui.define([
 			"Seconds",
 			"Milliseconds"
 		], sMethodName;
+		var oDateCopy = new Date(oDate.getTime());
 
 		for (var i = iStartIndex; i < aFields.length; i++) {
 			sMethodName = "set" + aFields[iStartIndex];
-			oDate[sMethodName].apply(oDate, [0]);
+			oDateCopy[sMethodName].apply(oDateCopy, [0]);
 		}
+		return oDateCopy;
 	}
 
 	var mRelativeDiffs = {
@@ -2228,32 +2306,32 @@ sap.ui.define([
 			var iFromDay = oFormat._adaptDayOfWeek(oFromDate.getDay());
 			var iToDay = oFormat._adaptDayOfWeek(oToDate.getDay());
 
-			cutDateFields(oFromDate, 3);
-			cutDateFields(oToDate, 3);
+			oFromDate = cutDateFields(oFromDate, 3);
+			oToDate = cutDateFields(oToDate, 3);
 
 			return (oToDate.getTime() - oFromDate.getTime() - (iToDay - iFromDay) * oFormat._mScales.day * 1000) / (oFormat._mScales.week * 1000);
 		},
 		day: function(oFromDate, oToDate, oFormat) {
-			cutDateFields(oFromDate, 3);
-			cutDateFields(oToDate, 3);
+			oFromDate = cutDateFields(oFromDate, 3);
+			oToDate = cutDateFields(oToDate, 3);
 
 			return (oToDate.getTime() - oFromDate.getTime()) / (oFormat._mScales.day * 1000);
 		},
 		hour: function(oFromDate, oToDate, oFormat) {
-			cutDateFields(oFromDate, 4);
-			cutDateFields(oToDate, 4);
+			oFromDate = cutDateFields(oFromDate, 4);
+			oToDate = cutDateFields(oToDate, 4);
 
 			return (oToDate.getTime() - oFromDate.getTime()) / (oFormat._mScales.hour * 1000);
 		},
 		minute: function(oFromDate, oToDate, oFormat) {
-			cutDateFields(oFromDate, 5);
-			cutDateFields(oToDate, 5);
+			oFromDate = cutDateFields(oFromDate, 5);
+			oToDate = cutDateFields(oToDate, 5);
 
 			return (oToDate.getTime() - oFromDate.getTime()) / (oFormat._mScales.minute * 1000);
 		},
 		second: function(oFromDate, oToDate, oFormat) {
-			cutDateFields(oFromDate, 6);
-			cutDateFields(oToDate, 6);
+			oFromDate = cutDateFields(oFromDate, 6);
+			oToDate = cutDateFields(oToDate, 6);
 
 			return (oToDate.getTime() - oFromDate.getTime()) / (oFormat._mScales.second * 1000);
 		}
@@ -2322,7 +2400,7 @@ sap.ui.define([
 						sAllowedCharacters += "0123456789";
 						bNumbers = true;
 					}
-				}else {
+				} else {
 					bAll = true;
 				}
 				break;

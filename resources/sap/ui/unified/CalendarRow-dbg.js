@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -18,6 +18,7 @@ sap.ui.define([
 	'sap/ui/core/Locale',
 	"./CalendarRowRenderer",
 	"sap/ui/dom/containsOrEquals",
+	"sap/ui/events/checkMouseEnterOrLeave",
 	"sap/ui/thirdparty/jquery",
 	"sap/ui/unified/CalendarAppointment"
 ], function(
@@ -33,6 +34,7 @@ sap.ui.define([
 	Locale,
 	CalendarRowRenderer,
 	containsOrEquals,
+	checkMouseEnterOrLeave,
 	jQuery,
 	CalendarAppointment
 ) {
@@ -50,7 +52,11 @@ sap.ui.define([
 	// shortcut for sap.ui.unified.CalendarIntervalType
 	var CalendarIntervalType = library.CalendarIntervalType;
 
-	var TOP_BOT_APP_MARGIN = 4;
+	// shortcut for sap.ui.unified.CalendarAppointmentHeight
+	var CalendarAppointmentHeight = library.CalendarAppointmentHeight;
+
+	// shortcut for sap.ui.unified.CalendarAppointmentRoundWidth
+	var CalendarAppointmentRoundWidth = library.CalendarAppointmentRoundWidth;
 
 	/*
 	 * <code>UniversalDate</code> objects are used inside the <code>CalendarRow</code>, whereas JavaScript dates are used in the API.
@@ -70,7 +76,7 @@ sap.ui.define([
 	 * @class
 	 * A calendar row with a header and appointments. The Appointments will be placed in the defined interval.
 	 * @extends sap.ui.core.Control
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @constructor
 	 * @public
@@ -92,6 +98,12 @@ sap.ui.define([
 			 * Number of displayed intervals. The size of the intervals is defined with <code>intervalType</code>
 			 */
 			intervals : {type : "int", group : "Appearance", defaultValue : 12},
+
+			/**
+			 * Number of interval type units merged. It's used when presenting Relative View in sap.m.PlanningCalendar.
+			 * Note: If the value is more than 1, the NonWorkingDays type is not presented.
+			 */
+			intervalSize : { type: "int", group: "Appearance", defaultValue: 1},
 
 			/**
 			 * Type of the intervals of the row. The default is one hour.
@@ -186,9 +198,10 @@ sap.ui.define([
 			 *
 			 * <b>Note:</b> On phone devices this property is ignored, appointments are always rendered in full height
 			 * to allow touching.
+			 * @deprecated Since version 1.81. Please use the <code>appointmentHeight</code> with value "Automatic" property instead.
 			 * @since 1.38.0
 			 */
-			appointmentsReducedHeight : {type : "boolean", group : "Appearance", defaultValue : false},
+			appointmentsReducedHeight : {type : "boolean", group : "Appearance", defaultValue : false, deprecated: true},
 
 			/**
 			 * Defines the visualization of the <code>CalendarAppoinment</code>
@@ -196,7 +209,21 @@ sap.ui.define([
 			 * <b>Note:</b> The real visualization depends on the used theme.
 			 * @since 1.40.0
 			 */
-			appointmentsVisualization : {type : "sap.ui.unified.CalendarAppointmentVisualization", group : "Appearance", defaultValue : CalendarAppointmentVisualization.Standard}
+			appointmentsVisualization: { type: "sap.ui.unified.CalendarAppointmentVisualization", group: "Appearance", defaultValue: CalendarAppointmentVisualization.Standard },
+
+			/**
+			 * Defines the height of the <code>CalendarAppoinment<code>
+			 * @since 1.81.0
+			 */
+			appointmentHeight: { type: "sap.ui.unified.CalendarAppointmentHeight", group: "Appearance", defaultValue: CalendarAppointmentHeight.Regular},
+
+			/**
+			 * Defines rounding of the width of <code>CalendarAppoinment<code>
+			 * <b>Note:</b> This property is applied, when the calendar interval type is day and the view shows more than 20 days
+			 * @experimental Since 1.81.0
+			 * @since 1.81.0
+			 */
+			appointmentRoundWidth: { type: "sap.ui.unified.CalendarAppointmentRoundWidth", group: "Appearance", defaultValue: CalendarAppointmentRoundWidth.None}
 		},
 		aggregations : {
 
@@ -269,7 +296,6 @@ sap.ui.define([
 					domRefId: {type: "string"}
 				}
 			},
-
 			/**
 			 * <code>startDate</code> was changed while navigating in <code>CalendarRow</code>
 			 */
@@ -322,9 +348,6 @@ sap.ui.define([
 			pattern: "EEEE dd/MM/YYYY 'at' " + _getLocaleData.call(this).getTimePattern("medium")
 		});
 
-		this._iHoursMinDelta = 1; // minutes - to position appointments in 1 minutes steps
-		this._iDaysMinDelta = 30; // minutes
-		this._iMonthsMinDelta = 720; // minutes
 		this._aVisibleAppointments = [];
 		this._aVisibleIntervalHeaders = [];
 
@@ -355,7 +378,7 @@ sap.ui.define([
 	};
 
 	CalendarRow.prototype.onBeforeRendering = function(){
-
+		this._aVisibleAppointments = [];
 		_calculateIntervals.call(this);
 		_determineVisibleAppointments.call(this);
 		_determineVisibleIntervalHeaders.call(this);
@@ -363,6 +386,14 @@ sap.ui.define([
 		if (this._sUpdateCurrentTime) {
 			clearTimeout(this._sUpdateCurrentTime);
 			this._sUpdateCurrentTime = undefined;
+		}
+
+		if (!this.getAppointments().length) {
+			this.aSelectedAppointments = [];
+		} else {
+			this.getAppointments().forEach(function (oApp) {
+				this._updateSelectedAppointmentsArray(oApp);
+			}.bind(this));
 		}
 
 	};
@@ -425,6 +456,8 @@ sap.ui.define([
 		var iYear = oStartDate.getFullYear();
 		CalendarUtils._checkYearInValidRange(iYear);
 
+		this._oUTCStartDate = CalendarUtils._createUniversalUTCDate(oStartDate, undefined, true);
+
 		this.setProperty("startDate", oStartDate);
 
 		return this;
@@ -451,37 +484,10 @@ sap.ui.define([
 
 	};
 
-	CalendarRow.prototype.setGroupAppointmentsMode = function(bGroupAppointmentsMode) {
-
-		this.setProperty("groupAppointmentsMode", bGroupAppointmentsMode);
-
-		// as levels must be new calculated
-		this._aVisibleAppointments = [];
-
-		return this;
-	};
-
-	CalendarRow.prototype.setAppointmentsReducedHeight = function(bAppointmentsReducedHeight){
-
-		this.setProperty("appointmentsReducedHeight", bAppointmentsReducedHeight);
-
-		// as levels must be new calculated
-		this._aVisibleAppointments = [];
-
-		return this;
-
-	};
-
 	CalendarRow.prototype._getAppointmentReducedHeight = function(oAppointment){
-
-		var bReducedHeight = false;
-
-		if (!Device.system.phone && this.getAppointmentsReducedHeight() && !oAppointment.getText()) {
-			bReducedHeight = true;
-		}
+		var bReducedHeight = !Device.system.phone && this.getAppointmentsReducedHeight() && oAppointment.size === CalendarAppointmentHeight.Regular;
 
 		return bReducedHeight;
-
 	};
 
 	CalendarRow.prototype.onfocusin = function(oEvent) {
@@ -578,7 +584,6 @@ sap.ui.define([
 	};
 
 	CalendarRow.prototype.onsapselect = function(oEvent){
-
 		// focused appointment must be selected
 		var aVisibleAppointments = this._getVisibleAppointments();
 
@@ -637,7 +642,7 @@ sap.ui.define([
 	 * of each <code>CalendarRow</code>.
 	 *
 	 * @param {jQuery.Event} oEvent The event object of the resize handler.
-	 * @returns {sap.ui.unified.CalendarRow} <code>this</code> to allow method chaining
+	 * @returns {this} <code>this</code> to allow method chaining
 	 * @public
 	 */
 	CalendarRow.prototype.handleResize = function(oEvent) {
@@ -667,7 +672,7 @@ sap.ui.define([
 	 * it is better if the container triggers the interval once and then calls this function
 	 * of each <code>CalendarRow</code>.
 	 *
-	 * @returns {sap.ui.unified.CalendarRow} <code>this</code> to allow method chaining
+	 * @returns {this} <code>this</code> to allow method chaining
 	 * @public
 	 */
 	CalendarRow.prototype.updateCurrentTimeVisualization = function() {
@@ -703,6 +708,7 @@ sap.ui.define([
 				case CalendarIntervalType.Day:
 				case CalendarIntervalType.Week:
 				case CalendarIntervalType.OneMonth:
+				case "OneMonth":
 					iTime = 1800000;
 					break;
 
@@ -715,7 +721,7 @@ sap.ui.define([
 					this._sUpdateCurrentTime = setTimeout(this.updateCurrentTimeVisualization.bind(this), iTime);
 				}
 			}
-		}else {
+		} else  {
 			$Now.css("display", "none");
 		}
 
@@ -763,7 +769,7 @@ sap.ui.define([
 	 * Focus the given <code>CalendarAppointment</code> in the <code>CalendarRow</code>.
 	 *
 	 * @param {sap.ui.unified.CalendarAppointment} oAppointment Appointment to be focused.
-	 * @returns {sap.ui.unified.CalendarRow} <code>this</code> to allow method chaining
+	 * @returns {this} <code>this</code> to allow method chaining
 	 * @public
 	 */
 	CalendarRow.prototype.focusAppointment = function(oAppointment) {
@@ -775,7 +781,7 @@ sap.ui.define([
 		var sId = oAppointment.getId();
 		if (this._sFocusedAppointmentId != sId) {
 			_focusAppointment.call(this, sId);
-		}else {
+		} else  {
 			oAppointment.focus();
 		}
 
@@ -788,7 +794,7 @@ sap.ui.define([
 	 * the given date.
 	 *
 	 * @param {object} oDate Javascript Date object.
-	 * @returns {sap.ui.unified.CalendarRow} <code>this</code> to allow method chaining
+	 * @returns {this} <code>this</code> to allow method chaining
 	 * @public
 	 */
 	CalendarRow.prototype.focusNearestAppointment = function(oDate) {
@@ -839,6 +845,9 @@ sap.ui.define([
 	};
 
 	CalendarRow.prototype._getNonWorkingDays = function() {
+		if (this.getIntervalSize() !== 1) {
+			return [];
+		}
 
 		var aNonWorkingDays = this.getNonWorkingDays();
 
@@ -854,7 +863,7 @@ sap.ui.define([
 					aNonWorkingDays.push(i);
 				}
 			}
-		}else if (!Array.isArray(aNonWorkingDays)) {
+		} else if (!Array.isArray(aNonWorkingDays)) {
 			aNonWorkingDays = [];
 		}
 
@@ -866,7 +875,7 @@ sap.ui.define([
 	 * returns if the appointments are rendered as list instead in a table
 	 */
 	CalendarRow.prototype._isOneMonthsRowOnSmallSizes = function() {
-		return this.getIntervalType() === CalendarIntervalType.OneMonth && this.getIntervals() === 1;
+		return (this.getIntervalType() === CalendarIntervalType.OneMonth || this.getIntervalType() === "OneMonth") && this.getIntervals() === 1;
 	};
 
 	/*
@@ -1012,21 +1021,19 @@ sap.ui.define([
 		case CalendarIntervalType.Hour:
 			oEndDate = new UniversalDate(this._oUTCStartDate.getTime());
 			oEndDate.setUTCHours(oEndDate.getUTCHours() + iIntervals);
-			this._iMinDelta = this._iHoursMinDelta;
 			break;
 
 		case CalendarIntervalType.Day:
 		case CalendarIntervalType.Week:
 		case CalendarIntervalType.OneMonth:
+		case "OneMonth":
 			oEndDate = new UniversalDate(this._oUTCStartDate.getTime());
-			oEndDate.setUTCDate(oEndDate.getUTCDate() + iIntervals);
-			this._iMinDelta = this._iDaysMinDelta;
+			oEndDate.setUTCDate(oEndDate.getUTCDate() + iIntervals * this.getIntervalSize());
 			break;
 
 		case CalendarIntervalType.Month:
 			oEndDate = new UniversalDate(this._oUTCStartDate.getTime());
 			oEndDate.setUTCMonth(oEndDate.getUTCMonth() + iIntervals);
-			this._iMinDelta = this._iMonthsMinDelta;
 			break;
 
 		default:
@@ -1059,6 +1066,7 @@ sap.ui.define([
 		case CalendarIntervalType.Day:
 		case CalendarIntervalType.Week:
 		case CalendarIntervalType.OneMonth:
+		case "OneMonth":
 			oUTCStartDate.setUTCHours(0);
 			oUTCStartDate.setUTCMinutes(0);
 			oUTCStartDate.setUTCSeconds(0);
@@ -1114,6 +1122,7 @@ sap.ui.define([
 		var i = 0;
 		var j = 0;
 		var bGroupsEnabled = _isGroupAppointmentsEnabled.call(this);
+		var bHorizontalFit = this._needAppointmentHorizontalFit();
 
 		this.destroyAggregation("groupAppointments", true);
 
@@ -1141,10 +1150,6 @@ sap.ui.define([
 				bCut = true;
 			}
 
-			// adjust start date to min. delta
-			var iStartMinutes = oAppointmentStartDate.getUTCHours() * 60 + oAppointmentStartDate.getUTCMinutes();
-			oAppointmentStartDate.setUTCMinutes(oAppointmentStartDate.getUTCMinutes() - (iStartMinutes % this._iMinDelta));
-
 			var iDelta = (oAppointmentEndDate.getTime() - oAppointmentStartDate.getTime()) / 60000;
 			if (bCut && iDelta == 0) {
 				// no size after cut -> e.g. starts in past and ends exactly on startDate
@@ -1159,7 +1164,7 @@ sap.ui.define([
 
 			if (oAppointmentStartDate && oAppointmentStartDate.getTime() <= iEndTime &&
 				oAppointmentEndDate && oAppointmentEndDate.getTime() >= iStartTime &&
-				oAppointmentStartDateTime < oAppointmentEndDateTime) {
+				oAppointmentStartDateTime <= oAppointmentEndDateTime) {
 
 				if (bGroupsEnabled &&
 					(sIntervalType == CalendarIntervalType.Month) &&
@@ -1173,6 +1178,9 @@ sap.ui.define([
 						// appointment ends in next group
 						oGroupAppointment2 = _getGroupAppointment.call(this, oAppointmentEndDate, oAppointment, sIntervalType, iIntervals, oStartDate, oEndDate, iStartTime, aVisibleAppointments);
 					}
+				}
+				if (bHorizontalFit) {
+					this._setHorizontalRoundingWidth(oAppointment, oAppointmentStartDate, oAppointmentEndDate);
 				}
 
 				iBegin = _calculateBegin.call(this, sIntervalType, iIntervals, oStartDate, oEndDate, iStartTime, oAppointmentStartDate);
@@ -1190,7 +1198,7 @@ sap.ui.define([
 					continue;
 				}
 
-				aVisibleAppointments.push({appointment: oAppointment, begin: iBegin, end: iEnd, calculatedEnd: iEnd, level: iLevel});
+				aVisibleAppointments.push({ appointment: oAppointment, begin: iBegin, end: iEnd, calculatedEnd: iEnd, level: iLevel, size: this.getProperty("appointmentHeight") });
 
 				if (this._sFocusedAppointmentId && this._sFocusedAppointmentId == oAppointment.getId()) {
 					bFocusIdFound = true;
@@ -1262,7 +1270,7 @@ sap.ui.define([
 			// focused appointment not visible or no focus set
 			if (aVisibleAppointments.length > 0) {
 				this._sFocusedAppointmentId = aVisibleAppointments[0].appointment.getId();
-			}else {
+			} else  {
 				this._sFocusedAppointmentId = undefined;
 			}
 		}
@@ -1313,7 +1321,7 @@ sap.ui.define([
 			this.addAggregation("groupAppointments", oGroupAppointment, true);
 			var iBegin = _calculateBegin.call(this, sIntervalType, iIntervals, oStartDate, oEndDate, iStartTime, oGroupStartDate);
 			var iEnd = _calculateEnd.call(this, sIntervalType, iIntervals, oStartDate, oEndDate, iStartTime, oGroupEndDate);
-			aVisibleAppointments.push({appointment: oGroupAppointment, begin: iBegin, end: iEnd, calculatedEnd: iEnd, level: -1});
+			aVisibleAppointments.push({appointment: oGroupAppointment, begin: iBegin, end: iEnd, calculatedEnd: iEnd, level: -1, size: this.getProperty("appointmentHeight")});
 		}
 		oGroupAppointment._aAppointments.push(oAppointment);
 		if (oGroupAppointment.getType() != CalendarDayType.None && oGroupAppointment.getType() != oAppointment.getType()){
@@ -1448,6 +1456,7 @@ sap.ui.define([
 						case CalendarIntervalType.Day:
 						case CalendarIntervalType.Week:
 						case CalendarIntervalType.OneMonth:
+						case "OneMonth":
 							oIntervalEndDate.setUTCDate(oIntervalEndDate.getUTCDate() + 1);
 							if (j > 0) {
 								oIntervalStartDate.setUTCDate(oIntervalStartDate.getUTCDate() + 1);
@@ -1512,6 +1521,7 @@ sap.ui.define([
 			return;
 		}
 
+		var TOP_BOT_APP_MARGIN = 4;
 		var iMinWidth = $DummyApp.outerWidth();
 		var iMinPercent =  iMinWidth / iRowWidth * 100;
 		var iMinPercentCeil =  Math.ceil(1000 * iMinPercent) / 1000;
@@ -1521,8 +1531,8 @@ sap.ui.define([
 		var iLevels = 0;
 		var i = 0;
 		var bIntervalContainer = false;
-		var bAppointmentsReducedHeight = !Device.system.phone && this.getAppointmentsReducedHeight();
 		var iTop;
+		var bHorizontalFit = this._needAppointmentHorizontalFit();
 
 		if (this.getShowIntervalHeaders() && (this.getShowEmptyIntervalHeaders() || this._getVisibleIntervalHeaders().length > 0)) {
 			iStaticHeight = jQuery(this.$("AppsInt0").children(".sapUiCalendarRowAppsIntHead")[0]).outerHeight(true);
@@ -1541,10 +1551,9 @@ sap.ui.define([
 				if (oAppointment.end < 0) {
 					oAppointment.end = 0;
 				}
-				oAppointment.level = -1; // level must be new calculated
 				bChanged = true;
 				$Appointment.addClass("sapUiCalendarAppSmall");
-			}else if ($Appointment.hasClass("sapUiCalendarAppSmall")){
+			} else if ($Appointment.hasClass("sapUiCalendarAppSmall")){
 				// not longer too small
 				oAppointment.end = oAppointment.calculatedEnd;
 				bChanged = true;
@@ -1552,11 +1561,20 @@ sap.ui.define([
 			}
 
 			if (bChanged) {
+				oAppointment.level = -1; // level must be new calculated
+			}
+
+			if (bChanged && !bHorizontalFit) {
 				if (this._bRTL) {
 					$Appointment.css("left", oAppointment.end + "%");
 				} else {
 					$Appointment.css("right", oAppointment.end + "%");
 				}
+			}
+
+			// if it is possible to round off the appointment, it is necessary to replace its end value with its pre-calculated
+			if (bHorizontalFit) {
+				oAppointment.end = oAppointment.calculatedEnd;
 			}
 		}
 
@@ -1565,7 +1583,6 @@ sap.ui.define([
 			oAppointment = this._aVisibleAppointments[i];
 			$Appointment = oAppointment.appointment.$();
 			var oBlockedLevels = {};
-			var bTwoLevels = bAppointmentsReducedHeight && !this._getAppointmentReducedHeight(oAppointment.appointment);
 
 			if (oAppointment.level < 0) {
 				for (var j = 0; j < this._aVisibleAppointments.length; j++) {
@@ -1574,28 +1591,12 @@ sap.ui.define([
 							oAppointment.begin < (Math.floor(1000 * (100 - oVisibleAppointment.end)) / 1000) &&
 							(Math.floor(1000 * (100 - oAppointment.end)) / 1000) > oVisibleAppointment.begin &&
 							oVisibleAppointment.level >= 0) {
-						// if one appointment starts directly at the end of an other one place it at the same level
-						if (oBlockedLevels[oVisibleAppointment.level]) {
-							oBlockedLevels[oVisibleAppointment.level]++;
-						} else {
-							oBlockedLevels[oVisibleAppointment.level] = 1;
-						}
-
-						if (bAppointmentsReducedHeight && !this._getAppointmentReducedHeight(oVisibleAppointment.appointment)) {
-							// 2 levels used
-							if (oBlockedLevels[oVisibleAppointment.level + 1]) {
-								oBlockedLevels[oVisibleAppointment.level + 1]++;
-							} else {
-								oBlockedLevels[oVisibleAppointment.level + 1] = 1;
-							}
-						}
+						this._setBlockedLevelsForAppointment(oVisibleAppointment, oBlockedLevels);
 					}
 				}
 
-				oAppointment.level = 0;
-				while (oBlockedLevels[oAppointment.level] || (bTwoLevels && oBlockedLevels[oAppointment.level + 1])) {
-					oAppointment.level++;
-				}
+				oAppointment.level = this._getAppointmetLevel(oBlockedLevels, oAppointment);
+
 				$Appointment.attr("data-sap-level", oAppointment.level);
 			}
 
@@ -1606,9 +1607,8 @@ sap.ui.define([
 			$Appointment.css("top", iTop + "px");
 
 			var iAppointmentEndLevel = oAppointment.level;
-			if (bTwoLevels) {
-				iAppointmentEndLevel++;
-			}
+			iAppointmentEndLevel += this._getAppointmentRowCount(oAppointment) - 1;
+
 			if (iLevels < iAppointmentEndLevel) {
 				iLevels = iAppointmentEndLevel;
 			}
@@ -1642,29 +1642,32 @@ sap.ui.define([
 	function _selectAppointment(oAppointment, bRemoveOldSelection) {
 
 		var i = 0;
-		var oOtherAppointment;
+		var oApp;
 		var sAriaLabel;
 		var sAriaLabelNotSelected;
 		var sAriaLabelSelected;
 		var sSelectedTextId = InvisibleText.getStaticId("sap.ui.unified", "APPOINTMENT_SELECTED");
+		var bSelect = !oAppointment.getSelected();
 
 		if (bRemoveOldSelection) {
 			var aAppointments = this.getAppointments();
 			var aGroupAppointments = this.getAggregation("groupAppointments", []);
 			jQuery.merge(aAppointments, aGroupAppointments);
+
+			// update the other appointments
 			for (i = 0; i < aAppointments.length; i++) {
-				oOtherAppointment = aAppointments[i];
-				if (oOtherAppointment.getId() !== oAppointment.getId() && oOtherAppointment.getSelected()) {
-					oOtherAppointment.setProperty("selected", false, true); // do not invalidate CalendarRow
-					oOtherAppointment.$().removeClass("sapUiCalendarAppSel");
+				oApp = aAppointments[i];
+				if (oApp.getId() !== oAppointment.getId() && oApp.getSelected()) {
+					oApp.setProperty("selected", false, true); // do not invalidate CalendarRow
+					oApp.$().removeClass("sapUiCalendarAppSel");
 					for (var i = 0; i < this.aSelectedAppointments.length; i++) {
-						if (this.aSelectedAppointments[i] !== oOtherAppointment.getId()){
+						if (this.aSelectedAppointments[i] !== oApp.getId()){
 							this.aSelectedAppointments.splice(i);
 						}
 					}
-					sAriaLabel = oOtherAppointment.$().attr("aria-labelledby");
+					sAriaLabel = oApp.$().attr("aria-labelledby");
 					sAriaLabelNotSelected = sAriaLabel ? sAriaLabel.replace(sSelectedTextId, "") : "";
-					oOtherAppointment.$().attr("aria-labelledby", sAriaLabelNotSelected);
+					oApp.$().attr("aria-labelledby", sAriaLabelNotSelected);
 				}
 			}
 		}
@@ -1672,7 +1675,7 @@ sap.ui.define([
 		sAriaLabelSelected = oAppointment.$().attr("aria-labelledby") + " " + sSelectedTextId;
 		sAriaLabelNotSelected = oAppointment.$().attr("aria-labelledby").replace(sSelectedTextId, "").trim();
 
-		if (oAppointment.getSelected()){
+		if (oAppointment.getSelected()) {
 			oAppointment.setProperty("selected", false, true); // do not invalidate CalendarRow
 			oAppointment.$().removeClass("sapUiCalendarAppSel");
 			oAppointment.$().attr("aria-labelledby", sAriaLabelNotSelected);
@@ -1689,10 +1692,10 @@ sap.ui.define([
 		if (oAppointment._aAppointments) {
 			// it's a group Appointment
 			for (i = 0; i < oAppointment._aAppointments.length; i++) {
-				oOtherAppointment = oAppointment._aAppointments[i];
-				oOtherAppointment.setProperty("selected", true, true); // do not invalidate CalendarRow
-				sAriaLabelSelected = oOtherAppointment.$().attr("aria-labelledby") + " " + sSelectedTextId;
-				oOtherAppointment.$().attr("aria-labelledby", sAriaLabelSelected);
+				oApp = oAppointment._aAppointments[i];
+				oApp.setProperty("selected", bSelect, true); // do not invalidate CalendarRow
+				sAriaLabelSelected = oApp.$().attr("aria-labelledby") + " " + sSelectedTextId;
+				oApp.$().attr("aria-labelledby", sAriaLabelSelected);
 			}
 			this.fireSelect({
 				appointments: oAppointment._aAppointments,
@@ -1720,6 +1723,113 @@ sap.ui.define([
 			oPC["_onRow" + sFuncName]();
 		}
 	}
+
+	CalendarRow.prototype._needAppointmentHorizontalFit = function (){
+		var oPC = this._getPlanningCalendar(),
+			sKey,
+			oView,
+			iIntervals;
+
+		if (!oPC || this.getAppointmentRoundWidth() === CalendarAppointmentRoundWidth.None) {
+			return false;
+		}
+
+		sKey = oPC.getViewKey();
+		oView = oPC._getView(sKey);
+		iIntervals = oPC._getIntervals(oView);
+
+		return iIntervals >= 20;
+	};
+
+	CalendarRow.prototype._setHorizontalRoundingWidth = function(oAppointment, oAppointmentStartDate, oAppointmentEndDate) {
+		var iRound;
+		switch (this.getAppointmentRoundWidth()) {
+			case CalendarAppointmentRoundWidth.HalfColumn :
+				iRound = 12;
+			break;
+		}
+		this._roundAppointment(oAppointment, oAppointmentStartDate, oAppointmentEndDate, iRound);
+	};
+
+	CalendarRow.prototype._roundAppointment = function(oAppointment, oAppointmentStartDate, oAppointmentEndDate,iRound) {
+		var iNewStartHour,
+			iNewEndHour;
+
+			iNewStartHour = oAppointment.getStartDate().getHours() - oAppointment.getStartDate().getHours() % iRound;
+			oAppointmentStartDate.setUTCHours(iNewStartHour);
+			oAppointmentStartDate.setUTCMinutes(0);
+			oAppointmentStartDate.setUTCSeconds(0);
+			oAppointmentStartDate.setUTCMilliseconds(0);
+
+			iNewEndHour = oAppointment.getEndDate().getHours() - oAppointment.getEndDate().getHours() % iRound + iRound;
+			oAppointmentEndDate.setUTCHours(iNewEndHour);
+			oAppointmentEndDate.setUTCMinutes(0);
+			oAppointmentEndDate.setUTCSeconds(0);
+			oAppointmentEndDate.setUTCMilliseconds(0);
+	};
+
+	CalendarRow.prototype._setBlockedLevelsForAppointment = function (oVisibleAppointment, oBlockedLevels) {
+		var iBlockedLevels = this._getAppointmentRowCount(oVisibleAppointment);
+		for (var iLevels = 0; iLevels < iBlockedLevels; iLevels++) {
+			oBlockedLevels[oVisibleAppointment.level + iLevels] = true;
+		}
+		return oBlockedLevels;
+	};
+
+	CalendarRow.prototype._getAppointmentRowCount = function (oVisibleAppointment){
+		var iBlockedLevels,
+			bReducedHeight = this._getAppointmentReducedHeight(oVisibleAppointment);
+		switch (oVisibleAppointment.size) {
+			case CalendarAppointmentHeight.HalfSize :
+				iBlockedLevels = 1;
+				break;
+			case CalendarAppointmentHeight.Regular :
+				iBlockedLevels = 2;
+				if (bReducedHeight && !oVisibleAppointment.appointment.getText() && !oVisibleAppointment.appointment.getDescription() ) {
+					iBlockedLevels = 1;
+				}
+				break;
+			case CalendarAppointmentHeight.Large :
+				iBlockedLevels = 3;
+				break;
+			case CalendarAppointmentHeight.Automatic :
+				iBlockedLevels = 1;
+				if (oVisibleAppointment.appointment.getText()) {
+					iBlockedLevels += 1;
+				}
+				if (oVisibleAppointment.appointment.getDescription()) {
+					iBlockedLevels += 1;
+				}
+				break;
+		}
+
+		return iBlockedLevels;
+	};
+
+	CalendarRow.prototype._getAppointmetLevel = function (oBlockedLevels, oAppointment){
+		var iAppointmentLevel = 0;
+		var iNeedFreeLevel = this._getAppointmentRowCount(oAppointment);
+		var bFoundSlots = true;
+		while (bFoundSlots) {
+			bFoundSlots = this._isPosibleToPositionAppointment(iAppointmentLevel,oBlockedLevels, iNeedFreeLevel);
+			if (!bFoundSlots) {
+				bFoundSlots = true;
+				iAppointmentLevel += 1;
+			} else {
+				bFoundSlots = false;
+			}
+		}
+		return iAppointmentLevel;
+	};
+
+	CalendarRow.prototype._isPosibleToPositionAppointment = function(iAppointmentLevel, oBlockedLevels, iNeedFreeLevel){
+		for (var p = iAppointmentLevel; p < iNeedFreeLevel + iAppointmentLevel; p++) {
+			if (oBlockedLevels[p]) {
+				return false;
+			}
+		}
+		return true;
+	};
 
 	/**
 	* Checks if there's a PlanningCalendar or not
@@ -1800,8 +1910,8 @@ sap.ui.define([
 				this._sFocusedAppointmentId = oAppointment.getId();
 				$OldAppointment.attr("tabindex", "-1");
 				$Appointment.attr("tabindex", "0");
-				$Appointment.focus();
-			}else {
+				$Appointment.trigger("focus");
+			} else  {
 				// appointment not visible -> find it and show it
 				for (i = 0; i < aAppointments.length; i++) {
 					if (aAppointments[i].getId() == sId) {
@@ -1899,6 +2009,7 @@ sap.ui.define([
 		case CalendarIntervalType.Day:
 		case CalendarIntervalType.Week:
 		case CalendarIntervalType.OneMonth:
+		case "OneMonth":
 			oStartDate.setUTCDate(1);
 			oEndDate.setUTCMonth(oEndDate.getUTCMonth() + 1);
 			oEndDate.setUTCDate(1);
@@ -1927,7 +2038,7 @@ sap.ui.define([
 				if (oEvent.type == "saphome") {
 					break;
 				}
-			}else if (aAppointments[i].getStartDate() > oLocalEndDate) {
+			} else if (aAppointments[i].getStartDate() > oLocalEndDate) {
 				break;
 			}
 		}
@@ -1990,6 +2101,7 @@ sap.ui.define([
 		case CalendarIntervalType.Day:
 		case CalendarIntervalType.Week:
 		case CalendarIntervalType.OneMonth:
+		case "OneMonth":
 			oIntervalStartDate.setUTCDate(oIntervalStartDate.getUTCDate() + iInterval);
 			if (bSubInterval) {
 				oIntervalStartDate.setUTCHours(oIntervalStartDate.getUTCHours() + iSubInterval * 24 / iSubIntervals);

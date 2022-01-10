@@ -1,13 +1,13 @@
 /*
  * ! OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides control sap.m.P13nFilterPanel.
 sap.ui.define([
-	'./P13nConditionPanel', './P13nPanel', './library', 'sap/m/Panel', './P13nFilterItem', './P13nOperationsHelper'
-], function(P13nConditionPanel, P13nPanel, library, Panel, P13nFilterItem, P13nOperationsHelper) {
+	'./P13nConditionPanel', './P13nPanel', './library', 'sap/m/Panel', './P13nFilterItem', './P13nOperationsHelper', 'sap/m/P13nFilterPanelRenderer'
+], function(P13nConditionPanel, P13nPanel, library, Panel, P13nFilterItem, P13nOperationsHelper, P13nFilterPanelRenderer) {
 	"use strict";
 
 	// shortcut for sap.m.P13nPanelType
@@ -23,7 +23,7 @@ sap.ui.define([
 	 * @param {object} [mSettings] initial settings for the new control
 	 * @class The P13nFilterPanel control is used to define filter-specific settings for table personalization.
 	 * @extends sap.m.P13nPanel
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 * @constructor
 	 * @public
 	 * @since 1.26.0
@@ -103,6 +103,14 @@ sap.ui.define([
 					multiple: true,
 					singularName: "filterItem",
 					bindable: "bindable"
+				},
+
+				/**
+				 * Defines an optional message strip to be displayed in the content area
+				 */
+				messageStrip: {
+					type: "sap.m.MessageStrip",
+					multiple: false
 				}
 			},
 			events: {
@@ -150,26 +158,7 @@ sap.ui.define([
 				}
 			}
 		},
-		renderer: {
-			apiVersion: 2,
-			render: function(oRm, oControl){
-				oRm.openStart("section", oControl);
-				oRm.class("sapMFilterPanel");
-				oRm.openEnd();
-
-				oRm.openStart("div");
-				oRm.class("sapMFilterPanelContent");
-				oRm.class("sapMFilterPanelBG");
-				oRm.openEnd();
-
-				oControl.getAggregation("content").forEach(function(oChildren){
-					oRm.renderControl(oChildren);
-				});
-
-				oRm.close("div");
-				oRm.close("section");
-			}
-		}
+		renderer: P13nFilterPanelRenderer.renderer
 	});
 
 	// EXC_ALL_CLOSURE_003
@@ -179,7 +168,7 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @param {object[]} aConditions the complete list of conditions
-	 * @returns {sap.m.P13nFilterPanel} this for chaining
+	 * @returns {this} this for chaining
 	 */
 	P13nFilterPanel.prototype.setConditions = function(aConditions) {
 		var aIConditions = [];
@@ -411,8 +400,6 @@ sap.ui.define([
 		this.setType(P13nPanelType.filter);
 		this.setTitle(sap.ui.getCore().getLibraryResourceBundle("sap.m").getText("FILTERPANEL_TITLE"));
 
-		sap.ui.getCore().loadLibrary("sap.ui.layout");
-
 		this._aKeyFields = [];
 
 		// init some resources
@@ -502,6 +489,12 @@ sap.ui.define([
 
 		if (this._bUpdateRequired) {
 			this._bUpdateRequired = false;
+
+			var oMessageStrip = this.getMessageStrip();
+			if (oMessageStrip) {
+				oMessageStrip.addStyleClass("sapUiResponsiveMargin");
+				this.insertAggregation("content", oMessageStrip, 0);
+			}
 
 			aKeyFields = [];
 			sModelName = (this.getBindingInfo("items") || {}).model;
@@ -737,6 +730,24 @@ sap.ui.define([
 		if (sReason === "change" && !this._bIgnoreBindCalls) {
 			this._bUpdateRequired = true;
 			this.invalidate();
+		}
+	};
+
+	P13nFilterPanel.prototype.setMessageStrip = function(oMessageStrip) {
+		this.setAggregation("messageStrip", oMessageStrip, true);
+
+		if (!this._bIgnoreBindCalls) {
+			this._bUpdateRequired = true;
+		}
+
+		return this;
+	};
+
+	P13nFilterPanel.prototype.updateMessageStrip = function(sReason) {
+		this.updateAggregation("messageStrip");
+
+		if (sReason === "change" && !this._bIgnoreBindCalls) {
+			this._bUpdateRequired = true;
 		}
 	};
 

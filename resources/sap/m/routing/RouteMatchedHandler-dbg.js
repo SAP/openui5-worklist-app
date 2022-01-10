@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(['sap/ui/base/Object', './TargetHandler', './Router', "sap/base/Log"],
@@ -39,7 +39,7 @@ sap.ui.define(['sap/ui/base/Object', './TargetHandler', './Router', "sap/base/Lo
 	 *
 	 * @deprecated Since 1.28 use {@link sap.m.routing.Router} or {@link sap.m.routing.Targets} instead. The functionality of the routematched handler is built in into these two classes, there is no need to create this anymore.
 	 * @param {sap.ui.core.routing.Router} router - A router that creates views</br>
-	 * @param {boolean} closeDialogs - the default is true - will close all open dialogs before navigating, if set to true. If set to false it will just navigate without closing dialogs.
+	 * @param {boolean} [closeDialogs=true] - If set to <code>true</code> it will close all open dialogs before navigating. If set to <code>false</code> it will just navigate without closing dialogs.
 	 * @public
 	 * @alias sap.m.routing.RouteMatchedHandler
 	 */
@@ -78,7 +78,7 @@ sap.ui.define(['sap/ui/base/Object', './TargetHandler', './Router', "sap/base/Lo
 	 * Removes the routeMatchedHandler from the Router
 	 *
 	 * @public
-	 * @returns {sap.m.routing.RouteMatchedHandler} for chaining
+	 * @returns {this} for chaining
 	 */
 	RouteMatchedHandler.prototype.destroy = function () {
 		if (this._oRouter) {
@@ -100,7 +100,7 @@ sap.ui.define(['sap/ui/base/Object', './TargetHandler', './Router', "sap/base/Lo
 	 *
 	 * @param {boolean} bCloseDialogs close dialogs if true
 	 * @public
-	 * @returns {sap.m.routing.RouteMatchedHandler} for chaining
+	 * @returns {this} for chaining
 	 */
 	RouteMatchedHandler.prototype.setCloseDialogs = function (bCloseDialogs) {
 		this._oTargetHandler.setCloseDialogs(bCloseDialogs);
@@ -159,6 +159,7 @@ sap.ui.define(['sap/ui/base/Object', './TargetHandler', './Router', "sap/base/Lo
 
 		this._oTargetHandler.addNavigation({
 			targetControl : oParameters.targetControl,
+			aggregationName : oParameters.config.targetAggregation,
 			eventData : oParameters.arguments,
 			view : oParameters.view,
 			navigationIdentifier : oParameters.name,
@@ -179,6 +180,7 @@ sap.ui.define(['sap/ui/base/Object', './TargetHandler', './Router', "sap/base/Lo
 
 		this._oTargetHandler.addNavigation({
 			targetControl : oParameters.control,
+			aggregationName : oConfig.controlAggregation,
 			eventData : oParameters.data,
 			view : oParameters.view,
 			navigationIdentifier : oParameters.name,

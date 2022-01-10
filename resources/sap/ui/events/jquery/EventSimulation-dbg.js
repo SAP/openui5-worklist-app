@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -19,9 +19,12 @@ sap.ui.define([
 	/**
 	 * @namespace
 	 * @alias module:sap/ui/events/jquery/EventSimulation
-	 * @public
+	 * @private
+	 * @ui5-restricted sap.ui.core
 	 */
 	var oEventSimulation = {};
+
+	var jQVersion = Version(jQuery.fn.jquery);
 
 	oEventSimulation.aAdditionalControlEvents = [];
 	oEventSimulation.aAdditionalPseudoEvents = [];
@@ -30,10 +33,10 @@ sap.ui.define([
 	 * This function adds the simulated event prefixed with string "sap" to ControlEvents.events.
 	 *
 	 * When UIArea binds to the simulated event with prefix, it internally binds to the original events with the given handler and
-	 * also provides the additional configuration data in the follwing format:
+	 * also provides the additional configuration data in the following format:
 	 *
 	 * {
-	 * 	domRef: // the dom reference of the UIArea
+	 * 	domRef: // the DOM reference of the UIArea
 	 * 	eventName: // the simulated event name
 	 * 	sapEventName: // the simulated event name with sap prefix
 	 * 	eventHandle: // the handler that should be registered to simulated event with sap prefix
@@ -114,8 +117,8 @@ sap.ui.define([
 			sTouchStartControlId = $DomRef.data("__touchstart_control"),
 			oTouchStartControlDOM = sTouchStartControlId && window.document.getElementById(sTouchStartControlId);
 
-		// Checks if the mouseout event should be handled, the mouseout of the inner dom shouldn't be handled when the mouse cursor
-		// is still inside the control's root dom node
+		// Checks if the mouseout event should be handled, the mouseout of the inner DOM shouldn't be handled when the mouse cursor
+		// is still inside the control's root DOM node
 		if (oEvent.type === "mouseout" && !checkMouseEnterOrLeave(oEvent, oConfig.domRef)
 			&& (!oTouchStartControlDOM || !checkMouseEnterOrLeave(oEvent, oTouchStartControlDOM))
 		) {
@@ -377,11 +380,11 @@ sap.ui.define([
 		//
 		// UIArea binds to both touchstart and saptouchstart event and saptouchstart internally also binds to touchstart event. Before
 		// jQuery version 1.9.1, the touchstart event handler is called before the saptouchstart event handler and our flags (e.g. _sapui_handledByUIArea)
-		// still work. However since the order of event registration is inversed from jQuery version 1.9.1, the saptouchstart event hanlder is called
+		// still work. However since the order of event registration is inversed from jQuery version 1.9.1, the saptouchstart event handler is called
 		// before the touchstart one, our flags don't work anymore.
 		//
 		// Therefore jQuery version needs to be checked in order to decide the event order in ControlEvents.events.
-		if (Version(jQuery.fn.jquery).compareTo("1.9.1") < 0) {
+		if (jQVersion.compareTo("1.9.1") < 0) {
 			aEvents = aEvents.concat(this.aAdditionalControlEvents);
 		} else {
 			aEvents = this.aAdditionalControlEvents.concat(aEvents);
@@ -420,27 +423,19 @@ sap.ui.define([
 			oEventSimulation.touchEventMode = "ON";
 
 			// ensure that "oEvent.touches", ... works (and not only "oEvent.originalEvent.touches", ...)
-			jQuery.event.props.push("touches", "targetTouches", "changedTouches");
+			if (jQVersion.compareTo("3.0.0") < 0) {
+				jQuery.event.props.push("touches", "targetTouches", "changedTouches");
+			} // else: jQuery 3.0ff already manages these properties
 		}
 
-		// Windows Phone (<10) doesn't need event emulation because IE supports
-		// touch events but fires mouse events based on pointer events without
-		// delay.
-		// In Edge on Windows Phone 10 the mouse events are delayed like in
-		// other browsers
-
-		var bEmulationNeeded = !(Device.os.windows_phone && Device.os.version < 10);
-
-		if (bEmulationNeeded) {
-			oEventSimulation._initTouchEventSimulation();
-		}
+		oEventSimulation._initTouchEventSimulation();
 
 		// polyfill for iOS context menu event (mapped to taphold)
 		if (Device.os.ios) {
 			oEventSimulation._initContextMenuSimulation();
 		}
 
-		if (Device.support.touch && bEmulationNeeded) {
+		if (Device.support.touch) {
 			// Deregister the previous touch to mouse event simulation (see line 25 in this file)
 			oEventSimulation.disableTouchToMouseHandling();
 			oEventSimulation._initMouseEventSimulation(Device.os.blackberry);

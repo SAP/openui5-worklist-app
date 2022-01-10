@@ -49,17 +49,6 @@
 	padding-left: 0;
 }
 
-.sapMMultiComboBoxReadOnlyPopover {
-	.sapMLIB {
-		pointer-events: none;
-		border-bottom: 0;
-
-		&.sapMLIBHoverable:hover {
-			background: none;
-		}
-	}
-}
-
 .sapMMultiComboBox.sapMInputBaseNoWidth {
 	width: 100%;
 }
@@ -76,10 +65,6 @@ li.sapMMultiComboBoxItem .sapMCbBg {
 }
 
 .sapMMultiComboBoxHasToken .sapMInputBaseInner::-webkit-input-placeholder {
-	color: transparent;
-}
-
-.sapMMultiComboBoxHasToken .sapMInputBaseInner:-ms-input-placeholder {
 	color: transparent;
 }
 
@@ -134,5 +119,22 @@ li.sapMMultiComboBoxItem .sapMCbBg {
 		&.sapMInputBaseReadonly .sapMInputBaseContentWrapper {
 			min-width: @_InputBase_Control_Tokens_ReadOnly_MinWidth_Compact;
 		}
+	}
+
+	.sapMMultiComboBoxSelectAll.sapMTB .sapMCb {
+		margin-left: 0.5rem;
+		padding-left: 2.25rem;
+	}
+}
+
+.sapMMultiComboBoxSelectAll.sapMTB.sapMIBar {
+	padding: 0;
+	&.sapMMultiComboBoxSelectAllFocused {
+		outline: 1px dotted @sapUiContentFocusColor;
+		outline-offset: -0.125rem;
+	}
+
+	& .sapMBarChild.sapMCb.sapMCbHasLabel:focus:before {
+		border: none;
 	}
 }

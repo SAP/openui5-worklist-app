@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -29,7 +29,12 @@ sap.ui.define([],
 		},
 		scrollContainers : [{
 				domRef : "> .sapFDynamicPageContentWrapper",
-				aggregations : function(oElement) {
+				aggregations : function(oElement, fnUpdateFunction) {
+					oElement.attachEventOnce("_moveHeader", function() {
+						fnUpdateFunction({
+							index: 0
+						});
+					});
 					if (oElement._bHeaderInTitleArea || oElement._bPinned || oElement.getPreserveHeaderStateOnScroll()) {
 						return ["content"];
 					} else {

@@ -1,6 +1,6 @@
 /*
  * ! OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -30,7 +30,7 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @constructor
 	 * @since 1.63
@@ -40,8 +40,8 @@ sap.ui.define([
 	 */
 	var ColumnHeaderPopover = Control.extend("sap.m.ColumnHeaderPopover", /** @lends sap.m.ColumnHeaderPopover.prototype */
 		{
-			library: "sap.m",
 			metadata: {
+				library: "sap.m",
 				properties: {},
 				aggregations: {
 					/**
@@ -58,7 +58,8 @@ sap.ui.define([
 						singularName: "ariaLabelledBy"
 					}
 				}
-			}
+			},
+			renderer: null // this is a popup control without a renderer
 		});
 
 	ColumnHeaderPopover.prototype.init = function() {

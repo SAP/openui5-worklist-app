@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -42,13 +42,10 @@ sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS"],
 				sSrc = oAvatar.getSrc(),
 				sAvatarClass = "sapFAvatar",
 				sTooltip = oAvatar.getTooltip_AsString(),
-				sDefaultTooltip = oAvatar._getDefaultTooltip(),
 				aLabelledBy = oAvatar.getAriaLabelledBy(),
 				aDescribedBy = oAvatar.getAriaDescribedBy(),
-				sAriaLabelTooltip = sTooltip && sInitials ? sDefaultTooltip + " " + sTooltip : sDefaultTooltip,
-				sAriaLabelInitials = sInitials ? sDefaultTooltip + " " + sInitials : sDefaultTooltip,
 				oBadge = oAvatar.hasListeners("press") ?  oAvatar._getBadge() : null,
-				sAriaRoledescription = sap.ui.getCore().getLibraryResourceBundle("sap.m").getText("AVATAR_ROLE_DESCRIPTION");
+				sDefaultTooltip = oAvatar._getDefaultTooltip();
 
 			oRm.openStart("span", oAvatar);
 			oRm.class(sAvatarClass);
@@ -64,7 +61,6 @@ sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS"],
 			} else {
 				oRm.attr("role", "img");
 			}
-			oRm.attr("aria-roledescription", sAriaRoledescription);
 			if (oAvatar.getShowBorder()) {
 				oRm.class("sapFAvatarBorder");
 			}
@@ -74,10 +70,15 @@ sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS"],
 				oRm.style("font-size", sCustomFontSize);
 			}
 			if (sTooltip) {
+				// if tooltip property is set the initials should be overwritten
 				oRm.attr("title", sTooltip);
-				oRm.attr("aria-label",sAriaLabelTooltip);
+				oRm.attr("aria-label", sTooltip);
+			} else if (sInitials) {
+				// default "Avatar" text + initials
+				oRm.attr("aria-label", sDefaultTooltip + " " + sInitials);
 			} else {
-				oRm.attr("aria-label",sAriaLabelInitials);
+				// no tooltip set nor initials - set only the default "Avatar" text
+				oRm.attr("aria-label", sDefaultTooltip);
 			}
 			// aria-labelledby references
 			if (aLabelledBy && aLabelledBy.length > 0) {
@@ -109,10 +110,14 @@ sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS"],
 			if (oBadge) {
 				oRm.openStart("div");
 				oRm.class(sAvatarClass + "BadgeIconActiveArea");
-				oRm.openEnd("div");
+				// we want to make sure icon, used for badge, scales proportionally with the custom size
+				if (sCustomDisplaySize) {
+					oRm.style("font-size", sCustomDisplaySize);
+				}
+				oRm.openEnd();
 					oRm.openStart("span");
 					oRm.class(sAvatarClass + "BadgeIcon");
-					oRm.openEnd("span");
+					oRm.openEnd();
 					oRm.renderControl(oBadge);
 					oRm.close("span");
 				oRm.close("div");

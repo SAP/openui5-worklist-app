@@ -1,6 +1,6 @@
 /*
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -135,8 +135,8 @@ sap.ui.define(['sap/ui/core/InvisibleText'],
 	/**
 	 * Determines how many custom items will be rendered.
 	 * @param {sap.ui.unified.CalendarLegend} oLeg an object representation of the legend that should be rendered
-	 * @param {integer} iCustomItemsLength the length of the custom items
-	 * @returns {integer} the length of the custom items to be rendered
+	 * @param {int} iCustomItemsLength the length of the custom items
+	 * @returns {int} the length of the custom items to be rendered
 	 * @since 1.74
 	 */
 	CalendarLegendRenderer.defineItemsLength = function(oLeg, iCustomItemsLength) {

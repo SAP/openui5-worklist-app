@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -40,7 +40,7 @@ sap.ui.define([
 	 * @extends sap.m.Tile
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @constructor
 	 * @public
@@ -52,6 +52,7 @@ sap.ui.define([
 	var StandardTile = Tile.extend("sap.m.StandardTile", /** @lends sap.m.StandardTile.prototype */ { metadata : {
 
 		library : "sap.m",
+		deprecated: true,
 		properties : {
 
 			/**
@@ -123,16 +124,12 @@ sap.ui.define([
 	};
 
 	StandardTile.prototype.ontap = function() {
-		// on IE when you click the focus is not applied so we have to set it explicitly
-		if (Device.browser.msie) {
-			this.focus();
-		}
 		Tile.prototype.ontap.apply(this, arguments);
 	};
 
 	/**
 	 * Gets the icon of the <code>StandardTile</code> control.
-	 * @returns {Object} The icon of the control
+	 * @returns {sap.ui.core.URI} The icon of the control
 	 * @public
 	 */
 	StandardTile.prototype.getIcon = function() {

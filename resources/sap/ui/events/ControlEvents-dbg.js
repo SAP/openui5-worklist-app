@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -57,8 +57,6 @@ sap.ui.define([
 		"compositionend",
 		"paste",
 		"cut",
-		/* input event is fired synchronously on IE9+ when the value of an <input> or <textarea> element is changed */
-		/* for more details please see : https://developer.mozilla.org/en-US/docs/Web/Reference/Events/input */
 		"input",
 		"change"
 	];

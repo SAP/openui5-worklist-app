@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -108,11 +108,13 @@ sap.ui.define([
 			} else {
 				oPopup.getContent().style.maxWidth = "";
 			}
+
 			oPopup.open(
 				this.getOpenDuration(),
 				mDock.BeginTop,
 				mDock.BeginBottom,
 				oControl.getDomRefForValueStateMessage(),
+				null,
 				null,
 				null,
 				Device.system.phone ? true : Popup.CLOSE_ON_SCROLL
@@ -126,8 +128,6 @@ sap.ui.define([
 			} else {
 				$DomRef.addClass("sapMValueStateMessageTop");
 			}
-
-			jQuery(oControl.getFocusDomRef()).addAriaDescribedBy(this.getId());
 		};
 
 		/**
@@ -136,15 +136,8 @@ sap.ui.define([
 		 * @protected
 		 */
 		ValueStateMessage.prototype.close = function() {
-			var oControl = this._oControl,
-				oPopup = this._oPopup;
-
-			if (oPopup) {
-				oPopup.close(0);
-			}
-
-			if (oControl) {
-				jQuery(oControl.getFocusDomRef()).removeAriaDescribedBy(this.getId());
+			if (this._oPopup) {
+				this._oPopup.close(0);
 			}
 		};
 
@@ -186,13 +179,11 @@ sap.ui.define([
 				jQuery(document.getElementById(sID)).remove();
 			});
 			this._oPopup.attachOpened(function () {
-				var content = this._oPopup.getContent(),
-					bControlWithValueStateTextInIE = Device.browser.msie &&
-						this._oControl && this._oControl.getFormattedValueStateText && !!this._oControl.getFormattedValueStateText();
+				var content = this._oPopup.getContent();
 
 				/* z-index of the popup is not calculated correctly by this._getCorrectZIndex() in IE, causing it
 				to be "under" the "blind layer" and links to be unreachable (unclickable) in IE */
-				if (content && !bControlWithValueStateTextInIE) {
+				if (content) {
 					content.style.zIndex = this._getCorrectZIndex();
 				}
 			}.bind(this));
@@ -216,6 +207,33 @@ sap.ui.define([
 		};
 
 		/**
+		 * Determines and extracts the correct value state text depending on the value state
+		 * If <code>formattedValueStateText</code> aggregation of type <code>sap.m.FormattedText</code> is set
+		 * it has priority over the plain text (string) <code>valueStateText</code> value state property.
+		 *
+		 * @param {sap.ui.core.Control} oControl The control for which this value state message is attached.
+		 * @param {string} sValueState The value state type of the control.
+		 * @returns {(string|object)} Value state message text of the control.
+
+		 *
+		 * @private
+		 */
+		ValueStateMessage.prototype._getValueStateText = function(oControl, sValueState) {
+			// Don't return text for value state "success" or "none"
+			if (sValueState === ValueState.Success || sValueState === ValueState.None) {
+				return "";
+			}
+
+			var oValueStateFormattedText = oControl.getFormattedValueStateText && oControl.getFormattedValueStateText();
+			var oValueStateFormattedTextContent = oValueStateFormattedText && oValueStateFormattedText.getHtmlText();
+			var sValueStatePlainText =  oControl.getValueStateText() || ValueStateSupport.getAdditionalText(oControl);
+
+			// Return sap.m.FormattedText aggregation only if there is an actual formatted text set to it
+			// Otherwise return the plain text value state message set in the control or the default one
+			return oValueStateFormattedTextContent ? oValueStateFormattedText : sValueStatePlainText;
+		};
+
+		/**
 		 * Creates the value state message HTML elements.
 		 *
 		 * @returns {object} The value state message root HTML element
@@ -227,64 +245,35 @@ sap.ui.define([
 				return null;
 			}
 
-			var sID = this.getId(),
+			var sID = this.getId(), oTextDomRef,
 				oMessageDomRef = document.createElement("div"),
-				sState = oControl.getValueState(),
-				bIsIE = Device.browser.msie,
-				oFormattedValueState = oControl.getFormattedValueStateText ? oControl.getFormattedValueStateText() : null,
-				oTextDomRef,
-				oRB,
-				oAccDomRef,
-				sText;
+				sValueState = oControl.getValueState(),
+				vValueStateMessageText = this._getValueStateText(oControl, sValueState);
 
-			oMessageDomRef.id = sID;
-			oMessageDomRef.setAttribute("role", "tooltip");
-			oMessageDomRef.setAttribute("aria-live", "assertive");
-
-			if (sState === ValueState.Success || sState === ValueState.None) {
+			if (sValueState === ValueState.Success || sValueState === ValueState.None) {
 				oMessageDomRef.className = "sapUiInvisibleText";
 			} else {
-				oMessageDomRef.className = "sapMValueStateMessage sapMValueStateMessage" + sState;
+				oMessageDomRef.className = "sapMValueStateMessage sapMValueStateMessage" + sValueState;
 			}
 
-			oRB = Core.getLibraryResourceBundle("sap.m");
-			oAccDomRef = document.createElement("span");
-			oAccDomRef.id = sID + "-hidden";
-
-			if (bIsIE) {
-				oAccDomRef.className = "sapUiHidden";
-				oAccDomRef.setAttribute("aria-hidden", "true");
-			} else {
-				oAccDomRef.className = "sapUiPseudoInvisibleText";
-			}
-
-			if (sState !== ValueState.None) {
-				oAccDomRef.appendChild(document.createTextNode(oRB.getText("INPUTBASE_VALUE_STATE_" + sState.toUpperCase())));
-			}
-
-			oMessageDomRef.appendChild(oAccDomRef);
-
-			if (!oFormattedValueState || !oFormattedValueState.getHtmlText()) {
-				sText = sState === ValueState.Success || sState === ValueState.None ? "" :  oControl.getValueStateText() || ValueStateSupport.getAdditionalText(oControl);
-
+			// If value state message is plain text create the required DOM
+			// otherwise it's of type sap.m.FormattedText - render it and add ID
+			if (typeof vValueStateMessageText === "string") {
 				oTextDomRef = document.createElement("span");
 				oTextDomRef.id = sID + "-text";
-
-				oTextDomRef.appendChild(document.createTextNode(sText));
+				oTextDomRef.appendChild(document.createTextNode(vValueStateMessageText));
 				oMessageDomRef.appendChild(oTextDomRef);
-			} else if (sState !== ValueState.Success && sState !== ValueState.None) {
-				Core.getRenderManager().render(oFormattedValueState, oMessageDomRef);
+			} else {
+				Core.getRenderManager().render(vValueStateMessageText, oMessageDomRef);
 				oMessageDomRef.lastElementChild.setAttribute("id", sID + "-text");
 			}
 
-			if (!oControl.isA('sap.m.Select') && bIsIE) {
-				// If ValueState Message is sap.m.FormattedText
-				if (!oTextDomRef) {
-					oMessageDomRef.lastElementChild.setAttribute("id", sID + "-text");
-				} else {
-					oTextDomRef.setAttribute("aria-hidden", "true");
-				}
-			}
+			oMessageDomRef.id = sID;
+
+			// This element should be hidden from the accessibility tree, since it has only presentation role
+			// The value state announcement is present via hidden span, referenced via aria-describedby/aria-errormessage
+			oMessageDomRef.setAttribute("role", "presentation");
+			oMessageDomRef.setAttribute("aria-hidden", "true");
 
 			return oMessageDomRef;
 		};

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -297,7 +297,8 @@ sap.ui.define([
 				return false;
 			}
 
-			if (this._iRenderedDataItems >= 40) {
+			// 32 is the minimum height of the item
+			if (this._getDomIndex(this._iRenderedDataItems) > (window.innerHeight / 32)) {
 				return true;
 			}
 
@@ -366,8 +367,7 @@ sap.ui.define([
 		// creates list item from the factory
 		createListItem : function(oContext, oBindingInfo) {
 			this._iRenderedDataItems++;
-			var oItem = oBindingInfo.factory(ManagedObjectMetadata.uid("clone"), oContext);
-			return oItem.setBindingContext(oContext, oBindingInfo.model);
+			return GrowingEnablement.createItem(oContext, oBindingInfo);
 		},
 
 		// update context on all items except group headers
@@ -393,7 +393,7 @@ sap.ui.define([
 			this.applyPendingGroupItem();
 
 			var iLength = this._aChunk.length;
-			if (!iLength) {
+			if (!iLength || !this._oControl.shouldRenderItems()) {
 				return;
 			}
 
@@ -522,9 +522,7 @@ sap.ui.define([
 				this.rebuildListItems(aContexts, oBindingInfo);
 			} else if (!aDiff || !aItems.length && aDiff.length) {
 				// new records need to be applied from scratch
-				if (oControl.shouldRenderItems()) {
-					this.rebuildListItems(aContexts, oBindingInfo, true);
-				}
+				this.rebuildListItems(aContexts, oBindingInfo, oControl.shouldGrowingSuppressInvalidation());
 			} else if (oBinding.isGrouped() || oControl.checkGrowingFromScratch()) {
 
 				if (this._sGroupingPath != this._getGroupingPath(oBinding)) {
@@ -618,10 +616,11 @@ sap.ui.define([
 		// updates the trigger state
 		_updateTrigger : function(bLoading) {
 			var oTrigger = this._oTrigger,
-				oControl = this._oControl;
+				oControl = this._oControl,
+				bVisibleItems = oControl && oControl.getVisibleItems().length > 0;
 
-			// If there are no visible columns then also hide the trigger.
-			if (!oTrigger || !oControl || !oControl.shouldRenderItems() || !oControl.getDomRef()) {
+			// If there are no visible columns or items then also hide the trigger.
+			if (!oTrigger || !oControl || !bVisibleItems || !oControl.shouldRenderItems() || !oControl.getDomRef()) {
 				return;
 			}
 
@@ -651,17 +650,23 @@ sap.ui.define([
 				}
 
 				// show, update or hide the growing button
-				if (!iItemsLength || !this._iLimit ||
+				if (!iItemsLength || !this._iLimit || !iBindingLength ||
 					(bLengthFinal && this._iLimit >= iBindingLength) ||
 					(bHasScrollToLoad && this._getHasScrollbars())) {
 					oControl.$("triggerList").css("display", "none");
+					oControl.$("listUl").removeClass("sapMListHasGrowing");
 				} else {
 					if (bLengthFinal) {
 						oControl.$("triggerInfo").css("display", "block").text(this._getListItemInfo());
 					}
 
-					oTrigger.$().removeClass("sapMGrowingListBusyIndicatorVisible");
 					oControl.$("triggerList").css("display", "");
+					oControl.$("listUl").addClass("sapMListHasGrowing");
+					oTrigger.$().removeClass("sapMGrowingListBusyIndicatorVisible");
+
+					if (oControl.isA("sap.m.Table") && !oControl.hasPopin()) {
+						this.adaptTriggerButtonWidth(oControl, oTriggerDomRef);
+					}
 				}
 
 				// store the last item count to be able to focus to the newly added item when the growing button is pressed
@@ -684,8 +689,40 @@ sap.ui.define([
 					this._oScrollPosition = null;
 				}
 			}
+		},
+
+		adaptTriggerButtonWidth: function(oControl, oTriggerDomRef) {
+			// adapt trigger button width if dummy col is rendered
+			if (oControl.shouldRenderDummyColumn() && oControl.$("listUl").hasClass("sapMListHasGrowing")) {
+				if (!oTriggerDomRef) {
+					oTriggerDomRef = this._oTrigger.getDomRef();
+				}
+
+				window.requestAnimationFrame(function() {
+					if (oControl.bIsDestroyed) {
+						return;
+					}
+
+					var sCalWidth = Array.from(oControl.getDomRef("tblHeader").childNodes).slice(0, -1).map(function(oDomRef) {
+						var sWidth = oDomRef.getAttribute("data-sap-width");
+						if (!sWidth || !sWidth.includes("%")) {
+							return oDomRef.getBoundingClientRect().width + "px";
+						} else {
+							return sWidth;
+						}
+					}).join(" + ");
+					// 1px is borderLeft of the dummyCell
+					oTriggerDomRef.style.width = "calc(" + sCalWidth + " + 1px)";
+					oTriggerDomRef.classList.add("sapMGrowingListDummyColumn");
+				});
+			}
 		}
 	});
+
+	GrowingEnablement.createItem = function(oContext, oBindingInfo, sIdSuffix) {
+		var oItem = oBindingInfo.factory(ManagedObjectMetadata.uid(sIdSuffix ? sIdSuffix : "clone"), oContext);
+		return oItem.setBindingContext(oContext, oBindingInfo.model);
+	};
 
 	return GrowingEnablement;
 

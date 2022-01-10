@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -15,6 +15,8 @@ sap.ui.define([
 ],
 	function(Device, ResizeHandler, library, FormLayout, ColumnLayoutRenderer, jQuery) {
 	"use strict";
+
+	/* global ResizeObserver */
 
 	/**
 	 * Constructor for a new <code>sap.ui.layout.form.ColumnLayout</code>.
@@ -58,7 +60,7 @@ sap.ui.define([
 	 * This control cannot be used stand-alone, it just renders a <code>Form</code> control,
 	 * so it must be assigned to a <code>Form</code> control using the <code>layout</code> aggregation.
 	 * @extends sap.ui.layout.form.FormLayout
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @constructor
 	 * @public
@@ -107,21 +109,30 @@ sap.ui.define([
 
 	ColumnLayout.prototype.init = function(){
 
+		FormLayout.prototype.init.apply(this, arguments);
+
 		this._iBreakPointTablet = Device.media._predefinedRangeSets[Device.media.RANGESETS.SAP_STANDARD_EXTENDED].points[0];
 		this._iBreakPointDesktop = Device.media._predefinedRangeSets[Device.media.RANGESETS.SAP_STANDARD_EXTENDED].points[1];
 		this._iBreakPointLargeDesktop = Device.media._predefinedRangeSets[Device.media.RANGESETS.SAP_STANDARD_EXTENDED].points[2];
 
 		this._resizeProxy = jQuery.proxy(_handleResize, this);
 
+		if (typeof ResizeObserver === "function") {
+			this._oResizeObserver = new ResizeObserver(this._resizeProxy);
+		}
+
 	};
 
 	ColumnLayout.prototype.exit = function(){
 
 		_cleanup.call(this);
+		this._oResizeObserver = undefined;
 
 	};
 
 	ColumnLayout.prototype.onBeforeRendering = function( oEvent ){
+
+		FormLayout.prototype.onBeforeRendering.apply(this, arguments);
 
 		if (this.getColumnsM() > this.getColumnsL() || this.getColumnsL() > this.getColumnsXL() ) {
 			throw new Error("Column size not correct defined for " + this);
@@ -133,8 +144,15 @@ sap.ui.define([
 
 	ColumnLayout.prototype.onAfterRendering = function( oEvent ){
 
-		this._sResizeListener = ResizeHandler.register(this, this._resizeProxy);
-		_handleResize.call(this);
+		if (this._oResizeObserver) {
+			var oDomRef = this.getDomRef();
+			this._oResizeObserver.observe(oDomRef);
+		} else {
+			// resize handler fallback for old browsers (e.g. IE 11)
+			this._sResizeListener = ResizeHandler.register(this, this._resizeProxy);
+		}
+
+		_reflow.call(this);
 
 	};
 
@@ -388,16 +406,18 @@ sap.ui.define([
 		var iLabelSizeL = this.getLabelCellsLarge();
 
 		if (oLD) {
-			oOptions.S.Size = oLD.getCellsSmall();
-			oOptions.L.Size = oLD.getCellsLarge();
+			oOptions.S.Size = oLD.getCellsSmall() === -1 ? iColumns : oLD.getCellsSmall();
+			oOptions.L.Size = oLD.getCellsLarge() === -1 ? iColumns : oLD.getCellsLarge();
 		}
 
 		var oElement = oField.getParent();
 		var oLabel = oElement.getLabelControl();
 
 		if (oLabel === oField) {
-			if (!oLD) {
+			if (!oLD || oLD.getCellsSmall() === -1) {
 				oOptions.S.Size = iLabelSizeS;
+			}
+			if (!oLD || oLD.getCellsLarge() === -1) {
 				oOptions.L.Size = iLabelSizeL;
 			}
 		} else {
@@ -409,8 +429,8 @@ sap.ui.define([
 			if (oLabel) {
 				var oLabelLD = this.getLayoutDataForElement(oLabel, "sap.ui.layout.form.ColumnElementData");
 				if (oLabelLD) {
-					iLabelSizeS = oLabelLD.getCellsSmall();
-					iLabelSizeL = oLabelLD.getCellsLarge();
+					iLabelSizeS = oLabelLD.getCellsSmall() === -1 ? iLabelSizeS : oLabelLD.getCellsSmall();
+					iLabelSizeL = oLabelLD.getCellsLarge() === -1 ? iLabelSizeL : oLabelLD.getCellsLarge();
 				}
 				if (iLabelSizeS < iColumns) {
 					iColumnsS = iColumnsS - iLabelSizeS;
@@ -425,13 +445,16 @@ sap.ui.define([
 
 			if (iFields === 1) {
 				// keep standard case simple
-				if (!oLD) {
+				if (!oLD || oLD.getCellsSmall() === -1) {
 					oOptions.S.Size = iColumnsS;
-					oOptions.L.Size = iColumnsL;
 				} else if (oLabel) {
 					if (oOptions.S.Size > iColumnsS) {
 						oOptions.S.Break = true;
 					}
+				}
+				if (!oLD || oLD.getCellsLarge() === -1) {
+					oOptions.L.Size = iColumnsL;
+				} else if (oLabel) {
 					if (oOptions.L.Size > iColumnsL) {
 						oOptions.L.Break = true;
 					}
@@ -495,17 +518,20 @@ sap.ui.define([
 						iField = i;
 					}
 
-					if (oOtherLD) {
+					if (oOtherLD && oOtherLD.getCellsSmall() > 0) {
 						iRowS = checkLD(aRowsS, iRowS, oOtherLD.getCellsSmall(), iColumnsS, i);
-						iRowL = checkLD(aRowsL, iRowL, oOtherLD.getCellsLarge(), iColumnsL, i);
 					} else {
 						iRowS = checkDefault(aRowsS, iRowS, iColumnsS, i);
+					}
+					if (oOtherLD && oOtherLD.getCellsLarge() > 0) {
+						iRowL = checkLD(aRowsL, iRowL, oOtherLD.getCellsLarge(), iColumnsL, i);
+					} else {
 						iRowL = checkDefault(aRowsL, iRowL, iColumnsL, i);
 					}
 				}
 
 				// determine size of Field
-				var determineSize = function(aRows, iField, oLD, oOptions, iLabelSize) {
+				var determineSize = function(aRows, iField, iLDCells, oOptions, iLabelSize) {
 					var iRemain = 0;
 					var oRow;
 
@@ -516,7 +542,7 @@ sap.ui.define([
 						}
 					}
 
-					if (!oLD) {
+					if (iLDCells <= 0) {
 						oOptions.Size = Math.floor(oRow.availableCells / oRow.defaultFields);
 					}
 					if (iField === oRow.first && iField > 0) {
@@ -534,8 +560,8 @@ sap.ui.define([
 					}
 				};
 
-				determineSize(aRowsS, iField, oLD, oOptions.S, iLabelSizeS);
-				determineSize(aRowsL, iField, oLD, oOptions.L, iLabelSizeL);
+				determineSize(aRowsS, iField, oLD ? oLD.getCellsSmall() : -1, oOptions.S, iLabelSizeS);
+				determineSize(aRowsL, iField, oLD ? oLD.getCellsLarge() : -1, oOptions.L, iLabelSizeL);
 			}
 
 		}
@@ -546,6 +572,9 @@ sap.ui.define([
 
 	function _cleanup(){
 
+		if (this._oResizeObserver) {
+			this._oResizeObserver.disconnect();
+		}
 		if (this._sResizeListener) {
 			ResizeHandler.deregister(this._sResizeListener);
 			this._sResizeListener = undefined;
@@ -553,9 +582,15 @@ sap.ui.define([
 
 	}
 
-	function _handleResize(oEvent, bNoRowResize){
+	function _handleResize(oEvent, bNoRowResize) {
+		window.requestAnimationFrame(function() {
+			_reflow.call(this, oEvent, bNoRowResize);
+		}.bind(this));
+	}
 
+	function _reflow(oEvent, bNoRowResize) {
 		var oDomRef = this.getDomRef();
+
 		// Prove if DOM reference exist, and if not - clean up the references.
 		if (!oDomRef) {
 			_cleanup.call(this);
@@ -563,12 +598,18 @@ sap.ui.define([
 		}
 
 		var $DomRef = this.$();
+
 		if (!$DomRef.is(":visible")) {
+			return;
+		}
+
+		if (ResizeHandler.isSuspended(oDomRef, this._resizeProxy)) {
 			return;
 		}
 
 		var iWidth = oDomRef.clientWidth;
 		var iColumns = 1;
+
 		if (iWidth <= this._iBreakPointTablet) {
 			$DomRef.toggleClass("sapUiFormCLMedia-Std-Phone", true);
 			$DomRef.toggleClass("sapUiFormCLMedia-Std-Desktop", false).toggleClass("sapUiFormCLMedia-Std-Tablet", false).toggleClass("sapUiFormCLMedia-Std-LargeDesktop", false);
@@ -589,8 +630,53 @@ sap.ui.define([
 		var bWideColumns = this.getLabelCellsLarge() < 12 && iWidth / iColumns > this._iBreakPointTablet;
 		$DomRef.toggleClass("sapUiFormCLWideColumns", bWideColumns);
 		$DomRef.toggleClass("sapUiFormCLSmallColumns", !bWideColumns);
-
 	}
+
+	ColumnLayout.prototype.getLayoutDataForDelimiter = function() {
+
+		var ColumnElementData = sap.ui.require("sap/ui/layout/form/ColumnElementData");
+		if (!ColumnElementData) {
+			var fnResolve;
+			sap.ui.require(["sap/ui/layout/form/ColumnElementData"], function(ColumnElementData) {
+				fnResolve(new ColumnElementData({cellsLarge: 1, cellsSmall: 1}));
+			});
+
+			return new Promise(function(fResolve) {
+				fnResolve = fResolve;
+			});
+		} else {
+			return new ColumnElementData({cellsLarge: 1, cellsSmall: 1});
+		}
+
+	};
+
+	ColumnLayout.prototype.getLayoutDataForSemanticField = function(iFields, iIndex, oLayoutData) {
+
+		if (oLayoutData) {
+			if (oLayoutData.isA("sap.ui.layout.form.ColumnElementData")) {
+				oLayoutData.setCellsLarge(-1).setCellsSmall(11);
+				return oLayoutData;
+			} else {
+				// LayoutData from other Layout -> destroy and create new one
+				oLayoutData.destroy();
+			}
+		}
+
+		var ColumnElementData = sap.ui.require("sap/ui/layout/form/ColumnElementData");
+		if (!ColumnElementData) {
+			var fnResolve;
+			sap.ui.require(["sap/ui/layout/form/ColumnElementData"], function(ColumnElementData) {
+				fnResolve(new ColumnElementData({cellsLarge: -1, cellsSmall: 11}));
+			});
+
+			return new Promise(function(fResolve) {
+				fnResolve = fResolve;
+			});
+		} else {
+			return new ColumnElementData({cellsLarge: -1, cellsSmall: 11});
+		}
+
+	};
 
 	return ColumnLayout;
 

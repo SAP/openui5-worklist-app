@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([],
@@ -11,29 +11,28 @@ sap.ui.define([],
 	 * DateTimeInput renderer.
 	 * @namespace
 	 */
-	var DateTimeInputRenderer = {};
+	var DateTimeInputRenderer = {
+		apiVersion: 2
+	};
 
 	DateTimeInputRenderer.render = function(oRm, oControl) {
 
-		oRm.write("<div");
-		oRm.writeControlData(oControl);
-		oRm.addClass("sapMDTI");
+		oRm.openStart("div", oControl);
+		oRm.class("sapMDTI");
 
 		var sWidth = oControl.getWidth();
 		if (sWidth) {
-			oRm.addStyle("width", sWidth);
+			oRm.style("width", sWidth);
 		}
 
-		oRm.writeStyles();
-		oRm.writeClasses();
-		oRm.write(">");
+		oRm.openEnd();
 
 		var oPicker = oControl.getAggregation("_picker");
 		if (oPicker) {
 			oRm.renderControl(oPicker);
 		}
 
-		oRm.write("</div>");
+		oRm.close("div");
 
 	};
 

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -43,7 +43,7 @@ sap.ui.define([],
 		rm.write("><span id='", oControl.getId(), "-focfirst' tabindex='0'></span><div id='", oControl.getId(), "-inner'>");
 
 		rm.write("<header class='sapUiUfdShellOvrlyHead'>");
-		rm.write("<hr class='sapUiUfdShellOvrlyBrand'/>");
+		rm.write("<hr class='sapUiUfdShellOvrlyBrand'>");
 		rm.write("<div class='sapUiUfdShellOvrlyHeadCntnt'");
 		if (sap.ui.getCore().getConfiguration().getAccessibility()) {
 			rm.writeAttribute("role", "toolbar");
@@ -70,12 +70,14 @@ sap.ui.define([],
 
 	ShellOverlayRenderer.renderSearch = function(rm, oControl) {
 		var iWidth = oControl._getSearchWidth();
-		var sStyle = "";
-		if (iWidth > 0 && oControl._opening) {
-			sStyle = "style='width:" + iWidth + "px'";
-		}
 
-		rm.write("<div id='" + oControl.getId() + "-search' class='sapUiUfdShellOvrlySearch' " + sStyle + "><div>");
+		rm.write("<div id='" + oControl.getId() + "-search' class='sapUiUfdShellOvrlySearch' ");
+		if (iWidth > 0 && oControl._opening) {
+			rm.addStyle("width", iWidth + "px'");
+			rm.writeStyles();
+		}
+		rm.write("><div>");
+
 		var oSearch = oControl.getSearch();
 		if (oSearch) {
 			rm.renderControl(oSearch);

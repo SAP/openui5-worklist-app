@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -63,7 +63,7 @@ sap.ui.define(["sap/ui/core/library", "sap/ui/core/InvisibleRenderer", "sap/ui/D
 		rm.attr('tabindex', '0');
 
 		rm.accessibilityState(control, {
-			role: "option",
+			role: "listitem",
 			expanded: !control.getCollapsed(),
 			labelledby: {
 				value: sAriaLablledByIds
@@ -154,7 +154,7 @@ sap.ui.define(["sap/ui/core/library", "sap/ui/core/InvisibleRenderer", "sap/ui/D
 
 		rm.openStart('ul')
 			.class('sapMNLGroupChildren')
-			.attr('role', 'listbox')
+			.attr('role', 'list')
 			.openEnd();
 
 		control.getItems().forEach(function (item) {

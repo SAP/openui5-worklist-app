@@ -1,27 +1,22 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
-
-/* global XMLHttpRequest */
-
+/*eslint-disable max-len */
 // Provides client-based DataBinding implementation
 sap.ui.define([
-	'./ClientContextBinding',
-	'./ClientListBinding',
-	'./ClientPropertyBinding',
-	'./ClientTreeBinding',
+	"sap/ui/thirdparty/jquery",
 	'./Model',
-	"sap/ui/thirdparty/jquery"
+	'./ClientContextBinding',
+	'./ClientListBinding', // convenience dependency for legacy code using global names
+	'./ClientPropertyBinding', // convenience dependency for legacy code using global names
+	'./ClientTreeBinding' // convenience dependency for legacy code using global names
 ],
 	function(
-		ClientContextBinding,
-		ClientListBinding,
-		ClientPropertyBinding,
-		ClientTreeBinding,
+		jQuery,
 		Model,
-		jQuery
+		ClientContextBinding
 	) {
 	"use strict";
 
@@ -34,7 +29,7 @@ sap.ui.define([
 	 * @extends sap.ui.model.Model
 	 *
 	 * @author SAP SE
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 *
 	 * @param {string} [oData] URL where to load the data from
 	 * @public
@@ -62,19 +57,16 @@ sap.ui.define([
 
 	/**
 	 * Returns the current data of the model.
+	 *
 	 * Be aware that the returned object is a reference to the model data so all changes to that data will also change the model data.
 	 *
-	 * @return the data object
+	 * @returns {any} the data object
 	 * @public
 	 */
 	ClientModel.prototype.getData = function(){
 		return this.oData;
 	};
 
-	/**
-	 * @see sap.ui.model.Model.prototype.bindElement
-	 *
-	 */
 	/**
 	 * @see sap.ui.model.Model.prototype.createBindingContext
 	 *
@@ -157,11 +149,11 @@ sap.ui.define([
 	};
 
 	/**
-	 * @see sap.ui.model.Model.prototype.destroyBindingContext
+	 * Does nothing.
 	 *
+	 * @param {sap.ui.model.Context} oContext The context to destroy
 	 */
 	ClientModel.prototype.destroyBindingContext = function(oContext) {
-		// TODO: what todo here?
 	};
 
 	/**

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -11,8 +11,7 @@ jQuery.sap.declare('sap-ui-debug');
 	"use strict";
 
 	//extract base URL from script tag
-	var aScripts, i, sSrc, mMatch, sBaseUrl, oScriptTag,
-		bCoreRequired = false;
+	var aScripts, i, sSrc, mMatch, sBaseUrl, oScriptTag;
 
 	oScriptTag = document.getElementById("sap-ui-bootstrap");
 	if (oScriptTag) {
@@ -44,22 +43,9 @@ jQuery.sap.declare('sap-ui-debug');
 
 	for (i = 0; i < aScriptIncludes.length; i++) {
 		sSrc = aScriptIncludes[i];
-		if ( sSrc.indexOf("raw:") === 0 ) {
-			sSrc = sBaseUrl + sSrc.slice(4);
-			document.write("<script src=\"" + sSrc + "\"></script>");
-		} else if ( sSrc.indexOf("require:") === 0 ) {
-			sSrc = sSrc.slice(8);
-			bCoreRequired = bCoreRequired || sSrc === "sap.ui.core.Core";
-			document.write("<script>jQuery.sap.require(\"" + sSrc + "\");</script>");
-		}
-	}
-	if ( bCoreRequired ) {
-		document.write("<script>sap.ui.getCore().boot && sap.ui.getCore().boot();</script>");
+		sSrc = sBaseUrl + sSrc.slice(4);
+		document.write("<script src=\"" + sSrc + "\"></script>");
 	}
 }([
-	"raw:sap/ui/debug/ControlTree.js",
-	"raw:sap/ui/debug/Highlighter.js",
-	"raw:sap/ui/debug/LogViewer.js",
-	"raw:sap/ui/debug/PropertyList.js",
 	"raw:sap/ui/debug/DebugEnv.js"
 ]));

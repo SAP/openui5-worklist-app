@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -23,13 +23,14 @@ sap.ui.define([
 		 *   The version of the OData service. Supported values are "2.0" and "4.0".
 		 * @param {object} [mQueryParams={}]
 		 *   A map of query parameters as described in
-		 *   {@link sap.ui.model.odata.v4.lib._Helper.buildQuery}
+		 *   {@link sap.ui.model.odata.v4.lib._Helper.buildQuery}. Note that "sap-context-token"
+		 *   is deleted(!) after the first <code>read</code> for a metadata document.
 		 * @returns {object}
 		 *   A new MetadataRequestor object
 		 */
 		create : function (mHeaders, sODataVersion, mQueryParams) {
 			var mUrl2Promise = {},
-				sQueryStr = _Helper.buildQuery(mQueryParams);
+				sQuery = _Helper.buildQuery(mQueryParams);
 
 			return {
 				/**
@@ -37,10 +38,10 @@ sap.ui.define([
 				 * @param {string} sUrl
 				 *   The URL of a metadata document, it must not contain a query string or a
 				 *   fragment part
-				 * @param {boolean} [bAnnotations=false]
+				 * @param {boolean} [bAnnotations]
 				 *   <code>true</code> if an additional annotation file is read, otherwise it is
 				 *   expected to be a metadata document in the correct OData version
-				 * @param {boolean} [bPrefetch=false]
+				 * @param {boolean} [bPrefetch]
 				 *   Whether to just read the metadata document, but not yet convert it from XML to
 				 *   JSON. For any given URL, this is useful in an optional early call that precedes
 				 *   a normal call without this flag.
@@ -77,10 +78,10 @@ sap.ui.define([
 						delete mUrl2Promise[sUrl];
 					} else {
 						oPromise = new Promise(function (fnResolve, fnReject) {
-							jQuery.ajax(bAnnotations ? sUrl : sUrl + sQueryStr, {
+							jQuery.ajax(bAnnotations ? sUrl : sUrl + sQuery, {
 								method : "GET",
 								headers : mHeaders
-							}).then(function (oData, sTextStatus, jqXHR) {
+							}).then(function (oData, _sTextStatus, jqXHR) {
 								var sDate = jqXHR.getResponseHeader("Date"),
 									sETag = jqXHR.getResponseHeader("ETag"),
 									oJSON = {$XML : oData},
@@ -96,13 +97,18 @@ sap.ui.define([
 									oJSON.$LastModified = sLastModified;
 								}
 								fnResolve(oJSON);
-							}, function (jqXHR, sTextStatus, sErrorMessage) {
+							}, function (jqXHR, _sTextStatus, _sErrorMessage) {
 								var oError = _Helper.createError(jqXHR, "Could not load metadata");
 
 								Log.error("GET " + sUrl, oError.message,
 									"sap.ui.model.odata.v4.lib._MetadataRequestor");
 								fnReject(oError);
 							});
+							if (!bAnnotations
+								&& mQueryParams && "sap-context-token" in mQueryParams) {
+								delete mQueryParams["sap-context-token"];
+								sQuery = _Helper.buildQuery(mQueryParams);
+							}
 						});
 						if (bPrefetch) {
 							mUrl2Promise[sUrl] = oPromise;

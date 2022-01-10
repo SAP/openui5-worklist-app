@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(["sap/base/Log"], function(Log) {
@@ -11,6 +11,7 @@ sap.ui.define(["sap/base/Log"], function(Log) {
 	 * @private
 	 * @experimental
 	 * @since 1.33
+	 * @deprecated Since 1.90. Use a {@link sap.ui.core.routing.async.Target async.Target} instead
 	 */
 	return {
 
@@ -44,6 +45,21 @@ sap.ui.define(["sap/base/Log"], function(Log) {
 		 * @private
 		 */
 		suspend : function () {
+			// the sync target can only load view and not component
+			// therefore it's not needed to do anything in this function
+			return this;
+		},
+
+		/**
+		 * Resumes the object which is loaded by the target.
+		 *
+		 * Currently this function doesn't do anything because the sync
+		 * version of the Target can only load Views but no Components.
+		 *
+		 * @return {sap.ui.core.routing.Target} The 'this' to chain the call
+		 * @private
+		 */
+		resume : function () {
 			// the sync target can only load view and not component
 			// therefore it's not needed to do anything in this function
 			return this;

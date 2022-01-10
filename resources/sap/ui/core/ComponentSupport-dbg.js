@@ -1,13 +1,12 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides class sap.ui.core.ComponentSupport
 sap.ui.define([
 	'sap/ui/base/DataType',
-	'sap/ui/core/Component',
 	'sap/ui/core/ComponentContainer',
 	'sap/ui/core/library',
 	"sap/base/Log",
@@ -16,7 +15,6 @@ sap.ui.define([
 ],
 	function(
 		DataType,
-		Component,
 		ComponentContainer,
 		library,
 		Log,
@@ -99,7 +97,7 @@ sap.ui.define([
 	 * @author SAP SE
 	 * @public
 	 * @since 1.58.0
-	 * @version 1.79.0
+	 * @version 1.96.2
 	 * @namespace
 	 * @alias module:sap/ui/core/ComponentSupport
 	 */

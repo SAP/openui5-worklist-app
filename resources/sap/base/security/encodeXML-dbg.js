@@ -1,12 +1,13 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(["sap/base/strings/toHex"], function(toHex) {
 	"use strict";
 
 
+	/* eslint-disable no-control-regex -- special characters are really needed here! */
 	/**
 	 * RegExp and escape function for HTML escaping
 	 */
@@ -18,6 +19,7 @@ sap.ui.define(["sap/base/strings/toHex"], function(toHex) {
 			"&": "&amp;",
 			"\"": "&quot;"
 		};
+	/* eslint-enable no-control-regex */
 
 	var fnHtml = function(sChar) {
 		var sEncoded = mHtmlLookup[sChar];

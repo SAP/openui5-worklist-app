@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -132,7 +132,7 @@ sap.ui.define(['./ListItemBaseRenderer', 'sap/ui/core/Renderer', 'sap/ui/core/li
 
 			rm.openEnd();
 
-			if (!!oLI.getIcon()) {
+			if (oLI.getIcon()) {
 				rm.openStart("div");
 				rm.class("sapMObjLIconDiv");
 
@@ -174,7 +174,7 @@ sap.ui.define(['./ListItemBaseRenderer', 'sap/ui/core/Renderer', 'sap/ui/core/li
 			rm.close("div"); // End Top row container
 
 			rm.openStart("div");
-			rm.style("clear", "both;");
+			rm.style("clear", "both");
 			rm.openEnd();
 			rm.close("div");
 

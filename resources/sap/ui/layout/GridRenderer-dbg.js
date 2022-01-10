@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2020 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(["sap/ui/Device", "sap/ui/layout/library"],
@@ -15,7 +15,7 @@ sap.ui.define(["sap/ui/Device", "sap/ui/layout/library"],
 	/**
 	 * @author SAP SE
 	 * @version
-	 * 1.79.0
+	 * 1.96.2
 	 * @namespace
 	 */
 	var GridRenderer = {
@@ -122,7 +122,7 @@ sap.ui.define(["sap/ui/Device", "sap/ui/layout/library"],
 
 
 		for ( var i = 0; i < aItems.length; i++) { // loop over all child controls
-			oRm.openStart("div");
+			oRm.openStart("div", oControl.getId() + "-wrapperfor-" + aItems[i].getId());
 			var oLay = oControl._getLayoutDataForControl(aItems[i]);
 			var bCellSpanXLChanged = false;
 
