@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -9,26 +9,22 @@ sap.ui.define([
 	'sap/ui/core/Core',
 	'./NotificationListBase',
 	'sap/ui/core/InvisibleText',
-	'./ListItemBase',
 	'sap/ui/core/IconPool',
 	'sap/ui/core/library',
 	'sap/ui/Device',
 	'sap/m/Button',
-	'./NotificationListGroupRenderer',
-	"sap/ui/events/KeyCodes"
+	'./NotificationListGroupRenderer'
 ],
 function(
 	library,
 	Core,
 	NotificationListBase,
 	InvisibleText,
-	ListItemBase,
 	IconPool,
 	coreLibrary,
 	Device,
 	Button,
-	NotificationListGroupRenderer,
-	KeyCodes
+	NotificationListGroupRenderer
 ) {
 	'use strict';
 
@@ -66,13 +62,12 @@ function(
 	 * @extends sap.m.NotificationListBase
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.34
 	 * @alias sap.m.NotificationListGroup
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var NotificationListGroup = NotificationListBase.extend('sap.m.NotificationListGroup', /** @lends sap.m.NotificationListGroup.prototype */ {
 		metadata: {
@@ -156,7 +151,9 @@ function(
 					}
 				}
 			}
-		}
+		},
+
+		renderer: NotificationListGroupRenderer
 	});
 
 	NotificationListGroup.prototype._getCollapseButton = function() {
@@ -320,7 +317,6 @@ function(
 	 * @private
 	 */
 	NotificationListGroup.prototype.onBeforeRendering = function () {
-
 		NotificationListBase.prototype.onBeforeRendering.apply(this, arguments);
 
 		this._getCollapseButton().setVisible(this.getEnableCollapseButtonWhenEmpty() || this._getVisibleItemsCount() > 0);

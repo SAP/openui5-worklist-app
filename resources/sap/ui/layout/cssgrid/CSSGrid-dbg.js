@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -85,17 +85,18 @@ sap.ui.define([
 	 * the <code>CSSGrid</code> and configure how it will look in different breakpoints (S, M, L, XL).</li>
 	 * </ul>
 	 *
-	 * <h3>Current Limitations</h3>
+	 * <h3>Out of current scope:</h3>
 	 * <ul>
-	 * <li>No alignment and ordering</li>
-	 * <li>No Named grid areas and lines</li>
+	 * <li>Alignment and ordering</li>
+	 * <li>Named grid areas and lines</li>
 	 * </ul>
 	 *
 	 * @see {@link topic:32d4b9c2b981425dbc374d3e9d5d0c2e Grid Controls}
+	 * @see {@link fiori:https://experience.sap.com/fiori-design-web/flexible-grid/ Flexible Grid}
 	 * @see {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_Layout MDN web docs: CSS Grid Layout}
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @extends sap.ui.core.Control
 	 * @implements sap.ui.layout.cssgrid.IGridConfigurable
@@ -104,7 +105,6 @@ sap.ui.define([
 	 * @constructor
 	 * @public
 	 * @alias sap.ui.layout.cssgrid.CSSGrid
-	 * @ui5-metamodel This control/element will also be described in the UI5 (legacy) designtime metamodel
 	 */
 	var CSSGrid = Control.extend("sap.ui.layout.cssgrid.CSSGrid", {
 		metadata: {

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -35,7 +35,7 @@ sap.ui.define([
 	 * Hook for changing list item attributes
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oLI An object representation of the control that should be rendered.
+	 * @param {sap.f.GridListItem} oLI An object representation of the control that should be rendered.
 	 * @override
 	 */
 	GridListItemRenderer.renderLIAttributes = function (oRm, oLI) {
@@ -46,7 +46,7 @@ sap.ui.define([
 	 * Renders the former part of the item.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oLI An object representation of the control that is rendered.
+	 * @param {sap.f.GridListItem} oLI An object representation of the control that is rendered.
 	 * @override
 	 */
 	GridListItemRenderer.renderContentFormer = function (oRm, oLI) {
@@ -57,7 +57,7 @@ sap.ui.define([
 	 * Renders a wrapper where the header and the content will be put.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oLI An object representation of the control that is rendered.
+	 * @param {sap.f.GridListItem} oLI An object representation of the control that is rendered.
 	 * @override
 	 */
 	GridListItemRenderer.renderLIContentWrapper = function (oRm, oLI) {
@@ -71,7 +71,7 @@ sap.ui.define([
 	 * Renders the latter part of the item.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oLI An object representation of the control that is rendered.
+	 * @param {sap.f.GridListItem} oLI An object representation of the control that is rendered.
 	 * @override
 	 */
 	GridListItemRenderer.renderContentLatter = function (oRm, oLI) { };
@@ -80,7 +80,7 @@ sap.ui.define([
 	 * Renders the header toolbar of the item.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oLI An object representation of the control that is rendered.
+	 * @param {sap.f.GridListItem} oLI An object representation of the control that is rendered.
 	 */
 	GridListItemRenderer.renderToolbar = function (oRm, oLI) {
 
@@ -114,7 +114,7 @@ sap.ui.define([
 	 * Renders the content of the item.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oLI An object representation of the control that is rendered.
+	 * @param {sap.f.GridListItem} oLI An object representation of the control that is rendered.
 	 * @override
 	 */
 	GridListItemRenderer.renderLIContent = function (oRm, oLI) {
@@ -125,7 +125,7 @@ sap.ui.define([
 	 * Renders a div inside the header toolbar, which serves as a spacer.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oLI An object representation of the control that is rendered.
+	 * @param {sap.f.GridListItem} oLI An object representation of the control that is rendered.
 	 */
 	GridListItemRenderer.renderToolbarSpacer = function (oRm) {
 		oRm.openStart("div").class("sapFGLIToolbarSpacer").openEnd().close("div");

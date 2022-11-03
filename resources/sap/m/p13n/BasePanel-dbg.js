@@ -1,12 +1,12 @@
-/*
- * ! OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+/*!
+ * OpenUI5
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
-	'sap/ui/model/json/JSONModel', 'sap/m/VBox', 'sap/ui/core/Control', 'sap/m/Column', 'sap/m/Text', 'sap/ui/model/Filter', "sap/m/Table", "sap/m/OverflowToolbar", "sap/m/SearchField", "sap/m/ToolbarSpacer", "sap/m/OverflowToolbarButton", "sap/m/OverflowToolbarLayoutData", "sap/base/util/merge", "sap/ui/core/dnd/DragDropInfo"
-], function(JSONModel, VBox, Control, Column, Text, Filter, Table, OverflowToolbar, SearchField, ToolbarSpacer, OverflowToolbarButton, OverflowToolbarLayoutData, merge, DragDropInfo) {
+	'sap/ui/model/json/JSONModel', 'sap/m/VBox', 'sap/ui/core/Control', 'sap/m/Column', 'sap/m/Text', 'sap/ui/model/Filter', "sap/m/Table", "sap/m/OverflowToolbar", "sap/m/SearchField", "sap/m/ToolbarSpacer", "sap/m/OverflowToolbarButton", "sap/m/OverflowToolbarLayoutData", "sap/ui/core/dnd/DragDropInfo"
+], function(JSONModel, VBox, Control, Column, Text, Filter, Table, OverflowToolbar, SearchField, ToolbarSpacer, OverflowToolbarButton, OverflowToolbarLayoutData, DragDropInfo) {
 	"use strict";
 
 	/**
@@ -17,27 +17,37 @@ sap.ui.define([
 	 *
 	 * @class
 	 * This control serves as base class for personalization implementations.
-	 * This base class is faceless and should be inherited to implement control specific personalization panels.
+	 * This faceless class serves as a way to implement control-specific personalization panels.
 	 *
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
-	 * @private
-	 * @ui5-restricted
-	 * @experimental
+	 * @public
+	 * @abstract
 	 *
+	 * @experimental Since 1.96.
 	 * @since 1.96
 	 * @alias sap.m.p13n.BasePanel
 	 */
 	var BasePanel = Control.extend("sap.m.p13n.BasePanel", {
 		metadata: {
 			library: "sap.m",
+			interfaces: [
+				"sap.m.p13n.IContent"
+			],
 			associations: {},
 			properties: {
 				/**
-				 * Determines whether the reordering of personalization items should be enabled.
+				 * A short text describing the panel.
+				 * <b>Note:</b> This text will only be displayed if the panel is being used in a <code>sap.m.p13n.Popup</code>.
+				 */
+				title: {
+					type: "string"
+				},
+				/**
+				 * Determines whether the reordering of personalization items is enabled.
 				 */
 				enableReorder: {
 					type: "boolean",
@@ -46,7 +56,7 @@ sap.ui.define([
 			},
 			aggregations: {
 				/**
-				 * Defines an optional message strip to be displayed in the content area
+				 * Defines an optional message strip to be displayed in the content area.
 				 */
 				 messageStrip: {
 					type: "sap.m.MessageStrip",
@@ -72,11 +82,11 @@ sap.ui.define([
 			},
 			events: {
 				/**
-				 * This event is fired if there has been made any change within the <code>BasePanel</code> control.
+				 * This event is fired if any change has been made within the <code>BasePanel</code> control.
 				 */
 				change: {
 					/**
-					 * The reason why the panel state has changed, e.g. "Add", "Remove" or "Move".
+					 * The reason why the panel state has changed, for example, items have been added, removed, or moved.
 					 */
 					reason: {
 						type: "string"
@@ -85,7 +95,7 @@ sap.ui.define([
 					 * An object containing information about the specific item that has been changed.
 					 */
 					item: {
-						type: "object"
+						type: "sap.m.p13n.Item|sap.m.p13n.Item[]"
 					}
 				}
 			}
@@ -109,6 +119,9 @@ sap.ui.define([
 	BasePanel.prototype.CHANGE_REASON_ADD = "Add";
 	BasePanel.prototype.CHANGE_REASON_REMOVE = "Remove";
 	BasePanel.prototype.CHANGE_REASON_MOVE = "Move";
+	BasePanel.prototype.CHANGE_REASON_SELECTALL = "SelectAll";
+	BasePanel.prototype.CHANGE_REASON_DESELECTALL = "DeselectAll";
+	BasePanel.prototype.CHANGE_REASON_RANGESELECT = "RangeSelect";
 
 	//defines the name of the attribute describing the presence/active state
 	BasePanel.prototype.PRESENCE_ATTRIBUTE = "visible";
@@ -120,8 +133,11 @@ sap.ui.define([
 		this._oP13nModel.setSizeLimit(10000);
 		this.setModel(this._oP13nModel, this.P13N_MODEL);
 
-	   // list is necessary to set the template + model on
+	    // list is necessary to set the template + model on
 		this._oListControl = this._createInnerListControl();
+
+		// Determines whether the rearranged item should be focused
+		this._bFocusOnRearrange = true;
 
 		this._setInnerLayout();
 
@@ -130,7 +146,7 @@ sap.ui.define([
 	};
 
 	/**
-	 * Can be overwritten in case a different wrapping Control is required for the inner content
+	 * Can be overwritten if a different wrapping control is required for the inner content.
 	 */
 	BasePanel.prototype._setInnerLayout = function() {
 		this.setAggregation("_content", new VBox({
@@ -141,20 +157,38 @@ sap.ui.define([
 	};
 
 	/**
-	 * @param {Array} aP13nData An array containing the personalization state that should be represented by the <code>BasePanel</code>.
+	 * P13n <code>Item</code> object type.
 	 *
-	 * @returns {sap.m.p13n.BasePanel} The BasePanel instance
+	 * @type {sap.m.p13n.Item}
+	 * @static
+	 * @constant
+	 * @typedef {object} sap.m.p13n.Item
+	 * @property {string} name The unique key of the item
+	 * @property {string} label The label describing the personalization item
+	 * @property {boolean} visible Defines the selection state of the personalization item
+	 * @public
+	 */
+
+	/**
+	 * Sets the personalization state of the panel instance.
+	 *
+	 * @public
+	 * @param {sap.m.p13n.Item[]} aP13nData An array containing the personalization state that is represented by the <code>BasePanel</code>.
+	 * @returns {this} The BasePanel instance
 	 */
 	BasePanel.prototype.setP13nData = function(aP13nData) {
-		this._getP13nModel().setProperty("/items", merge([], aP13nData));
+		this._getP13nModel().setProperty("/items", aP13nData);
 		return this;
 	};
 
 	/**
-	 * @returns {Array} An array containing the personalization state that is currently displayed by the <code>BasePanel</code>.
+	 * Returns the personalization state that is currently displayed by the <code>BasePanel</code>.
+	 * @public
+	 * @param {boolean} bOnlyActive Determines whether only the present items is included
+	 * @returns {sap.m.p13n.Item[]} An array containing the personalization state that is currently displayed by the <code>BasePanel</code>
 	 */
 	BasePanel.prototype.getP13nData = function (bOnlyActive) {
-		var aItems = merge([], this._getP13nModel().getProperty("/items"));
+		var aItems = this._getP13nModel().getProperty("/items");
 		if (bOnlyActive) {
 			aItems = aItems.filter(function(oItem){
 				return oItem[this.PRESENCE_ATTRIBUTE];
@@ -166,9 +200,9 @@ sap.ui.define([
 	/**
 	 * Displays a <code>sap.m.MessageStrip</code> instance in the content area of the <code>BasePanel</code>.
 	 *
+	 * @public
 	 * @param {sap.m.MessageStrip} oStrip Instance of a sap.m.MessageStrip
-	 *
-	 * @returns {sap.m.p13n.BasePanel} The BasePanel instance
+	 * @returns {sap.m.p13n.BasePanel} The <code>BasePanel</code> instance
 	 */
 	BasePanel.prototype.setMessageStrip = function(oStrip){
 		if (!oStrip) {
@@ -189,6 +223,7 @@ sap.ui.define([
 	/**
 	 * Getter for the <code>messageStrip</code> aggregation.
 	 *
+	 * @public
 	 * @returns {sap.m.p13n.BasePanel} The BasePanel instance
 	 */
 	BasePanel.prototype.getMessageStrip = function(){
@@ -196,14 +231,11 @@ sap.ui.define([
 	};
 
 	/**
-	 * The <code>enableReorder</code> property decides if additional move buttons should be shown on hovering over
-	 * the inner list. In addition drag and drop will be enabled on the inner list control.
-	 *
-	 * @param {boolean} bEnableReorder Decies whether reordering should be enabled or disabled.
-	 *
+	 * @param {boolean} bEnableReorder Determines whether reordering is enabled
+	 * @private
 	 * @returns {sap.m.p13n.BasePanel} The BasePanel instance
 	 */
-	BasePanel.prototype.setEnableReorder = function(bEnableReorder) {
+	BasePanel.prototype._updateMovement = function(bEnableReorder) {
 		var oTemplate = this.getAggregation("_template");
 		if (bEnableReorder) {
 			this._addHover(oTemplate);
@@ -212,11 +244,24 @@ sap.ui.define([
 		}
 		this._getDragDropConfig().setEnabled(bEnableReorder);
 		this._setMoveButtonVisibility(bEnableReorder);
-		this.setProperty("enableReorder", bEnableReorder);
 
 		return this;
 	};
 
+	/**
+	 * The <code>enableReorder</code> property determines whether additional move buttons are shown when hovering over
+	 * the inner list. In addition, drag and drop will be enabled for the inner list control.
+	 *
+	 * @param {boolean} bEnableReorder Determines whether reordering is enabled
+	 * @public
+	 * @returns {sap.m.p13n.BasePanel} The BasePanel instance
+	 */
+	BasePanel.prototype.setEnableReorder = function(bEnableReorder) {
+		this.setProperty("enableReorder", bEnableReorder);
+		this._updateMovement(bEnableReorder);
+
+		return this;
+	};
 
 	BasePanel.prototype._getDragDropConfig = function() {
 		if (!this._oDragDropInfo){
@@ -238,12 +283,7 @@ sap.ui.define([
 				tooltip: this._getResourceText("p13n.MOVE_TO_TOP"),
 				icon: "sap-icon://collapse-group",
 				press: [this._onPressButtonMoveToTop, this],
-				visible: false,
-				layoutData: new OverflowToolbarLayoutData({
-					moveToOverflow: true,
-					priority: "Low",
-					group: 2
-				})
+				visible: false
 			});
 			this.addDependent(this._oMoveTopBtn);
 		}
@@ -258,12 +298,7 @@ sap.ui.define([
 				tooltip: this._getResourceText("p13n.MOVE_UP"),
 				icon: "sap-icon://navigation-up-arrow",
 				press: [this._onPressButtonMoveUp, this],
-				visible: false,
-				layoutData: new OverflowToolbarLayoutData({
-					moveToOverflow: true,
-					priority: "High",
-					group: 1
-				})
+				visible: false
 			});
 			this.addDependent(this._oMoveUpButton);
 		}
@@ -278,12 +313,7 @@ sap.ui.define([
 				tooltip: this._getResourceText("p13n.MOVE_DOWN"),
 				icon: "sap-icon://navigation-down-arrow",
 				press: [this._onPressButtonMoveDown, this],
-				visible: false,
-				layoutData: new OverflowToolbarLayoutData({
-					moveToOverflow: true,
-					priority: "High",
-					group: 1
-				})
+				visible: false
 			});
 			this.addDependent(this._oMoveDownButton);
 		}
@@ -298,12 +328,7 @@ sap.ui.define([
 				tooltip: this._getResourceText("p13n.MOVE_TO_BOTTOM"),
 				icon: "sap-icon://expand-group",
 				press: [this._onPressButtonMoveToBottom, this],
-				visible: false,
-				layoutData: new OverflowToolbarLayoutData({
-					moveToOverflow: true,
-					priority: "Low",
-					group: 2
-				})
+				visible: false
 			});
 			this.addDependent(this._oMoveBottomButton);
 		}
@@ -395,6 +420,10 @@ sap.ui.define([
 
 	BasePanel.prototype._setTemplate = function(oTemplate) {
 		oTemplate.setType("Active");
+		var oCurrentTemplate = this.getAggregation("_template");
+		if (oCurrentTemplate) {
+			oCurrentTemplate.destroy();
+		}
 		this.setAggregation("_template", oTemplate);
 		if (oTemplate) {
 			if (this.getEnableReorder()){
@@ -470,24 +499,46 @@ sap.ui.define([
 	BasePanel.prototype._onSelectionChange = function(oEvent) {
 
 		var aListItems = oEvent.getParameter("listItems");
-		var bSelectAll = oEvent.getParameter("selectAll");
-		var bDeSelectAll = !bSelectAll && aListItems.length > 1;
+		var sSpecialChangeReason = this._checkSpecialChangeReason(oEvent.getParameter("selectAll"), oEvent.getParameter("listItems"));
 
 		aListItems.forEach(function(oTableItem) {
-			this._selectTableItem(oTableItem, bSelectAll || bDeSelectAll);
+			this._selectTableItem(oTableItem, !!sSpecialChangeReason);
 		}, this);
 
-		if (bSelectAll || bDeSelectAll) {
-			this.fireChange();
+		if (sSpecialChangeReason) {
+
+			var aModelItems = [];
+			aListItems.forEach(function(oTableItem) {
+				aModelItems.push(this._getModelEntry(oTableItem));
+			}, this);
+
+			this.fireChange({
+				reason: sSpecialChangeReason,
+				item: aModelItems
+			});
 		}
 
 		// in case of 'deselect all', the move buttons for positioning are going to be disabled
-		if (bDeSelectAll) {
+		if (sSpecialChangeReason === this.CHANGE_REASON_DESELECTALL) {
 			this._getMoveTopButton().setEnabled(false);
 			this._getMoveUpButton().setEnabled(false);
 			this._getMoveDownButton().setEnabled(false);
 			this._getMoveBottomButton().setEnabled(false);
 		}
+	};
+
+	BasePanel.prototype._checkSpecialChangeReason = function(bSelectAll, aListItems) {
+		var sSpecialChangeReason;
+
+		if (bSelectAll) {
+			sSpecialChangeReason = this.CHANGE_REASON_SELECTALL;
+		} else if (!bSelectAll && aListItems.length > 1 && !aListItems[0].getSelected()) {
+			sSpecialChangeReason = this.CHANGE_REASON_DESELECTALL;
+		} else if (aListItems.length > 1 && aListItems.length < this._oListControl.getItems().length) {
+			sSpecialChangeReason = this.CHANGE_REASON_RANGESELECT;
+		}
+
+		return sSpecialChangeReason;
 	};
 
 	BasePanel.prototype._onItemPressed = function(oEvent) {
@@ -533,10 +584,10 @@ sap.ui.define([
 		oList.getBinding("items").filter(bShowSelected ? new Filter(this.PRESENCE_ATTRIBUTE, "EQ", true) : []);
 	};
 
-	BasePanel.prototype._selectTableItem = function(oTableItem, bSelectAll) {
-		this._updateEnableOfMoveButtons(oTableItem, bSelectAll ? false : true);
+	BasePanel.prototype._selectTableItem = function(oTableItem, bSpecialChangeReason) {
+		this._updateEnableOfMoveButtons(oTableItem, bSpecialChangeReason ? false : true);
 		this._oSelectedItem = oTableItem;
-		if (!bSelectAll) {
+		if (!bSpecialChangeReason) {
 			var oItem = this._getP13nModel().getProperty(this._oSelectedItem.getBindingContext(this.P13N_MODEL).sPath);
 
 			this.fireChange({
@@ -586,13 +637,13 @@ sap.ui.define([
 		// store the moved item again due to binding
 		this._oSelectedItem = this._oListControl.getItems()[iNewIndex];
 
-		this._updateEnableOfMoveButtons(this._oSelectedItem, true);
+		this._updateEnableOfMoveButtons(this._oSelectedItem, this._bFocusOnRearrange);
 
 		this._handleActivated(this._oSelectedItem);
 
 		this.fireChange({
 			reason: this.CHANGE_REASON_MOVE,
-			item: undefined
+			item: this._getModelEntry(oItem)
 		});
 	};
 
@@ -629,6 +680,8 @@ sap.ui.define([
 
 	BasePanel.prototype.exit = function() {
 		Control.prototype.exit.apply(this, arguments);
+		this._bFocusOnRearrange = null;
+		this._oHoveredItem = null;
 		this._oSelectionBindingInfo = null;
 		this._oSelectedItem = null;
 		this._oListControl = null;

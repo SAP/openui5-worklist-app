@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -25,7 +25,6 @@ sap.ui.define([
 	 * This feature enables a native HTML5 drag-and-drop API for the controls, therefore it is limited to browser support.
 	 * <h3>Restrictions</h3>
 	 * <ul>
-	 *   <li>There is no mobile device that supports drag and drop.</li>
 	 *   <li>There is no accessible alternative for drag and drop. Applications which use the drag-and-drop functionality must provide an
 	 *   accessible alternative UI (for example, action buttons or menus) to perform the same operations.</li>
 	 *   <li>Transparency of the drag ghost element and the cursor during drag-and-drop operations depends on the browser implementation.</li>
@@ -38,12 +37,11 @@ sap.ui.define([
 	 *
 	 * @extends sap.ui.core.Element
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @since 1.52
 	 * @alias sap.ui.core.dnd.DragDropBase
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var DragDropBase = Element.extend("sap.ui.core.dnd.DragDropBase", /** @lends sap.ui.core.dnd.DragDropBase.prototype */ {
 		metadata: {

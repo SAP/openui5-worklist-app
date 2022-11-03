@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -57,10 +57,22 @@ sap.ui.define([
 		}
 	}
 
+	function onElementAvailable (sSelector, fnCallback) {
+		var oElement = document.querySelector(sSelector);
+		if (oElement) {
+			fnCallback(oElement);
+		} else {
+			setTimeout(function () {
+				onElementAvailable(sSelector, fnCallback);
+			}, 100);
+		}
+	}
+
 	return {
 		resolveStackTrace: resolveStackTrace,
 		functionToString: functionToString,
-		argumentsToString: argumentsToString
+		argumentsToString: argumentsToString,
+		onElementAvailable: onElementAvailable
 	};
 
 }, true);

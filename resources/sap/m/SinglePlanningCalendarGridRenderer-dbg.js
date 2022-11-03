@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -11,7 +11,8 @@ sap.ui.define([
 	'sap/ui/core/IconPool',
 	'sap/ui/core/InvisibleText',
 	'./PlanningCalendarLegend',
-	'sap/ui/unified/library'
+	'sap/ui/unified/library',
+	'sap/ui/core/Configuration'
 	],
 	function(
 		CalendarDate,
@@ -20,12 +21,13 @@ sap.ui.define([
 		IconPool,
 		InvisibleText,
 		PlanningCalendarLegend,
-		unifiedLibrary) {
+		unifiedLibrary,
+		Configuration) {
 		"use strict";
 
-		var iVerticalPaddingBetweenAppointments = 2;
-		var iAppointmentBottomPadding = 2;
-		var iAppointmentTopPadding = 1;
+		var iVerticalPaddingBetweenAppointments = 0.125;
+		var iAppointmentBottomPadding = 0.125;
+		var iAppointmentTopPadding = 0.0625;
 
 		// shortcut for sap.ui.unified.CalendarDayType
 		var CalendarDayType = unifiedLibrary.CalendarDayType;
@@ -42,7 +44,7 @@ sap.ui.define([
 		 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer
-		 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered
+		 * @param {sap.m.SinglePlanningCalendarGrid} oControl An object representation of the control that should be rendered
 		 */
 		SinglePlanningCalendarGridRenderer.render = function (oRm, oControl) {
 			oRm.openStart("div", oControl);
@@ -65,8 +67,8 @@ sap.ui.define([
 			var iColumns = oControl._getColumns(),
 				iMaxLevel = oControl._getBlockersToRender().iMaxlevel,
 				oStartDate = oControl.getStartDate(),
-				// hackie thing to calculate the container width. When we have more than 1 line of blockers - we must add 3 px in order to render the blockers visually in the container.
-				iContainerHeight = (iMaxLevel + 1) * oControl._getBlockerRowHeight() + 3,
+				// hackie thing to calculate the container width. When we have more than 1 line of blockers - we must add 0.1875rem in order to render the blockers visually in the container.
+				iContainerHeight = (iMaxLevel + 1) * oControl._getBlockerRowHeight() + 0.1875,
 				oFormat = oControl._getDateFormatter(),
 				aSpecialDates = oControl._getSpecialDates(),
 				oCalendarDate = CalendarDate.fromLocalJSDate(oStartDate),
@@ -95,7 +97,7 @@ sap.ui.define([
 				oRm.class("sapMSpecialDaysInDayView");
 			}
 
-			oRm.style("height", iContainerHeight + "px");
+			oRm.style("height", iContainerHeight + "rem");
 			oRm.openEnd();
 
 			this.renderDndPlaceholders(oRm, oControl, oControl.getAggregation("_blockersPlaceholders"));
@@ -159,8 +161,8 @@ sap.ui.define([
 		SinglePlanningCalendarGridRenderer.renderBlockerAppointment = function(oRm, oControl, oBlockerNode) {
 			var oGridCalStart = CalendarDate.fromLocalJSDate(oControl.getStartDate()),
 				oBlocker = oBlockerNode.getData(),
-				oBlockerCalStart = CalendarDate.fromLocalJSDate(oBlocker.getStartDate()),
-				oBlockerCalEnd = CalendarDate.fromLocalJSDate(oBlocker.getEndDate()),
+				oBlockerCalStart = CalendarDate.fromLocalJSDate(oBlocker._getStartDateWithTimezoneAdaptation()),
+				oBlockerCalEnd = CalendarDate.fromLocalJSDate(oBlocker._getEndDateWithTimezoneAdaptation()),
 				iStartDayDiff = CalendarUtils._daysBetween(oBlockerCalStart, oGridCalStart),
 				iEndDayDiff = CalendarUtils._daysBetween(oBlockerCalEnd, oGridCalStart),
 				iColumns = oControl._getColumns(),
@@ -186,7 +188,7 @@ sap.ui.define([
 				aAriaLabels = oControl.getAriaLabelledBy(),
 				iLeftPosition = iStartDayDiff * (100 / iColumns),
 				iRightPosition = (iColumns - iEndDayDiff - 1) * (100 / iColumns),
-				bIsRTL = sap.ui.getCore().getConfiguration().getRTL(),
+				bIsRTL = Configuration.getRTL(),
 				aClasses;
 
 			if (aAriaLabels.length > 0) {
@@ -227,14 +229,14 @@ sap.ui.define([
 				oRm.class("sapUiCalendarApp" + sType);
 			}
 			if (sColor) {
-				if (sap.ui.getCore().getConfiguration().getRTL()) {
+				if (Configuration.getRTL()) {
 					oRm.style("border-right-color", sColor);
 				} else {
 					oRm.style("border-left-color", sColor);
 				}
 			}
 
-			oRm.style("top", iRowHeight * iBlockerLevel + 1 + "px"); // Adding 1px to render all of the blockers 1px below in order to have space on top of them.
+			oRm.style("top", iRowHeight * iBlockerLevel + 0.0625 + "rem"); // Adding 0.0625rem to render all of the blockers 0.0625rem below in order to have space on top of them.
 			oRm.style(bIsRTL ? "right" : "left", Math.max(iLeftPosition, 0) + "%");
 			oRm.style(bIsRTL ? "left" : "right", Math.max(iRightPosition, 0) + "%");
 			oRm.openEnd();
@@ -268,7 +270,7 @@ sap.ui.define([
 
 			if (iLeftPosition < 0) {
 				aClasses = ["sapUiCalendarAppArrowIconLeft", "sapUiCalendarAppArrowIcon"];
-				oRm.icon("sap-icon://arrow-left", aClasses, { title: null });
+				oRm.icon("sap-icon://arrow-left", aClasses, { title: null, role: "img" });
 			}
 
 			if (sIcon) {
@@ -277,6 +279,7 @@ sap.ui.define([
 
 				mAttributes["id"] = sId + "-Icon";
 				mAttributes["title"] = null;
+				mAttributes["role"] = "img";
 				oRm.icon(sIcon, aClasses, mAttributes);
 			}
 
@@ -290,7 +293,7 @@ sap.ui.define([
 
 			if (iRightPosition < 0) {
 				aClasses = ["sapUiCalendarAppArrowIconRight", "sapUiCalendarAppArrowIcon"];
-				oRm.icon("sap-icon://arrow-right", aClasses, { title: null });
+				oRm.icon("sap-icon://arrow-right", aClasses, { title: null, role: "img" });
 			}
 
 			oRm.openStart("span", sId + "-Descr");
@@ -318,7 +321,7 @@ sap.ui.define([
 			oRm.openEnd();
 
 			for (var i = iStartHour; i <= iEndHour; i++) {
-				oStartDate.setHours(i);
+				oStartDate.setUTCHours(i);
 				oRm.openStart("span");
 				oRm.class("sapMSinglePCRowHeader");
 				oRm.class("sapMSinglePCRowHeader" + i);
@@ -328,13 +331,14 @@ sap.ui.define([
 				}
 
 				oRm.openEnd();
-				oRm.text(oHoursFormat.format(oStartDate));
+
+				oRm.text(oHoursFormat.format(oStartDate, true));
 
 				if (oControl._hasAMPM()) {
 					oRm.openStart("span");
 					oRm.class("sapMSinglePCRowHeaderAMPM");
 					oRm.openEnd();
-					oRm.text(" " + oAMPMFormat.format(oStartDate));
+					oRm.text(" " + oAMPMFormat.format(oStartDate, true));
 					oRm.close("span");
 				}
 
@@ -407,7 +411,6 @@ sap.ui.define([
 				oRm.openStart("div");
 				oRm.attr("role", "gridcell");
 				oRm.class("sapMSinglePCRow");
-
 				if (!oControl._isVisibleHour(i)) {
 					oRm.class("sapMSinglePCNonWorkingRow");
 				}
@@ -459,8 +462,8 @@ sap.ui.define([
 				iRowHeight = oControl._getRowHeight(),
 				oColumnStartDateAndHour = new UniversalDate(oColumnDate.getYear(), oColumnDate.getMonth(), oColumnDate.getDate(), oControl._getVisibleStartHour()),
 				oColumnEndDateAndHour = new UniversalDate(oColumnDate.getYear(), oColumnDate.getMonth(), oColumnDate.getDate(), oControl._getVisibleEndHour(), 59, 59),
-				oAppStartDate = oAppointment.getStartDate(),
-				oAppEndDate = oAppointment.getEndDate(),
+				oAppStartDate = oAppointment._getStartDateWithTimezoneAdaptation(),
+				oAppEndDate = oAppointment._getEndDateWithTimezoneAdaptation(),
 				oAppCalStart = CalendarDate.fromLocalJSDate(oAppStartDate),
 				oAppCalEnd = CalendarDate.fromLocalJSDate(oAppEndDate),
 				sTooltip = oAppointment.getTooltip_AsString(),
@@ -487,6 +490,8 @@ sap.ui.define([
 				iAppBottom = bAppEndIsOutsideVisibleEndHour ? 0 : oControl._calculateBottomPosition(oAppEndDate),
 				iAppChunkWidth = 100 / (iMaxLevel + 1),
 				bDraggable = oAppointment.getParent().getEnableAppointmentsDragAndDrop(),
+				iScaleFactor = oControl.getProperty("scaleFactor"),
+				iDivider = 2 * iScaleFactor,
 				iStartDayDiff,
 				iEndDayDiff,
 				bArrowLeft,
@@ -540,22 +545,21 @@ sap.ui.define([
 				oRm.class("sapUiCalendarApp" + sType);
 			}
 			if (sColor) {
-				if (sap.ui.getCore().getConfiguration().getRTL()) {
+				if (Configuration.getRTL()) {
 					oRm.style("border-right-color", sColor);
 				} else {
 					oRm.style("border-left-color", sColor);
 				}
 			}
-			oRm.style("top", iAppTop + "px");
-			oRm.style("bottom", iAppBottom + "px");
-			oRm.style(sap.ui.getCore().getConfiguration().getRTL() ? "right" : "left", iAppChunkWidth * iAppointmentLevel + "%");
+			oRm.style("top", iAppTop + "rem");
+			oRm.style("bottom", iAppBottom + "rem");
+			oRm.style(Configuration.getRTL() ? "right" : "left", iAppChunkWidth * iAppointmentLevel + "%");
 			oRm.style("width", iAppChunkWidth * iAppointmentWidth + "%"); // TODO: take into account the levels
 			oRm.openEnd();
 
 			oRm.openStart("div");
 			oRm.class("sapUiCalendarApp");
-
-			oRm.style("min-height", (iRowHeight - (iVerticalPaddingBetweenAppointments + iAppointmentBottomPadding + iAppointmentTopPadding)) / 2 + "px");
+			oRm.style("min-height", (iRowHeight - ((iVerticalPaddingBetweenAppointments + iAppointmentBottomPadding + iAppointmentTopPadding) * iScaleFactor)) / iDivider + "rem");
 
 			if (oAppointment.getSelected()) {
 				oRm.class("sapUiCalendarAppSel");
@@ -605,7 +609,7 @@ sap.ui.define([
 
 			if (bArrowLeft && iStartDayDiff < 0) {
 				aClasses = ["sapUiCalendarAppArrowIconLeft", "sapUiCalendarAppArrowIcon"];
-				oRm.icon("sap-icon://arrow-left", aClasses, { title: null });
+				oRm.icon("sap-icon://arrow-left", aClasses, { title: null, role: "img" });
 			}
 
 			if (sIcon) {
@@ -614,6 +618,7 @@ sap.ui.define([
 
 				mAttributes["id"] = sId + "-Icon";
 				mAttributes["title"] = null;
+				mAttributes["role"] = "img";
 				oRm.icon(sIcon, aClasses, mAttributes);
 			}
 
@@ -642,12 +647,12 @@ sap.ui.define([
 
 			if (bArrowRight && iEndDayDiff < 0) {
 				aClasses = ["sapUiCalendarAppArrowIconRight", "sapUiCalendarAppArrowIcon"];
-				oRm.icon("sap-icon://arrow-right", aClasses, { title: null });
+				oRm.icon("sap-icon://arrow-right", aClasses, { title: null, role: "img" });
 			}
 
 			// ARIA information about start and end
-			// var sAriaText = oRow._oRb.getText("CALENDAR_START_TIME") + ": " + oRow._oFormatAria.format(oAppointment.getStartDate());
-			// sAriaText = sAriaText + "; " + oRow._oRb.getText("CALENDAR_END_TIME") + ": " + oRow._oFormatAria.format(oAppointment.getEndDate());
+			// var sAriaText = oRow._oRb.getText("CALENDAR_START_TIME") + ": " + oRow._oFormatAria.format(oAppointment._getStartDateWithTimezoneAdaptation());
+			// sAriaText = sAriaText + "; " + oRow._oRb.getText("CALENDAR_END_TIME") + ": " + oRow._oFormatAria.format(oAppointment._getEndDateWithTimezoneAdaptation());
 			// if (sTooltip) {
 			// 	sAriaText = sAriaText + "; " + sTooltip;
 			// }
@@ -677,7 +682,7 @@ sap.ui.define([
 			var oDate = new Date();
 
 			oRm.openStart("div", oControl.getId() + "-nowMarker");
-			oRm.style("top", oControl._calculateTopPosition(oDate) + "px");
+			oRm.style("top", oControl._calculateTopPosition(oDate) + "rem");
 			oRm.class("sapMSinglePCNowMarker");
 
 			if (!oControl._isVisibleHour(oDate.getHours())) {
@@ -721,7 +726,7 @@ sap.ui.define([
 		 *
 		 * @param {Date} oAppStartDate start date of the appointment
 		 * @param {Date} oAppEndDate end date of the appointment
-		 * @return {String} Returns maximum allowed rows for the appointment as string
+		 * @return {string} Returns maximum allowed rows for the appointment as string
 		 * @private
 		 */
 		SinglePlanningCalendarGridRenderer._getLineClamp = function (oAppStartDate, oAppEndDate) {

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -8,8 +8,15 @@ sap.ui.define(['./library', "sap/base/security/encodeCSS"],
 	function(library, encodeCSS) {
 	"use strict";
 
+	// shortcut for sap.m.GenericTileMode
+	var GenericTileMode = library.GenericTileMode;
+
 	// shortcut for sap.m.GenericTileScope
 	var GenericTileScope = library.GenericTileScope;
+
+	// shortcut for sap.m.FrameType
+	var FrameType = library.FrameType;
+
 
 	/**
 	 * SlideTile renderer.
@@ -23,7 +30,7 @@ sap.ui.define(['./library', "sap/base/security/encodeCSS"],
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the Render-Output-Buffer
-	 * @param {sap.ui.core.Control} oControl the control to be rendered
+	 * @param {sap.m.SlideTile} oControl the control to be rendered
 	 */
 	SlideTileRenderer.render = function(oRm, oControl) {
 		var sTooltip = oControl.getTooltip_AsString(),
@@ -46,10 +53,15 @@ sap.ui.define(['./library', "sap/base/security/encodeCSS"],
 		if (sTooltip) {
 			oRm.attr("title", sTooltip);
 		}
-		oRm.attr("tabindex", "0");
-		oRm.attr("role", "presentation");
-		oRm.openEnd();
 		iLength = oControl.getTiles().length;
+		if (iLength > 1) {
+			oRm.attr("tabindex", "0");
+		}
+		oRm.attr("role", "application");
+		oRm.attr("aria-roledescription", oControl._oRb.getText("SLIDETILE"));
+		oRm.openEnd();
+		oControl.getAggregation("_invisibleText");
+		oRm.renderControl(oControl.getAggregation("_invisibleText"));
 		if (iLength > 1 && sScope === GenericTileScope.Display) {
 			this._renderPausePlayIcon(oRm, oControl);
 			this._renderTilesIndicator(oRm, oControl);
@@ -68,11 +80,12 @@ sap.ui.define(['./library', "sap/base/security/encodeCSS"],
 	SlideTileRenderer._renderTiles = function(oRm, oControl, iLength) {
 		oRm.openStart("div");
 		oRm.class("sapMSTOverflowHidden");
+		oRm.attr("aria-hidden","true");
 		oRm.openEnd();
 		for (var i = 0; i < iLength; i++) {
 			oRm.openStart("div", oControl.getId() + "-wrapper-" + i );
 			oRm.class("sapMSTWrapper");
-			if (oControl.getTiles()[i].getFrameType() == sap.m.FrameType.Stretch && oControl.getTiles()[i].getMode() == sap.m.GenericTileMode.ArticleMode) {
+			if (oControl.getTiles()[i].getFrameType() === FrameType.Stretch && oControl.getTiles()[i].getMode() === GenericTileMode.ArticleMode) {
 				oRm.class("sapMGTTileStretch");
 			}
 			oRm.openEnd();

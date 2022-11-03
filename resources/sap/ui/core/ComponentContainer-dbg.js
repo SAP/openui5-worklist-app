@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -11,7 +11,8 @@ sap.ui.define([
 	'./Component',
 	'./library',
 	"./ComponentContainerRenderer",
-	"sap/base/Log"
+	"sap/base/Log",
+	"sap/ui/core/Configuration"
 ],
 	function(
 		ManagedObject,
@@ -19,7 +20,8 @@ sap.ui.define([
 		Component,
 		library,
 		ComponentContainerRenderer,
-		Log
+		Log,
+		Configuration
 	) {
 	"use strict";
 
@@ -59,11 +61,10 @@ sap.ui.define([
 	 * See also {@link module:sap/ui/core/ComponentSupport}.
 	 *
 	 * @extends sap.ui.core.Control
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @alias sap.ui.core.ComponentContainer
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var ComponentContainer = Control.extend("sap.ui.core.ComponentContainer", /** @lends sap.ui.core.ComponentContainer.prototype */ {
 		metadata : {
@@ -255,6 +256,10 @@ sap.ui.define([
 
 	// Delegate registered by the ComponentContainer#showPlaceholder function
 	var oPlaceholderDelegate = {
+		/**
+		 * @this {sap.ui.core.ComponentContainer}
+		 * @private
+		 */
 		"onAfterRendering": function() {
 			// check whether the placeholder is still active. If yes, show the placeholder again
 			if (this._placeholder) {
@@ -277,7 +282,7 @@ sap.ui.define([
 	ComponentContainer.prototype.showPlaceholder = function(mSettings) {
 		var pLoaded;
 
-		if (!sap.ui.getCore().getConfiguration().getPlaceholder()) {
+		if (!Configuration.getPlaceholder()) {
 			return;
 		}
 

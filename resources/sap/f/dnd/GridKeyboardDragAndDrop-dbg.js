@@ -1,9 +1,9 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
-sap.ui.define(["sap/ui/thirdparty/jquery"], function(jQuery) {
+sap.ui.define([], function() {
 	"use strict";
 
 	/**
@@ -29,7 +29,7 @@ sap.ui.define(["sap/ui/thirdparty/jquery"], function(jQuery) {
 			 * @param {object} mConfig Custom styles of the drop indicator.
 			 * @protected
 			 */
-			setIndicatorConfig: jQuery.noop,
+			setIndicatorConfig: function() {},
 
 			/**
 			 * Returns the dragged control, if available within the same UI5 application frame.

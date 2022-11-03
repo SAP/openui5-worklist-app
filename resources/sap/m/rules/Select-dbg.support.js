@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -36,7 +36,7 @@ sap.ui.define(["sap/ui/support/library", "sap/ui/model/BindingMode"],
 		resolution: "Use the sap.ui.model.Model.prototype.setSizeLimit to adjust the size limit of the 'items' model if you expect more than 100 items",
 		resolutionurls: [{
 			text: "API Reference for sap.ui.model.Model",
-			href: "https://sapui5.hana.ondemand.com/#/api/sap.ui.model.Model"
+			href: "https://sdk.openui5.org/api/sap.ui.model.Model"
 		}],
 		check: function (oIssueManager, oCoreFacade, oScope) {
 			oScope.getElementsByClassName("sap.m.Select")

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -12,16 +12,35 @@ sap.ui.define([
 	"./_V2Requestor",
 	"sap/base/Log",
 	"sap/ui/base/SyncPromise",
+	"sap/ui/core/cache/CacheManager",
+	"sap/ui/core/Configuration",
 	"sap/ui/thirdparty/jquery"
-], function (_Batch, _GroupLock, _Helper, asV2Requestor, Log, SyncPromise, jQuery) {
+], function (_Batch, _GroupLock, _Helper, asV2Requestor, Log, SyncPromise, CacheManager,
+		Configuration, jQuery) {
 	"use strict";
 
 	var mBatchHeaders = { // headers for the $batch request
-			"Accept" : "multipart/mixed"
+			Accept : "multipart/mixed"
 		},
+		sCachePrefix = "sap.ui.model.odata.v4.optimisticBatch:",
 		sClassName = "sap.ui.model.odata.v4.lib._Requestor",
+		sMessagesAnnotation = "@com.sap.vocabularies.Common.v1.Messages",
 		rSystemQueryOptionWithPlaceholder = /(\$\w+)=~/g,
 		rTimeout = /^\d+$/;
+
+	/**
+	 * Clones the given headers and deletes the X-CSRF-Token within the returned cloned headers.
+	 *
+	 * @param {object} mHeaders The headers to be cloned
+	 * @returns {object} The cloned headers w/o X-CSRF-Token header
+	 */
+	function getHeadersWithoutCSRFToken(mHeaders) {
+		var oClone = Object.assign({}, mHeaders);
+
+		delete oClone["X-CSRF-Token"];
+
+		return oClone;
+	}
 
 	/**
 	 * The getResponseHeader() method imitates the jqXHR.getResponseHeader() method for a $batch
@@ -56,26 +75,7 @@ sap.ui.define([
 	 *   A map of query parameters as described in
 	 *   {@link sap.ui.model.odata.v4.lib._Helper.buildQuery}; used only to request the CSRF token
 	 * @param {object} oModelInterface
-	 *   A interface allowing to call back to the owning model
-	 * @param {function} oModelInterface.fetchEntityContainer
-	 *   A promise which is resolved with the $metadata "JSON" object as soon as the entity
-	 *   container is fully available, or rejected with an error.
-	 * @param {function} oModelInterface.fetchMetadata
-	 *   A function that returns a SyncPromise which resolves with the metadata instance for a
-	 *   given meta path
-	 * @param {function} oModelInterface.getGroupProperty
-	 *   A function called with parameters <code>sGroupId</code> and <code>sPropertyName</code>
-	 *   returning the property value in question. Only 'submit' is supported for <code>
-	 *   sPropertyName</code>. Supported property values are: 'API', 'Auto' and 'Direct'.
-	 * @param {function} oModelInterface.reportStateMessages
-	 *   A function for reporting state messages; see {@link #reportStateMessages} for the signature
-	 *   of this function
-	 * @param {function} oModelInterface.reportTransitionMessages
-	 *   A function called with parameters <code>sResourcePath</code> and <code>sMessages</code>
-	 *   reporting OData transition messages to the {@link sap.ui.core.message.MessageManager}.
-	 * @param {function (string)} [oModelInterface.onCreateGroup]
-	 *   A callback function that is called with the group name as parameter when the first
-	 *   request is added to a group
+	 *   An interface allowing to call back to the owning model (see {@link .create})
 	 *
 	 * @alias sap.ui.model.odata.v4.lib._Requestor
 	 * @constructor
@@ -83,9 +83,11 @@ sap.ui.define([
 	 */
 	function _Requestor(sServiceUrl, mHeaders, mQueryParams, oModelInterface) {
 		this.mBatchQueue = {};
+		this.bBatchSent = false;
 		this.mHeaders = mHeaders || {};
 		this.aLockedGroupLocks = [];
 		this.oModelInterface = oModelInterface;
+		this.oOptimisticBatch = null; // optimistic batch processing off
 		this.sQueryParams = _Helper.buildQuery(mQueryParams); // Used for $batch and CSRF token only
 		this.mRunningChangeRequests = {}; // map from group ID to a SyncPromise[]
 		this.iSessionTimer = 0;
@@ -106,14 +108,14 @@ sap.ui.define([
 	 * Predefined request headers in $batch parts for OData V4.
 	 */
 	_Requestor.prototype.mPredefinedPartHeaders = {
-		"Accept" : "application/json;odata.metadata=minimal;IEEE754Compatible=true"
+		Accept : "application/json;odata.metadata=minimal;IEEE754Compatible=true"
 	};
 
 	/**
 	 * Predefined request headers for all requests for OData V4.
 	 */
 	_Requestor.prototype.mPredefinedRequestHeaders = {
-		"Accept" : "application/json;odata.metadata=minimal;IEEE754Compatible=true",
+		Accept : "application/json;odata.metadata=minimal;IEEE754Compatible=true",
 		"OData-MaxVersion" : "4.0",
 		"OData-Version" : "4.0",
 		"X-CSRF-Token" : "Fetch"
@@ -208,8 +210,8 @@ sap.ui.define([
 			return sResourcePath;
 		}
 
-		return sResourcePath +
-			(sResourcePath.includes("?") ? "&" + sQueryString.slice(1) : sQueryString);
+		return sResourcePath
+			+ (sResourcePath.includes("?") ? "&" + sQueryString.slice(1) : sQueryString);
 	};
 
 	/**
@@ -300,23 +302,23 @@ sap.ui.define([
 	 *   The query string; it is empty if there are no options; it starts with "?" otherwise
 	 * @example
 	 * {
-	 *		$expand : {
-	 *			"SO_2_BP" : true,
-	 *			"SO_2_SOITEM" : {
-	 *				"$expand" : {
-	 *					"SOITEM_2_PRODUCT" : {
-	 *						"$apply" : "filter(Price gt 100)",
-	 *						"$expand" : {
-	 *							"PRODUCT_2_BP" : null,
-	 *						},
-	 *						"$select" : "CurrencyCode"
-	 *					},
-	 *					"SOITEM_2_SO" : null
-	 *				}
-	 *			}
-	 *		},
-	 *		"sap-client" : "003"
-	 *	}
+     *   $expand : {
+     *     "SO_2_BP" : true,
+     *     "SO_2_SOITEM" : {
+     *       "$expand" : {
+     *         "SOITEM_2_PRODUCT" : {
+     *           "$apply" : "filter(Price gt 100)",
+     *           "$expand" : {
+     *               "PRODUCT_2_BP" : null,
+     *           },
+     *           "$select" : "CurrencyCode"
+     *         },
+     *         "SOITEM_2_SO" : null
+     *       }
+     *     }
+     *   },
+     *   "sap-client" : "003"
+     * }
 	 *
 	 * @public
 	 */
@@ -447,13 +449,12 @@ sap.ui.define([
 	 */
 	_Requestor.prototype.checkConflictingStrictRequest = function (oRequest, aRequests,
 		iChangeSetNo) {
-
 		function isOtherChangeSetWithStrictHandling(aChangeSet, i) {
 			return iChangeSetNo !== i && aChangeSet.some(isUsingStrictHandling);
 		}
 
 		function isUsingStrictHandling(oRequest) {
-			return oRequest.headers["Prefer"] === "handling=strict";
+			return oRequest.headers.Prefer === "handling=strict";
 		}
 
 		// do not look past aRequests.iChangeSet because these cannot be change sets
@@ -532,6 +533,13 @@ sap.ui.define([
 		 */
 		function addToChangeSet(oChange) {
 			if (!mergePatch(oChange)) {
+				if (oChange.method === "DELETE" && oChange.headers["If-Match"]
+						&& oChange.headers["If-Match"]["@odata.etag"]
+						&& aChangeSet.find(function (oCandidate) {
+							return oCandidate.headers["If-Match"] === oChange.headers["If-Match"];
+						})) {
+					oChange.headers["If-Match"] = {"@odata.etag" : "*"};
+				}
 				aChangeSet.push(oChange);
 			}
 		}
@@ -551,6 +559,8 @@ sap.ui.define([
 						&& oCandidate.headers["If-Match"] === oChange.headers["If-Match"]) {
 					_Helper.merge(oCandidate.body, oChange.body);
 					oChange.$resolve(oCandidate.$promise);
+					oCandidate.$mergeRequests(oChange.$mergeRequests());
+
 					return true;
 				}
 			});
@@ -649,7 +659,7 @@ sap.ui.define([
 		// We do not pass a resource path, but within V4 this doesn't matter
 		this.doConvertSystemQueryOptions(undefined, vExpandOptions,
 			function (sOptionName, vOptionValue) {
-				aExpandOptions.push(sOptionName + '=' + vOptionValue);
+				aExpandOptions.push(sOptionName + "=" + vOptionValue);
 			},
 			undefined, bSortExpandSelect);
 		return aExpandOptions.length ? sExpandPath + "(" + aExpandOptions.join(";") + ")"
@@ -668,7 +678,8 @@ sap.ui.define([
 	 *   Whether all system query options are dropped (useful for non-GET requests)
 	 * @param {boolean} [bSortExpandSelect]
 	 *   Whether the paths in $expand and $select shall be sorted in the query string
-	 * @returns {object} The converted query options or undefined if there are no query options
+	 * @returns {object|undefined} The converted query options or <code>undefined</code> if there
+	 *   are no query options
 	 *
 	 * @private
 	 */
@@ -783,7 +794,7 @@ sap.ui.define([
 		Object.keys(mQueryOptions).forEach(function (sKey) {
 			var vValue = mQueryOptions[sKey];
 
-			if (bDropSystemQueryOptions && sKey[0] === '$') {
+			if (bDropSystemQueryOptions && sKey[0] === "$") {
 				return;
 			}
 
@@ -795,7 +806,9 @@ sap.ui.define([
 					break;
 				case "$select":
 					if (Array.isArray(vValue)) {
-						vValue = bSortExpandSelect ? vValue.sort().join(",") : vValue.join(",");
+						vValue = bSortExpandSelect
+							? vValue.slice().sort().join(",") // Note: Array#sort is "in place"
+							: vValue.join(",");
 					}
 					break;
 				default:
@@ -806,21 +819,65 @@ sap.ui.define([
 	};
 
 	/**
+	 * Fetches the type for the given path and puts it into mTypeForMetaPath. Recursively fetches
+	 * the key properties' parent types if they are complex.
+	 *
+	 * @param {object} mTypeForMetaPath
+	 *   A map from resource path and entity path to the type
+	 * @param {string} sMetaPath
+	 *   The meta path of the resource + navigation or key path (which may lead to an entity or
+	 *   complex type)
+	 * @returns {SyncPromise<object>}
+	 *   A promise resolving with the type
+	 */
+	 _Requestor.prototype.fetchType = function (mTypeForMetaPath, sMetaPath) {
+		var that = this;
+
+		if (sMetaPath in mTypeForMetaPath) {
+			return SyncPromise.resolve(mTypeForMetaPath[sMetaPath]);
+		}
+
+		return this.fetchTypeForPath(sMetaPath).then(function (oType) {
+			var oMessageAnnotation,
+				aPromises = [];
+
+			if (oType) {
+				oMessageAnnotation = that.getModelInterface()
+					.fetchMetadata(sMetaPath + "/" + sMessagesAnnotation).getResult();
+				if (oMessageAnnotation) {
+					oType = Object.create(oType);
+					oType[sMessagesAnnotation] = oMessageAnnotation;
+				}
+
+				mTypeForMetaPath[sMetaPath] = oType;
+
+				(oType.$Key || []).forEach(function (vKey) {
+					if (typeof vKey === "object") {
+						// key has an alias
+						vKey = vKey[Object.keys(vKey)[0]];
+						aPromises.push(that.fetchType(mTypeForMetaPath,
+							sMetaPath + "/" + vKey.slice(0, vKey.lastIndexOf("/"))));
+					}
+				});
+				return SyncPromise.all(aPromises).then(function () {
+					return oType;
+				});
+			}
+		});
+	};
+
+	/**
 	 * Fetches the type of the given meta path from the metadata.
 	 *
 	 * @param {string} sMetaPath
 	 *   The meta path, e.g. "/SalesOrderList/SO_2_BP"
-	 * @param {boolean} [bAsName]
-	 *   If <code>true</code>, the name of the type is delivered instead of the type itself. This
-	 *   must be used when asking for a property type to avoid that the function logs an error
-	 *   because there are no objects for primitive types like "Edm.Stream".
 	 * @returns {sap.ui.base.SyncPromise}
-	 *   A promise that is resolved with the type at the given path or its name.
+	 *   A promise that is resolved with the type at the given path.
 	 *
 	 * @private
 	 */
-	_Requestor.prototype.fetchTypeForPath = function (sMetaPath, bAsName) {
-		return this.oModelInterface.fetchMetadata(sMetaPath + (bAsName ? "/$Type" : "/"));
+	_Requestor.prototype.fetchTypeForPath = function (sMetaPath) {
+		return this.oModelInterface.fetchMetadata(sMetaPath + "/");
 	};
 
 	/**
@@ -883,9 +940,7 @@ sap.ui.define([
 			aChangeSet.iSerialNumber = 0;
 			aRequests = this.mBatchQueue[sGroupId] = [aChangeSet];
 			aRequests.iChangeSet = 0; // the index of the current change set in this queue
-			if (this.oModelInterface.onCreateGroup) {
-				this.oModelInterface.onCreateGroup(sGroupId);
-			}
+			this.oModelInterface.onCreateGroup(sGroupId);
 		}
 		return aRequests;
 	};
@@ -934,7 +989,7 @@ sap.ui.define([
 				}
 			}
 			sPath += "(" + aArguments.join(",") + ")";
-		} else { // Action
+		} else { // Action (or NavigationProperty, then mName2Parameter is empty!)
 			for (sName in mParameters) {
 				if (!(sName in mName2Parameter)) {
 					delete mParameters[sName]; // remove invalid parameter
@@ -968,6 +1023,50 @@ sap.ui.define([
 	 */
 	_Requestor.prototype.getServiceUrl = function () {
 		return this.sServiceUrl;
+	};
+
+	/**
+	 * Returns an unlocked copy of the given group lock if the corresponding group ID has submit
+	 * mode "Auto" (or "Direct"); else returns a new group lock for "$auto" with the same owner.
+	 *
+	 * @param {sap.ui.model.odata.v4.lib._GroupLock} oGroupLock - The original
+	 * @returns {sap.ui.model.odata.v4.lib._GroupLock}
+	 *   An unlocked copy w/ submit mode "Auto", see above
+	 *
+	 * @public
+	 */
+	_Requestor.prototype.getUnlockedAutoCopy = function (oGroupLock) {
+		if (this.getGroupSubmitMode(oGroupLock.getGroupId()) !== "API") {
+			return oGroupLock.getUnlockedCopy();
+		}
+
+		return this.lockGroup("$auto", oGroupLock.getOwner());
+	};
+
+	/**
+	 * Tells whether there are only PATCH requests with the "Prefer" header set to "return=minimal"
+	 * (results from using $$patchWithoutSideEffects=true) enqueued in the batch queue with the
+	 * given group ID.
+	 *
+	 * @param {string} sGroupId
+	 *   The group ID
+	 * @returns {boolean}
+	 *   Returns <code>true</code> if only PATCHes are enqueued in the batch queue with the given
+	 *   group ID
+	 *
+	 * @private
+	 */
+	_Requestor.prototype.hasOnlyPatchesWithoutSideEffects = function (sGroupId) {
+		return this.getGroupSubmitMode(sGroupId) === "Auto"
+			&& !!this.mBatchQueue[sGroupId]
+			&& this.mBatchQueue[sGroupId].every(function (vChangeSetOrRequest) {
+				// PATCH requests must be in a change set which is modeled as an array
+				return Array.isArray(vChangeSetOrRequest)
+					&& vChangeSetOrRequest.every(function (oRequest) {
+					return oRequest.method === "PATCH"
+						&& oRequest.headers.Prefer === "return=minimal";
+				});
+			});
 	};
 
 	/**
@@ -1019,18 +1118,22 @@ sap.ui.define([
 
 		return filter(this.mRunningChangeRequests).length > 0
 			|| this.aLockedGroupLocks.some(function (oGroupLock) {
-				return (sGroupId === undefined || oGroupLock.getGroupId() === sGroupId)
+				var sGroupId0 = oGroupLock.getGroupId();
+
+				return (sGroupId === undefined || sGroupId0 === sGroupId)
 					// aLockedGroupLocks may contain modifying group locks that have been unlocked
 					// already; cleanup of aLockedGroupLocks is done only in #submitBatch. An
 					// unlocked group lock is not relevant because either the corresponding change
 					// has been reset or it has been added to the batch queue.
-					&& oGroupLock.isModifying() && oGroupLock.isLocked();
+					&& oGroupLock.isModifying() && oGroupLock.isLocked()
+					&& !sGroupId0.startsWith("$inactive.");
 			})
 			|| filter(this.mBatchQueue).some(function (sGroupId0) {
-				return that.mBatchQueue[sGroupId0].some(function (vRequests) {
-					return Array.isArray(vRequests) && vRequests.some(function (oRequest) {
-						return oRequest.$cancel;
-					});
+				return !sGroupId0.startsWith("$inactive.")
+					&& that.mBatchQueue[sGroupId0].some(function (vRequests) {
+						return Array.isArray(vRequests) && vRequests.some(function (oRequest) {
+							return oRequest.$cancel;
+						});
 				});
 			});
 	};
@@ -1048,6 +1151,17 @@ sap.ui.define([
 	};
 
 	/**
+	 * Returns <code>true</code> if a non-optimistic batch request was already sent.
+	 *
+	 * @returns {boolean} Whether a non-optimistic batch was already sent
+	 *
+	 * @public
+	 */
+	_Requestor.prototype.isBatchSent = function () {
+		return this.bBatchSent;
+	};
+
+	/**
 	 * Tells whether change sets are optional. For OData V4, this is true.
 	 *
 	 * @returns {boolean} <code>true</code>
@@ -1059,10 +1173,10 @@ sap.ui.define([
 	};
 
 	/**
-	 * Merges all GET requests that are marked as mergeable, have the same resource path and the
-	 * same query options besides $expand and $select. One request with the merged $expand and
+	 * Merges all GET requests that are marked as mergeable and have the same owner, resource path,
+	 * and query options besides $expand and $select. One request with the merged $expand and
 	 * $select is left in the queue and all merged requests get the response of this one remaining
-	 * request.
+	 * request. For $mergeRequests, see parameter fnMergeRequests of {@link #request}.
 	 *
 	 * @param {object[]} aRequests The batch queue
 	 * @returns {object[]} The adjusted batch queue
@@ -1073,9 +1187,13 @@ sap.ui.define([
 
 		function merge(oRequest) {
 			return oRequest.$queryOptions && aResultingRequests.some(function (oCandidate) {
-				if (oCandidate.$queryOptions && oRequest.url === oCandidate.url) {
+				if (oCandidate.$queryOptions && oRequest.url === oCandidate.url
+						&& oRequest.$owner === oCandidate.$owner) {
 					_Helper.aggregateExpandSelect(oCandidate.$queryOptions, oRequest.$queryOptions);
 					oRequest.$resolve(oCandidate.$promise);
+					if (oCandidate.$mergeRequests && oRequest.$mergeRequests) {
+						oCandidate.$mergeRequests(oRequest.$mergeRequests());
+					}
 
 					return true;
 				}
@@ -1219,6 +1337,7 @@ sap.ui.define([
 			return Promise.resolve();
 		}
 
+		this.bBatchSent = true;
 		aRequests = this.mergeGetRequests(aRequests);
 		this.batchRequestSent(sGroupId, aRequests, bHasChanges);
 		return this.sendBatch(aRequests, sGroupId)
@@ -1289,6 +1408,86 @@ sap.ui.define([
 	};
 
 	/**
+	 * This function has two tasks:
+	 * <ul>
+	 *   <li> We are in the 1st app start, no optimistic batch payload stored so far. If optimistic
+	 *     batch handling is enabled via
+	 *     {@link sap.ui.model.odata.v4.ODataModel#setOptimisticBatchEnabler}, this function stores
+	 *     the current batch requests in cache.
+	 *   <li> If an optimistic batch was already sent, it returns its result promise.
+	 * </ul>
+	 *
+	 * @param {object[]} aRequests The requests of the current batch
+	 * @param {string} sGroupId The group ID
+	 * @returns {Promise|undefined}
+	 *   The optimistic batch result or <code>undefined</code> if the batch should be sent
+	 *   normally. <code>undefined</code> can have the following reasons:
+	 *   <ul>
+	 *     <li> We are in the 1st app start, no optimistic batch payload stored so far, or
+	 *     <li> the optimistic batch was sent, but its payload did not match to the current one, or
+	 *     <li> we are not in the first #sendBatch call within the _Requestors lifecycle, or
+	 *     <li> #sendBatch was called before first batch payload could be read via CacheManager or
+	 *     <li> we are in the first #sendBatch but the batch is modifying, means contains others
+	 *       than GET requests.
+	 *   </ul>
+	 *
+	 * @private
+	 */
+	_Requestor.prototype.processOptimisticBatch = function (aRequests, sGroupId) {
+		var bIsModifyingBatch,
+			sKey,
+			oOptimisticBatch = this.oOptimisticBatch,
+			fnOptimisticBatchEnabler,
+			that = this;
+
+		if (!oOptimisticBatch) {
+			return;
+		}
+
+		sKey = oOptimisticBatch.key;
+		this.oOptimisticBatch = null;
+		if (oOptimisticBatch.result) { // n+1 app start, consume optimistic batch result
+			if (_Requestor.matchesOptimisticBatch(aRequests, sGroupId,
+					oOptimisticBatch.firstBatch.requests, oOptimisticBatch.firstBatch.groupId)) {
+				Log.info("optimistic batch: success, response consumed", sKey, sClassName);
+				return oOptimisticBatch.result;
+			}
+			CacheManager.del(sCachePrefix + sKey).catch(this.oModelInterface.getReporter());
+			Log.warning("optimistic batch: mismatch, response skipped", sKey, sClassName);
+		}
+
+		fnOptimisticBatchEnabler = this.oModelInterface.getOptimisticBatchEnabler();
+		if (fnOptimisticBatchEnabler) { // 1st app start, or optimistic batch payload did not match
+			bIsModifyingBatch = aRequests.some(function (oRequest) {
+					return Array.isArray(oRequest) || oRequest.method !== "GET";
+				});
+			if (bIsModifyingBatch) {
+				Log.warning("optimistic batch: modifying batch not supported", sKey, sClassName);
+				return;
+			}
+
+			Promise.resolve(fnOptimisticBatchEnabler(sKey)).then(function (bEnabled) {
+				if (bEnabled) {
+					return CacheManager.set(sCachePrefix + sKey, {
+						groupId : sGroupId,
+						requests : aRequests.map(function (oRequest) {
+							return {
+								headers : getHeadersWithoutCSRFToken(oRequest.headers),
+								method : "GET",
+								url : oRequest.url
+							};
+						})
+					}).then(function () {
+						Log.info("optimistic batch: enabled, batch payload saved", sKey,
+							sClassName);
+					});
+				}
+				Log.info("optimistic batch: disabled", sKey, sClassName);
+			}).catch(that.oModelInterface.getReporter());
+		}
+	};
+
+	/**
 	 * Calls the security token handlers returned by
 	 * {@link sap.ui.core.Configuration#getSecurityTokenHandlers} one by one with the requestor's
 	 * service URL. The first handler not returning <code>undefined</code> but a
@@ -1301,7 +1500,7 @@ sap.ui.define([
 
 		this.oSecurityTokenPromise = null;
 
-		sap.ui.getCore().getConfiguration().getSecurityTokenHandlers().some(function (fnHandler) {
+		Configuration.getSecurityTokenHandlers().some(function (fnHandler) {
 			var oSecurityTokenPromise = fnHandler(that.sServiceUrl);
 
 			if (oSecurityTokenPromise !== undefined) {
@@ -1435,21 +1634,22 @@ sap.ui.define([
 	};
 
 	/**
-	 * Removes the pending PATCH request for the given promise from its group. Only requests for
-	 * which the <code>$cancel</code> callback is defined are removed.
+	 * Removes the pending PATCH or DELETE request for the given promise from its group. Only
+	 * requests for which the <code>$cancel</code> callback is defined are removed.
 	 *
 	 * @param {Promise} oPromise
-	 *   A promise that has been returned for a PATCH request. That request will be rejected with
-	 *   an error with property <code>canceled = true</code>.
+	 *   A promise that has been returned for a PATCH or DELETE request. That request will be
+	 *   rejected with an error with property <code>canceled = true</code>.
 	 * @throws {Error}
 	 *   If the request is not in the queue, assuming that it has been submitted already
 	 *
 	 * @private
 	 */
-	_Requestor.prototype.removePatch = function (oPromise) {
+	_Requestor.prototype.removeChangeRequest = function (oPromise) {
 		var bCanceled = this.cancelChangesByFilter(function (oChangeRequest) {
 				return oChangeRequest.$promise === oPromise;
 			});
+
 		if (!bCanceled) {
 			throw new Error("Cannot reset the changes, the batch request is running");
 		}
@@ -1545,6 +1745,12 @@ sap.ui.define([
 	 *   Query options if it is allowed to merge this request with another request having the same
 	 *   sResourcePath (only allowed for GET requests); the resulting resource path is the path from
 	 *   sResourcePath plus the merged query options; may only contain $expand and $select
+	 * @param {any} [vOwner]
+	 *   An additional precondition for the merging of GET requests: the owner must be identical.
+	 * @param {function(string[]):string[]} [fnMergeRequests]
+	 *   Function which is called during merging of GET or PATCH requests. If a merged request has a
+	 *   function given, this function will be called and its return value is
+	 *   given to the one remaining request's function as a parameter.
 	 * @returns {Promise}
 	 *   A promise on the outcome of the HTTP request; it will be rejected with an error having the
 	 *   property <code>canceled = true</code> instead of sending a request if
@@ -1555,7 +1761,8 @@ sap.ui.define([
 	 * @public
 	 */
 	_Requestor.prototype.request = function (sMethod, sResourcePath, oGroupLock, mHeaders, oPayload,
-			fnSubmit, fnCancel, sMetaPath, sOriginalResourcePath, bAtFront, mQueryOptions) {
+			fnSubmit, fnCancel, sMetaPath, sOriginalResourcePath, bAtFront, mQueryOptions, vOwner,
+			fnMergeRequests) {
 		var iChangeSetNo,
 			oError,
 			sGroupId = oGroupLock && oGroupLock.getGroupId() || "$direct",
@@ -1599,7 +1806,9 @@ sap.ui.define([
 						that.mFinalHeaders),
 					body : oPayload,
 					$cancel : fnCancel,
+					$mergeRequests : fnMergeRequests,
 					$metaPath : sMetaPath,
+					$owner : vOwner,
 					$queryOptions : mQueryOptions,
 					$reject : fnReject,
 					$resolve : fnResolve,
@@ -1658,14 +1867,41 @@ sap.ui.define([
 					: "Group ID (API): " + sGroupId
 			);
 
-		return this.sendRequest("POST", "$batch" + this.sQueryParams,
-			Object.assign(oBatchRequest.headers, mBatchHeaders), oBatchRequest.body
-		).then(function (oResponse) {
-			if (oResponse.messages !== null) {
-				throw new Error("Unexpected 'sap-messages' response header for batch request");
+		return this.processOptimisticBatch(aRequests, sGroupId)
+			|| this.sendRequest("POST", "$batch" + this.sQueryParams,
+				Object.assign(oBatchRequest.headers, mBatchHeaders), oBatchRequest.body
+			).then(function (oResponse) {
+				if (oResponse.messages !== null) {
+					throw new Error("Unexpected 'sap-messages' response header for batch request");
+				}
+				return _Batch.deserializeBatchResponse(oResponse.contentType, oResponse.body);
+			});
+	};
+
+	/**
+	 * Checks whether a first batch from an earlier app start was recorded and sends it immediately
+	 * out as optimistic batch in order to have its response at the earliest point in time.
+	 */
+	_Requestor.prototype.sendOptimisticBatch = function () {
+		var sKey = window.location.href,
+			that = this;
+
+		CacheManager.get(sCachePrefix + sKey).then(function (oFirstBatch) {
+			var oOptimisticBatch = {key : sKey};
+
+			if (oFirstBatch) {
+				if (that.isBatchSent()) {
+					Log.error("optimistic batch: #sendBatch called before optimistic batch "
+						+ "payload could be read", undefined, sClassName);
+					return;
+				}
+				oOptimisticBatch.firstBatch = oFirstBatch;
+				oOptimisticBatch.result
+					= that.sendBatch(oFirstBatch.requests, oFirstBatch.groupId);
+				Log.info("optimistic batch: sent ", sKey, sClassName);
 			}
-			return _Batch.deserializeBatchResponse(oResponse.contentType, oResponse.body);
-		});
+			that.oOptimisticBatch = oOptimisticBatch; // this has to be done after #sendBatch call
+		}).catch(this.oModelInterface.getReporter());
 	};
 
 	/**
@@ -1697,7 +1933,6 @@ sap.ui.define([
 			that = this;
 
 		return new Promise(function (fnResolve, fnReject) {
-
 			function send(bIsFreshToken) {
 				var sOldCsrfToken = that.mHeaders["X-CSRF-Token"];
 
@@ -1831,7 +2066,10 @@ sap.ui.define([
 
 	/**
 	 * Waits until all group locks for the given group ID have been unlocked and submits the
-	 * requests associated with this group ID in one batch request.
+	 * requests associated with this group ID in one batch request. If only PATCH requests are
+	 * enqueued (see {@link #hasOnlyPatchesWithoutSideEffects}), this will delay the execution to
+	 * wait for potential side effect requests triggered by
+	 * {@link sap.ui.core.Control#event:validateFieldGroup}.
 	 *
 	 * @param {string} sGroupId
 	 *   The group ID
@@ -1855,7 +2093,19 @@ sap.ui.define([
 		if (bBlocked) {
 			Log.info("submitBatch('" + sGroupId + "') is waiting for locks", null, sClassName);
 		}
+
 		return oPromise.then(function () {
+			if (that.hasOnlyPatchesWithoutSideEffects(sGroupId)) {
+				bBlocked = true;
+				Log.info("submitBatch('" + sGroupId
+					+ "') is waiting for potential side effect requests", null, sClassName);
+				return new Promise(function (fnResolve) {
+					setTimeout(function () {
+						fnResolve();
+					}, 0);
+				});
+			}
+		}).then(function () {
 			if (bBlocked) {
 				Log.info("submitBatch('" + sGroupId + "') continues", null, sClassName);
 			}
@@ -1864,6 +2114,23 @@ sap.ui.define([
 			});
 			return that.processBatch(sGroupId);
 		});
+	};
+
+	/**
+	 * Waits until a batch response has been received for the given group ID.
+	 *
+	 * @param {string} sGroupId
+	 *   The group ID
+	 * @returns {sap.ui.base.SyncPromise}
+	 *   A promise that resolves without a defined result when a batch response has been received
+	 *   for the given group ID, no matter if the batch succeeded or failed
+	 *
+	 * @public
+	 * @see #batchResponseReceived
+	 */
+	_Requestor.prototype.waitForBatchResponseReceived = function (sGroupId) {
+		// Note: this currently works only in case there is at least one change request already
+		return this.mBatchQueue[sGroupId][0][0].$promise;
 	};
 
 	/**
@@ -1890,6 +2157,32 @@ sap.ui.define([
 	};
 
 	/**
+	 * Checks whether the actual payload and group ID of a batch request matches to the optimistic
+	 * batch payload and group ID.
+	 *
+	 * @param {object[]} aActualRequests The requests of the actual batch
+	 * @param {string} sActualGroupId The group ID of the actual batch
+	 * @param {object[]} aOptimisticRequests The requests of the optimistic batch
+	 * @param {string} sOptimisticGroupId The group ID of the optimistic batch
+	 * @returns {boolean}
+	 *   Whether the actual batch requests and group ID matches the optimistic one
+	 */
+	_Requestor.matchesOptimisticBatch = function (aActualRequests, sActualGroupId,
+		aOptimisticRequests, sOptimisticGroupId) {
+		// no deepEqual because actual requests have additional properties which are irrelevant
+		return sActualGroupId === sOptimisticGroupId
+			&& aActualRequests.length === aOptimisticRequests.length
+			&& aActualRequests.every(function (oActual, i) {
+				// the payload is ignored because only GET requests are expected
+				return oActual.url === aOptimisticRequests[i].url
+					&& _Helper.deepEqual(
+						getHeadersWithoutCSRFToken(oActual.headers),
+						aOptimisticRequests[i].headers
+					);
+			});
+	};
+
+	/**
 	 * Creates a new <code>_Requestor</code> instance for the given service URL and default
 	 * headers.
 	 *
@@ -1900,20 +2193,40 @@ sap.ui.define([
 	 *   An interface allowing to call back to the owning model
 	 * @param {function} oModelInterface.fetchEntityContainer
 	 *   A promise which is resolved with the $metadata "JSON" object as soon as the entity
-	 *   container is fully available, or rejected with an error.
+	 *   container is fully available, or rejected with an error
 	 * @param {function} oModelInterface.fetchMetadata
 	 *   A function that returns a SyncPromise which resolves with the metadata instance for a
 	 *   given meta path
+	 * @param {function} oModelInterface.fireMessageChange
+	 *   A function that fires the 'messageChange' event for the given messages
+	 * @param {function} oModelInterface.fireDataReceived
+	 *   A function that fires the 'dataReceived' event at the model with an optional parameter
+	 *   <code>oError</code>
+	 * @param {function} oModelInterface.fireDataRequested
+	 *   A function that fires the 'dataRequested' event at the model
+	 * @param {function} oModelInterface.fireSessionTimeout
+	 *   A function that fires the 'sessionTimeout' event (when the server has created a session for
+	 *   the model and this session ran into a timeout due to inactivity)
 	 * @param {function} oModelInterface.getGroupProperty
 	 *   A function called with parameters <code>sGroupId</code> and <code>sPropertyName</code>
 	 *   returning the property value in question. Only 'submit' is supported for <code>
-	 *   sPropertyName</code>. Supported property values are: 'API', 'Auto' and 'Direct'.
-	 * @param {function (string)} [oModelInterface.onCreateGroup]
+	 *   sPropertyName</code>. Supported property values are: 'API', 'Auto' and 'Direct'
+	 * @param {function} oModelInterface.getMessagesByPath
+	 *   A function returning model messages for which the target matches the given resolved binding
+	 *   path
+	 * @param {function} oModelInterface.getOptimisticBatchEnabler
+	 *   A function that returns a callback function which controls the optimistic batch handling,
+	 *   see also {@link sap.ui.model.odata.v4.ODataModel#setOptimisticBatchEnabler}
+	 * @param {function} oModelInterface.getReporter
+	 *   A catch handler function expecting an <code>Error</code> instance. This function will call
+	 *   {@link sap.ui.model.odata.v4.ODataModel#reportError} if the error has not been reported
+	 *   yet
+	 * @param {function} oModelInterface.onCreateGroup
 	 *   A callback function that is called with the group name as parameter when the first
 	 *   request is added to a group
 	 * @param {function} oModelInterface.reportStateMessages
 	 *   A function to report OData state messages
-	 * @param {function (object[])} oModelInterface.reportTransitionMessages
+	 * @param {function} oModelInterface.reportTransitionMessages
 	 *   A function to report OData transition messages
 	 * @param {object} [mHeaders={}]
 	 *   Map of default headers; may be overridden with request-specific headers; certain
@@ -1937,10 +2250,9 @@ sap.ui.define([
 	 * @returns {object}
 	 *   A new <code>_Requestor</code> instance
 	 */
-	_Requestor.create = function (sServiceUrl, oModelInterface, mHeaders, mQueryParams, sODataVersion) {
-		var oRequestor = new _Requestor(sServiceUrl, mHeaders, mQueryParams,
-			oModelInterface
-		);
+	_Requestor.create = function (sServiceUrl, oModelInterface, mHeaders, mQueryParams,
+			sODataVersion) {
+		var oRequestor = new _Requestor(sServiceUrl, mHeaders, mQueryParams, oModelInterface);
 
 		if (sODataVersion === "2.0") {
 			asV2Requestor(oRequestor);

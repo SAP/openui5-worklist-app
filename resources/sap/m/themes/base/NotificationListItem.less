@@ -27,13 +27,16 @@
 		display: flex;
 	}
 
+	.sapMNLIImage {
+		margin-right: 0.75rem;
+	}
+
 	.sapMNLIContent {
 		display: flex;
 		flex-direction: column;
-		width: 100%;
 		min-width: 0; // chrome flex overflow issue
 		flex: 1;
-		padding: 0 1rem 0 0.75rem;
+		padding-right: 1rem;
 
 		.sapMNLITitle {
 			display: flex;
@@ -58,10 +61,6 @@
 				margin-top: 0;
 			}
 		}
-	}
-
-	&.sapMNLINoAvatar .sapMNLIContent {
-		padding-left: 0;
 	}
 
 	.sapMNLIFooter {
@@ -102,6 +101,11 @@
 			}
 		}
 	}
+
+	&.sapMNLINoAvatar .sapMNLIImage,
+	&.sapMNLIB-LayoutS .sapMNLIImage {
+		display: none;
+	}
 }
 
 .sapMNLGroup .sapMNLI {
@@ -114,16 +118,6 @@
 	-webkit-box-orient: vertical;
 	overflow: hidden;
 	max-height: 40px; // font-size * line-height (value 1.4) * 2 (number of rows)
-}
-
-.sapMNLIActions {
-	.sapMIBar {
-		border: none;
-
-		.sapMBarChild {
-			margin: 0 !important;
-		}
-	}
 }
 
 .sapMNLIShowMore .sapMLnk {
@@ -139,6 +133,8 @@
 	align-items: normal;
 }
 
-.sap-phone .sapMNLI {
-	padding: 1rem 0.5rem 1rem 0.75rem;
+.sapUiSizeCompact {
+	.sapMNLI {
+		padding: 1rem 0.5rem 1rem 0.75rem;
+	}
 }

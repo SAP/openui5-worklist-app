@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -95,17 +95,16 @@ sap.ui.define([
 	 *
 	 * <h3>Additional Information</h3>
 	 *
-	 * Check out the <a href="/#docs/api/symbols/sap.m.LightBox.html" >API Reference</a>.
+	 * Check out the {@link sap.m.LightBoxItem API Reference}.
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @alias sap.m.LightBox
 	 * @see {@link fiori:https://experience.sap.com/fiori-design-web/lightbox/ Light Box}
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var LightBox = Control.extend("sap.m.LightBox", /** @lends sap.m.LightBox.prototype */ {
 		metadata: {
@@ -149,7 +148,9 @@ sap.ui.define([
 			defaultAggregation: "imageContent",
 			events: {},
 			designtime: "sap/m/designtime/LightBox.designtime"
-		}
+		},
+
+		renderer: LightBoxRenderer
 	});
 
 	//================================================================================
@@ -301,7 +302,6 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @returns {this} Pointer to the control instance for chaining.
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	LightBox.prototype.open = function () {
 		/** @type {sap.m.LightBoxItem} */
@@ -336,7 +336,6 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @returns {this} Pointer to the control instance for chaining.
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	LightBox.prototype.close = function () {
 		if (this._iResizeListenerId) {
@@ -619,10 +618,10 @@ sap.ui.define([
 	 * Calculates the size for an image inside the LightBox.
 	 *
 	 * @private
-	 * @param {int} imageWidth The natural width of the loaded images in px.
-	 * @param {int} imageHeight The natural height of the loaded images in px.
-	 * @param {int} footerHeight The footer height in px.
-	 * @returns {Object} An object holding the calculated dimensions of the image
+	 * @param {int} iImageWidth The natural width of the loaded images in px.
+	 * @param {int} iImageHeight The natural height of the loaded images in px.
+	 * @param {int} iFooterHeight The footer height in px.
+	 * @returns {{width: int, height: int}} An object holding the calculated dimensions of the image
 	 */
 	LightBox.prototype._getDimensions = function (iImageWidth, iImageHeight, iFooterHeight) {
 		// minimum size of the lightbox

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*
@@ -46,7 +46,7 @@ sap.ui.define(["sap/ui/thirdparty/jquery", "sap/ui/events/PseudoEvents"
 		/**
 		 * Returns an array of names (as strings) identifying {@link module:sap/ui/events/PseudoEvents} that are fulfilled by this very Event instance.
 		 *
-		 * @returns {String[]} Array of names identifying {@link module:sap/ui/events/PseudoEvents} that are fulfilled by this very Event instance.
+		 * @returns {string[]} Array of names identifying {@link module:sap/ui/events/PseudoEvents} that are fulfilled by this very Event instance.
 		 * @public
 		 */
 		jQuery.Event.prototype.getPseudoTypes = function() {
@@ -197,7 +197,7 @@ sap.ui.define(["sap/ui/thirdparty/jquery", "sap/ui/events/PseudoEvents"
 		 * PRIVATE EXTENSION
 		 *
 		 * @param {string} [sKey="handledByControl"]
-		 * @returns {any} the marked value or undefined
+		 * @returns {any|undefined} the marked value or undefined
 		 */
 		jQuery.Event.prototype.getMark = function(sKey) {
 			sKey = sKey || "handledByControl";

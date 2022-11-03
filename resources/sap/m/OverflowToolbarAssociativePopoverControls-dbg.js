@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -119,17 +119,12 @@ sap.ui.define(['sap/ui/base/Object', './OverflowToolbarButton', './OverflowToolb
 			"sap.m.Button": {
 				canOverflow: true,
 				listenForEvents: ["press"],
-				noInvalidationProps: ["enabled"]
+				noInvalidationProps: ["enabled", "accesskey"]
 			},
 			"sap.m.MenuButton": {
 				canOverflow: true,
 				listenForEvents: ["defaultAction", "_menuItemSelected"],
 				noInvalidationProps: ["enabled", "text", "icon"]
-			},
-			"sap.m.OverflowToolbarButton": {
-				canOverflow: true,
-				listenForEvents: ["press"],
-				noInvalidationProps: ["enabled", "type"]
 			},
 			"sap.m.OverflowToolbarToggleButton": {
 				canOverflow: true,
@@ -139,7 +134,7 @@ sap.ui.define(['sap/ui/base/Object', './OverflowToolbarButton', './OverflowToolb
 			"sap.m.CheckBox": {
 				canOverflow: true,
 				listenForEvents: ["select"],
-				noInvalidationProps: ["enabled", "selected"]
+				noInvalidationProps: ["enabled", "selected", "accesskey"]
 			},
 			"sap.m.ToggleButton": {
 				canOverflow: true,
@@ -159,7 +154,7 @@ sap.ui.define(['sap/ui/base/Object', './OverflowToolbarButton', './OverflowToolb
 			"sap.m.Input": {
 				canOverflow: true,
 				listenForEvents: [],
-				noInvalidationProps: ["enabled", "value"]
+				noInvalidationProps: ["enabled", "value", "accesskey"]
 			},
 			"sap.m.DateTimeInput": {
 				canOverflow: true,
@@ -170,6 +165,11 @@ sap.ui.define(['sap/ui/base/Object', './OverflowToolbarButton', './OverflowToolb
 				canOverflow: true,
 				listenForEvents: ["change"],
 				noInvalidationProps: ["enabled", "value", "dateValue", "displayFormat", "valueFormat", "displayFormatType", "secondaryCalendarType", "minDate", "maxDate"]
+			},
+			"sap.m.DateRangeSelection": {
+				canOverflow: true,
+				listenForEvents: ["change"],
+				noInvalidationProps: ["enabled", "value", "dateValue", "secondDateValue", "displayFormat", "valueFormat", "displayFormatType", "secondaryCalendarType", "minDate", "maxDate", "delimiter"]
 			},
 			"sap.m.DateTimePicker": {
 				canOverflow: true,

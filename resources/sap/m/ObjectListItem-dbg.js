@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -14,7 +14,8 @@ sap.ui.define([
 	'sap/ui/core/library',
 	'./ObjectMarker',
 	'./Text',
-	'./ObjectListItemRenderer'
+	'./ObjectListItemRenderer',
+	'sap/ui/core/Configuration'
 ],
 function(
 	ManagedObjectObserver,
@@ -25,7 +26,8 @@ function(
 	coreLibrary,
 	ObjectMarker,
 	Text,
-	ObjectListItemRenderer
+	ObjectListItemRenderer,
+	Configuration
 	) {
 		"use strict";
 
@@ -59,156 +61,159 @@ function(
 		 *
 		 * <b>Note:</b> The control must only be used in the context of a list.
 		 * @extends sap.m.ListItemBase
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
 		 * @since 1.12
 		 * @alias sap.m.ObjectListItem
 		 * @see {@link fiori:https://experience.sap.com/fiori-design-web/object-list-item/ Object List Item}
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
-		var ObjectListItem = ListItemBase.extend("sap.m.ObjectListItem", /** @lends sap.m.ObjectListItem.prototype */ { metadata : {
+		var ObjectListItem = ListItemBase.extend("sap.m.ObjectListItem", /** @lends sap.m.ObjectListItem.prototype */ {
+			metadata : {
 
-			library : "sap.m",
-			properties : {
+				library : "sap.m",
+				properties : {
 
-				/**
-				 * Defines the ObjectListItem title.
-				 */
-				title : {type : "string", group : "Misc", defaultValue : null},
+					/**
+					 * Defines the ObjectListItem title.
+					 */
+					title : {type : "string", group : "Misc", defaultValue : null},
 
-				/**
-				 * Defines the ObjectListItem number.
-				 */
-				number : {type : "string", group : "Misc", defaultValue : null},
+					/**
+					 * Defines the ObjectListItem number.
+					 */
+					number : {type : "string", group : "Misc", defaultValue : null},
 
-				/**
-				 * Defines the number units qualifier of the ObjectListItem.
-				 */
-				numberUnit : {type : "string", group : "Misc", defaultValue : null},
+					/**
+					 * Defines the number units qualifier of the ObjectListItem.
+					 */
+					numberUnit : {type : "string", group : "Misc", defaultValue : null},
 
-				/**
-				 * Defines the introductory text for the ObjectListItem.
-				 */
-				intro : {type : "string", group : "Misc", defaultValue : null},
+					/**
+					 * Defines the introductory text for the ObjectListItem.
+					 */
+					intro : {type : "string", group : "Misc", defaultValue : null},
 
-				/**
-				 * ObjectListItem icon displayed to the left of the title.
-				 */
-				icon : {type : "sap.ui.core.URI", group : "Misc", defaultValue : null},
+					/**
+					 * ObjectListItem icon displayed to the left of the title.
+					 */
+					icon : {type : "sap.ui.core.URI", group : "Misc", defaultValue : null},
 
-				/**
-				 * Icon displayed when the ObjectListItem is active.
-				 */
-				activeIcon : {type : "sap.ui.core.URI", group : "Misc", defaultValue : null},
+					/**
+					 * Icon displayed when the ObjectListItem is active.
+					 */
+					activeIcon : {type : "sap.ui.core.URI", group : "Misc", defaultValue : null},
 
-				/**
-				 * By default, this is set to true but then one or more requests are sent trying to get the density perfect version of image (in case this version of image doesn't exist on the server).
-				 *
-				 * If bandwidth is key for the application, set this value to false.
-				 */
-				iconDensityAware : {type : "boolean", group : "Misc", defaultValue : true},
+					/**
+					 * By default, this is set to true but then one or more requests are sent trying to get the density perfect version of image (in case this version of image doesn't exist on the server).
+					 *
+					 * If bandwidth is key for the application, set this value to false.
+					 */
+					iconDensityAware : {type : "boolean", group : "Misc", defaultValue : true},
 
-				/**
-				 * Sets the favorite state for the ObjectListItem.<br><br>
-				 *
-				 * @since 1.16.0
-				 * @deprecated as of version 1.42.0, replaced by <code>markers</code> aggregation.
-				 * Add {@link sap.m.ObjectMarker} with type <code>sap.m.ObjectMarkerType.Favorite</code>.
-				 * You should use either this property or the <code>markers</code> aggregation, using both may lead to unpredicted behavior.
-				 */
-				markFavorite : {type : "boolean", group : "Misc", defaultValue : null, deprecated: true},
+					/**
+					 * Sets the favorite state for the ObjectListItem.<br><br>
+					 *
+					 * @since 1.16.0
+					 * @deprecated as of version 1.42.0, replaced by <code>markers</code> aggregation.
+					 * Add {@link sap.m.ObjectMarker} with type <code>sap.m.ObjectMarkerType.Favorite</code>.
+					 * You should use either this property or the <code>markers</code> aggregation, using both may lead to unpredicted behavior.
+					 */
+					markFavorite : {type : "boolean", group : "Misc", defaultValue : null, deprecated: true},
 
-				/**
-				 * Sets the flagged state for the ObjectListItem.<br><br>
-				 *
-				 * @since 1.16.0
-				 * @deprecated as of version 1.42.0, replaced by <code>markers</code> aggregation.
-				 * Add {@link sap.m.ObjectMarker} with type <code>sap.m.ObjectMarkerType.Flagged</code>.
-				 * You should use either this property or the <code>markers</code> aggregation, using both may lead to unpredicted behavior.
-				 */
-				markFlagged : {type : "boolean", group : "Misc", defaultValue : null, deprecated: true},
+					/**
+					 * Sets the flagged state for the ObjectListItem.<br><br>
+					 *
+					 * @since 1.16.0
+					 * @deprecated as of version 1.42.0, replaced by <code>markers</code> aggregation.
+					 * Add {@link sap.m.ObjectMarker} with type <code>sap.m.ObjectMarkerType.Flagged</code>.
+					 * You should use either this property or the <code>markers</code> aggregation, using both may lead to unpredicted behavior.
+					 */
+					markFlagged : {type : "boolean", group : "Misc", defaultValue : null, deprecated: true},
 
-				/**
-				 * If set to true, the ObjectListItem can be marked with icons such as favorite and flag.<br><br>
-				 *
-				 * @since 1.16.0
-				 * @deprecated as of version 1.42.0, replaced by <code>markers</code> aggregation.
-				 * This property is valid only if you are using the already deprecated properties - <code>markFlagged</code>, <code>markFavorite</code>, and <code>markLocked</code>.
-				 * If you are using the <code>markers</code> aggregation, the visibility of the markers depends on what is set in the aggregation itself.
-				 */
-				showMarkers : {type : "boolean", group : "Misc", defaultValue : null, deprecated: true},
+					/**
+					 * If set to true, the ObjectListItem can be marked with icons such as favorite and flag.<br><br>
+					 *
+					 * @since 1.16.0
+					 * @deprecated as of version 1.42.0, replaced by <code>markers</code> aggregation.
+					 * This property is valid only if you are using the already deprecated properties - <code>markFlagged</code>, <code>markFavorite</code>, and <code>markLocked</code>.
+					 * If you are using the <code>markers</code> aggregation, the visibility of the markers depends on what is set in the aggregation itself.
+					 */
+					showMarkers : {type : "boolean", group : "Misc", defaultValue : null, deprecated: true},
 
-				/**
-				 * Defines the ObjectListItem number and numberUnit value state.
-				 * @since 1.16.0
-				 */
-				numberState : {type : "sap.ui.core.ValueState", group : "Misc", defaultValue : ValueState.None},
+					/**
+					 * Defines the ObjectListItem number and numberUnit value state.
+					 * @since 1.16.0
+					 */
+					numberState : {type : "sap.ui.core.ValueState", group : "Misc", defaultValue : ValueState.None},
 
-				/**
-				 * Determines the text direction of the item title.
-				 * Available options for the title direction are LTR (left-to-right) and RTL (right-to-left).
-				 * By default the item title inherits the text direction from its parent.
-				 */
-				titleTextDirection: {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
+					/**
+					 * Determines the text direction of the item title.
+					 * Available options for the title direction are LTR (left-to-right) and RTL (right-to-left).
+					 * By default the item title inherits the text direction from its parent.
+					 */
+					titleTextDirection: {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
 
-				/**
-				 * Determines the text direction of the item intro.
-				 * Available options for the intro direction are LTR (left-to-right) and RTL (right-to-left).
-				 * By default the item intro inherits the text direction from its parent.
-				 */
-				introTextDirection: {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
+					/**
+					 * Determines the text direction of the item intro.
+					 * Available options for the intro direction are LTR (left-to-right) and RTL (right-to-left).
+					 * By default the item intro inherits the text direction from its parent.
+					 */
+					introTextDirection: {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
 
-				/**
-				 * Determines the text direction of the item number.
-				 * Available options for the number direction are LTR (left-to-right) and RTL (right-to-left).
-				 * By default the item number inherits the text direction from its parent.
-				 */
-				numberTextDirection: {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
+					/**
+					 * Determines the text direction of the item number.
+					 * Available options for the number direction are LTR (left-to-right) and RTL (right-to-left).
+					 * By default the item number inherits the text direction from its parent.
+					 */
+					numberTextDirection: {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
 
-				/**
-				 * Sets the locked state of the ObjectListItem.<br><br>
-				 *
-				 * @since 1.28
-				 * @deprecated as of version 1.42.0, replaced by <code>markers</code> aggregation.
-				 * Add {@link sap.m.ObjectMarker} with type <code>sap.m.ObjectMarkerType.Locked</code>.
-				 * You should use either this property or the <code>markers</code> aggregation, using both may lead to unpredicted behavior.<br><br>
-				 */
-				markLocked : {type : "boolean", group : "Misc", defaultValue : false, deprecated: true}
+					/**
+					 * Sets the locked state of the ObjectListItem.<br><br>
+					 *
+					 * @since 1.28
+					 * @deprecated as of version 1.42.0, replaced by <code>markers</code> aggregation.
+					 * Add {@link sap.m.ObjectMarker} with type <code>sap.m.ObjectMarkerType.Locked</code>.
+					 * You should use either this property or the <code>markers</code> aggregation, using both may lead to unpredicted behavior.<br><br>
+					 */
+					markLocked : {type : "boolean", group : "Misc", defaultValue : false, deprecated: true}
+				},
+				defaultAggregation : "attributes",
+				aggregations : {
+
+					/**
+					 * List of attributes displayed below the title to the left of the status fields.
+					 */
+					attributes : {type : "sap.m.ObjectAttribute", multiple : true, singularName : "attribute"},
+
+					/**
+					 * First status text field displayed on the right side of the attributes.
+					 */
+					firstStatus : {type : "sap.m.ObjectStatus", multiple : false},
+
+					/**
+					 * Second status text field displayed on the right side of the attributes.
+					 */
+					secondStatus : {type : "sap.m.ObjectStatus", multiple : false},
+
+					/**
+					 * List of markers (icon and/or text) that can be displayed for the <code>ObjectListItems</code>, such as favorite and flagged.<br><br>
+					 * <b>Note:</b> You should use either this aggregation or the already deprecated properties - <code>markFlagged</code>, <code>markFavorite</code>, and <code>markLocked</code>. Using both can lead to unexpected results.
+					 */
+					markers : {type : "sap.m.ObjectMarker", multiple : true, singularName : "marker"},
+
+					/**
+					 * Internal <code>sap.m.ObjectNumber</code> control which is created based on the <code>number</code>, <code>numberUnit</code>, <code>numberState</code>, <code>numberTextDirection</code>
+					 */
+					_objectNumber: {type: "sap.m.ObjectNumber", multiple: false, visibility: "hidden"}
+				},
+				designtime: "sap/m/designtime/ObjectListItem.designtime",
+				dnd: { draggable: true, droppable: true }
 			},
-			defaultAggregation : "attributes",
-			aggregations : {
 
-				/**
-				 * List of attributes displayed below the title to the left of the status fields.
-				 */
-				attributes : {type : "sap.m.ObjectAttribute", multiple : true, singularName : "attribute"},
-
-				/**
-				 * First status text field displayed on the right side of the attributes.
-				 */
-				firstStatus : {type : "sap.m.ObjectStatus", multiple : false},
-
-				/**
-				 * Second status text field displayed on the right side of the attributes.
-				 */
-				secondStatus : {type : "sap.m.ObjectStatus", multiple : false},
-
-				/**
-				 * List of markers (icon and/or text) that can be displayed for the <code>ObjectListItems</code>, such as favorite and flagged.<br><br>
-				 * <b>Note:</b> You should use either this aggregation or the already deprecated properties - <code>markFlagged</code>, <code>markFavorite</code>, and <code>markLocked</code>. Using both can lead to unexpected results.
-				 */
-				markers : {type : "sap.m.ObjectMarker", multiple : true, singularName : "marker"},
-
-				/**
-				 * Internal <code>sap.m.ObjectNumber</code> control which is created based on the <code>number</code>, <code>numberUnit</code>, <code>numberState</code>, <code>numberTextDirection</code>
-				 */
-				_objectNumber: {type: "sap.m.ObjectNumber", multiple: false, visibility: "hidden"}
-			},
-			designtime: "sap/m/designtime/ObjectListItem.designtime",
-			dnd: { draggable: true, droppable: true }
-		}});
+			renderer: ObjectListItemRenderer
+		});
 
 		/**
 		 * Initializes the control.
@@ -240,7 +245,7 @@ function(
 
 		ObjectListItem.prototype.onAfterRendering = function() {
 			var oObjectNumber = this.getAggregation("_objectNumber"),
-				bPageRTL = sap.ui.getCore().getConfiguration().getRTL(),
+				bPageRTL = Configuration.getRTL(),
 				sTextAlign = bPageRTL ? TextAlign.Left : TextAlign.Right;
 
 			if (oObjectNumber && oObjectNumber.getNumber()) { // adjust alignment according the design specification
@@ -588,6 +593,12 @@ function(
 			}, this);
 
 			return ListItemBase.prototype.destroyAggregation.call(this, "markers");
+		};
+
+		/**
+		 * @override
+		 */
+		ObjectListItem.prototype.getContentAnnouncement = function() {
 		};
 
 		ObjectListItem.prototype._observerObjectItemChanges = function (oChanges) {

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -14,8 +14,8 @@ sap.ui.define([
 	'./library',
 	"./IconRenderer",
 	"sap/ui/events/KeyCodes",
-	"sap/ui/thirdparty/jquery",
-	"sap/base/Log"
+	"sap/base/Log",
+	"sap/base/util/each"
 ],
 	function(
 		assert,
@@ -26,8 +26,8 @@ sap.ui.define([
 		library,
 		IconRenderer,
 		KeyCodes,
-		jQuery,
-		Log
+		Log,
+		each
 	) {
 	"use strict";
 
@@ -65,17 +65,19 @@ sap.ui.define([
 	 * @class
 	 * Icon uses embedded font instead of pixel image. Comparing to image, Icon is easily scalable, color can be altered live and various effects can be added using css.
 	 *
-	 * A set of built in Icons is available and they can be fetched by calling sap.ui.core.IconPool.getIconURI and set this value to the src property on the Icon.
+	 * A set of built in Icons is available in the {@link demo:sap/m/demokit/iconExplorer/webapp/index.html Icon Explorer}.
+	 *
+	 * For further information, see {@link topic:21ea0ea94614480d9a910b2e93431291 Icon and Icon Pool}.
+	 *
 	 * @extends sap.ui.core.Control
 	 * @implements sap.ui.core.IFormContent
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @since 1.11.1
 	 * @alias sap.ui.core.Icon
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var Icon = Control.extend("sap.ui.core.Icon", /** @lends sap.ui.core.Icon.prototype */ {
 		metadata : {
@@ -86,7 +88,18 @@ sap.ui.define([
 			properties : {
 
 				/**
-				 * This property should be set by the return value of calling sap.ui.core.IconPool.getIconURI with an Icon name parameter and an optional collection parameter which is required when using application extended Icons. A list of standard FontIcon is available here.
+				 * This property can be set by following options:
+				 *
+				 * <b>Option 1:</b></br>
+				 * The value has to be matched by following pattern <code>sap-icon://collection-name/icon-name</code> where
+				 * <code>collection-name</code> and <code>icon-name</code> have to be replaced by the desired values.
+				 * In case the default UI5 icons are used the <code>collection-name</code> can be omited.</br>
+				 * <i>Example:</i> <code>sap-icon://accept</code>
+				 *
+				 * <b>Option 2:</b>
+				 * The value is determined by using {@link sap.ui.core.IconPool.getIconURI} with an Icon name parameter
+				 * and an optional collection parameter which is required when using application extended Icons.</br>
+				 * <i>Example:</i> <code>IconPool.getIconURI("accept")</code>
 				 */
 				src : {type : "sap.ui.core.URI", group : "Data", defaultValue : null},
 
@@ -377,7 +390,7 @@ sap.ui.define([
 			return;
 		}
 
-		jQuery.each(IconColor, function(sPropertyName, sPropertyValue) {
+		each(IconColor, function(sPropertyName, sPropertyValue) {
 			that.removeStyleClass(sCSSClassNamePrefix + sPropertyValue);
 		});
 
@@ -520,8 +533,7 @@ sap.ui.define([
 			});
 			this.setAggregation("_invisibleText", oInvisibleText, true);
 		} else {
-			// avoid triggering invalidation during rendering
-			oInvisibleText.setProperty("text", sText, true);
+			oInvisibleText.setText(sText);
 		}
 
 		return oInvisibleText;

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -19,13 +19,12 @@ sap.ui.define(['sap/ui/core/Element', 'sap/ui/core/library'],
 	 * @class
 	 * Represents a DOM attribute of a DOM element.
 	 * @extends sap.ui.core.Element
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @since 1.15
 	 * @deprecated since 1.56
 	 * @alias sap.ui.core.tmpl.DOMAttribute
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var DOMAttribute = Element.extend("sap.ui.core.tmpl.DOMAttribute", /** @lends sap.ui.core.tmpl.DOMAttribute.prototype */ { metadata : {
 

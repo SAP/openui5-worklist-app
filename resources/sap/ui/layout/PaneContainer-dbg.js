@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -24,7 +24,7 @@ sap.ui.define(['./library', 'sap/ui/core/Element', './AssociativeSplitter', 'sap
 	 * @extends sap.ui.core.Element
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
@@ -103,7 +103,7 @@ sap.ui.define(['./library', 'sap/ui/core/Element', './AssociativeSplitter', 'sap
 
 	PaneContainer.prototype._getPanesInInterval = function (iFrom) {
 		return this.getPanes().filter(function(oPane) {
-			return oPane instanceof sap.ui.layout.SplitPane && oPane._isInInterval(iFrom);
+			return oPane && oPane.isA("sap.ui.layout.SplitPane") && oPane._isInInterval(iFrom);
 		});
 	};
 

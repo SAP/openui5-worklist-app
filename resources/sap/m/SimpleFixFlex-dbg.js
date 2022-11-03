@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -10,7 +10,7 @@ sap.ui.define([
 	'sap/base/Log',
 	'./SimpleFixFlexRenderer'
 ],
-function (Control, ResizeHandler, Log /**, SimpleFixFlexRenderer */) {
+function(Control, ResizeHandler, Log, SimpleFixFlexRenderer) {
 	"use strict";
 	/**
 	 * Constructor for a new <code>sap.m.SimpleFixFlex</code>.
@@ -31,16 +31,14 @@ function (Control, ResizeHandler, Log /**, SimpleFixFlexRenderer */) {
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @private
 	 * @since 1.65
 	 * @alias sap.m.SimpleFixFlex
-	 * @ui5-metamodel This control will also be described in the UI5 (legacy) design time meta model.
 	 */
-	var SimpleFixFlex = Control.extend("sap.m.SimpleFixFlex", /** @lends sap.m.SimpleFixFlex */ {
-
+	var SimpleFixFlex = Control.extend("sap.m.SimpleFixFlex", /** @lends sap.m.SimpleFixFlex.prototype */ {
 		metadata: {
 			library: "sap.m",
 			aggregations: {
@@ -70,7 +68,9 @@ function (Control, ResizeHandler, Log /**, SimpleFixFlexRenderer */) {
 					defaultValue: true
 				}
 			}
-		}
+		},
+
+		renderer: SimpleFixFlexRenderer
 	});
 
 	/*************************************** Static members ******************************************/
@@ -120,10 +120,9 @@ function (Control, ResizeHandler, Log /**, SimpleFixFlexRenderer */) {
 			return null;
 		}
 
-			//using clientHeight as jQuery's innerHeight() method returns the height
-			//even if the fix content has style of "display: none;"
-			$simpleFixFlex.css("padding-top", oFixedDom.clientHeight);
-			$fixContent.addClass("sapUiSimpleFixFlexFixedWrap");
+		//using clientHeight as jQuery's innerHeight() method returns the height
+		//even if the fix content has style of "display: none;"
+		$simpleFixFlex.css("padding-top", oFixedDom.clientHeight);
 	};
 
 	SimpleFixFlex.prototype.exit = function() {

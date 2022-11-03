@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -14,7 +14,6 @@ sap.ui.define([
 	"sap/ui/layout/GridData",
 	"sap/ui/layout/VerticalLayout",
 	"sap/ui/layout/HorizontalLayout",
-	"sap/ui/core/Icon",
 	"sap/ui/core/theming/Parameters",
 	"sap/ui/core/InvisibleText",
 	"sap/ui/Device",
@@ -22,6 +21,7 @@ sap.ui.define([
 	"./ColorPickerRenderer",
 	"sap/base/Log",
 	"sap/ui/thirdparty/jquery",
+	"sap/ui/core/Configuration",
 	"sap/ui/Global"
 ], function(
 	Library,
@@ -32,14 +32,14 @@ sap.ui.define([
 	GridData,
 	VLayout,
 	HLayout,
-	Icon,
 	Parameters,
 	InvisibleText,
 	Device,
 	coreLibrary,
 	ColorPickerRenderer,
 	Log,
-	jQuery
+	jQuery,
+	Configuration
 ) {
 	"use strict";
 
@@ -65,13 +65,12 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.48.0
 	 * @alias sap.ui.unified.ColorPicker
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var ColorPicker = Control.extend("sap.ui.unified.ColorPicker", /** @lends sap.ui.unified.ColorPicker.prototype */ { metadata : {
 
@@ -339,13 +338,13 @@ sap.ui.define([
 				}
 			}
 		}
-	}});
+	}, renderer: ColorPickerRenderer});
 
 	// variable that will be used for browser specific prefix of the slider background gradient
 	// it is set in the init function and is used inside _updateAlphaBackground() function
 	var sBrowserPrefix = "",
 		// get the background image of the slider
-		sBgSrc = sap.ui.resource('sap.ui.unified', 'img/ColorPicker/Alphaslider_BG.png'),
+		sBgSrc = sap.ui.require.toUrl("sap/ui/unified/img/ColorPicker/Alphaslider_BG.png"),
 		// get resource bundle
 		oRb = sap.ui.getCore().getLibraryResourceBundle("sap.ui.unified"),
 		// Constants object
@@ -561,7 +560,7 @@ sap.ui.define([
 		this.RGB = {r: 0, g: 0, b: 0};
 
 		// check if we are in RTL mode
-		this.bRtl = sap.ui.getCore().getConfiguration().getRTL();
+		this.bRtl = Configuration.getRTL();
 
 		this.data("sap-ui-fastnavgroup", "true", true); // Define group for F6 handling
 
@@ -569,16 +568,22 @@ sap.ui.define([
 		this.bResponsive = Library.ColorPickerHelper.isResponsive();
 
 		// Color picker cursor size in px obtained from less parameter. Keep in mind width and height are the same.
-		var circleSize = this.bResponsive ? "_sap_ui_unified_ColorPicker_CircleSize" : "_sap_ui_commons_ColorPicker_CircleSize";
-		this._iCPCursorSize = parseInt(Parameters.get(circleSize));
+		var sCircleSizeCSSParameterName = this.bResponsive ? "_sap_ui_unified_ColorPicker_CircleSize" : "_sap_ui_unified_ColorPicker_commonsCircleSize";
+		this._iCPCursorSize = 0;
+		var sCircleSizeCSSParameter = Parameters.get({
+			name: sCircleSizeCSSParameterName,
+			callback: function (_mParams) {
+				this._iCPCursorSize = parseInt(_mParams);
+			}.bind(this)
+		});
+
+		if (sCircleSizeCSSParameter) {
+			this._iCPCursorSize = parseInt(sCircleSizeCSSParameter);
+		}
 
 		// Init _processChanges and _bHSLMode according to default control mode
 		this._processChanges = this._processHSVChanges;
 		this._bHSLMode = false;
-
-		if (this.getDisplayMode() === ColorPickerDisplayMode.Simplified) {
-			CONSTANTS.HideForDisplay.value = ".hideDisplay";
-		}
 
 		this.bPressed = false;
 	};
@@ -609,7 +614,7 @@ sap.ui.define([
 			}
 		},
 		init: function() {
-			this.bRtl = sap.ui.getCore().getConfiguration().getRTL();
+			this.bRtl = Configuration.getRTL();
 		},
 		exit: function() {
 			if (this._sResizeListener) {
@@ -749,23 +754,22 @@ sap.ui.define([
 				saturation: (1 - iY / iBoxHeight) * 100
 			};
 		},
-		renderer: function(oRm, oControl) {
-			// Control container div
-			oRm.write("<div");
-			oRm.addClass(CONSTANTS.CPBoxClass);
-			oRm.writeControlData(oControl);
-			oRm.writeClasses();
-			oRm.write(">");
+		renderer: {
+			apiVersion: 2,
+			render: function(oRm, oControl) {
+				// Control container div
+				oRm.openStart("div", oControl);
+				oRm.class(CONSTANTS.CPBoxClass);
+				oRm.openEnd();
 
-			// Handle
-			oRm.write("<div");
-			oRm.writeAttribute("id", oControl.getId() + "-cpCur");
-			oRm.addClass(CONSTANTS.CPCircleClass);
-			oRm.writeClasses();
-			oRm.write("></div>");
+				// Handle
+				oRm.openStart("div", oControl.getId() + "-cpCur");
+				oRm.class(CONSTANTS.CPCircleClass);
+				oRm.openEnd().close("div");
 
-			// Close control container div
-			oRm.write("</div>");
+				// Close control container div
+				oRm.close("div");
+			}
 		}
 	});
 
@@ -1040,6 +1044,9 @@ sap.ui.define([
 
 		// Create internal controls
 		this._createInteractionControls();
+		if (this.getDisplayMode() === ColorPickerDisplayMode.Large) {
+			this._toggleInputsEnabled(this.Color.formatHSL);
+		}
 
 		// Layout Data - that will be needed for visual state update
 		this.oCPBoxGD = new GridData({span: "L6 M6 S12"}); // Color picker box
@@ -1339,12 +1346,20 @@ sap.ui.define([
 	/**
 	 * Event handler for changes of RGB or HSL radio button field.
 	 */
-	ColorPicker.prototype._handleRGBorHSLValueChange = function() {
-		// store new value
-		var oUnifiedRBGroup = this.oRGBorHSLRBUnifiedGroup;
-		this.Color.formatHSL = oUnifiedRBGroup ? oUnifiedRBGroup.getSelectedIndex() === 1 : this.oRGBorHSLRBGroup.getSelectedIndex() === 1;
-
+	ColorPicker.prototype._handleRGBorHSLValueChange = function(oEvent) {
+		this.Color.formatHSL = oEvent.getParameter("selectedIndex") === 1;
+		this._toggleInputsEnabled(this.Color.formatHSL);
 		this._updateColorStringProperty(true, true);
+	};
+
+	ColorPicker.prototype._toggleInputsEnabled = function(bHSL) {
+		this.oRedField.setEnabled(!bHSL);
+		this.oGreenField.setEnabled(!bHSL);
+		this.oBlueField.setEnabled(!bHSL);
+		this.oHueField.setEnabled(!!bHSL);
+		this.oSatField.setEnabled(!!bHSL);
+		this.oLitField.setEnabled(!!bHSL);
+		this.oValField.setEnabled(!!bHSL);
 	};
 
 	/**
@@ -1749,7 +1764,7 @@ sap.ui.define([
 		}
 
 		// calculate x if we are in RTL mode
-		if (sap.ui.getCore().getConfiguration().getRTL()) {
+		if (Configuration.getRTL()) {
 			iX = this._iCPBoxSize - iX;
 		}
 		iY = Math.round((1 - this.oSatField.getValue() / 100.0) * this._iCPBoxSize);
@@ -2408,10 +2423,9 @@ sap.ui.define([
 
 	/**
 	 * Gets current RGB values.
-	 * @returns {object} Containing current RGB values
+	 * @returns {{r: int, g: int, b: int}} Containing current RGB values
 	 * @public
 	 * @since 1.48.0
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	ColorPicker.prototype.getRGB = function() {
 		return {r: this.Color.r, g: this.Color.g, b: this.Color.b};

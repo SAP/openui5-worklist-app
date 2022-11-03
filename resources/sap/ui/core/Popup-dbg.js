@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -9,51 +9,59 @@
 // Provides helper class sap.ui.core.Popup
 sap.ui.define([
 	'sap/ui/Device',
+	'sap/ui/base/Event',
 	'sap/ui/base/ManagedObject',
 	'sap/ui/base/Object',
 	'sap/ui/base/ObjectPool',
 	'./Control',
+	'./Element',
+	'./FocusHandler',
 	'./IntervalTrigger',
 	'./RenderManager',
-	'./Element',
 	'./ResizeHandler',
+	'./UIArea',
 	'./library',
 	"sap/base/assert",
 	"sap/base/Log",
 	"sap/base/util/Version",
 	"sap/base/util/uid",
 	"sap/base/util/extend",
+	"sap/base/util/each",
 	"sap/base/util/deepExtend",
-	"sap/ui/dom/containsOrEquals",
 	"sap/ui/thirdparty/jquery",
 	"sap/ui/events/F6Navigation",
 	"sap/ui/events/isMouseEventDelayed",
 	"sap/ui/base/EventProvider",
+	"sap/ui/core/Configuration",
 	"sap/ui/dom/jquery/control", // jQuery Plugin "control"
 	"sap/ui/dom/jquery/Focusable", // jQuery Plugin "firstFocusableDomRef"
 	"sap/ui/dom/jquery/rect" // jQuery Plugin "rect"
 ], function(
 	Device,
+	Event,
 	ManagedObject,
 	BaseObject,
 	ObjectPool,
 	Control,
+	Element,
+	FocusHandler,
 	IntervalTrigger,
 	RenderManager,
-	Element,
 	ResizeHandler,
+	UIArea,
 	library,
 	assert,
 	Log,
 	Version,
 	uid,
 	extend,
+	each,
 	deepExtend,
-	containsOrEquals,
 	jQuery,
 	F6Navigation,
 	isMouseEventDelayed,
-	EventProvider
+	EventProvider,
+	Configuration
 	//control
 	//Focusable
 	//rect
@@ -65,6 +73,9 @@ sap.ui.define([
 
 	// shortcut for sap.ui.core.OpenState
 	var OpenState = library.OpenState;
+
+	// shortcut for sap.ui.core.Collision
+	var Collision = library.Collision;
 
 	var oStaticUIArea;
 
@@ -105,9 +116,9 @@ sap.ui.define([
 
 		var oStaticAreaRef, oControl;
 		try {
-			oStaticAreaRef = sap.ui.getCore().getStaticAreaRef();
+			oStaticAreaRef = UIArea.getStaticAreaRef();
 			// only a facade of the static UIArea is returned that contains only the public methods
-			oStaticUIArea = sap.ui.getCore().getUIArea(oStaticAreaRef);
+			oStaticUIArea = UIArea.registry.get(oStaticAreaRef.id);
 		} catch (e) {
 			Log.error(e);
 			throw new Error("Popup cannot be opened because static UIArea cannot be determined.");
@@ -151,9 +162,13 @@ sap.ui.define([
 	 * @private
 	 */
 	function clearSizeAndPosition($BlockRef) {
-		var aProperties = ["left", "top", "width", "height", "position"];
+		// left and top are set by jQuery.position
+		// width and height are set by function 'adaptSizeAndPosition'
+		// All of them need to be removed for being prepared to show a full screen blocklayer
+		var aProperties = ["left", "top", "width", "height"];
 
 		if ($BlockRef[0]) {
+			$BlockRef[0].classList.remove("sapUiBLyWithin");
 			aProperties.forEach(function(sProperty) {
 				$BlockRef[0].style.removeProperty(sProperty);
 			});
@@ -170,12 +185,13 @@ sap.ui.define([
 	function adaptSizeAndPosition($BlockRef, oWithin) {
 		var oClientRect = oWithin.getBoundingClientRect();
 
-		$BlockRef.css({
-			width: oClientRect.width,
-			height: oClientRect.height,
-			display: "block",
-			position: "absolute"
-		}).position({
+		$BlockRef
+			.css({
+				width: oClientRect.width,
+				height: oClientRect.height
+			})
+			.addClass("sapUiBLyWithin")
+			.position({
 			my: "left top",
 			at: "left top",
 			of: oWithin
@@ -258,6 +274,7 @@ sap.ui.define([
 			this._mEvents["sap.ui.core.Popup.onFocusEvent-" + this._popupUID] = this.onFocusEvent;
 			this._mEvents["sap.ui.core.Popup.increaseZIndex-" + this._popupUID] = this._increaseMyZIndex;
 			this._mEvents["sap.ui.core.Popup.contains-" + this._popupUID] = this._containsEventBusWrapper;
+			this._mEvents["sap.ui.core.Popup.extendFocusInfo-" + this._popupUID] = this._extendFocusInfoEventBusWrapper;
 
 			if (oContent) {
 				this.setContent(oContent);
@@ -300,7 +317,7 @@ sap.ui.define([
 					if (!this._contains(oEvent.target)) {
 						this.close();
 					}
-				};
+				}.bind(this);
 			}
 
 			this._F6NavigationHandler = function(oEvent) {
@@ -336,7 +353,7 @@ sap.ui.define([
 				}
 
 				F6Navigation.handleF6GroupNavigation(oEvent, oSettings);
-			};
+			}.bind(this);
 		},
 
 		metadata : {
@@ -758,7 +775,7 @@ sap.ui.define([
 	/**
 	 * Opens the popup's content at the position either specified here or beforehand via {@link #setPosition}.
 	 * Content must be capable of being positioned via "position:absolute;"
-	 * All parameters are optional (open() may be called without any parameters). iDuration may just be omitted, but if any of "at", "of", "offset", "collision" is given, also the preceding positioning parameters ("my", at",...) must be given.
+	 * All parameters are optional (open() may be called without any parameters). iDuration may just be omitted, but if any of "at", "of", "offset", "collision" is given, also the preceding positional parameters ("my", at",...) must be given.
 	 *
 	 * If the Popup's OpenState is different from "CLOSED" (i.e. if the Popup is already open, opening or closing), the call is ignored.
 	 *
@@ -767,9 +784,9 @@ sap.ui.define([
 	 * @param {sap.ui.core.Popup.Dock} [at=sap.ui.core.Popup.Dock.CenterCenter] the "of" element's reference point for docking to
 	 * @param {string | sap.ui.core.Element | Element | jQuery | jQuery.Event} [of=document] specifies the reference element to which the given content should dock to
 	 * @param {string} [offset='0 0'] the offset relative to the docking point, specified as a string with space-separated pixel values (e.g. "10 0" to move the popup 10 pixels to the right). If the docking of both "my" and "at" are both RTL-sensitive ("begin" or "end"), this offset is automatically mirrored in the RTL case as well.
-	 * @param {string} [collision='flip'] defines how the position of an element should be adjusted in case it overflows the within area in some direction.
+	 * @param {sap.ui.core.Collision} [collision='flip'] defines how the position of an element should be adjusted in case it overflows the within area in some direction.
 	 * @param {string | sap.ui.core.Element | Element | Window} [within=Window] defines the area the popup should be placed in. This affects the collision detection.
-	 * @param {boolean} [followOf=false] defines whether the popup should follow the dock reference when the reference changes its position.
+	 * @param {boolean | function | null} [followOf=false] defines whether the popup should follow the dock reference when the reference changes its position.
 	 * @public
 	 */
 	Popup.prototype.open = function(iDuration, my, at, of, offset, collision, within, followOf) {
@@ -811,7 +828,7 @@ sap.ui.define([
 		assert(at === undefined || typeof at === "string", "at must be a string or empty");
 		assert(!of || typeof of === "object" || typeof of === "function", "of must be empty or an object");
 		assert(!offset || typeof offset === "string", "offset must be empty or a string");
-		assert(!collision || typeof collision === "string", "collision must be empty or a string");
+		assert(!collision || Collision.isValid(collision), "collision must be empty or of type sap.ui.core.Collision");
 		assert(!within || within === window || typeof within === "string" || within instanceof Element || within instanceof HTMLElement, "within must be either empty, or the global window object, or a string, or a sap.ui.core.Element, or a DOM element");
 		assert(!followOf || typeof followOf === "boolean" || typeof followOf === "function" || followOf === Popup.CLOSE_ON_SCROLL, "followOf must be either empty or a boolean");
 
@@ -1103,7 +1120,7 @@ sap.ui.define([
 
 		this._activateFocusHandle();
 
-		this._$(false, true).on("keydown", jQuery.proxy(this._F6NavigationHandler, this));
+		this._$(false, true).on("keydown", this._F6NavigationHandler);
 	};
 
 	Popup.prototype._shouldGetFocusAfterOpen = function() {
@@ -1123,7 +1140,7 @@ sap.ui.define([
 			return false;
 		}
 
-		var bContains = containsOrEquals(oPopupDomRef, oDomRef);
+		var bContains = oPopupDomRef.contains(oDomRef);
 
 		var aChildPopups;
 
@@ -1135,7 +1152,7 @@ sap.ui.define([
 				// therefore we need to try with document.getElementById to check the DOM id case first
 				// only when it doesn't contain the given DOM, we publish an event to the event bus
 				var oContainDomRef = (sChildID ? window.document.getElementById(sChildID) : null);
-				var bContains = containsOrEquals(oContainDomRef, oDomRef);
+				var bContains = oContainDomRef && oContainDomRef.contains(oDomRef);
 				if (!bContains) {
 					var sEventId = "sap.ui.core.Popup.contains-" + sChildID;
 					var oData = {
@@ -1319,8 +1336,8 @@ sap.ui.define([
 			if (this._bContentAddedToStatic ) {
 				//Fix for RTE in PopUp
 				sap.ui.getCore().getEventBus().publish("sap.ui","__beforePopupClose", { domNode : this._$().get(0) });
-				var oStatic = sap.ui.getCore().getStaticAreaRef();
-				oStatic = sap.ui.getCore().getUIArea(oStatic);
+				var oStatic = UIArea.getStaticAreaRef();
+				oStatic = UIArea.registry.get(oStatic.id);
 				oStatic.removeContent(oStatic.indexOfContent(this.oContent), true);
 			} else if (this._bUIAreaPatched) { // if the getUIArea function is patched, delete it
 				delete this.oContent.getUIArea;
@@ -1600,7 +1617,7 @@ sap.ui.define([
 	 * @param {sap.ui.core.Popup.Dock | {left: sap.ui.core.CSSSize, top: sap.ui.core.CSSSize}} at specifies the point of the reference element to which the given Content should be aligned
 	 * @param {string | sap.ui.core.Element | Element | jQuery | jQuery.Event} [of=document] specifies the reference element to which the given content should be aligned as specified in the other parameters
 	 * @param {string} [offset='0 0'] the offset relative to the docking point, specified as a string with space-separated pixel values (e.g. "0 10" to move the popup 10 pixels to the right). If the docking of both "my" and "at" are both RTL-sensitive ("begin" or "end"), this offset is automatically mirrored in the RTL case as well.
-	 * @param {string} [collision] defines how the position of an element should be adjusted in case it overflows the within area in some direction. The valid values that refer to jQuery-UI's position parameters are "flip", "fit" and "none".
+	 * @param {sap.ui.core.Collision} [collision] defines how the position of an element should be adjusted in case it overflows the within area in some direction.
 	 * @param {string | sap.ui.core.Element | Element | Window} [within=Window] defines the area the popup should be placed in. This affects the collision detection.
 	 * @return {this} <code>this</code> to allow method chaining
 	 * @public
@@ -1610,7 +1627,7 @@ sap.ui.define([
 		assert(typeof at === "string" || (typeof at === "object" && (typeof at.left === "number") && (typeof at.top === "number")), "my must be a string or an object with 'left' and 'top' properties");
 		assert(!of || typeof of === "object" || typeof of === "function", "of must be empty or an object");
 		assert(!offset || typeof offset === "string", "offset must be empty or a string");
-		assert(!collision || typeof collision === "string", "collision must be empty or a string");
+		assert(!collision || Collision.isValid(collision), "collision must be empty or of type sap.ui.core.Collision");
 		assert(!within || within === window || typeof within === "string" || within instanceof Element || within instanceof HTMLElement, "within must be either empty, or the global window object, or a string, or a sap.ui.core.Element, or a DOM element");
 
 		this._oPosition = this._createPosition(my, at, of, offset, collision, within);
@@ -1744,7 +1761,7 @@ sap.ui.define([
 	 * @private
 	 */
 	Popup.prototype._applyPosition = function(oPosition) {
-		var bRtl = sap.ui.getCore().getConfiguration().getRTL();
+		var bRtl = Configuration.getRTL();
 		var $Ref = this._$();
 
 		if ($Ref.length) {
@@ -1794,7 +1811,7 @@ sap.ui.define([
 	/**
 	 * Calculates the rect information of the given parameter.
 	 *
-	 * @param {String| DomNode | jQuery |sap.ui.core.Element | Event | jQuery.Event} oOf the DOM Element, UI Element instance on which the calculation is done
+	 * @param {string| Element | jQuery |sap.ui.core.Element | Event | jQuery.Event} oOf the DOM Element, UI Element instance on which the calculation is done
 	 * @returns {object} the rect information which contains the top, left, width, height of the given object. If Event or jQuery.Event type parameter is given, null is returned because there's no way to calculate the rect info based on an event object.
 	 * @private
 	 */
@@ -1811,7 +1828,7 @@ sap.ui.define([
 	/**
 	 * Get the DOM reference of the given parameter. The "of" parameter can be different types. This methods returns the referred DOM reference based on the given parameter. If Event or jQuery.Event type parameter is given, null is returned.
 	 *
-	 * @param {String| DomNode | jQuery |sap.ui.core.Element | Event | jQuery.Event} oOf the DOM Element, UI Element instance on which the calculation is done
+	 * @param {string| Element | jQuery |sap.ui.core.Element | Event | jQuery.Event} oOf the DOM Element, UI Element instance on which the calculation is done
 	 * @returns {DomNode} the DOM reference calculated based on the given parameter. If Event, or jQuery Event type parameter is given, null is returned.
 	 * @private
 	 */
@@ -2026,7 +2043,7 @@ sap.ui.define([
 				if (this.touchEnabled && this._bAutoClose) {
 					if (!bModal) {
 						// register the autoclose handler when modal is set to false
-						jQuery(document).on("touchstart mousedown", jQuery.proxy(this._fAutoCloseHandler, this));
+						jQuery(document).on("touchstart mousedown", this._fAutoCloseHandler);
 					} else {
 						// deregister the autoclose handler when modal is set to true
 						jQuery(document).off("touchstart mousedown", this._fAutoCloseHandler);
@@ -2082,7 +2099,7 @@ sap.ui.define([
 			if (!this._bModal) {
 				if (bAutoClose) {
 					//register the autoclose hanlder when autoclose is set to true
-					jQuery(document).on("touchstart mousedown", jQuery.proxy(this._fAutoCloseHandler, this));
+					jQuery(document).on("touchstart mousedown", this._fAutoCloseHandler);
 				} else {
 					//deregister the autoclose handler when autoclose is set to false
 					jQuery(document).off("touchstart mousedown", this._fAutoCloseHandler);
@@ -2119,12 +2136,20 @@ sap.ui.define([
 
 		var createDelegate = function (oElement) {
 			return {
+				/**
+				 * @this {sap.ui.core.Popup}
+				 * @private
+				 */
 				onBeforeRendering: function() {
 					var oDomRef = oElement.getDomRef();
 					if (oDomRef && this.isOpen()) {
 						oDomRef.removeEventListener("blur", this.fnEventHandler, true);
 					}
 				},
+				/**
+				 * @this {sap.ui.core.Popup}
+				 * @private
+				 */
 				onAfterRendering: function() {
 					var oDomRef = oElement.getDomRef();
 					if (oDomRef && this.isOpen()) {
@@ -2382,7 +2407,7 @@ sap.ui.define([
 			var oElement;
 			this._aExtraContent.forEach(function(oAreaRef) {
 				if (oAreaRef.delegate) {
-					oElement = jQuery(document.getElementById(oAreaRef.id)).control(0);
+					oElement = Element.closestTo(document.getElementById(oAreaRef.id));
 					if (oElement) {
 						oElement.removeEventDelegate(oAreaRef.delegate);
 					}
@@ -2410,7 +2435,7 @@ sap.ui.define([
 	 */
 	Popup.prototype._addFocusEventListeners = function() {
 		if (!this.fnEventHandler) {
-			this.fnEventHandler = jQuery.proxy(this.onFocusEvent, this);
+			this.fnEventHandler = this.onFocusEvent.bind(this);
 		}
 		// make sure to notice all blur's in the popup
 		var $PopupRoot = this._$();
@@ -2472,7 +2497,7 @@ sap.ui.define([
 
 		//autoclose implementation for mobile or desktop browser in touch mode
 		if (this.touchEnabled && !this._bModal && this._bAutoClose) {
-			jQuery(document).on("touchstart mousedown", jQuery.proxy(this._fAutoCloseHandler, this));
+			jQuery(document).on("touchstart mousedown", this._fAutoCloseHandler);
 		}
 	};
 
@@ -2498,7 +2523,7 @@ sap.ui.define([
 	Popup.prototype._registerEventBusEvents = function() {
 		var that = this;
 
-		jQuery.each(that._mEvents, function(sEventId, fnListener) {
+		each(that._mEvents, function(sEventId, fnListener) {
 			sap.ui.getCore().getEventBus().subscribe("sap.ui", sEventId, fnListener, that);
 		});
 
@@ -2513,7 +2538,7 @@ sap.ui.define([
 	Popup.prototype._unregisterEventBusEvents = function() {
 		var that = this;
 
-		jQuery.each(that._mEvents, function(sEventId, fnListener) {
+		each(that._mEvents, function(sEventId, fnListener) {
 			sap.ui.getCore().getEventBus().unsubscribe("sap.ui", sEventId, fnListener, that);
 		});
 
@@ -2610,7 +2635,7 @@ sap.ui.define([
 				if ($ContentRef.length > 0) {
 					RenderManager.preserveContent($ContentRef[0], /* bPreserveRoot */ true, /* bPreserveNodesWithId */ false);
 				}
-				sap.ui.getCore().getRenderManager().render(this.oContent, sap.ui.getCore().getStaticAreaRef());
+				sap.ui.getCore().createRenderManager().render(this.oContent, sap.ui.getCore().getStaticAreaRef());
 				$ContentRef = this.oContent.$();
 			}
 		} else if (this.oContent instanceof Element) {
@@ -2723,6 +2748,46 @@ sap.ui.define([
 		}
 	}
 
+	Popup.prototype._extendFocusInfo = function(oEvent, oEventData) {
+		var bExtended = false,
+			sEventPrefix = "sap.ui.core.Popup.extendFocusInfo-",
+			oData;
+
+		if (oEvent instanceof Event) {
+			// the call is from event provider
+			oData = {
+				info: oEventData.info,
+				element: oEvent.getParameter("domRef")
+			};
+		} else {
+			// the call is from the event bus
+			oData = oEvent;
+		}
+
+		var oContent = this.getContent();
+		var oContentDom = (oContent instanceof Element) ? oContent.getDomRef() : oContent;
+
+		if (oContentDom && oContentDom.contains(oData.element)) {
+			oData.info.preventScroll = true;
+			bExtended = true;
+		} else {
+			var aChildPopups = this.getChildPopups();
+			bExtended = aChildPopups.some(function(sChildID) {
+				var sEventId = sEventPrefix + sChildID;
+				sap.ui.getCore().getEventBus().publish("sap.ui", sEventId, oData);
+
+				return oData.extended;
+			});
+		}
+
+		return bExtended;
+	};
+
+	// Wrapper of _contains method for the event bus
+	Popup.prototype._extendFocusInfoEventBusWrapper = function(sChannel, sEvent, oData) {
+		oData.contains = this._extendFocusInfo(oData);
+	};
+
 	/**
 	 * @private
 	 */
@@ -2759,6 +2824,11 @@ sap.ui.define([
 			"visibility": "visible"
 		}).show();
 
+		if (!this.isInPopup(this._oLastPosition.of)) {
+			this._bFocusExtenderAdded = true;
+			FocusHandler.addFocusInfoExtender(this._extendFocusInfo, this);
+		}
+
 		if (Popup.blStack.length === 1) {
 			_fireBlockLayerStateChange({
 				visible: true,
@@ -2778,10 +2848,14 @@ sap.ui.define([
 		disconnectBlockLayerAndWithin(oWithinDOMRef);
 
 		if ($BlockRef.length) {
+			if (this._bFocusExtenderAdded) {
+				this._bFocusExtenderAdded = false;
+				FocusHandler.removeFocusInfoExtender(this._extendFocusInfo, this);
+			}
+
 			// if there are more z-indices this means there are more dialogs stacked
 			// up. So redisplay the block layer (with new z-index) under the new
 			// current dialog which should be displayed.
-
 			if (Popup.blStack.length > 1) {
 				Popup.blStack = Popup.blStack.filter(function(oPopupInfo) {
 					return oPopupInfo.popup !== that;
@@ -2801,6 +2875,7 @@ sap.ui.define([
 				oBlockLayerDomRef.style.visibility = "hidden";
 				oBlockLayerDomRef.style.display = "none";
 
+
 				_fireBlockLayerStateChange({
 					visible: false,
 					zIndex: oLastPopupInfo.zIndex
@@ -2818,7 +2893,7 @@ sap.ui.define([
 	Popup.prototype._isFocusInsidePopup = function () {
 		var oDomRef = this._$(false).get(0);
 
-		if (oDomRef && containsOrEquals(oDomRef, document.activeElement)) {
+		if (oDomRef && oDomRef.contains(document.activeElement)) {
 			return true;
 		}
 
@@ -2836,7 +2911,7 @@ sap.ui.define([
 				oCurrentOfRect;
 
 			if (oCurrentOfRef) {
-				if ((oCurrentOfRef === window) || (oCurrentOfRef === window.document) || containsOrEquals(document.documentElement, oCurrentOfRef)) {
+				if ((oCurrentOfRef === window) || (oCurrentOfRef === window.document) || document.documentElement.contains(oCurrentOfRef)) {
 					// When the current Of reference is window or window.document or it's contained in the DOM tree,
 					// The client bounding rect can be calculated
 					oCurrentOfRect = jQuery(oCurrentOfRef).rect();
@@ -3027,7 +3102,7 @@ sap.ui.define([
 			this._addFocusEventListeners();
 		}
 
-		this._$(false, true).on("keydown", jQuery.proxy(this._F6NavigationHandler, this));
+		this._$(false, true).on("keydown", this._F6NavigationHandler);
 	};
 
 	/**

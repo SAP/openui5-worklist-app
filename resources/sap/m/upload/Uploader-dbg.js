@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -10,10 +10,9 @@ sap.ui.define([
 	"sap/ui/core/Element",
 	"sap/ui/core/util/File",
 	"sap/ui/Device",
-	"sap/ui/core/Item",
 	"sap/m/upload/UploadSetItem",
 	"sap/m/upload/UploaderHttpRequestMethod"
-], function (Log, MobileLibrary, Element, FileUtil, Device, HeaderField, UploadSetItem, UploaderHttpRequestMethod) {
+], function (Log, MobileLibrary, Element, FileUtil, Device, UploadSetItem, UploaderHttpRequestMethod) {
 	"use strict";
 
 	/**
@@ -28,7 +27,6 @@ sap.ui.define([
 	 * @public
 	 * @since 1.63
 	 * @alias sap.m.upload.Uploader
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var Uploader = Element.extend("sap.m.upload.Uploader", {
 		metadata: {
@@ -99,7 +97,21 @@ sap.ui.define([
 						/**
 						 * The item that was uploaded.
 						 */
-						item: {type: "sap.m.upload.UploadSetItem"}
+						item: {type: "sap.m.upload.UploadSetItem"},
+						/**
+						 * A JSON object containing the additional response parameters like response, responseXML, readyState, status and headers.
+						 * <i>Sample response object:</i>
+						 * <pre><code>
+						 * {
+						 *    response: "<!DOCTYPE html>\n<html>...</html>\n",
+						 *    responseXML: null,
+						 *    readyState: 2,
+						 *    status: 404,
+						 *    headers: "allow: GET, HEAD"
+						 * }
+						 * </code></pre>
+						 */
+						responseXHR: {type: "object"}
 					}
 				},
 				/**
@@ -213,9 +225,17 @@ sap.ui.define([
 		});
 
 		oXhr.onreadystatechange = function () {
-			var oHandler = that._mRequestHandlers[oItem.getId()];
+			var oHandler = that._mRequestHandlers[oItem.getId()],
+				oResponseXHRParams = {};
 			if (this.readyState === window.XMLHttpRequest.DONE && !oHandler.aborted) {
-				that.fireUploadCompleted({item: oItem});
+				oResponseXHRParams = {
+					"response": this.response,
+					"responseXML": this.responseXML,
+					"readyState": this.readyState,
+					"status": this.status,
+					"headers": this.getAllResponseHeaders()
+				};
+				that.fireUploadCompleted({item: oItem, responseXHR: oResponseXHRParams});
 			}
 		};
 

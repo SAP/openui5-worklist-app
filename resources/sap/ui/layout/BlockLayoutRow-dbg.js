@@ -1,13 +1,9 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-/**
-  * @typedef {Object} sap.ui.layout.BlockRowColorSets
-  * @typedef {Object} sap.ui.layout.BlockLayoutRow
-  */
 sap.ui.define([
     'sap/ui/core/Control',
     './library',
@@ -36,13 +32,12 @@ sap.ui.define([
 		 * @extends sap.ui.core.Control
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
 		 * @since 1.34
 		 * @alias sap.ui.layout.BlockLayoutRow
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		var BlockLayoutRow = Control.extend("sap.ui.layout.BlockLayoutRow", {
 			metadata: {
@@ -84,7 +79,9 @@ sap.ui.define([
 					accentCells: {type: "sap.ui.layout.BlockLayoutCell", multiple: true, singularName: "accentCell"}
 				},
 				designtime: "sap/ui/layout/designtime/BlockLayoutRow.designtime"
-			}
+			},
+
+			renderer: BlockLayoutRowRenderer
 		});
 
 		BlockLayoutRow.prototype.init = function () {

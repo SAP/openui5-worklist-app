@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -17,15 +17,13 @@ sap.ui.define(["./ListItemBaseRenderer", "sap/ui/core/Renderer"],
 	ActionListItemRenderer.apiVersion = 2;
 
 	/**
-	 * Renders the HTML for the given control, using the provided
+	 * Renders the List item attributes for the given control, using the provided
 	 * {@link sap.ui.core.RenderManager}.
 	 *
-	 * @param {sap.ui.core.RenderManager}
-	 *          oRenderManager the RenderManager that can be used for writing to the
-	 *          Render-Output-Buffer
-	 * @param {sap.ui.core.Control}
-	 *          oControl an object representation of the control that should be
-	 *          rendered
+	 * @param {sap.ui.core.RenderManager} rm
+	 *          RenderManager to be used for rendering
+	 * @param {sap.m.ActionListItem} oLI
+	 *          The item for which the attributes should be rendered
 	 */
 	ActionListItemRenderer.renderLIAttributes = function(rm, oLI) {
 		rm.class("sapMALI");

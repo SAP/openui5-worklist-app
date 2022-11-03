@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -11,8 +11,10 @@ sap.ui.define([
 	'./SearchField',
 	'./Table',
 	'./library',
+	"sap/ui/core/library",
 	'./SelectDialogBase',
 	'sap/ui/core/InvisibleText',
+	"sap/ui/core/InvisibleMessage",
 	'sap/ui/Device',
 	'sap/m/Toolbar',
 	'sap/m/Text',
@@ -26,8 +28,10 @@ sap.ui.define([
 	SearchField,
 	Table,
 	library,
+	CoreLibrary,
 	SelectDialogBase,
 	InvisibleText,
+	InvisibleMessage,
 	Device,
 	Toolbar,
 	Text,
@@ -46,6 +50,9 @@ sap.ui.define([
 
 	// shortcut for sap.m.TitleAlignment
 	var TitleAlignment = library.TitleAlignment;
+
+	// shortcut for sap.ui.core.InvisibleMessageMode
+	var InvisibleMessageMode = CoreLibrary.InvisibleMessageMode;
 
 	/**
 	 * Constructor for a new TableSelectDialog.
@@ -89,23 +96,22 @@ sap.ui.define([
 	 * <li>Since version 1.58, the columns headers and the info toolbar are sticky (remain fixed on top when scrolling). This feature is not supported in all browsers.
 	 * <li>The TableSelectDialog is usually displayed at the center of the screen. Its size and position can be changed by the user.
 	 * To enable this you need to set the <code>resizable</code> and <code>draggable</code> properties. Both properties are available only in desktop mode.</li>
-	 * For more information on browser support limitations, you can refer to the {@link sap.m.ListBase sap.m.ListBase} <code>sticky</code> property.
+	 * For more information on current restrictions, you can refer to the {@link sap.m.ListBase sap.m.ListBase} <code>sticky</code> property.
 	 * </ul>
 	 * <h3>Responsive Behavior</h3>
 	 * <ul>
 	 * <li>On smaller screens, the columns of the table wrap and build a list that shows all the information.</li>
 	 * </ul>
-	 * When using the <code>sap.m.TableSelectDialog</code> in SAP Quartz themes, the breakpoints and layout paddings could be determined by the dialog's width. To enable this concept and add responsive paddings to an element of the control, you have to add the following classes depending on your use case: <code>sapUiResponsivePadding--header</code>, <code>sapUiResponsivePadding--subHeader</code>, <code>sapUiResponsivePadding--content</code>, <code>sapUiResponsivePadding--footer</code>.
+	 * When using the <code>sap.m.TableSelectDialog</code> in SAP Quartz and Horizon themes, the breakpoints and layout paddings could be determined by the dialog's width. To enable this concept and add responsive paddings to an element of the control, you have to add the following classes depending on your use case: <code>sapUiResponsivePadding--header</code>, <code>sapUiResponsivePadding--subHeader</code>, <code>sapUiResponsivePadding--content</code>, <code>sapUiResponsivePadding--footer</code>.
 	 * @extends sap.m.SelectDialogBase
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.16
 	 * @alias sap.m.TableSelectDialog
 	 * @see {@link fiori:https://experience.sap.com/fiori-design-web/table-select-dialog/ Table Select Dialog}
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var TableSelectDialog = SelectDialogBase.extend("sap.m.TableSelectDialog", /** @lends sap.m.TableSelectDialog.prototype */ {
 		metadata : {
@@ -370,13 +376,6 @@ sap.ui.define([
 			updateFinished: this._updateFinished.bind(this)
 		});
 
-
-		this._oTable.getInfoToolbar().addEventDelegate({
-			onAfterRendering: function () {
-				that._oTable.getInfoToolbar().$().attr('aria-live', 'polite');
-			}
-		});
-
 		this._table = this._oTable; // for downward compatibility
 
 		// store a reference to the busyIndicator to display when data is currently loaded by a service
@@ -507,7 +506,7 @@ sap.ui.define([
 
 	/**
 	* Shows the busy state and is called after the renderer is finished.
-	* @overwrite
+	* @override
 	* @protected
 	* @returns {this} this pointer for chaining
 	*/
@@ -523,7 +522,7 @@ sap.ui.define([
 
 	/**
 	* Invalidates the dialog instead of this control, as there is no renderer.
-	* @overwrite
+	* @override
 	* @protected
 	* @returns {this} this pointer for chaining
 	*/
@@ -544,7 +543,6 @@ sap.ui.define([
 	 * @param {string} sSearchValue
 	 *         Value for the search. The table will be automatically trigger the search event if this parameter is set.
 	 * @returns {this} <code>this</code> to allow method chaining
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	TableSelectDialog.prototype.open = function (sSearchValue) {
 		if (!this.getParent() && !this._bAppendedToUIArea) {
@@ -649,9 +647,9 @@ sap.ui.define([
 
 	/**
 	 * Enables/Disables busy state.
-	 * @overwrite
+	 * @override
 	 * @public
-	 * @param {boolean} flag for enabling busy indicator
+	 * @param {boolean} bBusy flag for enabling busy indicator
 	 * @returns {this} this pointer for chaining
 	 */
 	TableSelectDialog.prototype.setBusy = function (bBusy) {
@@ -666,7 +664,7 @@ sap.ui.define([
 
 	/**
 	 * Gets current busy state.
-	 * @overwrite
+	 * @override
 	 * @public
 	 * @returns {boolean} value of currtent busy state.
 	 */
@@ -691,7 +689,7 @@ sap.ui.define([
 
 	/**
 	 * Enables/Disables multi selection mode.
-	 * @overwrite
+	 * @override
 	 * @public
 	 * @param {boolean} bMulti flag for multi selection mode
 	 * @returns {this} this pointer for chaining
@@ -715,7 +713,7 @@ sap.ui.define([
 
 	/**
 	 * Sets the title of the internal dialog
-	 * @overwrite
+	 * @override
 	 * @public
 	 * @param {string} sTitle the title text for the dialog
 	 * @returns {this} this pointer for chaining
@@ -750,7 +748,7 @@ sap.ui.define([
 
 	/**
 	 * Sets the no data text of the internal table
-	 * @overwrite
+	 * @override
 	 * @public
 	 * @param {string} sNoDataText the no data text for the table
 	 */
@@ -762,7 +760,7 @@ sap.ui.define([
 
 	/**
 	 * Retrieves the internal List's no data text property
-	 * @overwrite
+	 * @override
 	 * @public
 	 * @returns {string} the current no data text
 	 */
@@ -772,7 +770,7 @@ sap.ui.define([
 
 	/**
 	 * Retrieves content width of the select dialog {@link sap.m.Dialog}
-	 * @overwrite
+	 * @override
 	 * @public
 	 * @returns {sap.ui.core.CSSSize} sWidth the content width of the internal dialog
 	 */
@@ -784,7 +782,7 @@ sap.ui.define([
 	 * Sets content width of the select dialog {@link sap.m.Dialog}
 	 * @param {sap.ui.core.CSSSize} sWidth the new content width value for the dialog
 	 * @public
-	 * @overwrite
+	 * @override
 	 * @returns {this} this pointer for chaining
 	 */
 	TableSelectDialog.prototype.setContentWidth = function (sWidth) {
@@ -795,7 +793,7 @@ sap.ui.define([
 
 	/**
 	 * Retrieves content height of the select dialog {@link sap.m.Dialog}
-	 * @overwrite
+	 * @override
 	 * @public
 	 * @returns {sap.ui.core.CSSSize} sHeight the content height of the internal dialog
 	 */
@@ -807,7 +805,7 @@ sap.ui.define([
 	 * Sets content height of the select dialog {@link sap.m.Dialog}
 	 * @param {sap.ui.core.CSSSize} sHeight the new content height value for the dialog
 	 * @public
-	 * @overwrite
+	 * @override
 	 * @returns {this} this pointer for chaining
 	 */
 	TableSelectDialog.prototype.setContentHeight = function (sHeight) {
@@ -867,7 +865,7 @@ sap.ui.define([
 	 * Transfers method to the inner dialog: getDomRef
 	 * @public
 	 * @override
-	 * @return {Element} The Element's DOM Element sub DOM Element or null
+	 * @returns {Element|null} The Element's DOM Element, sub DOM Element or <code>null</code>
 	 */
 	TableSelectDialog.prototype.getDomRef = function () {
 		if (this._oDialog) {
@@ -903,10 +901,10 @@ sap.ui.define([
 
 	/**
 	 * Sets the model for the internal table and the current control, so that both controls can be used with data binding.
-	 * @overwrite
+	 * @override
 	 * @public
 	 * @param {sap.ui.model.Model} oModel The model that holds the data for the table
-	 * @param {string} [sName] The optional model name
+	 * @param {string} [sModelName] The optional model name
 	 * @returns {this} This pointer for chaining
 	 */
 	TableSelectDialog.prototype.setModel = function (oModel, sModelName) {
@@ -1034,7 +1032,7 @@ sap.ui.define([
 	TableSelectDialog.prototype._updateStarted = function (oEvent) {
 		this.fireUpdateStarted(oEvent.getParameters());
 
-		if (this.getModel() && this.getModel() instanceof sap.ui.model.odata.ODataModel) {
+		if (this.getModel() && this.getModel().isA("sap.ui.model.odata.ODataModel")) {
 			if (this._oDialog.isOpen() && this._iTableUpdateRequested) {
 				// only set busy mode when we have an OData model
 				this._setBusy(true);
@@ -1055,7 +1053,7 @@ sap.ui.define([
 
 		this._updateSelectionIndicator();
 		// only reset busy mode when we have an OData model
-		if (this.getModel() && this.getModel() instanceof sap.ui.model.odata.ODataModel) {
+		if (this.getModel() && this.getModel().isA("sap.ui.model.odata.ODataModel")) {
 			this._setBusy(false);
 			this._bInitBusy = false;
 		}
@@ -1183,6 +1181,10 @@ sap.ui.define([
 		// update the selection label
 		oInfoBar.setVisible(!!iSelectedContexts);
 		oInfoBar.getContent()[0].setText(this._oRb.getText("TABLESELECTDIALOG_SELECTEDITEMS", [iSelectedContexts]));
+
+		if (this._oDialog.isOpen()) {
+			InvisibleMessage.getInstance().announce(iSelectedContexts > 0 ? this._oRb.getText("TABLESELECTDIALOG_SELECTEDITEMS_SR", [iSelectedContexts]) : "", InvisibleMessageMode.Polite);
+		}
 	};
 
 	/**

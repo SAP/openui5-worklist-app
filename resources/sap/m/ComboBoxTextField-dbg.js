@@ -1,24 +1,18 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
 	'./InputBase',
 	'./library',
-	'sap/ui/core/InvisibleText',
-	'sap/ui/core/library',
-	'sap/ui/Device',
 	'sap/ui/core/LabelEnablement',
 	"./ComboBoxTextFieldRenderer"
 ],
 	function(
 		InputBase,
 		library,
-		InvisibleText,
-		coreLibrary,
-		Device,
 		LabelEnablement,
 		ComboBoxTextFieldRenderer
 	) {
@@ -35,13 +29,12 @@ sap.ui.define([
 		 * @extends sap.m.InputBase
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
 		 * @since 1.34
 		 * @alias sap.m.ComboBoxTextField
-		 * @ui5-metamodel This control will also be described in the UI5 (legacy) design time meta model.
 		 */
 		var ComboBoxTextField = InputBase.extend("sap.m.ComboBoxTextField", /** @lends sap.m.ComboBoxTextField.prototype */ {
 			metadata: {
@@ -67,7 +60,9 @@ sap.ui.define([
 						defaultValue: true
 					}
 				}
-			}
+			},
+
+			renderer: ComboBoxTextFieldRenderer
 		});
 
 		var oRb = sap.ui.getCore().getLibraryResourceBundle("sap.m");
@@ -75,7 +70,7 @@ sap.ui.define([
 		ComboBoxTextField.prototype.init = function () {
 			InputBase.prototype.init.apply(this, arguments);
 
-			this.addEndIcon({
+			this._oArrowIcon = this.addEndIcon({
 				id: this.getId() + "-arrow",
 				src: "sap-icon://slim-arrow-down",
 				noTabStop: true,
@@ -86,12 +81,24 @@ sap.ui.define([
 
 		/**
 		 * Returns the arrow icon
+		 *
+		 * @returns {sap.ui.core.Icon} Icon
+		 * @private
+		 * @ui5-restricted sap.m.ComboBoxBase,sap.m.ComboBox,sap.m.MultiComboBox
+		 */
+		ComboBoxTextField.prototype.getArrowIcon = function () {
+			return this._oArrowIcon;
+		};
+
+		/**
+		 * Returns the arrow icon
+		 *
+		 * Left for backward compatibility.
+		 *
 		 * @returns {sap.ui.core.Icon} Icon
 		 * @protected
 		 */
-		ComboBoxTextField.prototype.getIcon = function () {
-			return this.getAggregation("_endIcon")[0];
-		};
+		ComboBoxTextField.prototype.getIcon = ComboBoxTextField.prototype.getArrowIcon;
 
 		/**
 		 * Toggles the icon pressed style on or off.
@@ -107,7 +114,7 @@ sap.ui.define([
 			InputBase.prototype.onBeforeRendering.apply(this, arguments);
 
 			var aReferencingLabels = LabelEnablement.getReferencingLabels(this) || [],
-				oIcon = this.getIcon();
+				oIcon = this.getArrowIcon();
 
 			oIcon.setVisible(this.getShowButton());
 
@@ -125,7 +132,7 @@ sap.ui.define([
 		 */
 		ComboBoxTextField.prototype.getOpenArea = function() {
 			// returns the div wrapping the icon
-			var oDomRef = this.getIcon().getDomRef();
+			var oDomRef = this.getArrowIcon().getDomRef();
 
 			return oDomRef ? oDomRef.parentNode : oDomRef;
 		};
@@ -199,6 +206,8 @@ sap.ui.define([
 
 		ComboBoxTextField.prototype.exit = function() {
 			InputBase.prototype.exit.apply(this, arguments);
+
+			this._oArrowIcon = null;
 		};
 
 		return ComboBoxTextField;

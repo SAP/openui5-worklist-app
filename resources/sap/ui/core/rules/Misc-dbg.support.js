@@ -1,13 +1,18 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
  * Defines miscellaneous support rules.
  */
-sap.ui.define(["sap/ui/support/library", "./CoreHelper.support", "sap/ui/thirdparty/jquery", "sap/ui/dom/jquery/control"], // jQuery Plugin "control"
-	function(SupportLib, CoreHelper, jQuery) {
+sap.ui.define([
+	"sap/ui/core/Component",
+	"sap/ui/support/library",
+	"./CoreHelper.support",
+	"sap/ui/thirdparty/jquery",
+	"sap/ui/dom/jquery/control" // jQuery Plugin "control"
+], function(Component, SupportLib, CoreHelper, jQuery) {
 	"use strict";
 
 	// support rules can get loaded within a ui5 version which does not have module "sap/base/Log" yet
@@ -106,8 +111,58 @@ sap.ui.define(["sap/ui/support/library", "./CoreHelper.support", "sap/ui/thirdpa
 		}
 	};
 
+	/**
+	 * Checks if the corresponding Component or Library of a Component is already loaded in case the Component is embeddedBy a resource.
+	 */
+	var oMissingEmbeddedByLibrary = {
+		id: "embeddedByLibNotLoaded",
+		audiences: [Audiences.Application],
+		categories: [Categories.Performance],
+		enabled: true,
+		minversion: "1.97",
+		title: "Embedding Component or Library not loaded",
+		description: "Checks if the corresponding Component or Library of a Component is already loaded in case the Component is embedded by a resource.",
+		resolution: "Before using a Component embedded by a Library or another Component, it's necessary to load the embedding Library or Component in advance. " +
+			"The 'sap.app/embeddedBy' property must be relative path inside the deployment unit (library or component).",
+		resolutionurls: [],
+		check: function(oIssueManager) {
+			var oRegisteredComponents = {}, sComponentName;
+			var filterComponents = function (sComponentName) {
+				return function (oComponent) {
+					return oComponent.getManifestObject().getEntry("/sap.app/id") === sComponentName;
+				};
+			};
+			var createIssue = function (oComponentWithMissingEmbeddedBy) {
+				return function (oComponent) {
+					oIssueManager.addIssue({
+						severity: Severity.High,
+						details: oComponentWithMissingEmbeddedBy.message,
+						context: {
+							id: oComponent.getId()
+						}
+					});
+				};
+			};
+
+			Log.getLogEntries().forEach(function(oLogEntry) {
+				var oRegexGetComponentName = /^Component '([a-zA-Z0-9\.]*)'.*$/;
+				if (oLogEntry.component === "sap.ui.core.Component#embeddedBy") {
+					oRegisteredComponents[oRegexGetComponentName.exec(oLogEntry.message)[1]] = oLogEntry;
+				}
+			});
+
+			for (sComponentName in oRegisteredComponents) {
+				if (Object.hasOwnProperty.call(oRegisteredComponents, sComponentName)) {
+					var aComponents = Component.registry.filter(filterComponents(sComponentName));
+					aComponents.forEach(createIssue(oRegisteredComponents[sComponentName]));
+				}
+			}
+		}
+	};
+
 	return [
 		oEventBusLogs,
-		oErrorLogs
+		oErrorLogs,
+		oMissingEmbeddedByLibrary
 	];
 }, true);

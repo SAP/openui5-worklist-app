@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -100,6 +100,9 @@ sap.ui.define([
 								changeType: "moveSimpleFormGroup"
 							};
 						}
+					},
+					remove : {
+						removeLastElement: true
 					},
 					createContainer: {
 						changeType: "addSimpleFormGroup",
@@ -278,6 +281,10 @@ sap.ui.define([
 						return oFormContainerPropagatedMetadata;
 					} else if ( sType === "sap.ui.layout.form.FormElement") {
 						return oFormElementPropagatedMetadata;
+					} else if (oElement.isA("sap.ui.core.Label")) {
+						return {
+							actions: "not-adaptable"
+						};
 					} else {
 						return {
 							actions: null

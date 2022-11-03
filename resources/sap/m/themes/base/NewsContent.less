@@ -42,16 +42,7 @@
 
 .Stretch{
 	.sapMTileCnt.News .sapMNwC{
-		.sapMNwCCTxt .sapMText {
-			font-size: @sapMFontLargeSize;
-			color: @sapUiText;
-		}
-		.sapMNwCCTxt .sapMFT {
-			font-size: 0.938rem;
-			color: @sapUiText;
-		}
 		.sapMNwCSbh{
-			color: @sapUiText;
 			max-width: none;
 			padding-top: 0.25rem;
 
@@ -59,6 +50,10 @@
 				word-wrap: break-word;
 				white-space: normal;
 				height: 2rem;
+				overflow: hidden;
+				max-width: 60ch;
+				text-overflow: ellipsis;
+				white-space: nowrap;
 			}
 		}
 	}
@@ -102,6 +97,12 @@
 		}
 	}
 
+	&.sapMGTStretch{
+		.sapMNwCCTxt{
+			max-width: none;
+		}
+	}
+
 	.sapMNwCSbh {
 		max-width: 17.75rem;
 		line-height: 1.063rem;
@@ -119,6 +120,9 @@
 			white-space: nowrap;
 			width: 11.063rem;
 			overflow: hidden;
+			max-width: 60ch;
+			text-overflow: ellipsis;
+			white-space: nowrap;
 			text-overflow: ellipsis;
 		}
 	}

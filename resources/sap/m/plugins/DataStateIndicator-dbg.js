@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -19,12 +19,11 @@ sap.ui.define(["./PluginBase", "sap/ui/core/Core", "sap/ui/base/ManagedObjectObs
 	 *
 	 * @extends sap.ui.core.Element
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @since 1.73
 	 * @alias sap.m.plugins.DataStateIndicator
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var DataStateIndicator = PluginBase.extend("sap.m.plugins.DataStateIndicator", /** @lends sap.m.plugins.DataStateIndicator.prototype */ { metadata: {
 		library: "sap.m",
@@ -86,7 +85,14 @@ sap.ui.define(["./PluginBase", "sap/ui/core/Core", "sap/ui/base/ManagedObjectObs
 			 */
 			clearFilter: {
 				allowPreventDefault: true
-			}
+			},
+
+			/**
+			 * This event is fired when the user presses the <code>Close</code> button of the <code>MessageStrip</code> control which is managed by this plugin.
+			 *
+			 * @since 1.103
+			 */
+			close: {}
 		}
 	}});
 
@@ -181,7 +187,8 @@ sap.ui.define(["./PluginBase", "sap/ui/core/Core", "sap/ui/base/ManagedObjectObs
 					showIcon: true,
 					close: function() {
 						oControl.focus();
-					}
+						this.fireClose();
+					}.bind(this)
 				}).addStyleClass("sapUiTinyMargin");
 
 				oControl.setAggregation("_messageStrip", this._oMessageStrip);
@@ -305,7 +312,7 @@ sap.ui.define(["./PluginBase", "sap/ui/core/Core", "sap/ui/base/ManagedObjectObs
 				};
 
 				oBinding.requestFilterForMessages(fnMessageFilter).then(function(oFilter) {
-					oFilter && this._setLinkText(this._translate("FILTER_ITEMS"));
+					this._setLinkText(oFilter ? this._translate("FILTER_ITEMS") : "");
 				}.bind(this));
 			}
 
@@ -342,9 +349,10 @@ sap.ui.define(["./PluginBase", "sap/ui/core/Core", "sap/ui/base/ManagedObjectObs
 	DataStateIndicator.prototype._applyFilter = function() {
 		var fnFilter = this.getFilter();
 		var oControl = this.getControl();
+		var oParent = this.getParent();
 		var oBinding = oControl.getBinding(this._getBindingName());
 		var fnMessageFilter = fnFilter && function(oMessage) {
-			return fnFilter(oMessage, oControl);
+			return fnFilter(oMessage, oParent);
 		};
 
 		oBinding.requestFilterForMessages(fnMessageFilter).then(function(oFilter) {

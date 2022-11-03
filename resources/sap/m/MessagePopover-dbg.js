@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -91,14 +91,13 @@ function(
 		 * @extends sap.ui.core.Control
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
 		 * @since 1.28
 		 * @alias sap.m.MessagePopover
 		 * @see {@link fiori:https://experience.sap.com/fiori-design-web/message-popover/ Message Popover}
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		var MessagePopover = Control.extend("sap.m.MessagePopover", /** @lends sap.m.MessagePopover.prototype */ {
 			metadata: {
@@ -114,7 +113,7 @@ function(
 					 * @param {function} config.promise.resolve Method to resolve promise
 					 * @param {function} config.promise.reject Method to reject promise
 					 */
-					asyncDescriptionHandler: {type: "any", group: "Behavior", defaultValue: null},
+					asyncDescriptionHandler: {type: "function", group: "Behavior", defaultValue: null},
 
 					/**
 					 * Callback function for resolving a promise after a link has been asynchronously validated inside this function.
@@ -127,7 +126,7 @@ function(
 					 * @param {function} config.promise.resolve Method to resolve promise
 					 * @param {function} config.promise.reject Method to reject promise
 					 */
-					asyncURLHandler: {type: "any", group: "Behavior", defaultValue: null},
+					asyncURLHandler: {type: "function", group: "Behavior", defaultValue: null},
 
 					/**
 					 * Determines the position, where the control will appear on the screen.
@@ -143,6 +142,7 @@ function(
 
 					/**
 					 * Defines whether the MessageItems are grouped or not.
+					 * @since 1.73
 					 */
 					groupItems: { type: "boolean", group: "Behavior", defaultValue: false }
 				},
@@ -151,7 +151,16 @@ function(
 					/**
 					 * A list with message items.
 					 */
-					items: {type: "sap.m.MessageItem", altTypes: ["sap.m.MessagePopoverItem"], multiple: true, singularName: "item"},
+					items: {
+						type: "sap.m.MessageItem",
+						altTypes: ["sap.m.MessagePopoverItem"],
+						multiple: true,
+						singularName: "item",
+						forwarding: {
+							getter: "_getMessageView",
+							aggregation: "items"
+						}
+					},
 
 					/**
 					 * Sets a custom header button.
@@ -260,7 +269,9 @@ function(
 						}
 					}
 				}
-			}
+			},
+
+			renderer: MessagePopoverRenderer
 		});
 
 
@@ -368,6 +379,9 @@ function(
 				modal: false,
 				afterOpen: function (oEvent) {
 					that.fireAfterOpen({openBy: oEvent.getParameter("openBy")});
+
+					// ensure that the focus is in the correct place
+					that.getInitiallyExpanded() && that._oMessageView._restoreFocus();
 				},
 				afterClose: function (oEvent) {
 					that._oMessageView._navContainer.backToTop();
@@ -414,6 +428,7 @@ function(
 				var sMutation = oChange.mutation;
 				var oItem = oChange.child;
 
+
 				switch (sMutation) {
 
 					case "insert":
@@ -428,7 +443,7 @@ function(
 				}
 			}.bind(this));
 
-			oItemsObserver.observe(this, {
+			oItemsObserver.observe(this._oMessageView, {
 				aggregations: ["items"]
 			});
 		};
@@ -446,37 +461,6 @@ function(
 		 * @private
 		 */
 		MessagePopover.prototype.onBeforeRenderingPopover = function () {
-			// If there is no item's binding given - it should happen automatically in the MessageView
-			// However for backwards compatibility we need to have the same binding on the MessagePopover
-			// TODO: Decide what to do in this case
-			/*if (!this.getBinding("items") && this._oMessageView.getBinding("items")) {
-				this.bindAggregation("items", this._oMessageView.getBindingInfo("items"));
-			}*/
-
-			// Update MV only if 'items' aggregation is changed
-			if (this._oMessageView && this._bItemsChanged) {
-				var items = this.getItems();
-				var that = this;
-
-				this._oMessageView.destroyItems();
-
-				items.forEach(function (item) {
-					// we need to know if the MessagePopover's item was changed so to
-					// update the MessageView's items as well
-					item._updateProperties(function () {
-						that._bItemsChanged = true;
-					});
-
-					// we need to clone the item along with its bindings and aggregations
-					this._oMessageView.addItem(item.clone("", "", {
-						cloneChildren: true,
-						cloneBinding: true
-					}));
-				}, this);
-
-				this._bItemsChanged = false;
-			}
-
 			this._setInitialFocus();
 
 			// If for some reason the control that opened the popover
@@ -534,7 +518,6 @@ function(
 		 * @param {sap.ui.core.Control} oControl Control which opens the MessagePopover
 		 * @returns {this} Reference to the 'this' for chaining purposes
 		 * @public
-		 * @ui5-metamodel
 		 */
 		MessagePopover.prototype.openBy = function (oControl) {
 			var oResponsivePopoverControl = this._oPopover.getAggregation("_popup"),
@@ -754,6 +737,11 @@ function(
 				this._oMessageView.setProperty("groupItems", this.getGroupItems(), false);
 			}
 		};
+
+		MessagePopover.prototype._getMessageView = function () {
+			return this._oMessageView;
+		};
+
 
 		/*
 		 * =========================================

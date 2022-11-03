@@ -1,11 +1,12 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
 	'sap/ui/core/Control',
+	'sap/ui/core/CustomData',
 	'./library',
 	'sap/ui/core/library',
 	'sap/ui/core/ResizeHandler',
@@ -13,10 +14,12 @@ sap.ui.define([
 	'./SplitterRenderer',
 	"sap/base/Log",
 	"sap/ui/thirdparty/jquery",
-	"sap/ui/layout/SplitterLayoutData"
+	"sap/ui/layout/SplitterLayoutData",
+	"sap/ui/core/Configuration"
 ],
 	function(
 		Control,
+		CustomData,
 		library,
 		coreLibrary,
 		ResizeHandler,
@@ -24,7 +27,8 @@ sap.ui.define([
 		SplitterRenderer,
 		Log,
 		jQuery,
-		SplitterLayoutData
+		SplitterLayoutData,
+		Configuration
 	) {
 	"use strict";
 
@@ -66,13 +70,12 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.22.0
 	 * @alias sap.ui.layout.Splitter
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var Splitter = Control.extend("sap.ui.layout.Splitter", /** @lends sap.ui.layout.Splitter.prototype */ {
 		metadata: {
@@ -136,14 +139,16 @@ sap.ui.define([
 		this._liveResize        = true;
 		this._keyboardEnabled   = true;
 		this._bHorizontal       = true;
-		/** @type {Number[]} */
+		/** @type {number[]} */
 		this._calculatedSizes   = [];
 		this._move              = {};
 
 		this._resizeTimeout     = null;
 
 		// Context bound method for easy (de-)registering at the ResizeHandler
-		this._resizeCallback    = this._delayedResize.bind(this);
+		this._resizeCallback    = function (oEvent) {
+			this._delayedResize(0);
+		}.bind(this);
 		this._resizeHandlerId   = null;
 		// We need the information whether auto resize is enabled to temporarily disable it
 		// during live resize and then set it back to the value before
@@ -157,7 +162,7 @@ sap.ui.define([
 		// Switch resizing parameters based on orientation - this must be done to initialize the values
 		this._initOrientationProperties();
 
-		this._bRtl = sap.ui.getCore().getConfiguration().getRTL();
+		this._bRtl = Configuration.getRTL();
 
 		// Create bound listener functions for keyboard event handling
 		this._keyListeners = {
@@ -570,8 +575,8 @@ sap.ui.define([
 	/**
 	 * Resizes the contents after a bar has been moved
 	 *
-	 * @param {Number} [iLeftContent] Number of the first (left) content that is resized
-	 * @param {Number} [iPixels] Number of pixels to increase the first and decrease the second content
+	 * @param {int} [iLeftContent] Number of the first (left) content that is resized
+	 * @param {number} [iPixels] Number of pixels to increase the first and decrease the second content
 	 * @param {boolean} [bFinal] Whether this is the final position (sets the size in the layoutData of the
 	 * content areas)
 	 */
@@ -636,7 +641,7 @@ sap.ui.define([
 	 * Resizes as soon as the current stack is done. Can be used in cases where several resize-relevant
 	 * actions are done in a loop to make sure only one resize calculation is done at the end.
 	 *
-	 * @param {Number} [iDelay=0] Number of milliseconds to wait before doing the resize
+	 * @param {int} [iDelay=0] Number of milliseconds to wait before doing the resize
 	 * @private
 	 */
 	Splitter.prototype._delayedResize = function(iDelay) {
@@ -686,8 +691,12 @@ sap.ui.define([
 	 */
 	Splitter.prototype._resize = function() {
 		var oDomRef = this.getDomRef();
-		if (!oDomRef || RenderManager.getPreserveAreaRef().contains(oDomRef)) {
-			// Do not attempt to resize the content areas in case we are in the preserved area
+
+		// Do not attempt to resize the content areas in case the splitter
+		if (
+			!oDomRef || RenderManager.getPreserveAreaRef().contains(oDomRef) // is in the preserved area
+			|| oDomRef.scrollHeight === 0 || oDomRef.scrollWidth === 0 // has 0 width or height (display: none, etc.)
+		) {
 			return;
 		}
 
@@ -1052,8 +1061,8 @@ sap.ui.define([
 	 * Compares two (simple, one-dimensional) arrays. If all values are the same, false is returned -
 	 * If values differ or at least one of the values is no array, true is returned.
 	 *
-	 * @param {Number[]} [aSizes1] The array of numbers to compare against
-	 * @param {Number[]} [aSizes2] The array of numbers that is compared to the first one
+	 * @param {number[]} [aSizes1] The array of numbers to compare against
+	 * @param {number[]} [aSizes2] The array of numbers that is compared to the first one
 	 * @returns {boolean} True if the size-arrays differ, false otherwise
 	 * @private
 	 */
@@ -1143,7 +1152,7 @@ sap.ui.define([
 
 			// CustomData that needs to be updated in the DOM has been set on the splitter
 			// TODO: Programatically write CustomData on this control to the DOM
-		 || (oOrigin && oOrigin instanceof sap.ui.core.CustomData && oOrigin.getWriteToDom())
+		 || (oOrigin && oOrigin instanceof CustomData && oOrigin.getWriteToDom())
 
 			// We do not know where the invalidate originated from. We will pretty much have to rerender
 		 || (oOrigin === undefined);

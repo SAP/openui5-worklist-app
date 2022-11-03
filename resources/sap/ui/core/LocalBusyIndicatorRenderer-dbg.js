@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(function() {
@@ -13,7 +13,7 @@ sap.ui.define(function() {
 	 * @param {sap.ui.core.RenderManager}
 	 *            oRm the RenderManager that can be used for writing to the
 	 *            render output buffer
-	 * @param {sap.ui.core.Control}
+	 * @param {sap.ui.core.LocalBusyIndicator}
 	 *            oControl an object representation of the control that should
 	 *            be rendered
 	 * @private
@@ -53,7 +53,7 @@ sap.ui.define(function() {
 	 * @param {sap.ui.core.RenderManager}
 	 *            oRm the RenderManager that can be used for writing to the
 	 *            render output buffer
-	 * @param {sap.ui.core.Control}
+	 * @param {sap.ui.core.LocalBusyIndicator}
 	 *            oControl an object representation of the control that should
 	 *            be rendered
 	 */

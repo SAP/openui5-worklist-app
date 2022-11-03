@@ -1,6 +1,6 @@
 /*!
 * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
 */
 
@@ -8,12 +8,14 @@ sap.ui.define([
 	"./HyphenationTestingWords",
 	"sap/ui/base/ManagedObject",
 	"sap/base/Log",
-	"sap/ui/core/Locale"
+	"sap/ui/core/Locale",
+	"sap/ui/core/Configuration"
 ], function (
 	HyphenationTestingWords,
 	ManagedObject,
 	Log,
-	Locale
+	Locale,
+	Configuration
 ) {
 	"use strict";
 
@@ -267,7 +269,7 @@ sap.ui.define([
 		if (sLang) {
 			oLocale = new Locale(sLang);
 		} else {
-			oLocale = sap.ui.getCore().getConfiguration().getLocale();
+			oLocale = Configuration.getLocale();
 		}
 
 		var sLanguage = oLocale.getLanguage().toLowerCase();
@@ -306,7 +308,7 @@ sap.ui.define([
 			return new Locale(sLang).toString();
 		}
 
-		return sap.ui.getCore().getConfiguration().getLocale().toString();
+		return Configuration.getLocale().toString();
 	}
 
 	/**
@@ -398,12 +400,11 @@ sap.ui.define([
 	 * @see {@link topic:6322164936f047de941ec522b95d7b70 Hyphenation for Text Controls}
 	 * @extends sap.ui.base.ManagedObject
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @hideconstructor
 	 * @public
 	 * @since 1.60
 	 * @alias sap.ui.core.hyphenation.Hyphenation
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var Hyphenation = ManagedObject.extend("sap.ui.core.hyphenation.Hyphenation", {
 		metadata: {

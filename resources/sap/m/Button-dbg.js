@@ -1,15 +1,17 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides control sap.m.Button.
 sap.ui.define([
 	"./library",
+	"sap/ui/core/Core",
 	"sap/ui/core/Control",
 	"sap/ui/core/ShortcutHintsMixin",
 	"sap/ui/core/EnabledPropagator",
+	"sap/ui/core/AccessKeysEnablement",
 	"sap/ui/core/IconPool",
 	"sap/ui/Device",
 	"sap/ui/core/ContextMenuSupport",
@@ -22,9 +24,11 @@ sap.ui.define([
 	"sap/base/Log"
 ], function(
 	library,
+	Core,
 	Control,
 	ShortcutHintsMixin,
 	EnabledPropagator,
+	AccessKeysEnablement,
 	IconPool,
 	Device,
 	ContextMenuSupport,
@@ -85,119 +89,141 @@ sap.ui.define([
 	 * inactive and cannot be pressed.
 	 *
 	 * @extends sap.ui.core.Control
-	 * @implements sap.ui.core.IFormContent
+	 * @implements sap.ui.core.IFormContent, sap.ui.core.IAccessKeySupport
 	 * @mixes sap.ui.core.ContextMenuSupport
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @alias sap.m.Button
 	 * @see {@link fiori:https://experience.sap.com/fiori-design-web/button/ Button}
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var Button = Control.extend("sap.m.Button", /** @lends sap.m.Button.prototype */ { metadata : {
+	var Button = Control.extend("sap.m.Button", /** @lends sap.m.Button.prototype */ {
+		metadata : {
 
-		interfaces : ["sap.ui.core.IFormContent"],
-		library : "sap.m",
-		properties : {
+			interfaces : [
+				"sap.ui.core.IFormContent",
+				"sap.ui.core.IAccessKeySupport"
+			],
+			library : "sap.m",
+			properties : {
 
-			/**
-			 * Determines the text of the <code>Button</code>.
-			 */
-			text : {type : "string", group : "Misc", defaultValue: "" },
+				/**
+				 * Determines the text of the <code>Button</code>.
+				 */
+				text : {type : "string", group : "Misc", defaultValue: "" },
 
-			/**
-			 * Defines the <code>Button</code> type.
-			 */
-			type : {type : "sap.m.ButtonType", group : "Appearance", defaultValue : ButtonType.Default},
+				/**
+				 * Defines the <code>Button</code> type.
+				 */
+				type : {type : "sap.m.ButtonType", group : "Appearance", defaultValue : ButtonType.Default},
 
-			/**
-			 * Defines the <code>Button</code> width.
-			 */
-			width : {type : "sap.ui.core.CSSSize", group : "Misc", defaultValue : null},
+				/**
+				 * Defines the <code>Button</code> width.
+				 */
+				width : {type : "sap.ui.core.CSSSize", group : "Misc", defaultValue : null},
 
-			/**
-			 * Determines whether the <code>Button</code> is enabled (default is set to <code>true</code>).
-			 * A disabled <code>Button</code> has different colors depending on the {@link sap.m.ButtonType ButtonType}.
-			 */
-			enabled : {type : "boolean", group : "Behavior", defaultValue : true},
+				/**
+				 * Determines whether the <code>Button</code> is enabled (default is set to <code>true</code>).
+				 * A disabled <code>Button</code> has different colors depending on the {@link sap.m.ButtonType ButtonType}.
+				 */
+				enabled : {type : "boolean", group : "Behavior", defaultValue : true},
 
-			/**
-			 * Defines the icon to be displayed as graphical element within the <code>Button</code>.
-			 * It can be an image or an icon from the icon font.
-			 */
-			icon : {type : "sap.ui.core.URI", group : "Appearance", defaultValue: "" },
+				/**
+				 * Defines the icon to be displayed as graphical element within the <code>Button</code>.
+				 * It can be an image or an icon from the icon font.
+				 */
+				icon : {type : "sap.ui.core.URI", group : "Appearance", defaultValue: "" },
 
-			/**
-			 * Determines whether the icon is displayed before the text.
-			 */
-			iconFirst : {type : "boolean", group : "Appearance", defaultValue : true},
+				/**
+				 * Determines whether the icon is displayed before the text.
+				 */
+				iconFirst : {type : "boolean", group : "Appearance", defaultValue : true},
 
-			/**
-			 * The source property of an alternative icon for the active (depressed) state of the button.
-			 * Both active and default icon properties should be defined and have the same type: image or icon font.
-			 * If the <code>icon</code> property is not set or has a different type, the active icon is not displayed.
-			 */
-			activeIcon : {type : "sap.ui.core.URI", group : "Misc", defaultValue : null},
+				/**
+				 * The source property of an alternative icon for the active (depressed) state of the button.
+				 * Both active and default icon properties should be defined and have the same type: image or icon font.
+				 * If the <code>icon</code> property is not set or has a different type, the active icon is not displayed.
+				 */
+				activeIcon : {type : "sap.ui.core.URI", group : "Misc", defaultValue : null},
 
-			/**
-			 * By default, this is set to true but then one or more requests are sent trying to get the density perfect version of image if this version of image doesn't exist on the server.
-			 *
-			 * If only one version of image is provided, set this value to false to avoid the attempt of fetching density perfect image.
-			 */
-			iconDensityAware : {type : "boolean", group : "Misc", defaultValue : true},
+				/**
+				 * By default, this is set to true but then one or more requests are sent trying to get the density perfect version of image if this version of image doesn't exist on the server.
+				 *
+				 * If only one version of image is provided, set this value to false to avoid the attempt of fetching density perfect image.
+				 */
+				iconDensityAware : {type : "boolean", group : "Misc", defaultValue : true},
 
-			/**
-			 * Specifies the element's text directionality with enumerated options. By default, the control inherits text direction from the DOM.
-			 * @since 1.28.0
-			 */
-			textDirection : {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
+				/**
+				 * Specifies the element's text directionality with enumerated options. By default, the control inherits text direction from the DOM.
+				 * @since 1.28.0
+				 */
+				textDirection : {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
 
-			/**
-			 * Specifies the value of the <code>aria-haspopup</code> attribute
-			 *
-			 * If the value is <code>None</code>, the attribute will not be rendered. Otherwise it will be rendered with the selected value.
-			 *
-			 * NOTE: Use this property only when a button is related to a popover/popup. The value needs to be equal to the main/root role of the popup - e.g. dialog,
-			 * menu or list (examples: if you have dialog -> dialog, if you have menu -> menu; if you have list -> list; if you have dialog containing a list -> dialog).
-			 * Do not use it, if you open a standard sap.m.Dialog, MessageBox or other type of dialogs displayed as on overlay over the application.
-			 *
-			 * @since 1.84.0
-			 */
-			ariaHasPopup : {type : "sap.ui.core.aria.HasPopup", group : "Accessibility", defaultValue : AriaHasPopup.None}
+				/**
+				 * Specifies the value of the <code>aria-haspopup</code> attribute
+				 *
+				 * If the value is <code>None</code>, the attribute will not be rendered. Otherwise it will be rendered with the selected value.
+				 *
+				 * NOTE: Use this property only when a button is related to a popover/popup. The value needs to be equal to the main/root role of the popup - e.g. dialog,
+				 * menu or list (examples: if you have dialog -> dialog, if you have menu -> menu; if you have list -> list; if you have dialog containing a list -> dialog).
+				 * Do not use it, if you open a standard sap.m.Dialog, MessageBox or other type of dialogs displayed as on overlay over the application.
+				 *
+				 * @since 1.84.0
+				 */
+				ariaHasPopup : {type : "sap.ui.core.aria.HasPopup", group : "Accessibility", defaultValue : AriaHasPopup.None},
 
+				/**
+				 * Indicates whether the access keys ref of the control should be highlighted.
+				 * NOTE: this property is used only when access keys feature is turned on.
+				 *
+				 * @private
+				 */
+				highlightAccKeysRef: { type: "boolean", defaultValue: false, visibility: "hidden" },
+
+				/**
+				 * Indicates which keyboard key should be pressed to focus the access key ref
+				 * NOTE: this property is used only when access keys feature is turned on.
+				 *
+				 * @private
+				 */
+				accesskey: { type: "string", defaultValue: "", visibility: "hidden" }
+
+			},
+			associations : {
+
+				/**
+				 * Association to controls / ids which describe this control (see WAI-ARIA attribute aria-describedby).
+				 */
+				ariaDescribedBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaDescribedBy"},
+
+				/**
+				 * Association to controls / ids which label this control (see WAI-ARIA attribute aria-labelledby).
+				 */
+				ariaLabelledBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaLabelledBy"}
+
+			},
+			events : {
+
+				/**
+				 * Fired when the user taps the control.
+				 * @deprecated as of version 1.20, replaced by <code>press</code> event
+				 */
+				tap : {deprecated: true},
+
+				/**
+				 * Fired when the user clicks or taps on the control.
+				 */
+				press : {}
+			},
+			designtime: "sap/m/designtime/Button.designtime",
+			dnd: { draggable: true, droppable: false }
 		},
-		associations : {
 
-			/**
-			 * Association to controls / ids which describe this control (see WAI-ARIA attribute aria-describedby).
-			 */
-			ariaDescribedBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaDescribedBy"},
-
-			/**
-			 * Association to controls / ids which label this control (see WAI-ARIA attribute aria-labelledby).
-			 */
-			ariaLabelledBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaLabelledBy"}
-
-		},
-		events : {
-
-			/**
-			 * Fired when the user taps the control.
-			 * @deprecated as of version 1.20, replaced by <code>press</code> event
-			 */
-			tap : {deprecated: true},
-
-			/**
-			 * Fired when the user clicks or taps on the control.
-			 */
-			press : {}
-		},
-		designtime: "sap/m/designtime/Button.designtime",
-		dnd: { draggable: true, droppable: false }
-	}});
+		renderer: ButtonRenderer
+	});
 
 
 	/**
@@ -232,6 +258,8 @@ sap.ui.define([
 
 		this._badgeMinValue = BADGE_MIN_VALUE;
 		this._badgeMaxValue = BADGE_MAX_VALUE;
+
+		AccessKeysEnablement.registerControl(this);
 	};
 
 	//Formatter callback of the badge pre-set value, before it is visualized
@@ -324,7 +352,7 @@ sap.ui.define([
 	 * @private
 	 */
 	Button.prototype._updateBadgeInvisibleText = function(vValue) {
-		var oRb = sap.ui.getCore().getLibraryResourceBundle("sap.m"),
+		var oRb = Core.getLibraryResourceBundle("sap.m"),
 			sInvisibleTextValue,
 			iPlusPos;
 
@@ -417,7 +445,16 @@ sap.ui.define([
 	Button.prototype.onBeforeRendering = function() {
 		this._bRenderActive = this._bActive;
 
+		this._updateAccessKey();
 		this.$().off("mouseenter", this._onmouseenter);
+	};
+
+	Button.prototype._updateAccessKey = function () {
+		var sText = this.getText();
+
+		if (sText) {
+			this.setProperty("accesskey", sText[0].toLowerCase(), true);
+		}
 	};
 
 	/*
@@ -560,7 +597,8 @@ sap.ui.define([
 	 */
 	Button.prototype.onkeydown = function(oEvent) {
 
-		if (oEvent.which === KeyCodes.SPACE || oEvent.which === KeyCodes.ENTER || oEvent.which === KeyCodes.ESCAPE || oEvent.which === KeyCodes.SHIFT) {
+		if ((oEvent.which === KeyCodes.SPACE || oEvent.which === KeyCodes.ENTER || oEvent.which === KeyCodes.ESCAPE || oEvent.which === KeyCodes.SHIFT)
+			&& !oEvent.ctrlKey && !oEvent.metaKey) {
 
 			if (oEvent.which === KeyCodes.SPACE || oEvent.which === KeyCodes.ENTER) {
 				// mark the event for components that needs to know if the event was handled by the button
@@ -738,8 +776,8 @@ sap.ui.define([
 			bIconFirst;
 
 		// check if image control type and src match - destroy it, if they don't
-		if (this._image instanceof sap.m.Image && bIsIconURI ||
-			this._image instanceof sap.ui.core.Icon && !bIsIconURI) {
+		if (this._image && this._image.isA("sap.m.Image") && bIsIconURI ||
+			this._image && this._image.isA("sap.ui.core.Icon") && !bIsIconURI) {
 			this._image.destroy();
 			this._image = undefined;
 		}
@@ -749,7 +787,7 @@ sap.ui.define([
 
 		if (this._image) {
 			this._image.setSrc(sSrc);
-			if (this._image instanceof sap.m.Image) {
+			if (this._image.isA("sap.m.Image")) {
 				this._image.setActiveSrc(sActiveSrc);
 				this._image.setDensityAware(bIconDensityAware);
 			}
@@ -760,7 +798,7 @@ sap.ui.define([
 				activeSrc : sActiveSrc,
 				densityAware : bIconDensityAware,
 
-				// do not use default tootip in icon as the button renders it's own tooltip
+				// do not use default tooltip in icon as the button renders it's own tooltip
 				useIconTooltip: false
 
 			}, sap.m.Image).addStyleClass("sapMBtnCustomIcon").setParent(this, null, true);
@@ -891,7 +929,7 @@ sap.ui.define([
 
 		return {
 			role: "button",
-			type: sap.ui.getCore().getLibraryResourceBundle("sap.m").getText("ACC_CTR_TYPE_BUTTON"),
+			type: Core.getLibraryResourceBundle("sap.m").getText("ACC_CTR_TYPE_BUTTON"),
 			description: sDesc,
 			focusable: this.getEnabled(),
 			enabled: this.getEnabled()
@@ -921,7 +959,7 @@ sap.ui.define([
 			bAllowEnhancingByParent = !!(oParent && oParent.enhanceAccessibilityState);
 
 		return !bAlreadyHasSelfReference && this._getText() &&
-			(aAriaLabelledBy.length > 0 || bHasReferencingLabels || bAllowEnhancingByParent);
+			(aAriaLabelledBy.length > 0 || bHasReferencingLabels || bAllowEnhancingByParent || this._isBadgeButton());
 	};
 
 	/*
@@ -935,8 +973,8 @@ sap.ui.define([
 			bHasAriaDescribedBy = this.getAriaDescribedBy().length > 0,
 			bHasReferencingLabels = LabelEnablement.getReferencingLabels(this).length > 0,
 			bHasSemanticType = this.getType() !== ButtonType.Default,
-			bHasLabelling = bHasAriaLabelledBy || bHasReferencingLabels,
-			bHasDescription = bHasAriaDescribedBy || bHasSemanticType || (this._oBadgeData && this._oBadgeData.value !== "" && this._oBadgeData.State !== BadgeState.Disappear),
+			bHasLabelling = bHasAriaLabelledBy || bHasReferencingLabels || this._determineSelfReferencePresence(),
+			bHasDescription = bHasAriaDescribedBy || bHasSemanticType || this._isBadgeButton(),
 			sAccType;
 
 		// Conditions are separated instead of grouped to improve readability afterwards.
@@ -951,6 +989,10 @@ sap.ui.define([
 		}
 
 		return sAccType;
+	};
+
+	Button.prototype._isBadgeButton = function() {
+		return (this._oBadgeData && this._oBadgeData.value !== "" && this._oBadgeData.State !== BadgeState.Disappear);
 	};
 
 	//gets the title attribute for the given dom node id

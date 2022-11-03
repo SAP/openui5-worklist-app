@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -20,6 +20,7 @@ sap.ui.define([
 	'sap/base/Log',
 	'sap/base/security/encodeXML',
 	"sap/ui/thirdparty/jquery",
+	"sap/ui/core/Configuration",
 	// jQuery Plugin "addAriaDescribedBy"
 	'sap/ui/dom/jquery/Aria'
 ], function(
@@ -34,7 +35,8 @@ sap.ui.define([
 	KeyCodes,
 	Log,
 	encodeXML,
-	jQuery
+	jQuery,
+	Configuration
 ) {
 
 
@@ -63,12 +65,11 @@ sap.ui.define([
 	 * @implements sap.ui.core.IFormContent, sap.ui.unified.IProcessableBlobs
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @alias sap.ui.unified.FileUploader
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var FileUploader = Control.extend("sap.ui.unified.FileUploader", /** @lends sap.ui.unified.FileUploader.prototype */ { metadata : {
 
@@ -272,7 +273,16 @@ sap.ui.define([
 			 * If set to true, the button is displayed without any text.
 			 * @since 1.26.0
 			 */
-			iconOnly : {type : "boolean", group : "Appearance", defaultValue : false}
+			iconOnly : {type : "boolean", group : "Appearance", defaultValue : false},
+
+			/**
+			 * Allows users to upload all files from a given directory and its corresponding subdirectories.
+			 * @since 1.105.0
+			 *
+			 * <b>Note:</b> This feature is supported on all WebKit-based browsers as well as Microsoft Edge and Firefox after version 50.
+			 * <b>Note:</b> Multiple directory selection is not supported.
+			 */
+			directory : {type : "boolean", group : "Behavior", defaultValue : false}
 		},
 		aggregations : {
 
@@ -567,9 +577,20 @@ sap.ui.define([
 					 */
 					requestHeaders : {type : "object[]"}
 				}
-			}
+			},
+			/**
+			 * Fired before select file dialog opens.
+			 * @since 1.102.0
+			 */
+			beforeDialogOpen : {},
+
+			 /**
+			 * Fired after select file dialog closes.
+			 * @since 1.102.0
+			 */
+			afterDialogClose : {}
 		}
-	}});
+	}, renderer: FileUploaderRenderer});
 
 
 	/**
@@ -596,14 +617,7 @@ sap.ui.define([
 		// check if sap.m library is used
 		this.bMobileLib = this.oBrowse.getMetadata().getName() == "sap.m.Button";
 
-		//retrieving the default browse button text from the resource bundle
-		if (!this.getIconOnly()) {
-			this.oBrowse.setText(this.getBrowseText());
-		} else  {
-			this.oBrowse.setTooltip(this.getBrowseText());
-		}
-
-		if (sap.ui.getCore().getConfiguration().getAccessibility()) {
+		if (Configuration.getAccessibility()) {
 			if (!FileUploader.prototype._sAccText) {
 				var rb = sap.ui.getCore().getLibraryResourceBundle("sap.ui.unified");
 				FileUploader.prototype._sAccText = rb.getText("FILEUPLOAD_ACC");
@@ -618,16 +632,6 @@ sap.ui.define([
 		}
 		this._submitAfterRendering = false;
 
-	};
-
-	FileUploader.prototype.setButtonText = function(sText) {
-		this.setProperty("buttonText", sText, false);
-		if (!this.getIconOnly()) {
-			this.oBrowse.setText(sText || this.getBrowseText());
-		} else  {
-			this.oBrowse.setTooltip(this.getBrowseText());
-		}
-		return this;
 	};
 
 	FileUploader.prototype.setIcon = function(sIcon) {
@@ -657,18 +661,6 @@ sap.ui.define([
 	FileUploader.prototype.setIconFirst = function(bIconFirst) {
 		this.oBrowse.setIconFirst(bIconFirst);
 		this.setProperty("iconFirst", bIconFirst, false);
-		return this;
-	};
-
-	FileUploader.prototype.setIconOnly = function(bIconOnly) {
-		this.setProperty("iconOnly", bIconOnly, false);
-		if (bIconOnly) {
-			this.oBrowse.setText("");
-			this.oBrowse.setTooltip(this.getBrowseText());
-		} else  {
-			this.oBrowse.setText(this.getButtonText() || this.getBrowseText());
-			this.oBrowse.setTooltip("");
-		}
 		return this;
 	};
 
@@ -721,6 +713,12 @@ sap.ui.define([
 		return this;
 	};
 
+	FileUploader.prototype.setDirectory = function(bDirectory) {
+		this.setProperty("directory", bDirectory, false);
+		this._rerenderInputField();
+		return this;
+	};
+
 	FileUploader.prototype._rerenderInputField = function() {
 		if (this.oFileUpload) {
 			var aFiles = this.oFileUpload.files;
@@ -732,27 +730,22 @@ sap.ui.define([
 			// Reattach files to the input field if already selected
 			/*eslint strict: [2, "never"]*/
 			this.oFileUpload.files = aFiles;
+			this._cacheDOMEls();
 		}
 	};
 
 	FileUploader.prototype.setTooltip = function(oTooltip) {
-		var sTooltip,
-			sapUiFupInputMaskDOM;
+		var sTooltip;
 
-		this._refreshTooltipBaseDelegate(oTooltip);
-		this.setAggregation("tooltip", oTooltip, true);
-		this._updateAccDescription();
+		Control.prototype.setTooltip.call(this, oTooltip);
 
 		if (this.oFileUpload) {
 			sTooltip = this.getTooltip_AsString();
-			sapUiFupInputMaskDOM = this.$().find(".sapUiFupInputMask")[0];
 
 			if (sTooltip) {
 				this.oFileUpload.setAttribute("title", sTooltip);
-				sapUiFupInputMaskDOM && sapUiFupInputMaskDOM.setAttribute("title", sTooltip);
 			} else {
-				this.oFileUpload.removeAttribute("title");
-				sapUiFupInputMaskDOM && sapUiFupInputMaskDOM.removeAttribute("title");
+				this.oFileUpload.setAttribute("title", this.getValue() ? this.getValue() : this._getNoFileChosenText());
 			}
 		}
 		return this;
@@ -844,20 +837,6 @@ sap.ui.define([
 		return sAccDescription;
 	};
 
-	/*
-	 * Updates the hidden element's text, which holds the accessibility description.
-	 * This method should be called whenever the placeholder/value/tooltip update.
-	 * Otherwise screen readers will simply read a description, which doesn't match
-	 * what's visible on the screen.
-	 */
-	FileUploader.prototype._updateAccDescription = function () {
-		var oAccDescriptionHolder = this.getDomRef("AccDescr"),
-			sNewDescription = this._generateAccDescriptionText();
-
-		if (oAccDescriptionHolder) {
-			oAccDescriptionHolder.innerHTML = encodeXML(sNewDescription);
-		}
-	};
 
 	/**
 	 * Helper to ensure, that the types (file or mime) are inside an array.
@@ -929,6 +908,18 @@ sap.ui.define([
 		// unbind the custom event handlers
 		jQuery(this.oFileUpload).off();
 
+		if (this.getIconOnly() && this.getButtonOnly()) {
+			this.oBrowse.setText("");
+			this.oBrowse.setTooltip(this.getTooltip_AsString() || this.getBrowseText());
+		} else if (this.getIconOnly()) {
+			this.oBrowse.setText("");
+			this.oBrowse.setTooltip(this.getBrowseText());
+		} else {
+			this.oBrowse.setText(this.getButtonText() || this.getBrowseText());
+			this.oBrowse.setTooltip("");
+		}
+
+		this.oFilePath.setPlaceholder(this.getPlaceholder());
 	};
 
 	/**
@@ -1003,7 +994,7 @@ sap.ui.define([
 	 * @returns {Element} The DOM element that should be focused
 	 */
 	FileUploader.prototype.getFocusDomRef = function() {
-		return this.$("fu").get(0);
+		return this.oBrowse.getDomRef();
 	};
 
 	FileUploader.prototype._resizeDomElements = function() {
@@ -1055,17 +1046,22 @@ sap.ui.define([
 	FileUploader.prototype.setEnabled = function(bEnabled){
 		var $oFileUpload = jQuery(this.oFileUpload);
 
-		this.setProperty("enabled", bEnabled);
+		this.setProperty("enabled", bEnabled, false);
 		this.oFilePath.setEnabled(bEnabled);
 		this.oBrowse.setEnabled(bEnabled);
-		bEnabled ? $oFileUpload.removeAttr('disabled') : $oFileUpload.attr('disabled', 'disabled');
+
+		if (this.getEnabled()) {
+			$oFileUpload.removeAttr('disabled');
+		} else {
+			$oFileUpload.attr('disabled', 'disabled');
+		}
 
 		return this;
 	};
 
 	FileUploader.prototype.setValueState = function(sValueState) {
 
-		this.setProperty("valueState", sValueState, true);
+		this.setProperty("valueState", sValueState, false);
 		//as of 1.23.1 oFilePath can be an sap.ui.commons.TextField or an sap.m.Input, which both have a valueState
 		if (this.oFilePath.setValueState) {
 			this.oFilePath.setValueState(sValueState);
@@ -1102,16 +1098,7 @@ sap.ui.define([
 			Log.warning("Setting the valueStateText property with the combination of libraries used is not supported.", this);
 		}
 
-		return this.setProperty("valueStateText", sValueStateText, true);
-	};
-
-	FileUploader.prototype.setPlaceholder = function(sPlaceholder) {
-		this.setProperty("placeholder", sPlaceholder, true);
-		this.oFilePath.setPlaceholder(sPlaceholder);
-
-		this._updateAccDescription();
-
-		return this;
+		return this.setProperty("valueStateText", sValueStateText, false);
 	};
 
 	FileUploader.prototype.setStyle = function(sStyle) {
@@ -1146,6 +1133,9 @@ sap.ui.define([
 			// when we do not upload we re-render (cause some browsers don't like
 			// to change the value of file uploader INPUT elements)
 			this.setProperty("value", sValue, bUpload);
+			if (this.oFileUpload && !this.getTooltip_AsString()) {
+				this.oFileUpload.setAttribute("title", sValue ? sValue : this._getNoFileChosenText());
+			}
 			if (this.oFilePath) {
 				this.oFilePath.setValue(sValue);
 				//refocus the Button, except bSupressFocus is set
@@ -1193,7 +1183,6 @@ sap.ui.define([
 	 *
 	 * @public
 	 * @since 1.25.0
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 * @returns {this} The <code>sap.ui.unified.FileUploader</code> instance
 	 */
 	FileUploader.prototype.clear = function () {
@@ -1345,7 +1334,6 @@ sap.ui.define([
 	 *
 	 * @type void
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	FileUploader.prototype.upload = function(bPreProcessFiles) {
 		var uploadForm,
@@ -1407,7 +1395,6 @@ sap.ui.define([
 	 *                 The parameter is taken into account if the sHeaderParameterName parameter is provided too.
 	 * @public
 	 * @since 1.24.0
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	FileUploader.prototype.abort = function(sHeaderParameterName, sHeaderParameterValue) {
 		if (!this.getUseMultipart()) {
@@ -1458,6 +1445,15 @@ sap.ui.define([
 		//refocus the Button, except bSupressFocus is set
 		if (this.oBrowse.getDomRef() && (Device.browser.safari || containsOrEquals(this.getDomRef(), document.activeElement))) {
 			this.oBrowse.focus();
+		}
+
+		if (oEvent.target.getAttribute("type") === "file") {
+			this.fireBeforeDialogOpen();
+
+			document.body.onfocus = function () {
+				this.fireAfterDialogClose();
+				document.body.onfocus = null;
+			}.bind(this);
 		}
 	};
 
@@ -1603,7 +1599,7 @@ sap.ui.define([
 				sValue = sValue.substring(iIndex + 1);
 			}
 
-			if (this.getMultiple()) {
+			if (this.getMultiple() || this.getDirectory()) {
 				sValue = sFileString;
 			}
 
@@ -1868,7 +1864,7 @@ sap.ui.define([
 	 * Helper to retrieve the I18N texts for a button
 	 * @private
 	 */
-	FileUploader.prototype.getBrowseText = function() {
+	 FileUploader.prototype.getBrowseText = function() {
 
 		// as the text is the same for all FileUploaders, get it only once
 		if (!FileUploader.prototype._sBrowseText) {
@@ -1877,6 +1873,22 @@ sap.ui.define([
 		}
 
 		return FileUploader.prototype._sBrowseText ? FileUploader.prototype._sBrowseText : "Browse...";
+
+	};
+
+	/**
+	 * Helper to retrieve the I18N text for the tooltip when there is no file chosen
+	 * @private
+	 */
+	 FileUploader.prototype._getNoFileChosenText = function() {
+
+		// as the text is the same for all FileUploaders, get it only once
+		if (!FileUploader.prototype._sNoFileChosenText) {
+			var rb = sap.ui.getCore().getLibraryResourceBundle("sap.ui.unified");
+			FileUploader.prototype._sNoFileChosenText = rb.getText("FILEUPLOAD_NO_FILE_CHOSEN");
+		}
+
+		return FileUploader.prototype._sNoFileChosenText ? FileUploader.prototype._sNoFileChosenText : "No file chosen";
 
 	};
 
@@ -1936,13 +1948,13 @@ sap.ui.define([
 			aFileUpload.push('type="file" ');
 			aFileUpload.push('aria-hidden="true" ');
 			if (this.getName()) {
-				if (this.getMultiple()) {
+				if (this.getMultiple() || this.getDirectory()) {
 					aFileUpload.push('name="' + encodeXML(this.getName()) + '[]" ');
 				} else {
 					aFileUpload.push('name="' + encodeXML(this.getName()) + '" ');
 				}
 			} else {
-				if (this.getMultiple()) {
+				if (this.getMultiple() || this.getDirectory()) {
 					aFileUpload.push('name="' + this.getId() + '[]" ');
 				} else {
 					aFileUpload.push('name="' + this.getId() + '" ');
@@ -1959,13 +1971,17 @@ sap.ui.define([
 				aFileUpload.push('title="' + encodeXML(this.getTooltip_AsString()) + '" ');
 			//} else if (this.getTooltip() ) {
 				// object tooltip, do nothing - tooltip will be displayed
-			} else if (this.getValue() !== "") {
-				// only if there is no tooltip, then set value as fallback
-				aFileUpload.push('title="' + encodeXML(this.getValue()) + '" ');
+			} else {
+				// only if there is no tooltip, then set value or default tooltip as fallback
+				aFileUpload.push('title="' + encodeXML(this.getValue() ? this.getValue() : this._getNoFileChosenText()) + '" ');
 			}
 
 			if (!this.getEnabled()) {
 				aFileUpload.push('disabled="disabled" ');
+			}
+
+			if (this.getDirectory()) {
+				aFileUpload.push('webkitdirectory ');
 			}
 
 			if (this.getMultiple()) {
@@ -2028,8 +2044,9 @@ sap.ui.define([
 		if (this.oBrowse &&  this.oBrowse.$().length) {
 			$browse = this.oBrowse.$();
 			$browse.attr("type', 'button"); // The default type of button is submit that's why on click of label there are submit of the form. This way we are avoiding the submit of form.
-			$browse.off("click").on("click", function(e) {
-				e.preventDefault();
+			$browse.off("click").on("click", function(oEvent) {
+				oEvent.preventDefault();
+				oEvent.stopPropagation();
 				this.FUEl.click(); // The default behaviour on click on label is to open "open file" dialog. The only way to attach click event that is transferred from the label to the button is this way. AttachPress and attachTap don't work in this case.
 			}.bind(this));
 		}

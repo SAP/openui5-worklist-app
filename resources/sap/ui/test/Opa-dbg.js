@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -114,13 +114,15 @@ sap.ui.define([
 	}
 
 	function getMessageForException (oError) {
-		var sExceptionText = oError.toString();
+		return "Exception thrown by the testcode:'" + getErrorMessage(oError) + "'";
+	}
+
+	function getErrorMessage(oError) {
+		var sErrorMessage = oError.toString();
 		// Some browsers don't have the stack property it will be added later for those browsers
 		if (oError.stack) {
-			sExceptionText += "\n" + oError.stack;
+			sErrorMessage += "\n" + oError.stack;
 		}
-
-		var sErrorMessage = "Exception thrown by the testcode:'" + sExceptionText + "'";
 		return sErrorMessage;
 	}
 
@@ -635,7 +637,7 @@ sap.ui.define([
 						mPromiseState.done = true;
 					}, function (error) {
 						mPromiseState.errorMessage = "Error while waiting for promise scheduled on flow" +
-							(error ? ", details: " + error : "");
+							(error ? ", details: " + getErrorMessage(error) : "");
 					});
 				}
 				if (mPromiseState.errorMessage) {

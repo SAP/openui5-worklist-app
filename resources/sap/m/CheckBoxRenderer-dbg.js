@@ -1,11 +1,11 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define(['sap/ui/core/library', 'sap/ui/core/ValueStateSupport', 'sap/ui/Device'],
-	function(coreLibrary, ValueStateSupport, Device) {
+sap.ui.define(['sap/ui/core/library', 'sap/ui/core/ValueStateSupport', 'sap/ui/Device', "sap/ui/core/Configuration"],
+	function(coreLibrary, ValueStateSupport, Device, Configuration) {
 	"use strict";
 
 
@@ -26,7 +26,7 @@ sap.ui.define(['sap/ui/core/library', 'sap/ui/core/ValueStateSupport', 'sap/ui/D
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the Render-Output-Buffer
-	 * @param {sap.ui.core.Control} oCheckBox An object representation of the control that should be rendered
+	 * @param {sap.m.CheckBox} oCheckBox An object representation of the control that should be rendered
 	 */
 	CheckBoxRenderer.render = function(oRm, oCheckBox){
 		// get control properties
@@ -48,6 +48,7 @@ sap.ui.define(['sap/ui/core/library', 'sap/ui/core/ValueStateSupport', 'sap/ui/D
 		// CheckBox wrapper
 		oRm.openStart("div", oCheckBox);
 		oRm.class("sapMCb");
+		oRm.attr("data-ui5-accesskey", oCheckBox.getProperty("accesskey"));
 
 		if (!bEditable) {
 			oRm.class("sapMCbRo");
@@ -158,7 +159,7 @@ sap.ui.define(['sap/ui/core/library', 'sap/ui/core/ValueStateSupport', 'sap/ui/D
 		oRm.close("div");
 		oRm.renderControl(oCbLabel);
 
-		if (sTooltip && sap.ui.getCore().getConfiguration().getAccessibility() && bEditableAndEnabled) {
+		if (sTooltip && Configuration.getAccessibility() && bEditableAndEnabled) {
 			// for ARIA, the tooltip must be in a separate SPAN and assigned via aria-describedby.
 			// otherwise, JAWS does not read it.
 			oRm.openStart("span", sId + "-Descr");

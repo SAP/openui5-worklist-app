@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -18,7 +18,8 @@ sap.ui.define([
 	"./MonthsRowRenderer",
 	"sap/ui/dom/containsOrEquals",
 	"sap/ui/thirdparty/jquery",
-	"sap/ui/unified/DateRange"
+	"sap/ui/unified/DateRange",
+	"sap/ui/core/Configuration"
 ], function(
 	Control,
 	LocaleData,
@@ -32,12 +33,10 @@ sap.ui.define([
 	MonthsRowRenderer,
 	containsOrEquals,
 	jQuery,
-	DateRange
+	DateRange,
+	Configuration
 ) {
 	"use strict";
-
-	// shortcut for sap.ui.core.CalendarType
-	var CalendarType = coreLibrary.CalendarType;
 
 	/*
 	 * <code>CalendarDate</code> objects are used inside the <code>MonthsRow</code>, whereas JavaScript dates are used in the API.
@@ -61,13 +60,12 @@ sap.ui.define([
 	 * The MontsRow works with JavaScript Date objects, but only the month and the year are used to display and interact.
 	 * As representation for a month, the 1st of the month will always be returned in the API.
 	 * @extends sap.ui.core.Control
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.32.0
 	 * @alias sap.ui.unified.calendar.MonthsRow
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var MonthsRow = Control.extend("sap.ui.unified.calendar.MonthsRow", /** @lends sap.ui.unified.calendar.MonthsRow.prototype */ { metadata : {
 
@@ -106,7 +104,15 @@ sap.ui.define([
 			/**
 			 * If set, a header with the years is shown to visualize what month belongs to what year.
 			 */
-			showHeader : {type : "boolean", group : "Appearance", defaultValue : false}
+			showHeader : {type : "boolean", group : "Appearance", defaultValue : false},
+
+			/**
+			 * If set, the calendar type is used for display.
+			 * If not set, the calendar type of the global configuration is used.
+			 * @private
+			 * @since 1.108.0
+			 */
+			primaryCalendarType : {type : "sap.ui.core.CalendarType", group : "Appearance", defaultValue : null}
 		},
 		aggregations : {
 
@@ -165,13 +171,14 @@ sap.ui.define([
 				}
 			}
 		}
-	}});
+	}, renderer: MonthsRowRenderer});
 
 	MonthsRow.prototype.init = function(){
+		var sCalendarType = this.getProperty("primaryCalendarType");
 
 		//need day in pattern because in islamic calendar 2 Month can start in one gregorianic calendar
-		this._oFormatYyyymm = DateFormat.getInstance({pattern: "yyyyMMdd", calendarType: CalendarType.Gregorian});
-		this._oFormatLong = DateFormat.getInstance({pattern: "MMMM y"});
+		this._oFormatYyyymm = DateFormat.getInstance({pattern: "yyyyMMdd", calendarType: sCalendarType});
+		this._oFormatLong = DateFormat.getInstance({pattern: "MMMM y", calendarType: sCalendarType});
 
 		this._mouseMoveProxy = jQuery.proxy(this._handleMouseMove, this);
 
@@ -263,7 +270,7 @@ sap.ui.define([
 	 */
 	MonthsRow.prototype.setDate = function(oDate){
 		if (oDate) {
-			var oCalDate = CalendarDate.fromLocalJSDate(oDate);
+			var oCalDate = CalendarDate.fromLocalJSDate(oDate, this.getProperty("primaryCalendarType"));
 			this._oDate = oCalDate;
 			_changeDate.call(this, oCalDate, false);
 		}
@@ -278,11 +285,11 @@ sap.ui.define([
 	*/
 	MonthsRow.prototype._getDate = function(){
 
-		if (!this._oDate ) {
-			this._oDate  = new CalendarDate();
+		if (!this._oDate) {
+			this._oDate  = CalendarDate.fromLocalJSDate(new Date(), this.getProperty("primaryCalendarType"));
 		}
 
-		return this._oDate ;
+		return this._oDate;
 
 	};
 
@@ -299,7 +306,7 @@ sap.ui.define([
 		iYear = oStartDate.getFullYear();
 		CalendarUtils._checkYearInValidRange(iYear);
 
-		oCalDate = CalendarDate.fromLocalJSDate(oStartDate);
+		oCalDate = CalendarDate.fromLocalJSDate(oStartDate, this.getProperty("primaryCalendarType"));
 		this.setProperty("startDate", oStartDate, true);
 		this._oStartDate = oCalDate;
 		this._oStartDate.setDate(1); // always use begin of month as start date
@@ -322,7 +329,7 @@ sap.ui.define([
 	MonthsRow.prototype._getStartDate = function(){
 
 		if (!this._oStartDate) {
-			this._oStartDate = new CalendarDate();
+			this._oStartDate = CalendarDate.fromLocalJSDate(new Date(), this.getProperty("primaryCalendarType"));
 			this._oStartDate.setDate(1); // always use begin of month as start date
 		}
 
@@ -335,11 +342,10 @@ sap.ui.define([
 	 * @param {object} oDate JavaScript Date object for focused date.
 	 * @returns {this} <code>this</code> to allow method chaining
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	MonthsRow.prototype.displayDate = function(oDate){
 
-		_changeDate.call(this, CalendarDate.fromLocalJSDate(oDate), true);
+		_changeDate.call(this, CalendarDate.fromLocalJSDate(oDate, this.getProperty("primaryCalendarType")), true);
 
 		return this;
 
@@ -356,7 +362,7 @@ sap.ui.define([
 		if (oParent && oParent.getLocale) {
 			return oParent.getLocale();
 		} else if (!this._sLocale) {
-			this._sLocale = sap.ui.getCore().getConfiguration().getFormatSettings().getFormatLocale().toString();
+			this._sLocale = Configuration.getFormatSettings().getFormatLocale().toString();
 		}
 
 		return this._sLocale;
@@ -393,7 +399,7 @@ sap.ui.define([
 
 		if (this._oFormatLong.oLocale.toString() != sLocale) {
 			var oLocale = new Locale(sLocale);
-			this._oFormatLong = DateFormat.getInstance({style: "long"} , oLocale);
+			this._oFormatLong = DateFormat.getInstance({style: "long", calendarType: this.getProperty("primaryCalendarType")} , oLocale);
 		}
 
 		return this._oFormatLong;
@@ -550,6 +556,7 @@ sap.ui.define([
 			oTimeStamp,
 			oStartTimeStamp = 0, oEndTimeStamp = 0,
 			iSelected = 0,
+			sCalendarType = this.getProperty("primaryCalendarType"),
 			i,
 			aSelectedDates,
 			oMyDate;
@@ -567,14 +574,14 @@ sap.ui.define([
 			oStartDate = oRange.getStartDate();
 			oStartTimeStamp = 0;
 			if (oStartDate) {
-				oStartDate = CalendarDate.fromLocalJSDate(oStartDate);
+				oStartDate = CalendarDate.fromLocalJSDate(oStartDate, sCalendarType);
 				oStartDate.setDate(1); // begin of month
 				oStartTimeStamp = oStartDate.toUTCJSDate().getTime();
 			}
 			oEndDate = oRange.getEndDate();
 			oEndTimeStamp = 0;
 			if (oEndDate) {
-				oEndDate = CalendarDate.fromLocalJSDate(oEndDate);
+				oEndDate = CalendarDate.fromLocalJSDate(oEndDate, sCalendarType);
 				oEndDate.setDate(1); // begin of month
 				oEndTimeStamp = oEndDate.toUTCJSDate().getTime();
 			}
@@ -621,7 +628,8 @@ sap.ui.define([
 			oEndDate, oEndTimeStamp = 0,
 			oTimeStamp,
 			aSpecialDates = this.getSpecialDates(),
-			oMyDate = new CalendarDate(oDate);
+			oMyDate = new CalendarDate(oDate),
+			sCalendarType = this.getProperty("primaryCalendarType");
 
 		oMyDate.setDate(1); //always use begin of month for test
 		oTimeStamp = oMyDate.toUTCJSDate().getTime();
@@ -632,14 +640,14 @@ sap.ui.define([
 			oStartDate = oRange.getStartDate();
 			oStartTimeStamp = 0;
 			if (oStartDate) {
-				oStartDate = CalendarDate.fromLocalJSDate(oStartDate);
+				oStartDate = CalendarDate.fromLocalJSDate(oStartDate, sCalendarType);
 				oStartDate.setDate(1); // begin of month
 				oStartTimeStamp = oStartDate.toUTCJSDate().getTime();
 			}
 			oEndDate = oRange.getEndDate();
 			oEndTimeStamp = 0;
 			if (oEndDate) {
-				oEndDate = CalendarDate.fromLocalJSDate(oEndDate);
+				oEndDate = CalendarDate.fromLocalJSDate(oEndDate, sCalendarType);
 				oEndDate.setDate(CalendarUtils._daysInMonth(oEndDate));// end of the Month
 				oEndTimeStamp = oEndDate.toUTCJSDate().getTime();
 			}
@@ -692,7 +700,7 @@ sap.ui.define([
 
 		if ($Target.hasClass("sapUiCalItem")) {
 			var oOldFocusedDate = this._getDate();
-			var oFocusedDate = CalendarDate.fromLocalJSDate(this._oFormatYyyymm.parse($Target.attr("data-sap-month")));
+			var oFocusedDate = CalendarDate.fromLocalJSDate(this._oFormatYyyymm.parse($Target.attr("data-sap-month"), this.getProperty("primaryCalendarType")));
 			oFocusedDate.setDate(1);
 
 			if (!oFocusedDate.isSame(oOldFocusedDate)) {
@@ -730,7 +738,7 @@ sap.ui.define([
 				}
 
 				if ($Target.hasClass("sapUiCalItem")) {
-					oFocusedDate = CalendarDate.fromLocalJSDate(this._oFormatYyyymm.parse($Target.attr("data-sap-month")));
+					oFocusedDate = CalendarDate.fromLocalJSDate(this._oFormatYyyymm.parse($Target.attr("data-sap-month"), this.getProperty("primaryCalendarType")));
 					oFocusedDate.setDate(1);
 				}
 
@@ -828,7 +836,7 @@ sap.ui.define([
 		this._bNamesLengthChecked = undefined;
 		this._bLongWeekDays = undefined;
 		var oLocaleData = this._getLocaleData();
-		var aMonthNamesWide = oLocaleData.getMonthsStandAlone("wide");
+		var aMonthNamesWide = oLocaleData.getMonthsStandAlone("wide", this.getProperty("primaryCalendarType"));
 		var aMonths = this.$("months").children();
 		var iMonth = this._getStartDate().getMonth();
 		for (var i = 0; i < aMonths.length; i++) {
@@ -847,7 +855,6 @@ sap.ui.define([
 	 * @param {object} oDateTime JavaScript Date object for focused date.
 	 * @returns {boolean} flag if focusable
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	MonthsRow.prototype.checkDateFocusable = function(oDateTime){
 
@@ -864,7 +871,7 @@ sap.ui.define([
 		var oEndDate = new CalendarDate(oStartDate);
 		oEndDate.setDate(1);
 		oEndDate.setMonth(oEndDate.getMonth() + this.getMonths());
-		var oCalDate = CalendarDate.fromLocalJSDate(oDateTime);
+		var oCalDate = CalendarDate.fromLocalJSDate(oDateTime, this.getProperty("primaryCalendarType"));
 
 		return oCalDate.isSameOrAfter(oStartDate) && oCalDate.isBefore(oEndDate);
 	};
@@ -937,7 +944,7 @@ sap.ui.define([
 		// find out what day was focused
 		var $DomRef = jQuery(aDomRefs[iIndex]);
 
-		oFocusedDate = CalendarDate.fromLocalJSDate(this._oFormatYyyymm.parse($DomRef.attr("data-sap-month")));
+		oFocusedDate = CalendarDate.fromLocalJSDate(this._oFormatYyyymm.parse($DomRef.attr("data-sap-month"), this.getProperty("primaryCalendarType")));
 		oFocusedDate.setDate(1);
 		this.setDate(oFocusedDate.toLocalJSDate());
 
@@ -1053,7 +1060,7 @@ sap.ui.define([
 		CalendarUtils._checkYearInValidRange(iYear);
 
 		var bFocusable = true; // if date not changed it is still focusable
-		if (!this.getDate() || !oDate.isSame(CalendarDate.fromLocalJSDate(this.getDate()))) {
+		if (!this.getDate() || !oDate.isSame(CalendarDate.fromLocalJSDate(this.getDate(), this.getProperty("primaryCalendarType")))) {
 			var oCalDate = new CalendarDate(oDate);
 			oCalDate.setDate(1); // always use begin of month
 			bFocusable = this.checkDateFocusable(oDate.toLocalJSDate());
@@ -1133,7 +1140,7 @@ sap.ui.define([
 				oDateRange = aSelectedDates[0];
 				oStartDate = oDateRange.getStartDate();
 				if (oStartDate) {
-					oStartDate = CalendarDate.fromLocalJSDate(oStartDate);
+					oStartDate = CalendarDate.fromLocalJSDate(oStartDate, this.getProperty("primaryCalendarType"));
 					oStartDate.setDate(1); // begin of month
 				}
 			} else {
@@ -1175,7 +1182,7 @@ sap.ui.define([
 					for ( i = 0; i < aSelectedDates.length; i++) {
 						oStartDate = aSelectedDates[i].getStartDate();
 						if (oStartDate) {
-							oStartDate = CalendarDate.fromLocalJSDate(oStartDate);
+							oStartDate = CalendarDate.fromLocalJSDate(oStartDate, this.getProperty("primaryCalendarType"));
 							oStartDate.setDate(1); // begin of month
 							if (oDate.isSame(oStartDate)) {
 								oAggOwner.removeAggregation("selectedDates", i);
@@ -1217,7 +1224,7 @@ sap.ui.define([
 			var iBlocks = Math.ceil(12 / iMonths);
 			var iMonth = 0;
 			var oLocaleData = this._getLocaleData();
-			var aMonthNamesWide = oLocaleData.getMonthsStandAlone("wide");
+			var aMonthNamesWide = oLocaleData.getMonthsStandAlone("wide", this.getProperty("primaryCalendarType"));
 			var $Month;
 
 			for (var b = 0; b < iBlocks; b++) {
@@ -1257,7 +1264,7 @@ sap.ui.define([
 			if (bTooLong) {
 				this._bLongMonth = false;
 				// change month name on button but not change month picker, because it is hided again
-				var aMonthNames = oLocaleData.getMonthsStandAlone("abbreviated");
+				var aMonthNames = oLocaleData.getMonthsStandAlone("abbreviated", this.getProperty("primaryCalendarType"));
 				iMonth = this._getStartDate().getMonth();
 				for (i = 0; i < aMonths.length; i++) {
 					$Month = jQuery(jQuery(aMonths[i]).children(".sapUiCalItemText"));

@@ -1,13 +1,14 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
 	'sap/ui/unified/library',
-	"sap/base/security/encodeXML"
+	"sap/base/security/encodeXML",
+	"sap/ui/core/Configuration"
 ],
-	function(library, encodeXML) {
+	function(library, encodeXML, Configuration) {
 	"use strict";
 
 
@@ -28,12 +29,12 @@ sap.ui.define([
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oControl an object representation of the control that should be rendered
+	 * @param {sap.ui.unified.ContentSwitcher} oControl an object representation of the control that should be rendered
 	 */
 	ContentSwitcherRenderer.render = function(oRm, oControl){
 		var sId            = oControl.getId();
 		var sAnimation     = oControl.getAnimation();
-		if (!sap.ui.getCore().getConfiguration().getAnimation()) {
+		if (!Configuration.getAnimation()) {
 			sAnimation = ContentSwitcherAnimation.None;
 		}
 

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -73,7 +73,7 @@ function(
 	 *
 	 *
 	 * @author Frank Weigel
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @since 0.8.6
 	 * @alias sap.ui.base.ManagedObjectMetadata
 	 * @extends sap.ui.base.Metadata
@@ -402,6 +402,15 @@ function(
 		}
 	};
 
+	/**
+	 * Creates a new aggregation forwarder for the given aggregation.
+	 * @param {object} oAggregation Aggregation info object
+	 *
+	 * @class Class to manage the forwarding of an aggregation.
+	 * @alias sap.ui.base.ManagedObjectMetadata.AggregationForwarder
+	 * @private
+	 * @ui5-restricted sap.ui.base
+	 */
 	function AggregationForwarder(oAggregation) {
 		var oForwardTo = oAggregation.forwarding;
 		this.aggregation = oAggregation; // source aggregation info
@@ -458,6 +467,7 @@ function(
 
 	/*
 	 * Returns the forwarding target instance and ensures that this.targetAggregationInfo is available
+	 * @returns {sap.ui.core.Control}
 	 */
 	AggregationForwarder.prototype.getTarget = function(oInstance, bConnectTargetInfo) {
 		var oTarget = this._getTarget.call(oInstance);
@@ -975,7 +985,7 @@ function(
 	 *   in the constructor documentation of this class.
 	 *
 	 * @param {string} sName name of the property
-	 * @returns {Object} An info object describing the property or <code>undefined</code>
+	 * @returns {Object|undefined} An info object describing the property or <code>undefined</code>
 	 * @public
 	 * @since 1.27.0
 	 */
@@ -1048,7 +1058,7 @@ function(
 	 *   in the constructor documentation of this class.
 	 *
 	 * @param {string} sName name of the property to be retrieved or empty
-	 * @return {object} property info object or undefined
+	 * @returns {object|undefined} property info object or <code>undefined</code>
 	 * @protected
 	 */
 	ManagedObjectMetadata.prototype.getManagedProperty = function(sName) {
@@ -1111,7 +1121,7 @@ function(
 	 *   in the constructor documentation of this class.
 	 *
 	 * @param {string} [sName] name of the aggregation or empty
-	 * @returns {Object} An info object describing the aggregation or <code>undefined</code>
+	 * @returns {Object|undefined} An info object describing the aggregation or <code>undefined</code>
 	 * @public
 	 * @since 1.27.0
 	 */
@@ -1189,7 +1199,7 @@ function(
 	 *   in the constructor documentation of this class.
 	 *
 	 * @param {string} sAggregationName name of the aggregation to be retrieved or empty
-	 * @return {object} aggregation info object or undefined
+	 * @returns {object|undefined} aggregation info object or <code>undefined</code>
 	 * @protected
 	 */
 	ManagedObjectMetadata.prototype.getManagedAggregation = function(sAggregationName) {
@@ -1345,7 +1355,9 @@ function(
 
 	/**
 	 * Returns a forwarder for the given aggregation (or undefined, when there is no forwarding), considering also inherited aggregations.
+	 * @param {string} sAggregationName Name of the aggregation to get the forwarder for
 	 * @private
+	 * @returns {sap.ui.base.ManagedObjectMetadata.AggregationForwarder|undefined}
 	 */
 	ManagedObjectMetadata.prototype.getAggregationForwarder = function(sAggregationName) {
 		var oAggregation = this._mAllAggregations[sAggregationName];
@@ -1391,7 +1403,7 @@ function(
 	 *   in the constructor documentation of this class.
 	 *
 	 * @param {string} sName name of the property like setting
-	 * @returns {Object} An info object describing the property or aggregation or <code>undefined</code>
+	 * @returns {Object|undefined} An info object describing the property or aggregation or <code>undefined</code>
 	 * @public
 	 * @since 1.27.0
 	 */
@@ -1431,7 +1443,7 @@ function(
 	 *   in the constructor documentation of this class.
 	 *
 	 * @param {string} sName name of the association
-	 * @returns {Object} An info object describing the association or <code>undefined</code>
+	 * @returns {Object|undefined} An info object describing the association or <code>undefined</code>
 	 * @public
 	 * @since 1.27.0
 	 */
@@ -1504,7 +1516,7 @@ function(
 	 *   in the constructor documentation of this class.
 	 *
 	 * @param {string} sName name of the association to be retrieved
-	 * @return {object} association info object or undefined
+	 * @returns {object|undefined} association info object or <code>undefined</code>
 	 * @protected
 	 */
 	ManagedObjectMetadata.prototype.getManagedAssociation = function(sName) {
@@ -1539,7 +1551,7 @@ function(
 	 *   in the constructor documentation of this class.
 	 *
 	 * @param {string} sName name of the event
-	 * @returns {Object} An info object describing the event or <code>undefined</code>
+	 * @returns {Object|undefined} An info object describing the event or <code>undefined</code>
 	 * @public
 	 * @since 1.27.0
 	 */
@@ -1712,16 +1724,17 @@ function(
 
 	/**
 	 * Filter out settings from the given map that are not described in the metadata.
-	 * If null or undefined is given, null or undefined is returned.
 	 *
-	 * @param {object} mSettings original filters or null
-	 * @returns {object} filtered settings or null
+	 * If <code>null</code> or <code>undefined</code> is given, <code>null</code> or <code>undefined</code> is returned.
+	 *
+	 * @param {object|null|undefined} [mSettings] original filters or <code>null</code>
+	 * @returns {object|null|undefined} new object with filtered settings or <code>null</code> or <code>undefined</code>
 	 * @private
 	 * @since 1.27.0
 	 */
 	ManagedObjectMetadata.prototype.removeUnknownSettings = function(mSettings) {
 
-		assert(mSettings == null || typeof mSettings === 'object', "mSettings must be null or an object");
+		assert(mSettings == null || typeof mSettings === 'object', "mSettings must be null or undefined or an object");
 
 		if ( mSettings == null ) {
 			return mSettings;

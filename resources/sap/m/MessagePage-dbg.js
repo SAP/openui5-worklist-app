@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -45,6 +45,9 @@ sap.ui.define([
 		// shortcut for sap.m.BarDesign
 		var BarDesign = library.BarDesign;
 
+		// shortcut for sap.ui.core.TitleLevel
+		var TitleLevel = coreLibrary.TitleLevel;
+
 		/**
 		 * Constructor for a new MessagePage.
 		 *
@@ -69,127 +72,138 @@ sap.ui.define([
 		 * @see {@link fiori:https://experience.sap.com/fiori-design-web/message-page/ Message Page}
 		 *
 		 * @extends sap.ui.core.Control
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
 		 * @since 1.28
 		 * @alias sap.m.MessagePage
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
-		var MessagePage = Control.extend("sap.m.MessagePage", /** @lends sap.m.MessagePage.prototype */ { metadata : {
+		var MessagePage = Control.extend("sap.m.MessagePage", /** @lends sap.m.MessagePage.prototype */ {
+			metadata : {
 
-			library : "sap.m",
-			properties : {
-				/**
-				 * Determines the main text displayed on the MessagePage.
-				 */
-				text : {type : "string", group : "Misc", defaultValue : "No matching items found."},
-				/**
-				 * Determines the detailed description that shows additional information on the MessagePage.
-				 */
-				description : {type : "string", group : "Misc", defaultValue : "Check the filter settings."},
-				/**
-				 * Determines the title in the header of MessagePage.
-				 */
-				title : { type : "string", group : "Misc", defaultValue : null },
-				/**
-				 * Determines the visibility of the MessagePage header.
-				 * Can be used to hide the header of the MessagePage when it's embedded in another page.
-				 */
-				showHeader : { type : "boolean", group : "Appearance", defaultValue : true },
-				/**
-				 * Determines the visibility of the navigation button in MessagePage header.
-				 */
-				showNavButton : {type : "boolean", group : "Appearance", defaultValue : false},
-				/**
-				 * Determines the icon displayed on the MessagePage.
-				 */
-				icon : {type : "sap.ui.core.URI", group : "Misc", defaultValue : "sap-icon://documents" },
-				/**
-				 * Defines the alt attribute of the icon displayed on the <code>MessagePage</code>.
-				 *
-				 * @since 1.52
-				 */
-				iconAlt : {type : "string", group : "Misc", defaultValue : null },
-				/**
-				 * Determines the element's text directionality with enumerated options. By default, the control inherits text direction from the DOM.
-				 */
-				textDirection : {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
+				library : "sap.m",
+				properties : {
+					/**
+					 * Determines the main text displayed on the MessagePage.
+					 */
+					text : {type : "string", group : "Misc", defaultValue : "No matching items found."},
+					/**
+					 * Determines the detailed description that shows additional information on the MessagePage.
+					 */
+					description : {type : "string", group : "Misc", defaultValue : "Check the filter settings."},
+					/**
+					 * Determines the title in the header of MessagePage.
+					 */
+					title : { type : "string", group : "Misc", defaultValue : null },
+					/**
+					 * Defines the semantic level of the title. When using <code>Auto</code>, no explicit level information is written.
+					 *
+					 * <b>Note:</b> Used for accessibility purposes only.
+					 *
+					 * @since 1.97
+					 */
+					titleLevel : { type: "sap.ui.core.TitleLevel", group: "Appearance", defaultValue: TitleLevel.Auto },
+					/**
+					 * Determines the visibility of the MessagePage header.
+					 * Can be used to hide the header of the MessagePage when it's embedded in another page.
+					 */
+					showHeader : { type : "boolean", group : "Appearance", defaultValue : true },
+					/**
+					 * Determines the visibility of the navigation button in MessagePage header.
+					 */
+					showNavButton : {type : "boolean", group : "Appearance", defaultValue : false},
+					/**
+					 * Determines the icon displayed on the MessagePage.
+					 */
+					icon : {type : "sap.ui.core.URI", group : "Misc", defaultValue : "sap-icon://documents" },
+					/**
+					 * Defines the alt attribute of the icon displayed on the <code>MessagePage</code>.
+					 *
+					 * @since 1.52
+					 */
+					iconAlt : {type : "string", group : "Misc", defaultValue : null },
+					/**
+					 * Determines the element's text directionality with enumerated options. By default, the control inherits text direction from the DOM.
+					 */
+					textDirection : {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
 
-				/**
-				 * Defines whether the value set in the <code>description</code> property is displayed
-				 * as formatted text in HTML format.
-				 *
-				 * For details regarding supported HTML tags, see {@link sap.m.FormattedText}
-				 * @since 1.54
-				 */
-				enableFormattedText: { type: "boolean", group: "Appearance", defaultValue: false }
+					/**
+					 * Defines whether the value set in the <code>description</code> property is displayed
+					 * as formatted text in HTML format.
+					 *
+					 * For details regarding supported HTML tags, see {@link sap.m.FormattedText}
+					 * @since 1.54
+					 */
+					enableFormattedText: { type: "boolean", group: "Appearance", defaultValue: false }
+				},
+				aggregations : {
+					/**
+					 * The (optional) custom Text control of this page.
+					 * Use this aggregation when the "text" (sap.m.Text) control needs to be replaced with an sap.m.Link control.
+					 * "text" and "textDirection" setters can be used for this aggregation.
+					 */
+					customText : {type : "sap.m.Link", multiple : false},
+					/**
+					 * The (optional) custom description control of this page.
+					 * Use this aggregation when the "description" (sap.m.Text) control needs to be replaced with an sap.m.Link control.
+					 * "description" and "textDirection" setters can be used for this aggregation.
+					 */
+					customDescription : {type : "sap.m.Link", multiple : false},
+
+					/**
+					 * The buttons displayed under the description text.
+					 *
+					 * <b>Note:</b> Buttons added to this aggregation are both vertically and horizontally
+					 * centered. Depending on the available space, they may be rendered on several lines.
+					 * @since 1.54
+					 */
+					buttons: {type: "sap.m.Button", multiple: true},
+
+					/**
+					 * A header bar which is managed internally by the MessagePage control.
+					 */
+					_internalHeader: {type: "sap.m.Bar", multiple: false, visibility: "hidden"},
+
+					/**
+					 * The formatted text which is used when enableFormattedText is true.
+					 */
+					_formattedText: {type: "sap.m.FormattedText", multiple: false, visibility: "hidden" },
+
+					/**
+					 * The text displayed under the icon.
+					 */
+					_text: {type: "sap.m.Text", multiple: false, visibility: "hidden"},
+
+					/**
+					 * The description displayed under the text when enableFormattedText is false.
+					 */
+					_description: {type: "sap.m.Text", multiple: false, visibility: "hidden"}
+				},
+				associations : {
+
+					/**
+					 * Association to controls / ids which describe this control (see WAI-ARIA attribute aria-describedby).
+					 */
+					ariaDescribedBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaDescribedBy"},
+
+					/**
+					 * Association to controls / ids which label this control (see WAI-ARIA attribute aria-labelledby).
+					 */
+					ariaLabelledBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaLabelledBy"}
+				},
+				events : {
+					/**
+					 * This event is fired when Nav Button is pressed.
+					 * @since 1.28.1
+					 */
+					navButtonPress : {}
+				},
+				designtime: "sap/m/designtime/MessagePage.designtime"
 			},
-			aggregations : {
-				/**
-				 * The (optional) custom Text control of this page.
-				 * Use this aggregation when the "text" (sap.m.Text) control needs to be replaced with an sap.m.Link control.
-				 * "text" and "textDirection" setters can be used for this aggregation.
-				 */
-				customText : {type : "sap.m.Link", multiple : false},
-				/**
-				 * The (optional) custom description control of this page.
-				 * Use this aggregation when the "description" (sap.m.Text) control needs to be replaced with an sap.m.Link control.
-				 * "description" and "textDirection" setters can be used for this aggregation.
-				 */
-				customDescription : {type : "sap.m.Link", multiple : false},
 
-				/**
-				 * The buttons displayed under the description text.
-				 *
-				 * <b>Note:</b> Buttons added to this aggregation are both vertically and horizontally
-				 * centered. Depending on the available space, they may be rendered on several lines.
-				 * @since 1.54
-				 */
-				buttons: {type: "sap.m.Button", multiple: true},
-
-				/**
-				 * A header bar which is managed internally by the MessagePage control.
-				 */
-				_internalHeader: {type: "sap.m.Bar", multiple: false, visibility: "hidden"},
-
-				/**
-				 * The formatted text which is used when enableFormattedText is true.
-				 */
-				_formattedText: {type: "sap.m.FormattedText", multiple: false, visibility: "hidden" },
-
-				/**
-				 * The text displayed under the icon.
-				 */
-				_text: {type: "sap.m.Text", multiple: false, visibility: "hidden"},
-
-				/**
-				 * The description displayed under the text when enableFormattedText is false.
-				 */
-				_description: {type: "sap.m.Text", multiple: false, visibility: "hidden"}
-			},
-			associations : {
-
-				/**
-				 * Association to controls / ids which describe this control (see WAI-ARIA attribute aria-describedby).
-				 */
-				ariaDescribedBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaDescribedBy"},
-
-				/**
-				 * Association to controls / ids which label this control (see WAI-ARIA attribute aria-labelledby).
-				 */
-				ariaLabelledBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaLabelledBy"}
-			},
-			events : {
-				/**
-				 * This event is fired when Nav Button is pressed.
-				 * @since 1.28.1
-				 */
-				navButtonPress : {}
-			},
-			designtime: "sap/m/designtime/MessagePage.designtime"
-		}});
+			renderer: MessagePageRenderer
+		});
 
 		/**
 		 * STATIC MEMBERS
@@ -235,12 +249,15 @@ sap.ui.define([
 		MessagePage.prototype.setTitle = function(sTitle) {
 			this.setProperty("title", sTitle, true); // no re-rendering
 
-			if (!this._oTitle) {
-				this._oTitle = new Title(this.getId() + "-title");
-				this._getInternalHeader().addContentMiddle(this._oTitle);
-			}
+			this._getTitle().setText(sTitle);
 
-			this._oTitle.setText(sTitle);
+			return this;
+		};
+
+		MessagePage.prototype.setTitleLevel = function(sTitleLevel) {
+			this.setProperty("titleLevel", sTitleLevel, true); // no re-rendering
+
+			this._getTitle().setLevel(sTitleLevel);
 
 			return this;
 		};
@@ -345,6 +362,21 @@ sap.ui.define([
 			}
 
 			return this.getAggregation("_text");
+		};
+
+		/**
+		 * @returns {sap.m.Title} the control which will display the MessagePage's title
+		 * @private
+		 */
+		MessagePage.prototype._getTitle = function() {
+			if (!this._oTitle) {
+				this._oTitle = new Title(this.getId() + "-title", {
+					level: this.getTitleLevel()
+				});
+				this._getInternalHeader().addContentMiddle(this._oTitle);
+			}
+
+			return this._oTitle;
 		};
 
 		/**

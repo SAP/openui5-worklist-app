@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -62,14 +62,13 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.38
 	 * @alias sap.m.ObjectMarker
 	 * @see {@link fiori:https://experience.sap.com/fiori-design-web/object-display-elements/#-object-status Object Marker}
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var ObjectMarker = Control.extend("sap.m.ObjectMarker", /** @lends sap.m.ObjectMarker.prototype */ {
 		metadata: {
@@ -142,7 +141,9 @@ sap.ui.define([
 				}
 			},
 			dnd: { draggable: true, droppable: false }
-		}
+		},
+
+		renderer: ObjectMarkerRenderer
 	});
 
 	/**
@@ -403,7 +404,9 @@ sap.ui.define([
 		if (bIsIconVisible) {
 			oInnerControl.setIcon(oType.icon.src, bSuppressInvalidate);
 			oInnerIcon.setDecorative(!bIsIconOnly); // icon should be decorative if we have text
-			oInnerIcon.setAlt(sText);
+			if (bIsTextVisible) {
+				oInnerIcon.setAlt(sText);
+			}
 			oInnerIcon.setUseIconTooltip(false);
 			this.addStyleClass("sapMObjectMarkerIcon");
 		} else {
@@ -413,11 +416,12 @@ sap.ui.define([
 
 		if (bIsTextVisible) {
 			oInnerControl.setAggregation("tooltip", null, bSuppressInvalidate);
+			oInnerIcon && oInnerIcon.setAggregation("tooltip", null, bSuppressInvalidate);
 			oInnerControl.setText(sText, bSuppressInvalidate);
 			this.addStyleClass("sapMObjectMarkerText");
 		} else {
 			if (oInnerIcon) {
-				oInnerControl.setAggregation("tooltip", sText, bSuppressInvalidate);
+				oInnerControl.setAggregation("tooltip", this.getTooltip_AsString() || sText, bSuppressInvalidate);
 			}
 			oInnerControl.setText(null, bSuppressInvalidate);
 			this.removeStyleClass("sapMObjectMarkerText");
@@ -443,7 +447,7 @@ sap.ui.define([
 	 * @param {object} oType The object type
 	 * @param {string} sType The string type
 	 * @param {string} sAdditionalInfo The additional information
-	 * @returns {String} concatenated from type and additionalInfo text
+	 * @returns {string} concatenated from type and additionalInfo text
 	 * @private
 	 */
 	ObjectMarker.prototype._getMarkerText = function (oType, sType, sAdditionalInfo) {
@@ -547,16 +551,18 @@ sap.ui.define([
 	 */
 	ObjectMarker.prototype._createCustomLink = function () {
 		var oCustomLink = new CustomLink(this.getId() + "-link", {
-			wrapping: true
-		});
-
-		oCustomLink.attachPress(function(oEvent) {
-			this.firePress({
-				type: this.getType()
+				wrapping: true
 			});
-		}, this);
+
+		oCustomLink.attachPress(this._firePress, this);
 
 		return oCustomLink;
+	};
+
+	ObjectMarker.prototype._firePress = function() {
+		this.firePress({
+			type: this.getType()
+		});
 	};
 
 	/**
@@ -589,6 +595,16 @@ sap.ui.define([
 
 	CustomTextRenderer.apiVersion = 2;
 
+	CustomTextRenderer.render = function(oRm, oControl) {
+		if (oControl.getIconOnly()) {
+			var oIconControl = oControl._getIconAggregation();
+			oIconControl.setAlt(oControl.getTooltip_AsString());
+			oRm.renderControl(oIconControl);
+		} else {
+			TextRenderer.render.call(this, oRm, oControl);
+		}
+	};
+
 	CustomTextRenderer.renderText = function(oRm, oControl) {
 		oRm.renderControl(oControl._getIconAggregation());
 		TextRenderer.renderText(oRm, oControl);
@@ -598,7 +614,8 @@ sap.ui.define([
 		metadata: {
 			library: "sap.m",
 			properties: {
-				icon: {type : "sap.ui.core.URI", group : "Data", defaultValue : null}
+				icon: {type: "sap.ui.core.URI", group: "Data", defaultValue: null},
+				iconOnly: {type: "boolean", group: "Appearance", defaultValue: false}
 			},
 			aggregations: {
 				_iconControl: {type: "sap.ui.core.Icon", multiple: false, visibility: "hidden"}
@@ -641,6 +658,18 @@ sap.ui.define([
 
 	CustomLinkRenderer.apiVersion = 2;
 
+	CustomLinkRenderer.render = function(oRm, oControl) {
+		if (oControl.getIconOnly()) {
+			var oIconControl = oControl._getIconAggregation(),
+				sTooltip = oControl.getTooltip_AsString();
+			oIconControl.setAlt(sTooltip);
+			oIconControl.setTooltip(sTooltip);
+			oRm.renderControl(oIconControl);
+		} else {
+			LinkRenderer.render.call(this, oRm, oControl);
+		}
+	};
+
 	CustomLinkRenderer.renderText = function(oRm, oControl) {
 		oRm.renderControl(oControl._getIconAggregation());
 		LinkRenderer.renderText(oRm, oControl);
@@ -650,7 +679,8 @@ sap.ui.define([
 		metadata: {
 			library: "sap.m",
 			properties: {
-				icon: {type : "sap.ui.core.URI", group : "Data", defaultValue : null}
+				icon: {type: "sap.ui.core.URI", group: "Data", defaultValue: null},
+				iconOnly: {type: "boolean", group: "Appearance", defaultValue: false}
 			},
 			aggregations: {
 				_iconControl: {type: "sap.ui.core.Icon", multiple: false, visibility: "hidden"}
@@ -690,6 +720,21 @@ sap.ui.define([
 		}
 
 		return oIcon;
+	};
+
+	/*
+	 * Determines whether self-reference should be added.
+	 *
+	 * @returns {boolean}
+	 * @override
+	 * @private
+	 */
+	CustomLink.prototype._determineSelfReferencePresence = function () {
+		if (this.getIcon() && !this.getText()) {
+			return false;
+		} else {
+			return Link.prototype._determineSelfReferencePresence.apply(this, arguments);
+		}
 	};
 
 	return ObjectMarker;

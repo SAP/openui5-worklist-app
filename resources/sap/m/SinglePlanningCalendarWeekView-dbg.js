@@ -1,16 +1,18 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
 	'./library',
 	'./SinglePlanningCalendarView',
+	'sap/ui/core/LocaleData',
 	'sap/ui/unified/calendar/CalendarDate',
-	'sap/ui/unified/calendar/CalendarUtils'
+	'sap/ui/unified/calendar/CalendarUtils',
+	'sap/ui/core/Configuration'
 ],
-function (library, SinglePlanningCalendarView, CalendarDate, CalendarUtils) {
+function (library, SinglePlanningCalendarView, LocaleData, CalendarDate, CalendarUtils, Configuration) {
 	"use strict";
 
 	/**
@@ -27,7 +29,7 @@ function (library, SinglePlanningCalendarView, CalendarDate, CalendarUtils) {
 	 * @extends sap.m.SinglePlanningCalendarView
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
@@ -74,10 +76,19 @@ function (library, SinglePlanningCalendarView, CalendarDate, CalendarUtils) {
 	 * @public
 	 */
 	SinglePlanningCalendarWeekView.prototype.calculateStartDate = function (oStartDate) {
-		var oCalDate = CalendarDate.fromLocalJSDate(oStartDate),
-			oCalFirstDateOfWeek = CalendarUtils._getFirstDateOfWeek(oCalDate);
+		var oLocaleData = LocaleData.getInstance(Configuration.getFormatSettings().getFormatLocale()),
+			iFirstDayOfWeek = this.getFirstDayOfWeek(),
+			// -1 is the default value of firstDayOfWeek property. It means that the information from the used locale is used.
+			iCurrentFirstDayOfWeek = iFirstDayOfWeek === -1 ? oLocaleData.getFirstDayOfWeek() : iFirstDayOfWeek;
 
-		return oCalFirstDateOfWeek.toLocalJSDate();
+		oStartDate.setDate(oStartDate.getDate() - oStartDate.getDay() + iCurrentFirstDayOfWeek);
+
+		return CalendarUtils
+			._getFirstDateOfWeek(CalendarDate.fromLocalJSDate(oStartDate), {
+				firstDayOfWeek: iFirstDayOfWeek,
+				minimalDaysInFirstWeek: oLocaleData.getMinimalDaysInFirstWeek()
+			})
+			.toLocalJSDate();
 	};
 
 	return SinglePlanningCalendarWeekView;

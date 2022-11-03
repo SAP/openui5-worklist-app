@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -129,8 +129,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/IconPool', 'sap/m/library', 
 		 */
 		 SelectRenderer.renderFocusElement = function (oRm, oSelect) {
 			var oSelectedItem = oSelect.getSelectedItem(),
-				sTooltip = oSelect.getTooltip_AsString(),
-				sType = oSelect.getType();
+				bIconOnly = oSelect.getType() === SelectType.IconOnly;
 
 			oRm.openStart("div", oSelect.getId() + "-hiddenSelect");
 
@@ -145,23 +144,48 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/IconPool', 'sap/m/library', 
 				oRm.attr("tabindex", "0");
 			}
 
-			if (sTooltip) {
-				oRm.attr("title", sTooltip);
-			} else if (sType === SelectType.IconOnly) {
-				var oIconInfo = IconPool.getIconInfo(oSelect.getIcon());
-
-				if (oIconInfo) {
-					oRm.attr("title", oIconInfo.text);
-				}
-			}
+			this.renderTooltip(oRm, oSelect);
 
 			oRm.openEnd();
 
-			if (oSelectedItem) {
+			if (oSelectedItem && !bIconOnly) {
+				// if icon only mode, the control is announced as standard
+				// button and the selected value is not rendered
 				oRm.text(oSelectedItem.getText());
 			}
 
 			oRm.close('div');
+		};
+
+		/**
+		 * Generates and renders the tooltip text. Icon only aware.
+		 *
+		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
+		 * @param {sap.m.Select} oSelect An object representation of the Select control.
+		 * @private
+		 */
+		SelectRenderer.renderTooltip = function (oRm, oSelect) {
+			var oIconInfo,
+				sTooltip = oSelect.getTooltip_AsString(),
+				bIconOnly = oSelect.getType() === SelectType.IconOnly;
+
+			if (!sTooltip && bIconOnly) {
+				oIconInfo = IconPool.getIconInfo(oSelect.getIcon());
+				if (oIconInfo) {
+					sTooltip = oIconInfo.text;
+				}
+			}
+
+			if (!sTooltip) {
+				return;
+			}
+
+			oRm.attr("title", sTooltip);
+
+			if (bIconOnly) {
+				// if in IconOnly mode, similarly to sap.m.Button the tooltip should also be part of the accessibleName
+				oRm.attr("aria-label", sTooltip);
+			}
 		};
 
 		/**
@@ -334,7 +358,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/IconPool', 'sap/m/library', 
 		 * This method is reserved for derived class to add extra classes to the HTML root element of the control.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-		 * @param {sap.ui.core.Control} oSelect An object representation of the control that should be rendered.
+		 * @param {sap.m.Select} oSelect An object representation of the control that should be rendered.
 		 * @protected
 		 */
 		SelectRenderer.addClass = function(oRm, oSelect) {};
@@ -344,7 +368,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/IconPool', 'sap/m/library', 
 		 * To be overwritten by subclasses.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-		 * @param {sap.ui.core.Control} oSelect An object representation of the control that should be rendered.
+		 * @param {sap.m.Select} oSelect An object representation of the control that should be rendered.
 		 */
 		SelectRenderer.addValueStateClasses = function(oRm, oSelect) {
 			oRm.class(SelectRenderer.CSS_CLASS + "State");
@@ -355,7 +379,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/IconPool', 'sap/m/library', 
 		 * Gets accessibility role.
 		 * To be overwritten by subclasses.
 		 *
-		 * @param {sap.ui.core.Control} oSelect An object representation of the control that should be rendered.
+		 * @param {sap.m.Select} oSelect An object representation of the control that should be rendered.
 		 * @protected
 		 */
 		SelectRenderer.getAriaRole = function(oSelect) {
@@ -375,7 +399,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/IconPool', 'sap/m/library', 
 		 * To be overwritten by subclasses.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-		 * @param {sap.ui.core.Control} oSelect An object representation of the control that should be rendered.
+		 * @param {sap.m.Select} oSelect An object representation of the control that should be rendered.
 		 */
 		SelectRenderer.writeAccessibilityState = function(oRm, oSelect) {
 			var sValueState = oSelect.getValueState(),
@@ -426,7 +450,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/IconPool', 'sap/m/library', 
 
 			oRm.accessibilityState(null, {
 				role: this.getAriaRole(oSelect),
-				roledescription: oSelect._sAriaRoleDescription,
+				roledescription: bIconOnly ? undefined : oSelect._sAriaRoleDescription,
 				readonly: bIconOnly ? undefined : oSelect.getEnabled() && !oSelect.getEditable(),
 				required: oSelect._isRequired() || undefined,
 				disabled: !oSelect.getEnabled() || undefined,
@@ -443,7 +467,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/IconPool', 'sap/m/library', 
 		 * Render value state accessibility DOM nodes for screen readers.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-		 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+		 * @param {sap.m.Select} oControl An object representation of the control that should be rendered.
 		 */
 		SelectRenderer.renderAccessibilityDomNodes = function (oRm, oControl) {
 			var sValueState = oControl.getValueState(),

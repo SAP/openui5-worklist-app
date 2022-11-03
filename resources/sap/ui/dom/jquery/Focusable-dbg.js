@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -29,7 +29,7 @@ sap.ui.define([
 	 *
 	 * @param {Node} oContainer Node to search for a focusable descendant
 	 * @param {boolean} bForward Whether to search forward (true) or backwards (false)
-	 * @returns {Element} Element node that is focusable and visible or null
+	 * @returns {Element|null} Element node that is focusable and visible or null
 	 * @private
 	 */
 	function findFocusableDomRef(oContainer, bForward) {

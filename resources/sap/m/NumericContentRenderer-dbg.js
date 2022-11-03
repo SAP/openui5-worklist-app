@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -27,7 +27,7 @@ sap.ui.define([
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oControl an object representation of the control that should be rendered
+	 * @param {sap.m.NumericContent} oControl an object representation of the control that should be rendered
 	 */
 	NumericContentRenderer.render = function(oRm, oControl) {
 		var sState = oControl.getState();
@@ -76,9 +76,9 @@ sap.ui.define([
 	 * in comparison to Chrome.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oControl an object representation of the control that should be rendered
+	 * @param {sap.m.NumericContent} oControl an object representation of the control that should be rendered
 	 * @param {sap.ui.core.Icon} oIcon the icon inside the control
-	 * @param {String} sNumericContentFontClass font class of related NumericContent
+	 * @param {string} sNumericContentFontClass font class of related NumericContent
 	 * @private
 	 */
 	NumericContentRenderer._prepareAndRenderIcon = function (oRm, oControl, oIcon, sNumericContentFontClass) {
@@ -116,11 +116,11 @@ sap.ui.define([
 	 *
 	 * @private
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oControl an object representation of the control whose title should be rendered
-	 * @param {String} sWithoutMargin
-	 * @param {String} sValue
-	 * @param {String} sScale
-	 * @param {String} sNumericContentFontClass font class of related NumericContent
+	 * @param {sap.m.NumericContent} oControl an object representation of the control whose title should be rendered
+	 * @param {string} sWithoutMargin
+	 * @param {string} sValue
+	 * @param {string} sScale
+	 * @param {string} sNumericContentFontClass font class of related NumericContent
 	 */
 	NumericContentRenderer._renderScaleAndIndicator = function(oRm, oControl, sWithoutMargin, sValue, sScale, sNumericContentFontClass) {
 		var bIndicator = DeviationIndicator.None !== oControl.getIndicator() && sValue !== "";
@@ -161,8 +161,8 @@ sap.ui.define([
 	 *
 	 * @private
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oControl an object representation of the control whose title should be rendered
-	 * @param {String} sWithoutMargin
+	 * @param {sap.m.NumericContent} oControl an object representation of the control whose title should be rendered
+	 * @param {string} sWithoutMargin
 	 */
 	NumericContentRenderer._renderValue = function(oRm, oControl, sWithoutMargin) {
 		var sValue = oControl.getValue();

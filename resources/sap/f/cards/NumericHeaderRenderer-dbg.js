@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -21,19 +21,17 @@ sap.ui.define([], function () {
 	NumericHeaderRenderer.render = function (oRm, oNumericHeader) {
 		var bLoading = oNumericHeader.isLoading(),
 			oError = oNumericHeader.getAggregation("_error"),
-			sTabIndex = oNumericHeader._isInsideGridContainer() ? "-1" : "0";
+			sTabIndex;
 
 		oRm.openStart("div", oNumericHeader)
 			.class("sapFCardHeader")
-			.class("sapFCardNumericHeader")
-			.class("sapFCardNumericHeaderSideIndicatorsAlign" + oNumericHeader.getSideIndicatorsAlignment())
-			.attr("tabindex", sTabIndex);
+			.class("sapFCardNumericHeader");
 
 		if (bLoading) {
 			oRm.class("sapFCardHeaderLoading");
 		}
 
-		if (oNumericHeader.hasListeners("press")) {
+		if (oNumericHeader._isInteractive()) {
 			oRm.class("sapFCardClickable");
 		}
 
@@ -44,15 +42,25 @@ sap.ui.define([], function () {
 		//Accessibility state
 		oRm.accessibilityState(oNumericHeader, {
 			role: oNumericHeader.getAriaRole(),
-			labelledby: { value: oNumericHeader._getAriaLabelledBy(), append: true },
-			roledescription: { value: oNumericHeader.getAriaRoleDescription(), append: true },
-			level: { value: oNumericHeader.getAriaHeadingLevel() }
+			roledescription: { value: oNumericHeader.getAriaRoleDescription(), append: true }
 		});
 		oRm.openEnd();
 
 		oRm.openStart("div")
-			.class("sapFCardHeaderContent")
-			.openEnd();
+			.attr("id", oNumericHeader.getId() + "-focusable")
+			.class("sapFCardHeaderContent");
+
+		if (oNumericHeader.getProperty("focusable")) {
+			sTabIndex = oNumericHeader._isInsideGridContainer() ? "-1" : "0";
+			oRm.attr("tabindex", sTabIndex);
+		}
+
+		oRm.accessibilityState({
+			labelledby: { value: oNumericHeader._getAriaLabelledBy(), append: true },
+			role: oNumericHeader.getFocusableElementAriaRole()
+		});
+
+		oRm.openEnd();
 
 		if (oError) {
 			oRm.renderControl(oError);
@@ -120,7 +128,7 @@ sap.ui.define([], function () {
 		}
 
 		if (sStatus) {
-			oRm.openStart("span", oNumericHeader.getId() + '-status')
+			oRm.openStart("span", oNumericHeader.getId() + "-status")
 				.class("sapFCardStatus");
 
 			if (oBindingInfos.statusText) {
@@ -184,52 +192,23 @@ sap.ui.define([], function () {
 	 * Render main indicator and side indicators if any.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.f.cards.NumericHeader} oNumericHeader An object representation of the control that should be rendered
+	 * @param {sap.f.cards.NumericHeader} oNH An object representation of the control that should be rendered
 	 */
-	NumericHeaderRenderer.renderIndicators = function(oRm, oNumericHeader) {
-		var oMainIndicator = oNumericHeader.getAggregation("_mainIndicator"),
-			oSideIndicators = oNumericHeader.getAggregation("sideIndicators"),
-			oBindingInfos = oNumericHeader.mBindingInfos;
-
-		if ((oMainIndicator && oMainIndicator.getValue()) || oSideIndicators.length !== 0) {
-			oRm.openStart("div")
-				.class("sapFCardHeaderIndicators")
-				.openEnd();
-
-			if (oMainIndicator) {
-				oRm.openStart("div")
-					.class("sapFCardHeaderMainIndicator")
-					.openEnd();
-
-				if (oBindingInfos.scale || oBindingInfos.number || oBindingInfos.trend || oBindingInfos.state) {
-					oMainIndicator.addStyleClass("sapFCardHeaderItemBinded");
-				} else {
-					oMainIndicator.removeStyleClass("sapFCardHeaderItemBinded");
-				}
-				oRm.renderControl(oMainIndicator);
-				oRm.close("div");
-
-				oRm.openStart("div")
-					.class("sapFCardHeaderIndicatorsGap")
-					.openEnd()
-					.close("div");
-			}
-
-			if (oSideIndicators.length !== 0) {
-				oRm.openStart("div")
-					.class("sapFCardHeaderSideIndicators")
-					.openEnd();
-
-				// TODO min-width for side indicator. Now it starts to truncate too early
-				// Maybe wrap them when card is too small
-				oSideIndicators.forEach(function(oIndicator) {
-					oRm.renderControl(oIndicator);
-				});
-				oRm.close("div");
-			}
-
-			oRm.close("div");
+	NumericHeaderRenderer.renderIndicators = function(oRm, oNH) {
+		if (!oNH.getNumber() && !oNH.isBound("number") && oNH.getSideIndicators().length === 0) {
+			return;
 		}
+
+		var oNumericIndicators = oNH._getNumericIndicators(),
+			oMainIndicator = oNumericIndicators._getMainIndicator();
+
+		if (oNH.isBound("scale") || oNH.isBound("number") || oNH.isBound("trend") || oNH.isBound("state")) {
+			oMainIndicator.addStyleClass("sapFCardHeaderItemBinded");
+		} else {
+			oMainIndicator.removeStyleClass("sapFCardHeaderItemBinded");
+		}
+
+		oRm.renderControl(oNumericIndicators);
 	};
 
 	/**

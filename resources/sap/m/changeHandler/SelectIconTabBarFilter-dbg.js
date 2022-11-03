@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -14,7 +14,7 @@ sap.ui.define([
 	 *
 	 * @alias sap.m.changeHandler.SelectIconTabBarFilter
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @experimental Since 1.96
 	 */
 	var SelectIconTabBarFilter = {};
@@ -31,10 +31,16 @@ sap.ui.define([
 	 */
 	SelectIconTabBarFilter.applyChange = function (oChange, oControl, mPropertyBag) {
 		var oModifier = mPropertyBag.modifier;
-		var oChangeDefinition = oChange.getDefinition();
+		var oChangeContent = oChange.getContent();
 
-		oModifier.setProperty(oControl, "selectedKey", oChangeDefinition.content.selectedKey);
-		oChange.setRevertData(oChangeDefinition.content.previousSelectedKey);
+		// Make sure the "select" event of the control is fired.
+		// By default it is not fired when the "selectedKey" property is changed,
+		// but only via user interaction
+		oControl._bFireSelectEvent = oChangeContent.fireEvent;
+		oModifier.setProperty(oControl, "selectedKey", oChangeContent.selectedKey);
+		oControl._bFireSelectEvent = false;
+
+		oChange.setRevertData({key:oChangeContent.previousSelectedKey, fireEvent: oChangeContent.fireEvent});
 	};
 
 	/**
@@ -48,9 +54,15 @@ sap.ui.define([
 	 */
 	SelectIconTabBarFilter.revertChange = function (oChange, oControl, mPropertyBag) {
 		var oModifier = mPropertyBag.modifier;
-		var sPreviousSelectedKey = oChange.getRevertData();
+		var oRevertData = oChange.getRevertData();
 
-		oModifier.setProperty(oControl, "selectedKey", sPreviousSelectedKey);
+		// Make sure the "select" event of the control is fired.
+		// By default it is not fired when the "selectedKey" property is changed,
+		// but only via user interaction
+		oControl._bFireSelectEvent = oRevertData.fireEvent;
+		oModifier.setProperty(oControl, "selectedKey", oRevertData.key);
+		oControl._bFireSelectEvent = false;
+
 		oChange.resetRevertData();
 	};
 

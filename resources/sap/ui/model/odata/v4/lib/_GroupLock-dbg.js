@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -14,6 +14,10 @@ sap.ui.define([
 	 * Constructs a potential lock for the given group ID. A group lock may be created locked or
 	 * unlocked. If locked, its {@link #waitFor} returns a promise that is resolved when the lock is
 	 * unlocked.
+	 *
+	 * Do not use this constructor directly. Use
+	 * {@link sap.ui.model.odata.v4.lib._Requestor#lockGroup} instead, so that the
+	 * <code>bLocked</code> flag is handled.
 	 *
 	 * @param {string} sGroupId
 	 *   The group ID
@@ -77,6 +81,18 @@ sap.ui.define([
 	 */
 	_GroupLock.prototype.getGroupId = function () {
 		return this.sGroupId;
+	};
+
+	/**
+	 * Returns the owner.
+	 *
+	 * @returns {object}
+	 *   The lock's owner for debugging
+	 *
+	 * @public
+	 */
+	_GroupLock.prototype.getOwner = function () {
+		return this.oOwner;
 	};
 
 	/**
@@ -180,7 +196,7 @@ sap.ui.define([
 	 * Returns a promise that is resolved when this lock does no longer block the given group ID.
 	 *
 	 * @param {string} sGroupId The group ID
-	 * @returns {sap.ui.base.SyncPromise}
+	 * @returns {sap.ui.base.SyncPromise|undefined}
 	 *   A promise or <code>undefined</code> if the lock does not block this group
 	 *
 	 * @public

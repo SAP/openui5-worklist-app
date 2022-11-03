@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -46,7 +46,7 @@ sap.ui.define([
 	 *
 	 * @extends sap.ui.model.Type
 	 * @public
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 */
 	var SimpleType = Type.extend("sap.ui.model.SimpleType", /** @lends sap.ui.model.SimpleType.prototype */ {
 
@@ -109,7 +109,7 @@ sap.ui.define([
 	 *
 	 * @param {any} vValue
 	 *   The value to be validated
-	 * @returns {void|Promise}
+	 * @returns {void|Promise<undefined>}
 	 *   <code>undefined</code> or a <code>Promise</code> resolving with an undefined value
 	 * @throws {sap.ui.model.ValidateException}
 	 *   If at least one of the type constraints are not met; the message of the exception is

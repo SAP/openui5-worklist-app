@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(['sap/ui/core/Renderer', './DatePickerRenderer'],
@@ -20,7 +20,7 @@ sap.ui.define(['sap/ui/core/Renderer', './DatePickerRenderer'],
 	 *
 	 * @public
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.DateRangeSelection} oControl An object representation of the control that should be rendered.
 	 */
 	DateRangeSelectionRenderer.writeInnerValue = function(oRm, oControl) {
 

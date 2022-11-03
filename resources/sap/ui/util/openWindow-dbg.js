@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([], function() {
@@ -14,7 +14,7 @@ sap.ui.define([], function() {
 	 *
 	 * @param {sap.ui.core.URI} sUrl URL of a document that should be loaded in the new window
 	 * @param {string} sWindowName Name of the new window
-	 * @returns {Window|null} The newly returned window object or null
+	 * @returns {Window|null} The newly returned window object or <code>null</code>
 	 * @private
 	 * @ui5-restricted
 	 * @alias module:sap/ui/util/openWindow

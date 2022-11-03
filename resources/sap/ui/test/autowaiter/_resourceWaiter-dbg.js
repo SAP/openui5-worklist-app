@@ -1,12 +1,13 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
 	"./WaiterBase",
+	"./_utils",
 	"sap/ui/thirdparty/jquery"
-], function (WaiterBase, jQueryDOM) {
+], function (WaiterBase, _utils, jQueryDOM) {
 	"use strict";
 
 	var STATE = {
@@ -45,7 +46,7 @@ sap.ui.define([
 				}.bind(this));
 			}.bind(this));
 
-			this._onElementAvailable("body", function (oElement) {
+			_utils.onElementAvailable("body", function (oElement) {
 				observer.observe(oElement, {
 					attributes: true,
 					attributeFilter: ["src"],
@@ -103,16 +104,6 @@ sap.ui.define([
 					mNewResource.state = STATE.ERROR;
 					this._oLogger.trace("Image with src '" + oElement.src + "' failed to load");
 				}.bind(this));
-			}
-		},
-		_onElementAvailable: function (sSelector, fnOnAvailable) {
-			var aElements = jQueryDOM(sSelector);
-			if (aElements.length) {
-				fnOnAvailable(aElements[0]);
-			} else {
-				setTimeout(function () {
-					this._onElementAvailable(sSelector, fnOnAvailable);
-				}.bind(this), 100);
 			}
 		}
 	});

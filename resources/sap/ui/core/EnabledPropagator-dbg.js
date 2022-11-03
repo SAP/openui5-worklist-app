@@ -1,11 +1,13 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides mixin sap.ui.core.EnabledPropagator
-sap.ui.define([], function() {
+sap.ui.define([
+	"sap/ui/dom/jquery/Selectors"// jQuery custom selectors ":focusable"
+], function() {
 	"use strict";
 
 	/**
@@ -41,7 +43,7 @@ sap.ui.define([], function() {
 	 *
 	 * @param {boolean} [bDefault=true] Value that should be used as default value for the enhancement of the control.
 	 * @param {boolean} [bLegacy=false] Whether the introduced property should use the old name <code>Enabled</code>.
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @public
 	 * @class
 	 * @alias sap.ui.core.EnabledPropagator

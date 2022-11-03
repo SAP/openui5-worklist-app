@@ -1,12 +1,12 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides control sap.f.PlanningCalendarInCardLegend.
-sap.ui.define(['sap/m/PlanningCalendarLegend', 'sap/ui/unified/CalendarLegendItem', './PlanningCalendarInCardLegendRenderer'],
-	function(PlanningCalendarLegend, CalendarLegendItem, PlanningCalendarInCardLegendRenderer) {
+sap.ui.define(['sap/m/PlanningCalendarLegend', 'sap/ui/unified/CalendarLegendItem', './PlanningCalendarInCardLegendRenderer', 'sap/ui/core/Core'],
+	function(PlanningCalendarLegend, CalendarLegendItem, PlanningCalendarInCardLegendRenderer, Core) {
 		"use strict";
 
 
@@ -22,25 +22,28 @@ sap.ui.define(['sap/m/PlanningCalendarLegend', 'sap/ui/unified/CalendarLegendIte
 		 * @extends sap.m.PlanningCalendarLegend
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @private
 		 * @since 1.74
 		 * @experimental Since 1.74.
 		 * @alias sap.f.PlanningCalendarInCardLegend
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
-		var PlanningCalendarInCardLegend = PlanningCalendarLegend.extend("sap.f.PlanningCalendarInCardLegend", /** @lends sap.f.PlanningCalendarInCardLegend.prototype */ { metadata : {
+		var PlanningCalendarInCardLegend = PlanningCalendarLegend.extend("sap.f.PlanningCalendarInCardLegend", /** @lends sap.f.PlanningCalendarInCardLegend.prototype */ {
+			metadata : {
 
-			library : "sap.m",
-			properties: {
-				/**
-				 * Defines the number of visible calendar and appointment items.
-				 */
-				visibleLegendItemsCount: {type : "int", group : "Data", defaultValue: 2}
-			}
-		}});
+				library : "sap.m",
+				properties: {
+					/**
+					 * Defines the number of visible calendar and appointment items.
+					 */
+					visibleLegendItemsCount: {type : "int", group : "Data", defaultValue: 2}
+				}
+			},
+
+			renderer: PlanningCalendarInCardLegendRenderer
+		});
 
 		PlanningCalendarInCardLegend.prototype.exit = function () {
 			PlanningCalendarLegend.prototype.exit.call(this, arguments);
@@ -57,8 +60,9 @@ sap.ui.define(['sap/m/PlanningCalendarLegend', 'sap/ui/unified/CalendarLegendIte
 		 */
 		PlanningCalendarInCardLegend.prototype._getMoreItemsText = function (iItemsLeft) {
 			if (!this._oItemsLink) {
-				this._oItemsLink = new sap.ui.unified.CalendarLegendItem({
-					text: "More (" + iItemsLeft + ")"
+				var oRB = Core.getLibraryResourceBundle("sap.f");
+				this._oItemsLink = new CalendarLegendItem({
+					text: oRB.getText("CALENDAR_LEGEND_MORE") + " (" + iItemsLeft + ")"
 				});
 			}
 			return this._oItemsLink;

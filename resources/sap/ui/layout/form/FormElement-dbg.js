@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -26,13 +26,12 @@ sap.ui.define([
 	 * @extends sap.ui.core.Element
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.16.0
 	 * @alias sap.ui.layout.form.FormElement
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var FormElement = Element.extend("sap.ui.layout.form.FormElement", /** @lends sap.ui.layout.form.FormElement.prototype */ { metadata : {
 
@@ -209,7 +208,6 @@ sap.ui.define([
 	 *
 	 * @returns {sap.ui.core.Label} <code>Label</code> control used to render the label
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	FormElement.prototype.getLabelControl = function() {
 
@@ -290,7 +288,7 @@ sap.ui.define([
 	 * As Elements must not have a DOM reference it is not sure if one exists
 	 * If the FormElement has a DOM representation this function returns it,
 	 * independent from the ID of this DOM element
-	 * @return {Element} The Element's DOM representation or null
+	 * @return {Element|null} The Element's DOM representation or null
 	 * @private
 	 */
 	FormElement.prototype.getRenderedDomRef = function(){

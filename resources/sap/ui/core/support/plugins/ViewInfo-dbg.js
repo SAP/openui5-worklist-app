@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -10,17 +10,16 @@ sap.ui.define([
 	'sap/ui/core/support/controls/TreeViewer',
 	'sap/ui/core/support/controls/ObjectViewer',
 	'sap/ui/Device',
-	"sap/base/Log",
-	"sap/base/security/encodeXML"
-], function(Plugin, TreeViewer, ObjectViewer, Device, Log, encodeXML) {
+	'sap/base/Log',
+	'sap/ui/thirdparty/jquery'
+], function(Plugin, TreeViewer, ObjectViewer, Device, Log, $) {
 	"use strict";
 
-		var $ = jQuery;
 		/**
 		 * Creates an instance of sap.ui.core.support.plugins.ViewInfo.
 		 * @class This class represents the ViewInfo plugin for the support tool functionality of UI5. This class is internal and all its functions must not be used by an application.
 		 * @extends sap.ui.core.support.Plugin
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 * @private
 		 * @alias sap.ui.core.support.plugins.ViewInfo
 		 */
@@ -29,21 +28,6 @@ sap.ui.define([
 				Plugin.apply(this, [ "sapUiSupportViewInfo", "XML View and Templating Support Tools", oSupportStub]);
 
 				this._oStub = oSupportStub;
-
-				if (!this.runsAsToolPlugin()) {
-					// register as core plugin
-					var that = this;
-
-					sap.ui.getCore().registerPlugin({
-						startPlugin: function(oCore) {
-							that.oCore = oCore;
-						},
-						stopPlugin: function() {
-							that.oCore = undefined;
-						}
-					});
-
-				}
 			}
 		});
 
@@ -67,7 +51,7 @@ sap.ui.define([
 				this.$().get(0).innerHTML =
 					"<div class='sapUISupportLabel'>" +
 						"View Info Support Tool is only available in <b>Support Mode.</b>" +
-						"<br>Turn it on by adding '<b>sap-ui-support=true</b>' to the url or your application." +
+						"<br>Turn it on by adding '<b>sap-ui-support=true</b>' to the URL of your application." +
 					"</div>";
 				return;
 			}
@@ -83,7 +67,7 @@ sap.ui.define([
 				this.$().get(0).innerHTML = "View Info Support Tool did not record any information on the current page.<br>" +
 						"Possible reasons:<br>" +
 						"There are no XML Views defined in the current app.<br>" +
-						"Views where not loaded before the Diagnistics tool was started.";
+						"Views where not loaded before the Diagnostics tool was started.";
 			}
 			if (this.runsAsToolPlugin()) {
 				initInTools.call(this, oSupportStub);
@@ -210,7 +194,11 @@ sap.ui.define([
 				this.aDataTrees = [];
 				this.aObjectViewers = [];
 				var i = 0;
-				rm.write('<div class="viewxmlmain"><div class="settingscontainer"><span class="settings" raise="_onClearAllBreakpoints">Clear all breakpoints</span><span class="settings" raise="_onClearAllXMLModifications">Clear all XML modifications</span></div>');
+				rm.openStart("div").class("viewxmlmain").openEnd();
+				rm.openStart("div").class("settingscontainer").openEnd();
+				rm.openStart("span").class("settings").attr("raise", "_onClearAllBreakpoints").openEnd().text("Clear all breakpoints").close("span");
+				rm.openStart("span").class("settings").attr("raise", "_onClearAllXMLModifications").openEnd().text("Clear all XML modifications").close("span");
+				rm.close("div");
 				this.aMetamodels = [];
 				if (this.aOdataModels) {
 					for (var j = 0; j < this.aOdataModels.length; j++) {
@@ -219,12 +207,34 @@ sap.ui.define([
 							this.aMetamodels.push(oMetadata);
 							var oTree = this.createTree(oMetadata, i);
 							this.aTrees[i] = oTree;
-							rm.write('<div class="viewxmlheader" collapsed="true"><span class="toggle"></span><span class="info">Metadata: ' + encodeXML(oMetadata.env.settings.response.requestUri) + '</span><div class="settingscontainer"><span class="settings sapUiSupportViewInfoElementHidden" raise="_onToggleDebugNodes" idx="' + i + '">Expand debugged nodes</span><span class="settings sapUiSupportViewInfoElementHidden" raise="_onToggleRealIds" idx="' + i + '"><span selected="false"></span>Show XML View Ids</span><span class="settings" raise="_onToggleNamespace" idx="' + i + '" ><span selected="false"></span>Hide tag namespace</span><span class="settings" raise="_onToggleInactive" idx="' + i + '" ><span selected="false"></span>Hide inactive</span></div></div>');
-							rm.write('<div class="sapUiSupportViewInfoElementHidden"><div id="treecontent_' + i + '"></div>');
-							rm.write('<div class="viewxmlsplitter">');
-							rm.write('</div>');
-							rm.write('<div class="viewxmlinfo"><div class="title sapUiSupportViewInfoElementHidden" id="objectHeader' + i + '">Header</div><div class="toolbar sapUiSupportViewInfoElementHidden" id="objectToolbar' + i + '">Toolbar</div><div class="content" id="selectedcontent_' + i + '">');
-							rm.write('</div></div></div>');
+							rm.openStart("div").class("viewxmlheader").attr("collapsed", "true").openEnd();
+								rm.openStart("span").class("toggle").openEnd().close("span");
+								rm.openStart("span").class("info").openEnd().text("Metadata: " + oMetadata.env.settings.response.requestUri).close("span");
+								rm.openStart("div").class("settingscontainer").openEnd();
+									rm.openStart("span").class("settings").class("sapUiSupportViewInfoElementHidden").attr("raise", "_onToggleDebugNodes").attr("idx", i).openEnd().text("Expand debugged nodes").close("span");
+									rm.openStart("span").class("settings").class("sapUiSupportViewInfoElementHidden").attr("raise", "_onToggleRealIds").attr("idx", i).openEnd();
+										rm.openStart("span").attr("selected", "false").openEnd().close("span");
+										rm.text("Show XML View Ids");
+									rm.close("span");
+									rm.openStart("span").class("settings").attr("raise", "_onToggleNamespace").attr("idx", i).openEnd();
+										rm.openStart("span").attr("selected", "false").openEnd().close("span");
+										rm.text("Hide tag namespace");
+									rm.close("span");
+									rm.openStart("span").class("settings").attr("raise", "_onToggleInactive").attr("idx", i).openEnd();
+										rm.openStart("span").attr("selected", "false").openEnd().close("span");
+										rm.text("Hide inactive");
+									rm.close("span");
+								rm.close("div");
+							rm.close("div");
+							rm.openStart("div").class("sapUiSupportViewInfoElementHidden").openEnd();
+								rm.openStart("div", "treecontent_" + i).openEnd().close("div");
+								rm.openStart("div").class("viewxmlsplitter").openEnd().close("div");
+								rm.openStart("div").class("viewxmlinfo").openEnd();
+									rm.openStart("div", "objectHeader" + i).class("title").class("sapUiSupportViewInfoElementHidden").openEnd().text("Header").close("div");
+									rm.openStart("div", "objectToolbar" + i).class("toolbar").class("sapUiSupportViewInfoElementHidden").openEnd().text("Toolbar").close("div");
+									rm.openStart("div", "selectedcontent_" + i).class("content").openEnd().close("div");
+								rm.close("div");
+							rm.close("div");
 						}
 						oMetadata.env.tree = oTree;
 						i++;
@@ -276,7 +286,25 @@ sap.ui.define([
 						}
 
 						if (oView.env.type === "template") {
-							rm.write('<div class="viewxmlheader" collapsed="true"><span class="toggle"></span><span class="info">' + sId + ' (' + oView.env.type + ')</span><div class="settingscontainer"><span class="settings" raise="_onToggleDebugNodes" idx="' + i + '">Expand debugged nodes</span><span class="settings sapUiSupportViewInfoElementHidden" raise="_onToggleRealIds" idx="' + i + '"><span selected="false"></span>Show XML View Ids</span><span class="settings" raise="_onToggleNamespace" idx="' + i + '" ><span selected="false"></span>Hide tag namespace</span><span class="settings" raise="_onToggleInactive" idx="' + i + '" ><span selected="false"></span>Hide inactive</span></div></div>');
+							rm.openStart("div").class("viewxmlheader").attr("collapsed", "true").openEnd();
+								rm.openstart("span").class("toggle").openEnd().close("span");
+								rm.openStart("span").class("info").openEnd().text(sId + ' (' + oView.env.type + ')').close("span");
+								rm.openStart("div").class("settingscontainer").openEnd();
+									rm.openStart("span").class("settings").attr("raise", "_onToggleDebugNodes").attr("idx", i).openEnd().text("Expand debugged nodes").close("span");
+									rm.openStart("span").class("settings").class("sapUiSupportViewInfoElementHidden").attr("raise", "_onToggleRealIds").attr("idx", i).openEnd();
+										rm.openStart("span").attr("selected", "false").openEnd().close("span");
+										rm.text("Show XML View Ids");
+									rm.close("span");
+									rm.openStart("span").class("settings").attr("raise", "_onToggleNamespace").attr("idx", i).openEnd();
+										rm.openStart("span").attr("selected", "false").openEnd().close("span");
+										rm.text("Hide tag namespace");
+									rm.close("span");
+									rm.openStart("span").class("settings").attr("raise", "_onToggleInactive").attr("idx", i).openEnd();
+										rm.openStart("span").attr("selected", "false").openEnd().close("span");
+										rm.text("Hide inactive");
+									rm.close("span");
+								rm.close("div");
+							rm.close("div");
 						} else {
 							var sTemplatedBy = "";
 							if (oView.env.metamodels) {
@@ -290,13 +318,32 @@ sap.ui.define([
 							if (oView.env.settings.cache) {
 								sCache += " from client cache " + JSON.stringify(oView.env.settings.cache);
 							}
-							rm.write('<div class="viewxmlheader" collapsed="true"><span class="toggle"></span><span class="info">' + sId + ' (' + oView.env.type + encodeXML(String(sTemplatedBy)) + ') ' + encodeXML(String(sCache)) + '</span><div class="settingscontainer"><span class="settings" raise="_onToggleDebugNodes" idx="' + i + '">Expand debugged nodes</span><span class="settings" raise="_onToggleRealIds" idx="' + i + '" ><span selected="false"></span>Show XML View Ids</span><span class="settings" raise="_onToggleNamespace" idx="' + i + '" ><span selected="false"></span>Hide tag namespace</span></div></div>');
+							rm.openStart("div").class("viewxmlheader").attr("collapsed", "true").openEnd();
+								rm.openStart("span").class("toggle").openEnd().close("span");
+								rm.openStart("span").class("info").openEnd().text(sId + ' (' + oView.env.type + sTemplatedBy + ') ' + sCache).close("span");
+								rm.openStart("div").class("settingscontainer").openEnd();
+									rm.openStart("span").class("settings").attr("raise", "_onToggleDebugNodes").attr("idx", i).openEnd().text("Expand debugged nodes").close("span");
+									rm.openStart("span").class("settings").attr("raise", "_onToggleRealIds").attr("idx", i).openEnd();
+										rm.openStart("span").attr("selected", "false").openEnd().close("span");
+										rm.text("Show XML View Ids");
+									rm.close("span");
+									rm.openStart("span").class("settings").attr("raise", "_onToggleNamespace").attr("idx", i).openEnd();
+										rm.openStart("span").attr("selected", "false").openEnd().close("span");
+										rm.text("Hide tag namespace");
+									rm.close("span");
+								rm.close("div");
+							rm.close("div");
 						}
-						rm.write('<div class="sapUiSupportViewInfoElementHidden"><div id="treecontent_' + i + '"></div>');
-						rm.write('<div class="viewxmlsplitter">');
-						rm.write('</div>');
-						rm.write('<div class="viewxmlinfo"><div class="title sapUiSupportViewInfoElementHidden" id="objectHeader' + i + '">Header</div><div class="toolbar sapUiSupportViewInfoElementHidden" id="objectToolbar' + i + '">Toolbar</div><div class="content" id="selectedcontent_' + i + '">');
-						rm.write('</div></div></div></div>');
+						rm.openStart("div").class("sapUiSupportViewInfoElementHidden").openEnd();
+							rm.openStart("div", "treecontent_" + i).openEnd().close("div");
+							rm.openStart("div").class("viewxmlsplitter").openEnd().close("div");
+							rm.openStart("div").class("viewxmlinfo").openEnd();
+								rm.openStart("div", "objectHeader" + i).class("title").class("sapUiSupportViewInfoElementHidden").openEnd().text("Header").close("div");
+								rm.openStart("div", "objectToolbar" + i).class("toolbar").class("sapUiSupportViewInfoElementHidden").openEnd().text("Toolbar").close("div");
+								rm.openStart("div", "selectedcontent_" + i).class("content").openEnd().close("div");
+							rm.close("div");
+						rm.close("div");
+						rm.close("div");
 						i++;
 					}
 				}
@@ -506,7 +553,7 @@ sap.ui.define([
 							oData.Attributes[oAttribute.name] = {
 								value: oAttribute.value,
 								__enabled: false,
-								__docu: ViewInfo.DemokitUrl + oProperty._oParent.getName() + ".html#" + oProperty._sGetter,
+								__docu: ViewInfo.DemokitUrl + oProperty._oParent.getName() + "#" + oProperty._sGetter,
 								__original: oAttribute.value,
 								__change: fnChangeAttribute(oProperty, oNode, sId),
 								__add: true
@@ -523,7 +570,7 @@ sap.ui.define([
 							value2: aControls[0] && aControls[0][oProperty._sGetter] ? aControls[0] && aControls[0][oProperty._sGetter]() : null,
 							__controls: aControls,
 							__enabled: aControls[0] && this._propertyChangeDebugger[aControls[0].getId() + "__" + aProperties[i]] != null,
-							__docu: ViewInfo.DemokitUrl + oProperty._oParent.getName() + ".html#" + oProperty._sGetter,
+							__docu: ViewInfo.DemokitUrl + oProperty._oParent.getName() + "#" + oProperty._sGetter,
 							__original: oNode.getAttribute(aProperties[i]),
 							__changed: null
 						};
@@ -630,7 +677,7 @@ sap.ui.define([
 
 		};
 
-		ViewInfo.DemokitUrl = "https://sapui5.hana.ondemand.com/#docs/api/symbols/";
+		ViewInfo.DemokitUrl = "https://sdk.openui5.org/api/";
 
 		ViewInfo.prototype.updateObjectInfo = function(oData, iIdx, sReason) {
 			var oObjectViewer = this.aObjectViewers[iIdx],
@@ -651,14 +698,14 @@ sap.ui.define([
 					var sControlName = oData.parentNode.namespaceURI + "." + oData.parentNode.localName;
 					var sAggr = "get" + oData.localName.substring(0,1).toUpperCase() + oData.localName.substring(1);
 
-					sHeader += "<a target=\"_docu\" href=\"" + ViewInfo.DemokitUrl + sControlName + ".html\">" + sControlName + "</a> (" + oData.tagName + ") ";
-					sHeader +=  ": <a target=\"_docu\" href=\"" + ViewInfo.DemokitUrl + sControlName + ".html#" + sAggr + "\">" + oData.localName + " aggregation</a>";
+					sHeader += "<a target=\"_docu\" href=\"" + ViewInfo.DemokitUrl + sControlName + "\">" + sControlName + "</a> (" + oData.tagName + ") ";
+					sHeader +=  ": <a target=\"_docu\" href=\"" + ViewInfo.DemokitUrl + sControlName + "#" + sAggr + "\">" + oData.localName + " aggregation</a>";
 
 				} else {
 						var sControlName = oData.namespaceURI + "." + oData.localName;
-						sHeader += "<a target=\"_docu\" href=\"" + ViewInfo.DemokitUrl + sControlName + ".html\">" + sControlName + "</a> (" + oData.tagName + ") ";
+						sHeader += "<a target=\"_docu\" href=\"" + ViewInfo.DemokitUrl + sControlName + "\">" + sControlName + "</a> (" + oData.tagName + ") ";
 						var sParentName = window.opener.jQuery.sap.getObject(Object.keys(oDataObject.Control)[0]).getMetadata().getParent().getName();
-						sHeader += ": <a target=\"_docu\" href=\"" + ViewInfo.DemokitUrl + sParentName + ".html\">" + sParentName + "</a>";
+						sHeader += ": <a target=\"_docu\" href=\"" + ViewInfo.DemokitUrl + sParentName + "\">" + sParentName + "</a>";
 				}
 			} catch (ex) {
 				sHeader += "";

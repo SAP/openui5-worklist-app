@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -187,6 +187,11 @@ sap.ui.define([
 						} else if (sOverrideMember in mLifecycleConfig) {
 							//apply lifecycle hooks even if they don't exist on controller
 							ControllerExtension.overrideMethod(sOverrideMember, oController, oOverrides, oExtension, oControllerMetadata.getOverrideExecution(sOverrideMember));
+						/* legacy support: hooks defined as null instead of a function and starting with 'extHook' must not be ignored.
+							Some legacy applications defined possible extension hooks in this way. As ControllerExtensions rely on Interface usage
+							legacy scenarios will break. */
+						} else if (sOverrideMember.startsWith("extHook") && oController[sOverrideMember] === null) {
+							ControllerExtension.overrideMethod(sOverrideMember, oController, oOverrides, oExtension);
 						} else {
 							Log.error("Method '" + sOverrideMember + "' does not exist in controller " + oController.getMetadata().getName() + " and cannot be overridden");
 						}
@@ -261,7 +266,7 @@ sap.ui.define([
 		 *
 		 * @param {string} sName the controller name
 		 * @param {boolean} bAsync Load async or not
-		 * @return {{sap.ui.core.mvc.Controller | Promise} oController <code>Promise</code> in case of asynchronous loading
+		 * @return {sap.ui.core.mvc.Controller | Promise} oController <code>Promise</code> in case of asynchronous loading
 		 *           or <code>undefined</code> in case of synchronous loading
 		 */
 		function loadControllerClass(sName, bAsync) {
@@ -654,8 +659,8 @@ sap.ui.define([
 		};
 
 		/**
-		 * Returns the view associated with this controller or undefined.
-		 * @return {sap.ui.core.mvc.View} View connected to this controller.
+		 * Returns the view associated with this controller or <code>undefined</code>.
+		 * @returns {sap.ui.core.mvc.View|undefined} View connected to this controller.
 		 * @public
 		 */
 		Controller.prototype.getView = function() {
@@ -670,10 +675,10 @@ sap.ui.define([
 		 * This method helps to find an element by its local ID only.
 		 *
 		 * If no view is connected or if the view doesn't contain an element with
-		 * the given local ID, undefined is returned.
+		 * the given local ID, <code>undefined</code> is returned.
 		 *
 		 * @param {string} sId View-local ID
-		 * @return {sap.ui.core.Element} Element by its (view local) ID
+		 * @returns {sap.ui.core.Element|undefined} Element by its (view local) ID
 		 * @public
 		 */
 		Controller.prototype.byId = function(sId) {
@@ -685,10 +690,10 @@ sap.ui.define([
 		 * Converts a view local ID to a globally unique one by prepending
 		 * the view ID.
 		 *
-		 * If no view is connected, undefined is returned.
+		 * If no view is connected, <code>undefined</code> is returned.
 		 *
 		 * @param {string} sId View-local ID
-		 * @return {string} Prefixed ID
+		 * @returns {string|undefined} Prefixed ID
 		 * @public
 		 */
 		Controller.prototype.createId = function(sId) {
@@ -699,9 +704,9 @@ sap.ui.define([
 		 * Gets the component of the controller's view
 		 *
 		 * If there is no Component connected to the view or the view is not connected to the controller,
-		 * undefined is returned.
+		 * <code>undefined</code> is returned.
 		 *
-		 * @return {sap.ui.core.Component} Component instance
+		 * @return {sap.ui.core.Component|undefined} Component instance
 		 * @since 1.23.0
 		 * @public
 		 */
@@ -723,9 +728,9 @@ sap.ui.define([
 			}
 			if (this.onExit) {
 				oView.attachBeforeExit(this.onExit, this);
-				if (oView.bControllerIsViewManaged) {
-					oView.attachBeforeExit(this.destroyFragments, this);
-				}
+			}
+			if (oView.bControllerIsViewManaged) {
+				oView.attachBeforeExit(this.destroyFragments, this);
 			}
 			if (this.onAfterRendering) {
 				oView.attachAfterRendering(this.onAfterRendering, this);
@@ -783,11 +788,11 @@ sap.ui.define([
 		 * @param {object} mOptions Options regarding fragment loading
 		 * @param {string} mOptions.name The Fragment name, which must correspond to a Fragment which can be loaded via the module system
 		 *    (fragmentName + suffix ".fragment.[typeextension]") and which contains the Fragment definition.
-		 * @param {object} [mOptions.addToDependents=true] Whether the fragment content should be added to the <code>dependents</code> aggregation of the view
-		 * @param {object} [mOptions.autoPrefixId=true] Whether the IDs of the fragment content will be prefixed by the view ID
+		 * @param {boolean} [mOptions.addToDependents=true] Whether the fragment content should be added to the <code>dependents</code> aggregation of the view
+		 * @param {boolean} [mOptions.autoPrefixId=true] Whether the IDs of the fragment content will be prefixed by the view ID
 		 * @param {string} [mOptions.id] the ID of the Fragment
 		 * @param {string} [mOptions.type=XML] the Fragment type, e.g. "XML", "JS", or "HTML" (see above). Default is "XML"
-		 * @return {Promise} A Promise that resolves with the fragment content
+		 * @returns {Promise<sap.ui.core.Control|sap.ui.core.Control[]>} A Promise that resolves with the fragment content
 		 *
 		 * @since 1.93
 		 * @public
@@ -864,7 +869,7 @@ sap.ui.define([
 		 *
 		 * <b>Example for a callback module definition (sync):</b>
 		 * <pre>
-		 * sap.ui.define("my/custom/sync/ExtensionProvider", ['jquery.sap.global'], function(jQuery) {
+		 * sap.ui.define("my/custom/sync/ExtensionProvider", [], function() {
 		 *   var ExtensionProvider = function() {};
 		 *   ExtensionProvider.prototype.getControllerExtensions = function(sControllerName, sComponentId, bAsync) {
 		 *     if (!bAsync && sControllerName == "my.own.Controller") {
@@ -883,13 +888,13 @@ sap.ui.define([
 		 *     }];
 		 *   };
 		 *   return ExtensionProvider;
-		 * }, true);
+		 * });
 		 * </pre>
 		 *
 		 *
 		 * <b>Example for a callback module definition (async):</b>
 		 * <pre>
-		 * sap.ui.define("my/custom/async/ExtensionProvider", ['jquery.sap.global'], function(jQuery) {
+		 * sap.ui.define("my/custom/async/ExtensionProvider", [], function() {
 		 *   var ExtensionProvider = function() {};
 		 *   ExtensionProvider.prototype.getControllerExtensions = function(sControllerName, sComponentId, bAsync) {
 		 *     if (bAsync && sControllerName == "my.own.Controller") {
@@ -913,7 +918,7 @@ sap.ui.define([
 		 *     };
 		 *   };
 		 *   return ExtensionProvider;
-		 * }, true);
+		 * });
 		 * </pre>
 		 *
 		 *
@@ -923,7 +928,7 @@ sap.ui.define([
 		 * controller. The event handler functions, such as <code>onButtonClick</code>,
 		 * are replacing the original controller's function.
 		 *
-		 * When using an async extension provider you need to ensure that the
+		 * When using an async extension provider, you need to ensure that the
 		 * view is loaded in async mode.
 		 *
 		 * In both cases, return <code>undefined</code> if no controller extension shall be applied.

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -18,9 +18,9 @@ sap.ui.define([
 	"./CalendarDateIntervalRenderer",
 	"sap/base/util/deepEqual",
 	"sap/m/Popover",
+	"sap/ui/core/CalendarType",
 	"sap/ui/core/Core",
 	"sap/base/Log",
-	"sap/ui/thirdparty/jquery",
 	"./DateRange"
 ], function(
 	CalendarUtils,
@@ -35,18 +35,17 @@ sap.ui.define([
 	CalendarDateIntervalRenderer,
 	deepEqual,
 	Popover,
+	CalendarType,
 	Core,
 	Log,
-	jQuery,
 	DateRange
 ) {
 	"use strict";
 
-	var CalendarType = sap.ui.core.CalendarType;
 	/*
-	* Inside the CalendarDateInterval CalendarDate objects are used. But in the API JS dates are used.
-	* So conversion must be done on API functions.
-	*/
+	 * Inside the CalendarDateInterval CalendarDate objects are used. But in the API JS dates are used.
+	 * So conversion must be done on API functions.
+	 */
 
 	/**
 	 * Constructor for a new <code>CalendarDateInterval</code>.
@@ -57,13 +56,12 @@ sap.ui.define([
 	 * @class
 	 * <code>CalendarDateInterval</code> only visualizes the dates in a one-line interval and allows the selection of a single day.
 	 * @extends sap.ui.unified.Calendar
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.30.0
 	 * @alias sap.ui.unified.CalendarDateInterval
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var CalendarDateInterval = Calendar.extend("sap.ui.unified.CalendarDateInterval", /** @lends sap.ui.unified.CalendarDateInterval.prototype */ { metadata : {
 
@@ -96,7 +94,7 @@ sap.ui.define([
 
 		},
 		designtime: "sap/ui/unified/designtime/CalendarDateInterval.designtime"
-	}});
+	}, renderer: CalendarDateIntervalRenderer});
 
 	CalendarDateInterval.prototype.init = function(){
 
@@ -107,13 +105,13 @@ sap.ui.define([
 	};
 
 	CalendarDateInterval.prototype.onBeforeRendering = function() {
-		Calendar.prototype.onBeforeRendering.apply(this, arguments);
-
-		this._bPoupupMode = this.getPickerPopup();
-
 		if (this._getSucessorsPickerPopup()) {
 			this.setProperty("_currentPicker", "month");
 		}
+
+		Calendar.prototype.onBeforeRendering.apply(this, arguments);
+
+		this._bPoupupMode = this.getPickerPopup();
 	};
 
 	CalendarDateInterval.prototype._selectYearRange = function() {
@@ -262,7 +260,6 @@ sap.ui.define([
 
 		if (!this._oCalendar) {
 			oCalendar = new Calendar(this.getId() + "--Cal");
-			oCalendar.setPopupMode(true);
 			oCalendar.attachEvent("select", this._handleCalendarPickerDateSelect, this);
 			oCalendar.attachEvent("cancel", function (oEvent) {
 				this._closeCalendarPicker(true);
@@ -314,7 +311,12 @@ sap.ui.define([
 	CalendarDateInterval.prototype._setHeaderText = function(oDate){
 
 		// sets the text for the month and the year button to the header
-		var oTexts = Calendar.prototype._setHeaderText.apply(this, arguments);
+		var oTexts;
+		if (this.getStartDate()) {
+			oTexts = Calendar.prototype._setHeaderText.apply(this, [CalendarDate.fromLocalJSDate(this.getStartDate(), this.getPrimaryCalendarType())]);
+		} else {
+			oTexts = Calendar.prototype._setHeaderText.apply(this, arguments);
+		}
 		var sText,
 			sAriaLabel = oTexts.sAriaLabel,
 			oHeader = this.getAggregation("header");
@@ -383,14 +385,6 @@ sap.ui.define([
 
 		if (!bSkipFocus) {
 			this._renderMonth(); // to focus date
-
-			// restore tabindex
-			var aMonths = this.getAggregation("month");
-
-			for (var i = 0; i < aMonths.length; i++) {
-				var oMonth = aMonths[i];
-				oMonth._oItemNavigation.getItemDomRefs()[oMonth._oItemNavigation.getFocusedIndex()].setAttribute("tabindex", "0");
-			}
 		}
 
 		this._getCalendar()._closePickers();
@@ -682,12 +676,11 @@ sap.ui.define([
 	 */
 	CalendarDateInterval.prototype._focusDateExtend = function(oDate, bOtherMonth, bNoEvent) {
 		if (bOtherMonth) {
-			var oOldFocusedDate = this._getFocusedDate(),
-				oOldStartDate = this._getStartDate(),
-				iDay = CalendarUtils._daysBetween(oOldFocusedDate, oOldStartDate),
+			var oMonth = this.getAggregation("month")[0],
+				iFocusDayIndex = oMonth._oItemNavigation ? oMonth._oItemNavigation.getFocusedIndex() : 0,
 				oNewStartDate = new CalendarDate(oDate, this.getPrimaryCalendarType());
 
-			oNewStartDate.setDate(oNewStartDate.getDate() - iDay);
+			oNewStartDate.setDate(oNewStartDate.getDate() - iFocusDayIndex);
 
 			this._setStartDate(oNewStartDate, false, true);
 

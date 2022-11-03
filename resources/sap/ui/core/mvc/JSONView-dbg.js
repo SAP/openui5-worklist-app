@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -43,11 +43,10 @@ sap.ui.define([
 	 * @class
 	 * A View defined using JSON.
 	 * @extends sap.ui.core.mvc.View
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @alias sap.ui.core.mvc.JSONView
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var JSONView = View.extend("sap.ui.core.mvc.JSONView", /** @lends sap.ui.core.mvc.JSONView.prototype */ {
 		metadata : {
@@ -68,6 +67,7 @@ sap.ui.define([
 	 * The given controller instance overrides the controller defined in the view definition. Sharing a controller instance
 	 * between multiple views is not supported.
 	 * @public
+	 * @since 1.56.0
 	 * @static
 	 * @returns {Promise<sap.ui.core.mvc.JSONView>} A promise which resolves with the created <code>JSONView</code> instance.
 	 */

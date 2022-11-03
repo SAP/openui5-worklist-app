@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -43,13 +43,12 @@ sap.ui.define([
 	 * @extends sap.ui.core.Element
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.42
 	 * @alias sap.m.LightBoxItem
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var LightBoxItem = Element.extend("sap.m.LightBoxItem", /** @lends sap.m.LightBoxItem.prototype */ {
 		metadata: {
@@ -234,8 +233,7 @@ sap.ui.define([
 	/**
 	 * Sets the subtitle of the image.
 	 * @public
-	 * @param {string} subtitleText The image subtitle
-	 * @method
+	 * @param {string} sSubtitleText The image subtitle
 	 * @returns {this} Pointer to the control instance for chaining.
 	 */
 	LightBoxItem.prototype.setSubtitle = function (sSubtitleText) {

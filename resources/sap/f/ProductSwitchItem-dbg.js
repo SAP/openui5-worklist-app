@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -13,7 +13,7 @@ sap.ui.define([
 	"sap/ui/events/KeyCodes",
 	"sap/f/ProductSwitchItemRenderer"
 ],
-	function (
+	function(
 		Control,
 		Icon,
 		library,
@@ -40,14 +40,13 @@ sap.ui.define([
 		 * @extends sap.ui.core.Control
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
 		 * @experimental Since 1.72. This class is experimental and provides only limited functionality. Also the API might be changed in future.
 		 * @alias sap.f.ProductSwitchItem
 		 * @since 1.72
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		var ProductSwitchItem = Control.extend("sap.f.ProductSwitchItem", {
 			metadata: {
@@ -68,6 +67,9 @@ sap.ui.define([
 					subTitle: { type: "string", defaultValue: null },
 					 /**
 					 * Defines the <code>ProductSwitchItem</code> target URI. Supports standard hyperlink behavior.
+					 *
+					 * <b>Note:</b> Redirection is handled via application logic, by subscribing to the
+					 * {@link sap.f.ProductSwitch#event:change change} event of <code>sap.f.ProductSwitch</code>.
 					 */
 					targetSrc: { type: "sap.ui.core.URI", group: "Data", defaultValue: null },
 					 /**
@@ -89,7 +91,9 @@ sap.ui.define([
 					 */
 					_title: { type: "sap.m.Text", visibility: "hidden", multiple: false }
 				}
-			}
+			},
+
+			renderer: ProductSwitchItemRenderer
 		});
 
 		ProductSwitchItem.prototype.init = function () {

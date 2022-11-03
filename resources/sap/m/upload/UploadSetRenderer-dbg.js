@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -21,7 +21,7 @@ sap.ui.define([
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl an object representation of the control that should be rendered.
+	 * @param {sap.m.upload.UploadSet} oControl an object representation of the control that should be rendered.
 	 */
 	UploadSetRenderer.render = function (oRm, oControl) {
 		oRm.openStart("div",oControl);
@@ -54,28 +54,20 @@ sap.ui.define([
 
 	UploadSetRenderer.renderNoData = function(oRm, oControl) {
 		var oUploadSet = oControl.getParent();
+		oUploadSet.fnOriginalRenderDummyArea = oUploadSet.getList().getRenderer().renderDummyArea;
+		oUploadSet.getList().getRenderer().renderDummyArea = oUploadSet.getRenderer().renderDummyArea;
 		oRm.openStart("li", oUploadSet.getList().getId("nodata"));
 		oRm.attr("tabindex", 0);
 		oRm.class("sapMLIB").class("sapMUCNoDataPage");
 		ListItemBaseRenderer.addFocusableClasses.call(ListItemBaseRenderer, oRm);
 		oRm.openEnd();
-
-		oRm.renderControl(oUploadSet._oNoDataIcon);
-
-		oRm.openStart("div", oUploadSet.getId() + "-no-data-text");
-		oRm.class("sapMUCNoDataText");
-		oRm.openEnd();
-		oRm.text(oUploadSet.getNoDataText());
-		oRm.close("div");
-
-		if (oUploadSet.getUploadEnabled()) {
-			oRm.openStart("div" , oUploadSet.getId() + "-no-data-description");
-			oRm.class("sapMUCNoDataDescription");
-			oRm.openEnd();
-			oRm.text(oUploadSet.getNoDataDescription());
-			oRm.close("div");
-		}
+		oRm.renderControl(oUploadSet._getIllustratedMessage());
 		oRm.close("li");
+	};
+
+	UploadSetRenderer.renderDummyArea = function(oRm, oControl, sAreaId, iTabIndex) {
+		var oUploadSet = oControl.getParent();
+		oUploadSet.getList().getRenderer().renderDummyArea = oUploadSet.fnOriginalRenderDummyArea;
 	};
 
 	return UploadSetRenderer;

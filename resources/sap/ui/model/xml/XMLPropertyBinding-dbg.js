@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -28,7 +28,7 @@ sap.ui.define([
 	 */
 	var XMLPropertyBinding = ClientPropertyBinding.extend("sap.ui.model.xml.XMLPropertyBinding");
 
-	/**
+	/*
 	 * @see sap.ui.model.PropertyBinding.prototype.setValue
 	 */
 	XMLPropertyBinding.prototype.setValue = function(oValue){
@@ -48,7 +48,7 @@ sap.ui.define([
 	 * Checks whether this Binding would provide new values and in case it changed, fires a change
 	 * event with change reason <code>sap.ui.model.ChangeReason.Change</code>.
 	 *
-	 * @param {boolean} bForceupdate
+	 * @param {boolean} [bForceupdate]
 	 *   Whether the change event will be fired regardless of the binding's state
 	 */
 	XMLPropertyBinding.prototype.checkUpdate = function(bForceupdate){

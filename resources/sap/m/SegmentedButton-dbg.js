@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -8,6 +8,7 @@
 sap.ui.define([
 	'./library',
 	'./Button',
+	'./SegmentedButtonItem',
 	'./Select',
 	'sap/ui/core/Control',
 	'sap/ui/core/EnabledPropagator',
@@ -20,6 +21,7 @@ sap.ui.define([
 function(
 	library,
 	Button,
+	SegmentedButtonItem,
 	Select,
 	Control,
 	EnabledPropagator,
@@ -31,7 +33,8 @@ function(
 	) {
 	"use strict";
 
-
+	// lazy dependency to sap/m/Image
+	var Image;
 
 	/**
 	 * Constructor for a new <code>SegmentedButton</code>.
@@ -52,132 +55,135 @@ function(
 	 * @implements sap.ui.core.IFormContent
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @alias sap.m.SegmentedButton
 	 * @see {@link fiori:https://experience.sap.com/fiori-design-web/button/ Segmented Button}
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var SegmentedButton = Control.extend("sap.m.SegmentedButton", /** @lends sap.m.SegmentedButton.prototype */ { metadata : {
+	var SegmentedButton = Control.extend("sap.m.SegmentedButton", /** @lends sap.m.SegmentedButton.prototype */ {
+		metadata : {
 
-		interfaces : [
-			"sap.ui.core.IFormContent",
-			"sap.m.IOverflowToolbarContent"
-		],
-		library : "sap.m",
-		designtime: "sap/m/designtime/SegmentedButton.designtime",
-		publicMethods : ["createButton"],
-		properties : {
+			interfaces : [
+				"sap.ui.core.IFormContent",
+				"sap.m.IOverflowToolbarContent"
+			],
+			library : "sap.m",
+			designtime: "sap/m/designtime/SegmentedButton.designtime",
+			publicMethods : ["createButton"],
+			properties : {
 
-			/**
-			 * Defines the width of the SegmentedButton control. If not set, it uses the minimum required width to make all buttons inside of the same size (based on the biggest button).
-			 *
-			 */
-			width : {type : "sap.ui.core.CSSSize", group : "Misc", defaultValue : null},
+				/**
+				 * Defines the width of the SegmentedButton control. If not set, it uses the minimum required width to make all buttons inside of the same size (based on the biggest button).
+				 *
+				 */
+				width : {type : "sap.ui.core.CSSSize", group : "Misc", defaultValue : null},
 
-			/**
-			 * Disables all the buttons in the SegmentedButton control. When disabled all the buttons look grey and you cannot focus or click on them.
-			 */
-			enabled : {type : "boolean", group : "Behavior", defaultValue : true},
+				/**
+				 * Disables all the buttons in the SegmentedButton control. When disabled all the buttons look grey and you cannot focus or click on them.
+				 */
+				enabled : {type : "boolean", group : "Behavior", defaultValue : true},
 
-			/**
-			 * Key of the selected item. If no item to this key is found in the items aggregation, no changes will apply. Only the items aggregation is affected. If duplicate keys exist, the first item matching the key is used.
-			 * @since 1.28.0
-			 */
-			selectedKey: { type: "string", group: "Data", defaultValue: "", bindable: "bindable" }
-		},
-		defaultAggregation : "buttons",
-		aggregations : {
+				/**
+				 * Key of the selected item. If no item to this key is found in the items aggregation, no changes will apply. Only the items aggregation is affected. If duplicate keys exist, the first item matching the key is used.
+				 * @since 1.28.0
+				 */
+				selectedKey: { type: "string", group: "Data", defaultValue: "", bindable: "bindable" }
+			},
+			defaultAggregation : "buttons",
+			aggregations : {
 
-			/**
-			 * The buttons of the SegmentedButton control. The items set in this aggregation are used as an interface for the buttons displayed by the control. Only the properties ID, icon, text, enabled and textDirections of the Button control are evaluated. Setting other properties of the button will have no effect. Alternatively, you can use the createButton method to add buttons.
-			 * @deprecated as of 1.28.0, replaced by <code>items</code> aggregation
-			 */
-			buttons : {type : "sap.m.Button", multiple : true, singularName : "button", deprecated: true},
+				/**
+				 * The buttons of the SegmentedButton control. The items set in this aggregation are used as an interface for the buttons displayed by the control. Only the properties ID, icon, text, enabled and textDirections of the Button control are evaluated. Setting other properties of the button will have no effect. Alternatively, you can use the createButton method to add buttons.
+				 * @deprecated as of 1.28.0, replaced by <code>items</code> aggregation
+				 */
+				buttons : {type : "sap.m.Button", multiple : true, singularName : "button", deprecated: true},
 
-			/**
-			 * Aggregation of items to be displayed. The items set in this aggregation are used as an interface for the buttons displayed by the control.
-			 * The "items" and "buttons" aggregations should NOT be used simultaneously as it causes the control to work incorrectly.
-			 * Note: If <code>width</code> is supplied in percetange to <code>SegmentedButtonItem</code> instances and
-			 * the sum of all percentages exeeds 100%, then the buttons display could overlap other elements in the page.
-			 * @since 1.28
-			 */
-			items : { type : "sap.m.SegmentedButtonItem", multiple : true, singularName : "item", bindable : "bindable" },
+				/**
+				 * Aggregation of items to be displayed. The items set in this aggregation are used as an interface for the buttons displayed by the control.
+				 * The "items" and "buttons" aggregations should NOT be used simultaneously as it causes the control to work incorrectly.
+				 * Note: If <code>width</code> is supplied in percetange to <code>SegmentedButtonItem</code> instances and
+				 * the sum of all percentages exeeds 100%, then the buttons display could overlap other elements in the page.
+				 * @since 1.28
+				 */
+				items : { type : "sap.m.SegmentedButtonItem", multiple : true, singularName : "item", bindable : "bindable" },
 
-			/**
-			 * Hidden aggregation that holds an instance of sap.m.Select to be used in some contexts as a representation of the segmented button (for example, in a popover with little space).
-			 */
-			_select: { type : "sap.m.Select", multiple : false, visibility : "hidden"}
-		},
-		associations : {
+				/**
+				 * Hidden aggregation that holds an instance of sap.m.Select to be used in some contexts as a representation of the segmented button (for example, in a popover with little space).
+				 */
+				_select: { type : "sap.m.Select", multiple : false, visibility : "hidden"}
+			},
+			associations : {
 
-			/**
-			 * A reference to the currently selected button control. By default or if the association is set to false (null, undefined, "", false), the first button will be selected.
-			 * If the association is set to an invalid value (for example, an ID of a button that does not exist) the selection on the SegmentedButton will be removed.
-			 * @deprecated as of version 1.52, replaced by <code>selectedItem</code> association
-			 */
-			selectedButton : {deprecated: true, type : "sap.m.Button", multiple : false},
+				/**
+				 * A reference to the currently selected button control. By default or if the association is set to false (null, undefined, "", false), the first button will be selected.
+				 * If the association is set to an invalid value (for example, an ID of a button that does not exist) the selection on the SegmentedButton will be removed.
+				 * @deprecated as of version 1.52, replaced by <code>selectedItem</code> association
+				 */
+				selectedButton : {deprecated: true, type : "sap.m.Button", multiple : false},
 
-			/**
-			 * A reference to the currently selected item control.
-			 * @since 1.52
-			 */
-			selectedItem : {type : "sap.m.SegmentedButtonItem", multiple : false},
+				/**
+				 * A reference to the currently selected item control.
+				 * @since 1.52
+				 */
+				selectedItem : {type : "sap.m.SegmentedButtonItem", multiple : false},
 
-			/**
-			 * Association to controls / IDs, which describe this control (see WAI-ARIA attribute aria-describedby).
-			 */
-			ariaDescribedBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaDescribedBy"},
+				/**
+				 * Association to controls / IDs, which describe this control (see WAI-ARIA attribute aria-describedby).
+				 */
+				ariaDescribedBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaDescribedBy"},
 
-			/**
-			 * Association to controls / IDs, which label this control (see WAI-ARIA attribute aria-labelledby).
-			 */
-			ariaLabelledBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaLabelledBy"}
-		},
-		events : {
+				/**
+				 * Association to controls / IDs, which label this control (see WAI-ARIA attribute aria-labelledby).
+				 */
+				ariaLabelledBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaLabelledBy"}
+			},
+			events : {
 
-			/**
-			 * Fires when the user selects a button, which returns the ID and button object.
-			 * @deprecated as of version 1.52, replaced by <code>selectionChange</code> event
-			 */
-			select : {
-				deprecated: true,
-				parameters : {
+				/**
+				 * Fires when the user selects a button, which returns the ID and button object.
+				 * @deprecated as of version 1.52, replaced by <code>selectionChange</code> event
+				 */
+				select : {
+					deprecated: true,
+					parameters : {
 
-					/**
-					 * Reference to the button, that has been selected.
-					 */
-					button : {type : "sap.m.Button"},
+						/**
+						 * Reference to the button, that has been selected.
+						 */
+						button : {type : "sap.m.Button"},
 
-					/**
-					 * ID of the button, which has been selected.
-					 */
-					id : {type : "string"},
+						/**
+						 * ID of the button, which has been selected.
+						 */
+						id : {type : "string"},
 
-					/**
-					 * Key of the button, which has been selected. This property is only filled when the control is initiated with the items aggregation.
-					 * @since 1.28.0
-					 */
-					key : {type : "string"}
+						/**
+						 * Key of the button, which has been selected. This property is only filled when the control is initiated with the items aggregation.
+						 * @since 1.28.0
+						 */
+						key : {type : "string"}
+					}
+				},
+				/**
+				 * Fires when the user selects an item, which returns the item object.
+				 * @since 1.52
+				 */
+				selectionChange : {
+					parameters : {
+						/**
+						 * Reference to the item, that has been selected.
+						 */
+						item : {type : "sap.m.SegmentedButtonItem"}
+					}
 				}
 			},
-			/**
-			 * Fires when the user selects an item, which returns the item object.
-			 * @since 1.52
-			 */
-			selectionChange : {
-				parameters : {
-					/**
-					 * Reference to the item, that has been selected.
-					 */
-					item : {type : "sap.m.SegmentedButtonItem"}
-				}
-			}
+			dnd: { draggable: true, droppable: false }
 		},
-		dnd: { draggable: true, droppable: false }
-	}});
+
+		renderer: SegmentedButtonRenderer
+	});
 
 
 	EnabledPropagator.call(SegmentedButton.prototype);
@@ -191,8 +197,10 @@ function(
 		this._oItemNavigation.setCycling(false);
 		//this way we do not hijack the browser back/forward navigation
 		this._oItemNavigation.setDisabledModifiers({
-			sapnext: ["alt"],
-			sapprevious: ["alt"]
+			sapnext: ["alt", "meta"],
+			sapprevious: ["alt", "meta"],
+			saphome : ["alt", "meta"],
+			sapend : ["meta"]
 		});
 		this.addDelegate(this._oItemNavigation);
 
@@ -244,6 +252,10 @@ function(
 		// Calculate and apply widths
 		this._aWidths = this._getRenderedButtonWidths(aButtons);
 		this._updateWidth();
+	};
+
+	SegmentedButton.prototype.onThemeChanged = function () {
+		this._handleContainerResize();
 	};
 
 	/**
@@ -402,7 +414,7 @@ function(
 			}
 		}
 
-		iCurrentWidth = this.$().width();
+		iCurrentWidth = Math.floor(this.getDomRef().getBoundingClientRect().width);
 
 		if (this._previousWidth !== undefined && iCurrentWidth !== this._previousWidth && !this._bInOverflow) {
 			this.fireEvent("_containerWidthChanged");
@@ -500,7 +512,6 @@ function(
 	 *         @since 1.28.0
 	 * @return {sap.m.Button} The created Button
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	SegmentedButton.prototype.createButton = function (sText, sURI, bEnabled, sTextDirection) {
 		var oButton = new Button();
@@ -683,7 +694,7 @@ function(
 			this.removeButton(oItem.oButton);//since this fires a "_change" event, it must be placed after public items are removed
 		}
 		// Reset selected button if the removed button is the currently selected one
-		if (oItem && oItem instanceof sap.m.SegmentedButtonItem && this.getSelectedButton() === oItem.oButton.getId()) {
+		if (oItem instanceof SegmentedButtonItem && this.getSelectedButton() === oItem.oButton.getId()) {
 			this.setSelectedKey("");
 			this.setSelectedButton("");
 			this.setSelectedItem("");
@@ -824,7 +835,7 @@ function(
 	 */
 	SegmentedButton.prototype.setSelectedItem = function (vItem) {
 		var oItem = typeof vItem === "string" && vItem !== "" ? sap.ui.getCore().byId(vItem) : vItem,
-			oItemInstanceOfSegBtnItem = oItem instanceof sap.m.SegmentedButtonItem,
+			oItemInstanceOfSegBtnItem = oItem instanceof SegmentedButtonItem,
 			vButton = oItemInstanceOfSegBtnItem ? oItem.oButton : vItem;
 
 		// set the new value
@@ -923,6 +934,25 @@ function(
 	};
 
 	/**
+	 * @see sap.ui.core.Control#getAccessibilityInfo
+	 * @returns {object} Current accessibility state of the control
+	 * @protected
+	 */
+	 SegmentedButton.prototype.getAccessibilityInfo = function() {
+		var oResourceBundle = sap.ui.getCore().getLibraryResourceBundle("sap.m"),
+			oSelectedItem = this.getItems().find(function(oItem) {
+				return oItem.getId() === this.getSelectedItem();
+			}.bind(this));
+
+		return {
+		  role: "listbox",
+		  type: oResourceBundle.getText("SEGMENTEDBUTTON_NAME"),
+		  description: oSelectedItem.oButton.getAccessibilityInfo().description,
+		  focusable: this.getEnabled()
+		};
+	 };
+
+	/**
 	 * To be called to make the control go to select mode.
 	 * @private
 	 */
@@ -973,12 +1003,13 @@ function(
 	SegmentedButton.prototype._overwriteImageOnload = function (oImage) {
 		var that = this;
 
-		if (oImage.onload === sap.m.Image.prototype.onload) {
+		Image = Image || sap.ui.require("sap/m/Image");
+		if (Image && oImage.onload === Image.prototype.onload) {
 			oImage.onload = function () {
-				if (sap.m.Image.prototype.onload) {
-					sap.m.Image.prototype.onload.apply(this, arguments);
+				if (Image.prototype.onload) {
+					Image.prototype.onload.apply(this, arguments);
 				}
-				window.setTimeout(function() {
+				setTimeout(function() {
 					that._updateWidth();
 				}, 20);
 			};

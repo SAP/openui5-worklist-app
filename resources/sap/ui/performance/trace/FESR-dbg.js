@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -203,35 +203,38 @@ sap.ui.define([
 	}
 
 	function onInteractionFinished(oFinishedInteraction) {
-		var sStepName = oFinishedInteraction.trigger + "_" + oFinishedInteraction.event;
-		var oFESRHandle = FESR.onBeforeCreated({
-			stepName: sStepName,
-			appNameLong: oFinishedInteraction.stepComponent || oFinishedInteraction.component,
-			appNameShort: oFinishedInteraction.stepComponent || oFinishedInteraction.component,
-			timeToInteractive: oFinishedInteraction.duration,
-			interactionType: determineInteractionType(sStepName)
-		}, oFinishedInteraction);
+		if (oFinishedInteraction) {
+			var sStepName = oFinishedInteraction.semanticStepName ? oFinishedInteraction.semanticStepName : oFinishedInteraction.trigger + "_" + oFinishedInteraction.event;
+			var oFESRHandle = FESR.onBeforeCreated({
+				stepName: sStepName,
+				appNameLong: oFinishedInteraction.stepComponent || oFinishedInteraction.component,
+				appNameShort: oFinishedInteraction.stepComponent || oFinishedInteraction.component,
+				timeToInteractive: oFinishedInteraction.duration,
+				interactionType: determineInteractionType(sStepName)
+			}, oFinishedInteraction);
 
-		// do not send UI-only FESR with piggyback approach
-		if (oBeaconRequest || oFinishedInteraction.requests.length > 0) {
-			createHeader(oFinishedInteraction, oFESRHandle);
-			if (oBeaconRequest) {
-				// reset the transactionId for Beacon approach
-				sFESRTransactionId = null;
+			// do not send UI-only FESR with piggyback approach
+			if (oBeaconRequest || oFinishedInteraction.requests.length > 0) {
+				createHeader(oFinishedInteraction, oFESRHandle);
+				if (oBeaconRequest) {
+					// reset the transactionId for Beacon approach
+					sFESRTransactionId = null;
+				}
+			}
+
+			// use the sendBeacon API instead of the piggyback approach
+			if (oBeaconRequest && sFESR && sFESRopt) {
+				oBeaconRequest.append("SAP-Perf-FESRec", sFESR + "SAP-Perf-FESRec-opt" + sFESRopt);
+				sendBeaconRequest();
+			}
+
+			if (sAppVersionFull != oFinishedInteraction.appVersion) {
+				sAppVersionFull = oFinishedInteraction.appVersion;
+				sAppVersion = sAppVersionFull ? formatVersion(sAppVersionFull) : "";
 			}
 		}
 
-		// use the sendBeacon API instead of the piggyback approach
-		if (oBeaconRequest && sFESR && sFESRopt) {
-			oBeaconRequest.append("SAP-Perf-FESRec", sFESR + "SAP-Perf-FESRec-opt" + sFESRopt);
-			sendBeaconRequest();
-		}
-
-		if (sAppVersionFull != oFinishedInteraction.appVersion) {
-			sAppVersionFull = oFinishedInteraction.appVersion;
-			sAppVersion = sAppVersionFull ? formatVersion(sAppVersionFull) : "";
-		}
-
+		sPassportComponentInfo = "undefined";
 		sPassportAction = "undefined";
 	}
 

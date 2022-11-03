@@ -1,13 +1,12 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
 	"sap/ui/base/ManagedObject",
 	"sap/ui/base/ManagedObjectMetadata",
-	"sap/base/util/ObjectPath",
 	"sap/ui/util/XMLHelper",
 	"sap/ui/core/XMLTemplateProcessor",
 	"sap/ui/core/util/XMLPreprocessor",
@@ -16,7 +15,6 @@ sap.ui.define([
 ], function(
 	ManagedObject,
 	ManagedObjectMetadata,
-	ObjectPath,
 	XMLHelper,
 	XMLTemplateProcessor,
 	XMLPreprocessor,
@@ -217,7 +215,6 @@ sap.ui.define([
 			var sControlId = (vControl instanceof ManagedObject) ? vControl.getId() : vControl;
 
 			if (!oAppComponent) {
-				Log.error("Determination of a local ID suffix failed due to missing app component for " + sControlId);
 				return false;
 			}
 
@@ -299,6 +296,10 @@ sap.ui.define([
 		 */
 		_getControlMetadataInXml: function(oControl) {
 			var sControlType = this._getControlTypeInXml(oControl).replace(/\./g, "/");
+			var oControlType = sap.ui.require(sControlType);
+			if (oControlType && oControlType.getMetadata) {
+				return Promise.resolve(oControlType.getMetadata());
+			}
 			return new Promise(function(fnResolve, fnReject) {
 				sap.ui.require([sControlType],
 					function(ControlType) {
@@ -671,7 +672,7 @@ sap.ui.define([
 		 *
 		 * @param {sap.ui.base.ManagedObject|Element} vParent - Control which has the association
 		 * @param {string} sName - Association name
-		 * @returns {string|string[]} ID of the associated managed object or an array of such IDs; may be null if the association has not been populated
+		 * @returns {string|string[]|null} ID of the associated managed object or an array of such IDs; may be <code>null</code> if the association has not been populated
 		 * @public
 		 */
 		getAssociation: function (vParent, sName) {},

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -64,7 +64,7 @@ sap.ui.define(['./UniversalDate', '../CalendarType', './_Calendars'],
 	}
 
 	/**
-	 * Calculate gregorian year from japanes era and year
+	 * Calculate Gregorian year from Japanese era and year
 	 *
 	 * @param {object} oJapanese
 	 * @return {int}
@@ -79,10 +79,10 @@ sap.ui.define(['./UniversalDate', '../CalendarType', './_Calendars'],
 	}
 
 	/**
-	 * Convert arguments array from japanese date to gregorian data
+	 * Convert arguments array from Japanese date to Gregorian data.
 	 *
-	 * @param {object} oJapanese
-	 * @return {int}
+	 * @param {int[]|any[]} aArgs Array with year (or [era, year]), month and day (optional) according to Japanese calendar
+	 * @returns {int[]} Array with year, month and day according to the Gregorian calendar
 	 */
 	function toGregorianArguments(aArgs) {
 		var oJapanese, oGregorian,
@@ -229,12 +229,6 @@ sap.ui.define(['./UniversalDate', '../CalendarType', './_Calendars'],
 			oJapanese.day = iDay;
 		}
 		return this._setUTCJapanese(oJapanese);
-	};
-	Japanese.prototype.getWeek = function() {
-		return UniversalDate.getWeekByDate(this.sCalendarType, this.oDate.getFullYear(), this.getMonth(), this.getDate());
-	};
-	Japanese.prototype.getUTCWeek = function() {
-		return UniversalDate.getWeekByDate(this.sCalendarType, this.oDate.getUTCFullYear(), this.getUTCMonth(), this.getUTCDate());
 	};
 
 	_Calendars.set(CalendarType.Japanese, Japanese);

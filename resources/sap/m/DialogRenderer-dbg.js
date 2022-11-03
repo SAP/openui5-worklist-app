@@ -1,13 +1,14 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
 	"sap/m/library",
 	"sap/ui/Device",
-	"sap/ui/core/library"
-], function (library, Device, coreLibrary) {
+	"sap/ui/core/library",
+	"sap/ui/core/Core"
+], function (library, Device, coreLibrary, Core) {
 	"use strict";
 
 	// shortcut for sap.m.DialogType
@@ -40,7 +41,7 @@ sap.ui.define([
 	 * Renders the HTML for the Dialog control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRM The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oDialog An object representation of the control that should be rendered.
+	 * @param {sap.m.Dialog} oDialog An object representation of the control that should be rendered.
 	 */
 	DialogRenderer.render = function (oRM, oDialog) {
 		var sId = oDialog.getId(),
@@ -151,7 +152,7 @@ sap.ui.define([
 		if (Device.system.desktop) {
 
 			if (oDialog.getResizable() && !bStretch) {
-				oRM.icon("sap-icon://resize-corner", ["sapMDialogResizeHandler"], { "title": "" });
+				oRM.icon("sap-icon://resize-corner", ["sapMDialogResizeHandler"], {"title": "", "aria-label": ""});
 			}
 
 			// Invisible element which is used to determine when desktop keyboard navigation
@@ -159,6 +160,7 @@ sap.ui.define([
 			// In that case, the controller will focus the last focusable element.
 			oRM.openStart("span", sId + "-firstfe")
 				.class("sapMDialogFirstFE")
+				.attr("role", "none")
 				.attr("tabindex", "0")
 				.openEnd()
 				.close("span");
@@ -167,15 +169,26 @@ sap.ui.define([
 		if (oHeader) {
 			oHeader._applyContextClassFor("header");
 			oRM.openStart("header")
-				.class("sapMDialogTitle");
+				.class("sapMDialogTitle")
+				.openEnd()
+				.openStart("div")
+				.class("sapMDialogTitleGroup");
 
 			if (oDialog._isDraggableOrResizable()) {
-				oRM.attr("tabindex", 0);
+				oRM.attr("tabindex", 0)
+					.accessibilityState(oHeader, {
+						role: "group",
+						roledescription: Core.getLibraryResourceBundle("sap.m").getText("DIALOG_HEADER_ARIA_ROLE_DESCRIPTION"),
+						describedby: { value: oDialog.getId() + "-ariaDescribedbyText", append: true }
+					});
 			}
 
 			oRM.openEnd()
-				.renderControl(oHeader)
-				.close("header");
+			.renderControl(oHeader)
+			.renderControl(oDialog._oAriaDescribedbyText)
+			.close("div")
+			.close("header");
+
 		}
 
 		if (oSubHeader && oSubHeader.getVisible()) {
@@ -229,6 +242,7 @@ sap.ui.define([
 			// In that case, the controller will focus the first focusable element.
 			oRM.openStart("span", sId + "-lastfe")
 				.class("sapMDialogLastFE")
+				.attr("role", "none")
 				.attr("tabindex", "0")
 				.openEnd()
 				.close("span");

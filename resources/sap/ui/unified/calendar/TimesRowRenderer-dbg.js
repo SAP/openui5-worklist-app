@@ -1,12 +1,12 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/core/date/UniversalDate', 'sap/ui/unified/CalendarLegendRenderer',
+sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/core/format/TimezoneUtil', 'sap/ui/core/Core', 'sap/ui/core/date/UniversalDate', 'sap/ui/unified/CalendarLegendRenderer',
 		'sap/ui/unified/library', "sap/base/Log"],
-	function(CalendarUtils, UniversalDate, CalendarLegendRenderer, library, Log) {
+	function(CalendarUtils, TimezoneUtil, Core, UniversalDate, CalendarLegendRenderer, library, Log) {
 		"use strict";
 
 
@@ -145,6 +145,23 @@ sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/core/date/Univer
 
 	};
 
+	/**
+	 * Aligns a date to the timezone from the configuration.
+	 *
+	 * @returns {Object} <code>oNewDate</code> aligned to the configured timezone.
+	 * @private
+	 */
+	TimesRowRenderer._convertToTimezone = function(oDate) {
+		var sTimezone = Core.getConfiguration().getTimezone();
+		var oNewDate = CalendarUtils._createUniversalUTCDate(oDate, undefined, true);
+
+		oNewDate = new Date(oDate.getUTCFullYear(), oDate.getUTCMonth(), oDate.getUTCDate(), oDate.getUTCHours(), oDate.getUTCMinutes(), oDate.getUTCSeconds());
+		oNewDate.setUTCFullYear(oDate.getUTCFullYear());
+		oNewDate = TimezoneUtil.convertToTimezone(oNewDate, sTimezone);
+
+		return oNewDate;
+	};
+
 	TimesRowRenderer.renderTimes = function(oRm, oTimesRow, oDate){
 
 		var oHelper = this.getHelper(oTimesRow, oDate);
@@ -195,6 +212,8 @@ sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/core/date/Univer
 				Log.warning("CalendarLegend " + sLegendId + " does not exist!", oTimesRow);
 			}
 		}
+
+		oHelper.oNow = this._convertToTimezone(new Date());
 
 		return oHelper;
 

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -94,7 +94,7 @@ sap.ui.define(['./ListItemBaseRenderer', 'sap/ui/core/Renderer', 'sap/ui/core/li
 		 *
 		 * @param {sap.ui.core.RenderManager} rm The RenderManager that can be used for writing to the
 		 *          Render-Output-Buffer
-		 * @param {sap.ui.core.Control} oLI An object representation of the control that should be
+		 * @param {sap.m.ObjectListItem} oLI An object representation of the control that should be
 		 *          rendered
 		 */
 		ObjectListItemRenderer.renderLIAttributes = function(rm, oLI) {
@@ -156,7 +156,7 @@ sap.ui.define(['./ListItemBaseRenderer', 'sap/ui/core/Renderer', 'sap/ui/core/li
 
 			// Title container displayed to the left of the number and number units container.
 			rm.openStart("div"); // Start Title container
-			rm.style("display", "-webkit-box");
+			rm.style("display", "flex");
 			rm.style("overflow", "hidden");
 			rm.openEnd();
 			var oTitleText = oLI._getTitleText();
@@ -216,7 +216,7 @@ sap.ui.define(['./ListItemBaseRenderer', 'sap/ui/core/Renderer', 'sap/ui/core/li
 		 *
 		 * @param {sap.m.ObjectListItem}
 		 *			oLI An object representation of the control
-		 * @returns {String} ObjectListItem`s inner nodes IDs
+		 * @returns {string} ObjectListItem`s inner nodes IDs
 		 */
 		ObjectListItemRenderer.getAriaLabelledBy = function(oLI) {
 			var aLabelledByIds = [],

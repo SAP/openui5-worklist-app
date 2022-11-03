@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -47,9 +47,11 @@ sap.ui.define([
 	 * @extends sap.ui.model.ClientModel
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
-	 * @param {object} oData either the URL where to load the XML from or an XML
+	 * @param {XMLDocument|string} oData
+	 *   Either the URL where to load the XML from or an XML document
+	 *
 	 * @public
 	 * @alias sap.ui.model.xml.XMLModel
 	 */
@@ -118,12 +120,14 @@ sap.ui.define([
 	 *
 	 * @param {string} sURL A string containing the URL to which the request is sent
 	 * @param {object | string} [oParameters] A map of parameters or a single parameter string that is sent to the server with the request
-	 * @param {boolean} [bAsync=true] By default, all requests are sent asynchronous.
-	 * <b>Do not use <code>bAsync=false</code></b> because synchronous requests may temporarily lock
-	 * the browser, disabling any actions while the request is active. Cross-domain requests do not
-	 * support synchronous operation.
+	 * @param {boolean} [bAsync=true] <b>Deprecated as of Version 1.107</b>; always use asynchronous
+	 * loading for performance reasons. By default, all requests are sent asynchronously.
+	 * Synchronous requests may temporarily lock the browser, disabling any actions while
+	 * the request is active. Cross-domain requests do not support synchronous operations.
 	 * @param {string} [sType=GET] HTTP method of request
-	 * @param {string} [bCache=false] Force no caching if false
+	 * @param {string} [bCache=true] <b>Deprecated as of Version 1.107</b>; always use the cache
+	 * headers from the back-end system for performance reasons. Disables caching if set to
+	 * <code>false</code>.
 	 * @param {object} [mHeaders] An object of additional header key/value pairs to send along with the request
 	 *
 	 * @public
@@ -181,7 +185,7 @@ sap.ui.define([
 		this.oNameSpaces[sPrefix] = sNameSpace;
 	};
 
-	/**
+	/*
 	 * @see sap.ui.model.Model.prototype.bindProperty
 	 */
 	XMLModel.prototype.bindProperty = function(sPath, oContext, mParameters) {
@@ -189,7 +193,7 @@ sap.ui.define([
 		return oBinding;
 	};
 
-	/**
+	/*
 	 * @see sap.ui.model.Model.prototype.bindList
 	 */
 	XMLModel.prototype.bindList = function(sPath, oContext, aSorters, aFilters, mParameters) {
@@ -197,7 +201,7 @@ sap.ui.define([
 		return oBinding;
 	};
 
-	/**
+	/*
 	 * @see sap.ui.model.Model.prototype.bindTree
 	 */
 	XMLModel.prototype.bindTree = function(sPath, oContext, aFilters, mParameters, aSorters) {
@@ -267,7 +271,7 @@ sap.ui.define([
 	XMLModel.prototype.getProperty = function(sPath, oContext) {
 		var oResult = this._getObject(sPath, oContext);
 		if (oResult && typeof oResult != "string") {
-			oResult = oResult[0] ? oResult[0].textContent : ""; // TODO is this right? shouldn't we return the object?!
+			oResult = oResult[0] ? oResult[0].textContent : "";
 		}
 		return oResult;
 	};

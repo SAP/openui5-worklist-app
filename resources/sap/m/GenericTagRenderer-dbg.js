@@ -1,13 +1,14 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
 	"./library",
-	"sap/ui/core/library"
-], function(library, coreLibrary) {
+	"sap/ui/core/library",
+	"sap/ui/core/Core"
+], function(library, coreLibrary, oCore) {
 	"use strict";
 	//shortcut for sap.m.GenericTagDesign
 	var GenericTagDesign = library.GenericTagDesign,
@@ -17,7 +18,6 @@ sap.ui.define([
 
 		//shortcut for sap.ui.core.ValueState
 		ValueState = coreLibrary.ValueState,
-		oCore = sap.ui.getCore(),
 		GenericTagRenderer = {
 			apiVersion: 2
 		};
@@ -107,11 +107,13 @@ sap.ui.define([
 	};
 
 	GenericTagRenderer._getAriaLabelledBy = function(oControl) {
-		var aLabelledBy = [],
+		var aLabelledBy = oControl.getAriaLabelledBy().slice(),
 			sId = oControl.getId(),
-			sTagValueId = this._getTagValueId(oControl);
+			sTagValueId = this._getTagValueId(oControl),
+			sTagValueState = this._getTagValueState(oControl),
+			sStatus = oControl.getStatus();
 
-		if (oControl.getStatus() !== ValueState.None) {
+		if (sStatus !== ValueState.None && sStatus !== sTagValueState) {
 			aLabelledBy.push(sId + "-status");
 		}
 
@@ -152,6 +154,12 @@ sap.ui.define([
 		var oValue = oControl.getValue();
 
 		return oValue ? oValue.getId() : "";
+	};
+
+	GenericTagRenderer._getTagValueState = function(oControl) {
+		var oValue = oControl.getValue();
+
+		return oValue ? oValue.getState() : "";
 	};
 
 	return GenericTagRenderer;

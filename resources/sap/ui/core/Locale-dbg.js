@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -38,7 +38,7 @@ sap.ui.define(['sap/ui/base/Object', 'sap/base/assert', './CalendarType'],
 		 *
 		 * @extends sap.ui.base.Object
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 * @public
 		 * @alias sap.ui.core.Locale
 		 */
@@ -98,7 +98,7 @@ sap.ui.define(['sap/ui/base/Object', 'sap/base/assert', './CalendarType'],
 			 * (Upper case first letter and lower case reminder enforced as
 			 * recommended by BCP47/ISO15924)
 			 *
-			 * @return {string} the script code or null
+			 * @returns {string|null} the script code or <code>null</code>
 			 * @public
 			 */
 			getScript : function() {
@@ -123,7 +123,7 @@ sap.ui.define(['sap/ui/base/Object', 'sap/base/assert', './CalendarType'],
 			 *
 			 * Multiple variants are separated by a dash '-'.
 			 *
-			 * @return {string} the variant or null
+			 * @return {string|null} the variant or <code>null</code>
 			 * @public
 			 */
 			getVariant : function() {
@@ -152,7 +152,7 @@ sap.ui.define(['sap/ui/base/Object', 'sap/base/assert', './CalendarType'],
 			 *
 			 * Use {@link #getExtensions} to get the individual extension tokens as an array.
 			 *
-			 * @return {string} the extension
+			 * @return {string|null} the extension or <code>null</code>
 			 * @public
 			 */
 			getExtension : function() {
@@ -269,6 +269,30 @@ sap.ui.define(['sap/ui/base/Object', 'sap/base/assert', './CalendarType'],
 			 *   as that class allows to configure an SAP Logon language.
 			 */
 			getSAPLogonLanguage : function() {
+				return this._getSAPLogonLanguage();
+			},
+			/**
+			 * Best guess to get a proper SAP Logon Language for this locale.
+			 *
+			 * Conversions taken into account:
+			 * <ul>
+			 * <li>use the language part only</li>
+			 * <li>convert old ISO639 codes to newer ones (e.g. 'iw' to 'he')</li>
+			 * <li>for Chinese, map 'Traditional Chinese' or region 'TW' to SAP proprietary code 'zf'</li>
+			 * <li>map private extensions x-saptrc, x-sappsd and saprigi to SAP pseudo languages '1Q', '2Q' and '3Q'</li>
+			 * <li>remove ext. language sub tags</li>
+			 * <li>convert to uppercase</li>
+			 * </ul>
+			 *
+			 * Note that the conversion also returns a result for languages that are not
+			 * supported by the default set of SAP languages. This method has no knowledge
+			 * about the concrete languages of any given backend system.
+			 *
+			 * @return {string} a language code that should
+			 * @private
+			 * @ui5-restricted sap.ui.core.Configuration
+			 **/
+			_getSAPLogonLanguage : function() {
 
 				var sLanguage = this.sLanguage || "";
 

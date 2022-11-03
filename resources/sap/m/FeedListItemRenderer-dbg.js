@@ -1,12 +1,12 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides default renderer for the sap.m.FeedListItem
-sap.ui.define(["./ListItemBaseRenderer", "sap/ui/core/Renderer", "sap/ui/Device"],
-	function(ListItemBaseRenderer, Renderer, Device) {
+sap.ui.define(["./ListItemBaseRenderer", "sap/ui/core/Renderer", "sap/ui/Device", "sap/ui/core/Configuration"],
+	function(ListItemBaseRenderer, Renderer, Device, Configuration) {
 	"use strict";
 
 
@@ -21,7 +21,7 @@ sap.ui.define(["./ListItemBaseRenderer", "sap/ui/core/Renderer", "sap/ui/Device"
 	 * Make sure that parent li is displayed as a horizontal webkit-box.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the Render-Output-Buffer
-	 * @param {sap.ui.core.Control} oControl an object representation of the feed list item that should be rendered
+	 * @param {sap.m.FeedListItem} oControl an object representation of the feed list item that should be rendered
 	 */
 	FeedListItemRenderer.renderLIAttributes = function(oRm, oControl) {
 		oRm.class("sapMFeedListItemTitleDiv");
@@ -32,7 +32,7 @@ sap.ui.define(["./ListItemBaseRenderer", "sap/ui/core/Renderer", "sap/ui/Device"
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the Render-Output-Buffer
-	 * @param {sap.ui.core.Control} oControl an object representation of the feed list item that should be rendered
+	 * @param {sap.m.FeedListItem} oControl an object representation of the feed list item that should be rendered
 	 */
 	FeedListItemRenderer.renderLIContent = function(oRm, oControl) {
 		// convenience variable
@@ -49,11 +49,16 @@ sap.ui.define(["./ListItemBaseRenderer", "sap/ui/core/Renderer", "sap/ui/Device"
 
 		// action button
 		if (oControl.getActions().length > 0) {
-			oRm.openStart("div", sMyId + "-action-button");
-			oRm.class('sapMFeedListItemActionButton');
-			oRm.openEnd();
-			oRm.renderControl(oControl.getAggregation("_actionButton"));
-			oRm.close("div");
+			var isAllActionsNotVisible = oControl.getActions().every(function (oAction) {
+				return oAction.getVisible() === false ;
+			});
+			if (!isAllActionsNotVisible) {
+				oRm.openStart("div", sMyId + "-action-button");
+				oRm.class('sapMFeedListItemActionButton');
+				oRm.openEnd();
+				oRm.renderControl(oControl.getAggregation("_actionButton"));
+				oRm.close("div");
+			}
 		}
 
 		// text (starting with sender)
@@ -121,7 +126,7 @@ sap.ui.define(["./ListItemBaseRenderer", "sap/ui/core/Renderer", "sap/ui/Device"
 			if (oControl.getInfo() || oControl.getTimestamp()) {
 				// info and date
 				oRm.openStart('p').class("sapMFeedListItemFooter").class("sapUiSelectable").openEnd();
-				if (!sap.ui.getCore().getConfiguration().getRTL()) {
+				if (!Configuration.getRTL()) {
 					if (oControl.getInfo()) {
 						this._writeInfo(oRm, oControl, sMyId);
 						// Write Interpunct separator if necessary (with spaces before and after)

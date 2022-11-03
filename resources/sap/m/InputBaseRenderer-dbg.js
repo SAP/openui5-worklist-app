@@ -1,11 +1,11 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library', 'sap/ui/core/ValueStateSupport', 'sap/ui/core/LabelEnablement', 'sap/ui/Device'],
-	function(Renderer, Core, coreLibrary, ValueStateSupport, LabelEnablement, Device) {
+sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library', 'sap/ui/core/ValueStateSupport', 'sap/ui/Device', 'sap/ui/core/Configuration'],
+	function(Renderer, Core, coreLibrary, ValueStateSupport, Device, Configuration) {
 	"use strict";
 
 	// shortcut for sap.ui.core.TextDirection
@@ -15,9 +15,12 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	var ValueState = coreLibrary.ValueState;
 
 	/**
-	 * Input renderer.
+	 * InputBase renderer.
 	 *
 	 * @namespace
+	 * @alias sap.m.InputBaseRenderer
+	 * @static
+	 * @protected
 	 */
 	var InputBaseRenderer = {
 		apiVersion: 2
@@ -27,13 +30,13 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.render = function(oRm, oControl) {
 		var sValueState = oControl.getValueState(),
 			sTextDir = oControl.getTextDirection(),
 			sTextAlign = Renderer.getTextAlign(oControl.getTextAlign(), sTextDir),
-			bAccessibility = sap.ui.getCore().getConfiguration().getAccessibility(),
+			bAccessibility = Configuration.getAccessibility(),
 			aBeginIcons = oControl.getAggregation("_beginIcon") || [],
 			aEndIcons = oControl.getAggregation("_endIcon") || [],
 			aVisibleBeginIcons, aVisibleEndIcons;
@@ -181,6 +184,8 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 		this.writeInnerContent(oRm, oControl);
 		this.closeInputTag(oRm, oControl);
 
+		this.writeAdditionalContent(oRm, oControl);
+
 		// write the end icons after the inner part
 		if (aEndIcons.length) {
 			this.writeIcons(oRm, aEndIcons);
@@ -208,8 +213,8 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 * Hook for the subclasses.
 	 *
 	 * @protected
-	 * @param {sap.ui.core.Control} oControl an object representation of the control
-	 * @returns {String}
+	 * @param {sap.m.InputBase} oControl an object representation of the control
+	 * @returns {string}
 	 */
 	InputBaseRenderer.getAriaRole = function(oControl) {
 		return "textbox";
@@ -220,8 +225,8 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 * Hook for the subclasses.
 	 *
 	 * @protected
-	 * @param {sap.ui.core.Control} oControl an object representation of the control.
-	 * @returns {String|undefined}
+	 * @param {sap.m.InputBase} oControl an object representation of the control.
+	 * @returns {string|undefined}
 	 */
 	InputBaseRenderer.getAriaLabelledBy = function(oControl) {
 		if (this.getLabelledByAnnouncement(oControl)) {
@@ -234,8 +239,8 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 * Hook for the subclasses.
 	 *
 	 * @protected
-	 * @param {sap.ui.core.Control} oControl an object representation of the control.
-	 * @returns {String}
+	 * @param {sap.m.InputBase} oControl an object representation of the control.
+	 * @returns {string}
 	 */
 	InputBaseRenderer.getLabelledByAnnouncement = function(oControl) {
 		return "";
@@ -247,7 +252,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.renderAriaLabelledBy = function(oRm, oControl) {
 		var sAnnouncement = this.getLabelledByAnnouncement(oControl);
@@ -266,8 +271,8 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 * Hook for the subclasses.
 	 *
 	 * @protected
-	 * @param {sap.ui.core.Control} oControl an object representation of the control.
-	 * @returns {String|undefined}
+	 * @param {sap.m.InputBase} oControl an object representation of the control.
+	 * @returns {string|undefined}
 	 */
 	InputBaseRenderer.getAriaDescribedBy = function(oControl) {
 		if (this.getDescribedByAnnouncement(oControl)) {
@@ -280,8 +285,8 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 * Hook for the subclasses.
 	 *
 	 * @protected
-	 * @param {sap.ui.core.Control} oControl an object representation of the control.
-	 * @returns {String}
+	 * @param {sap.m.InputBase} oControl an object representation of the control.
+	 * @returns {string}
 	 */
 	InputBaseRenderer.getDescribedByAnnouncement = function(oControl) {
 		return "";
@@ -293,7 +298,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.renderAriaDescribedBy = function(oRm, oControl) {
 		var sAnnouncement = this.getDescribedByAnnouncement(oControl);
@@ -312,7 +317,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.renderValueStateAccDom = function(oRm, oControl) {
 		var sValueState = oControl.getValueState();
@@ -347,7 +352,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 * Hook for the subclasses.
 	 *
 	 * @protected
-	 * @param {sap.ui.core.Control} oControl an object representation of the control.
+	 * @param {sap.m.InputBase} oControl an object representation of the control.
 	 * @returns {Object}
 	 */
 	InputBaseRenderer.getAccessibilityState = function(oControl) {
@@ -393,7 +398,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.writeAccessibilityState = function(oRm, oControl) {
 		oRm.accessibilityState(oControl, this.getAccessibilityState(oControl));
@@ -404,7 +409,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.openInputTag = function(oRm, oControl) {
 		oRm.voidStart("input", oControl.getId() + "-" + this.getInnerSuffix());
@@ -415,7 +420,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.endInputTag = function(oRm, oControl) {
 		oRm.voidEnd();
@@ -426,7 +431,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.writeInnerValue = function(oRm, oControl) {
 		oRm.attr("value", oControl.getValue());
@@ -437,7 +442,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.addCursorClass = function(oRm, oControl) {};
 
@@ -447,7 +452,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.addPaddingClass = function(oRm, oControl) {
 		oRm.class("sapMInputBaseHeightMargin");
@@ -458,7 +463,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.addOuterStyles = function(oRm, oControl) {};
 
@@ -467,7 +472,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.addControlWidth = function(oRm, oControl) {
 		if (!oControl.getProperty('width')) {
@@ -482,7 +487,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.addOuterClasses = function(oRm, oControl) {};
 
@@ -491,7 +496,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.writeOuterAttributes = function(oRm, oControl) {};
 
@@ -500,7 +505,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.addInnerStyles = function(oRm, oControl) {};
 
@@ -509,7 +514,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.addWrapperStyles = function(oRm, oControl) {
 		oRm.style("width", "100%");
@@ -520,7 +525,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.addInnerClasses = function(oRm, oControl) {};
 
@@ -529,7 +534,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.writeInnerAttributes = function(oRm, oControl) {};
 
@@ -538,7 +543,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.prependInnerContent = function(oRm, oControl) {};
 
@@ -547,17 +552,26 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.writeInnerContent = function(oRm, oControl) {};
+
+	/**
+	 * Writes additional content inside the input container, after the input.
+	 *
+	 * @protected
+	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
+	 * @ui5-restricted sap.m.DateTimePickerRenderer, sap.m.DateTimeFieldRenderer
+	 */
+	InputBaseRenderer.writeAdditionalContent = function(oRm, oControl) {};
 
 	/**
 	 * Renders icons from the icon aggregations.
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
-	 * @param {string} sPosition An aggregation from which the icon should be rendered - begin or end.
+	 * @param {sap.ui.core.Icon[]} aIcons List of icons to render
 	 */
 	InputBaseRenderer.writeIcons = function (oRm, aIcons) {
 		oRm.openStart("div")
@@ -573,7 +587,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.writeDecorations = function (oRm, oControl) {};
 
@@ -582,7 +596,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.closeInputTag = function(oRm, oControl) {};
 
@@ -592,7 +606,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 * @deprecated
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.addPlaceholderStyles = function(oRm, oControl) {};
 
@@ -604,7 +618,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 * @deprecated
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.addPlaceholderClasses = function(oRm, oControl) {};
 
@@ -614,7 +628,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/core/Core', 'sap/ui/core/library'
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+	 * @param {sap.m.InputBase} oControl An object representation of the control that should be rendered.
 	 */
 	InputBaseRenderer.addValueStateClasses = function(oRm, oControl) {
 		oRm.class("sapMInputBaseContentWrapperState");

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -23,7 +23,7 @@ sap.ui.define(['sap/ui/unified/CalendarLegendRenderer', 'sap/ui/core/Renderer'],
 		 * @override
 		 */
 		PlanningCalendarLegendRenderer.renderItemsHeader = function(oRm, oLeg) {
-			var sItemsHeader = oLeg.getItemsHeader();
+			var sItemsHeader = oLeg._getItemsHeader();
 
 			if (sItemsHeader && (oLeg.getItems().length || oLeg.getStandardItems().length)) {
 				this._renderItemsHeader(oRm, sItemsHeader);
@@ -36,7 +36,7 @@ sap.ui.define(['sap/ui/unified/CalendarLegendRenderer', 'sap/ui/core/Renderer'],
 		 * @param {sap.ui.unified.CalendarLegend} oLeg an object representation of the legend that should be rendered
 		 */
 		PlanningCalendarLegendRenderer.renderAppointmentsItemsHeader = function(oRm, oLeg) {
-			var sAppointmentItemsHeader = oLeg.getAppointmentItemsHeader();
+			var sAppointmentItemsHeader = oLeg._getAppointmentItemsHeader();
 			if (sAppointmentItemsHeader && oLeg.getAppointmentItems().length) {
 				this._renderItemsHeader(oRm, sAppointmentItemsHeader);
 			} else if (oLeg.getAppointmentItems().length && (oLeg.getItems().length || oLeg.getStandardItems().length)) {

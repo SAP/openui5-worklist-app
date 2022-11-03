@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -22,35 +22,38 @@ sap.ui.define(['sap/ui/core/Control', './library', "./HorizontalLayoutRenderer"]
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.16.0
 	 * @alias sap.ui.layout.HorizontalLayout
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var HorizontalLayout = Control.extend("sap.ui.layout.HorizontalLayout", /** @lends sap.ui.layout.HorizontalLayout.prototype */ { metadata : {
+	var HorizontalLayout = Control.extend("sap.ui.layout.HorizontalLayout", /** @lends sap.ui.layout.HorizontalLayout.prototype */ {
+		metadata : {
 
-		library : "sap.ui.layout",
-		properties : {
+			library : "sap.ui.layout",
+			properties : {
 
-			/**
-			 * Specifies whether the content inside the Layout shall be line-wrapped in the case that there is less horizontal space available than required.
-			 */
-			allowWrapping : {type : "boolean", group : "Misc", defaultValue : false}
+				/**
+				 * Specifies whether the content inside the Layout shall be line-wrapped in the case that there is less horizontal space available than required.
+				 */
+				allowWrapping : {type : "boolean", group : "Misc", defaultValue : false}
+			},
+			defaultAggregation : "content",
+			aggregations : {
+
+				/**
+				 * The controls inside this layout
+				 */
+				content : {type : "sap.ui.core.Control", multiple : true, singularName : "content"}
+			},
+			designtime: "sap/ui/layout/designtime/HorizontalLayout.designtime",
+			dnd: { draggable: false, droppable: true }
 		},
-		defaultAggregation : "content",
-		aggregations : {
 
-			/**
-			 * The controls inside this layout
-			 */
-			content : {type : "sap.ui.core.Control", multiple : true, singularName : "content"}
-		},
-		designtime: "sap/ui/layout/designtime/HorizontalLayout.designtime",
-		dnd: { draggable: false, droppable: true }
-	}});
+		renderer: HorizontalLayoutRenderer
+	});
 
 	/**
 	 * @see sap.ui.core.Control#getAccessibilityInfo

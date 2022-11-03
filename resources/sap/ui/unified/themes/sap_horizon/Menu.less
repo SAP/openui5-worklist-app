@@ -3,6 +3,14 @@
 /* Horizon theme                        */
 /* ==================================== */
 
+.sapUiMnu {
+	border-radius: @sapUiPopoverBorderCornerRadius;
+}
+
+.sapUiMnuItmSbMnu > div:after {
+	font-size: 1rem;
+}
+
 .sapUiMnuItm.sapUiMnuTfItm .sapUiMnuTfItemTf.sapUiMnuTfItemTfDsbl {
 	opacity: @sapUiContentDisabledOpacity;
 }
@@ -84,7 +92,7 @@ html.sap-phone .sapUiSizeCozy .sapUiMnuItm {
 }
 
 .sapMMenuLIArrowRightIcon {
-	font-size: 0.75rem;
+	font-size: 1rem;
 	width: 2.75rem;
 	height: 2.75rem;
 	line-height: 2.75rem;
@@ -119,33 +127,22 @@ html.sap-phone .sapUiSizeCozy .sapUiMnuItm {
 
 html.sap-desktop,
 html.sap-tablet {
-	.sapUiSizeCozy{
-		.sapUiMnuLst > .sapUiMnuItm > .sapUiMnuItmTxt {
-			padding-left: 0.75rem;
-		}
-		.sapUiMnuLst > .sapUiMnuItm > .sapUiMnuItmIco + .sapUiMnuItmTxt {
-			padding-left: 0;
-		}
-		.sapUiMnuLst.sapUiMnuNoIco > .sapUiMnuItm > .sapUiMnuItmTxt,
-		.sapUiMnuLst.sapUiMnuNoIco > .sapUiMnuItm > .sapUiMnuItmIco + .sapUiMnuItmTxt {
-			padding-left: 0;
-		}
+	.sapUiMnuLst > .sapUiMnuItm > .sapUiMnuItmTxt {
+		padding-left: 0.75rem;
+	}
+	.sapUiMnuLst > .sapUiMnuItm > .sapUiMnuItmIco + .sapUiMnuItmTxt {
+		padding-left: 0;
+	}
+	.sapUiMnuLst.sapUiMnuNoIco > .sapUiMnuItm > .sapUiMnuItmTxt,
+	.sapUiMnuLst.sapUiMnuNoIco > .sapUiMnuItm > .sapUiMnuItmIco + .sapUiMnuItmTxt {
+		padding-left: 0;
 	}
 }
 
-/** Compact Mode **/
+.sapUiMnuItm.sapUiMnuTfItm .sapUiMnuTfItemTf {
+	border-radius: 0.25rem;
+}
 
-.sapUiSizeCompact{
-	.sapUiMnuLst > .sapUiMnuItm > .sapUiMnuItmTxt {
-		padding-left: 0.5rem;
-	}
-
-	.sapUiMnuLst > .sapUiMnuItm > .sapUiMnuItmIco + .sapUiMnuItmTxt {
-		padding-left: 0rem;
-	}
-
-	.sapUiMnuLst.sapUiMnuNoIco > .sapUiMnuItm > .sapUiMnuItmTxt,
-	.sapUiMnuLst.sapUiMnuNoIco > .sapUiMnuItm > .sapUiMnuItmIco + .sapUiMnuItmTxt{
-		padding-left: 0;
-	}
+.sapUiMnuItm.sapUiMnuTfItm .sapUiMnuTfItemTf:focus {
+	border-width: 0.125rem;
 }

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -19,7 +19,7 @@ sap.ui.define([
 		 * @class This class represents the trace plugin for the support tool functionality of UI5. This class is internal and all its functions must not be used by an application.
 		 *
 		 * @extends sap.ui.core.support.Plugin
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 * @private
 		 * @alias sap.ui.core.support.plugins.Trace
 		 */
@@ -208,18 +208,18 @@ sap.ui.define([
 		};
 
 		function log(oPlugin, oEntry){
-			var jContentRef = jQuery(".sapUiSupportTraceCntnt", oPlugin.$());
+			var oContentRef = oPlugin.$()[0].querySelector(".sapUiSupportTraceCntnt");
 			if (!oEntry) {
-				jContentRef.html("");
+				oContentRef.textContent = "";
 				oPlugin._aLogEntries = [];
 			} else if (typeof (oEntry) === "string") {
-				jContentRef.html(encodeXML(oEntry));
-				jContentRef[0].scrollTop = jContentRef[0].scrollHeight;
+				oContentRef.textContent = encodeXML(oEntry);
+				oContentRef.scrollTop = oContentRef.scrollHeight;
 			} else {
 				oEntry._levelInfo = getLevel(oEntry.level);
 				if (applyFilter(oPlugin._filter, oPlugin._iLogLevel, oEntry)) {
-					jContentRef.append(getEntryHTML(oPlugin, oEntry));
-					jContentRef[0].scrollTop = jContentRef[0].scrollHeight;
+					oContentRef.insertAdjacentHTML("beforeend", getEntryHTML(oPlugin, oEntry));
+					oContentRef.scrollTop = oContentRef.scrollHeight;
 				}
 				oPlugin._aLogEntries.push(oEntry);
 			}

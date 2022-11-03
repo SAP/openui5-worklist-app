@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -13,8 +13,9 @@ sap.ui.define([
     "sap/ui/events/KeyCodes",
     "sap/base/Log",
     "sap/ui/core/Icon",
-    "./library"
-], function(Control, IconPool, AvatarRenderer, KeyCodes, Log, Icon, library) {
+    "./library",
+	"sap/ui/core/library"
+], function(Control, IconPool, AvatarRenderer, KeyCodes, Log, Icon, library, coreLibrary) {
 	"use strict";
 
 	// shortcut for sap.m.AvatarType
@@ -31,6 +32,9 @@ sap.ui.define([
 
 	// shortcut for sap.m.AvatarShape
 	var AvatarShape = library.AvatarShape;
+
+	// shortcut for sap.ui.core.aria.HasPopup
+	var AriaHasPopup = coreLibrary.aria.HasPopup;
 
 	// shortcut for Accent colors keys only (from AvatarColor enum)
 	var AccentColors = Object.keys(AvatarColor).filter(function (sCurrColor) {
@@ -58,8 +62,8 @@ sap.ui.define([
 	 *
 	 * <h3>Usage</h3>
 	 *
-	 * Up to two Latin letters can be displayed as initials in an <code>Avatar</code>. If there
-	 * are more than two letters, or if there's a non-Latin character present, a default image
+	 * Up to three Latin letters can be displayed as initials in an <code>Avatar</code>. If there
+	 * are more than three letters, or if there's a non-Latin character present, a default image
 	 * placeholder will be created.
 	 *
 	 * There are two options for how the displayed image can fit inside the
@@ -76,14 +80,13 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.73
 	 * @see {@link fiori:https://experience.sap.com/fiori-design-web/avatar/ Avatar}
 	 * @alias sap.m.Avatar
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var Avatar = Control.extend("sap.m.Avatar", {
 		metadata: {
@@ -94,7 +97,7 @@ sap.ui.define([
 				 */
 				src: {type: "sap.ui.core.URI", group: "Data", defaultValue: null},
 				/**
-				 * Defines the displayed initials.
+				 * Defines the displayed initials. They should consist of only 1,2 or 3 latin letters.
 				 */
 				initials: {type: "string", group: "Data", defaultValue: null},
 				/**
@@ -164,7 +167,28 @@ sap.ui.define([
 				 *
 				 * @since 1.77
 				 */
-				badgeTooltip: {type: "string", group: "Data", defaultValue: null}
+				badgeTooltip: {type: "string", group: "Data", defaultValue: null},
+				/**
+				 * Defines whether the <code>sap.m.Avatar</code> is used for decorative purposes and is ignored by accessibility tools.
+				 *
+				 * <b>Note:</b> This property doesn't take effect if <code>sap.m.Avatar</code> has a <code>press</code> handler.
+				 *
+				 * @since 1.97
+				 */
+				decorative : {type : "boolean", group : "Accessibility", defaultValue : false},
+
+				/**
+				 * Specifies the value of the <code>aria-haspopup</code> attribute
+				 *
+				 * If the value is <code>None</code>, the attribute will not be rendered. Otherwise it will be rendered with the selected value.
+				 *
+				 * NOTE: Use this property only when an avatar is related to a popover/popup. The value needs to be equal to the main/root role of the popup - e.g. dialog,
+				 * menu or list (examples: if you have dialog -> dialog, if you have menu -> menu; if you have list -> list; if you have dialog containing a list -> dialog).
+				 * Do not use it, if you open a standard sap.m.Dialog, MessageBox or other type of dialogs displayed as on overlay over the application.
+				 *
+				 * @since 1.99.0
+				 */
+				ariaHasPopup : {type : "sap.ui.core.aria.HasPopup", group : "Accessibility", defaultValue : AriaHasPopup.None}
 
 			},
 			aggregations : {
@@ -205,7 +229,9 @@ sap.ui.define([
 			},
 			dnd: { draggable: true, droppable: false },
 			designtime: "sap/m/designtime/Avatar.designtime"
-		}
+		},
+
+		renderer: AvatarRenderer
 	});
 
 	/**
@@ -248,6 +274,14 @@ sap.ui.define([
 		this._badgeRef = null;
 	};
 
+	Avatar.prototype.onAfterRendering = function() {
+		this._checkInitialsHolderWidth();
+	};
+
+	Avatar.prototype.onThemeChanged = function() {
+		this._checkInitialsHolderWidth();
+	};
+
 	Avatar.prototype.exit = function () {
 		if (this._fnLightBoxOpen) {
 			this._fnLightBoxOpen = null;
@@ -263,7 +297,7 @@ sap.ui.define([
 	/**
 	 * Sets the <code>detailBox</code> aggregation.
 	 * @param {sap.m.LightBox|undefined} oLightBox - Instance of the <code>LightBox</code> control or undefined
-	 * @returns {object} <code>this</code> for chaining
+	 * @returns {this} <code>this</code> for chaining
 	 * @override
 	 * @public
 	 */
@@ -397,10 +431,10 @@ sap.ui.define([
 	 * @returns {boolean} The initials are valid or not
 	 * @private
 	 */
-	Avatar.prototype._areInitialsValid = function (sInitials) {
-		var validInitials = /^[a-zA-Z]{1,2}$/;
+	 Avatar.prototype._areInitialsValid = function (sInitials) {
+		var validInitials = /^[a-zA-Z]{1,3}$/;
 		if (!validInitials.test(sInitials)) {
-			Log.warning("Initials should consist of only 1 or 2 latin letters", this);
+			Log.warning("Initials should consist of only 1,2 or 3 latin letters", this);
 			this._sActualType = AvatarType.Icon;
 			this._bIsDefaultIcon = true;
 			return false;
@@ -644,6 +678,40 @@ sap.ui.define([
 		}
 
 		return sBackground;
+	};
+
+	// Checks the scrollWidth of the initials holder inside the control.
+	// This is related with the initials property and the case where there are 3 letter initials,
+	// which width is bigger than the initials holder`s width.
+
+	Avatar.prototype._checkInitialsHolderWidth = function() {
+		var $this = this.$(),
+			iInitials = this.getInitials().length;
+
+		this.$oInitialsHolder = $this.children(".sapFAvatarInitialsHolder");
+
+			if (this.$oInitialsHolder.length !== 0 && iInitials === 3) {
+				var iAvatarWidth = $this[0].offsetWidth,
+				iInitialsHolderWidth = this.$oInitialsHolder[0].offsetWidth;
+
+				if (iInitialsHolderWidth > iAvatarWidth) {
+					this._wideInitialsIcon();
+				}
+			}
+	};
+
+	// In case when there are 3 initials set to the avatar and they are overflowing,
+	// we want to show icon inatead of the initials.
+
+	Avatar.prototype._wideInitialsIcon = function() {
+		var $this = this.$(),
+			$oHiddenIcon = 	$this.children(".sapFAvatarHiddenIcon");
+
+		$oHiddenIcon.removeClass("sapFAvatarHiddenIcon");
+		this.$oInitialsHolder.css("display", "none");
+
+		$this.removeClass("sapFAvatarInitials");
+		$this.addClass("sapFAvatarIcon");
 	};
 
 	return Avatar;

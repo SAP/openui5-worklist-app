@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -45,7 +45,7 @@ sap.ui.define([
 			/**
 			 * Sets the controller for this extension. Accessible by the base member.
 			 *
-			 * @param {sap.ui.core.mvcController} oController The controller
+			 * @param {sap.ui.core.mvc.Controller} oController The controller
 			 * @private
 			 */
 			_setController: function(oController) {

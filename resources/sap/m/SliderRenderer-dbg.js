@@ -1,11 +1,11 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define(['./SliderUtilities', "sap/ui/core/InvisibleText"],
-	function(SliderUtilities, InvisibleText) {
+sap.ui.define(['./SliderUtilities', "sap/ui/core/InvisibleText", "sap/ui/core/Configuration"],
+	function(SliderUtilities, InvisibleText, Configuration) {
 		"use strict";
 
 		/**
@@ -27,7 +27,7 @@ sap.ui.define(['./SliderUtilities', "sap/ui/core/InvisibleText"],
 		 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-		 * @param {sap.ui.core.Control} oSlider An object representation of the slider that should be rendered.
+		 * @param {sap.m.Slider} oSlider An object representation of the slider that should be rendered.
 		 */
 		SliderRenderer.render = function(oRm, oSlider) {
 			var bEnabled = oSlider.getEnabled(),
@@ -93,7 +93,7 @@ sap.ui.define(['./SliderUtilities', "sap/ui/core/InvisibleText"],
 		 * This hook method is reserved for derived classes to render more handles.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-		 * @param {sap.ui.core.Control} oSlider An object representation of the slider that should be rendered.
+		 * @param {sap.m.Slider} oSlider An object representation of the slider that should be rendered.
 		 */
 		SliderRenderer.renderHandles = function(oRm, oSlider, sForwardedLabels) {
 			this.renderHandle(oRm, oSlider,  {
@@ -117,7 +117,7 @@ sap.ui.define(['./SliderUtilities', "sap/ui/core/InvisibleText"],
 			}
 
 			this.addHandleClass(oRm, oSlider);
-			oRm.style(sap.ui.getCore().getConfiguration().getRTL() ? "right" : "left", oSlider._sProgressValue);
+			oRm.style(Configuration.getRTL() ? "right" : "left", oSlider._sProgressValue);
 			this.writeAccessibilityState(oRm, oSlider, mOptions);
 
 
@@ -133,7 +133,7 @@ sap.ui.define(['./SliderUtilities', "sap/ui/core/InvisibleText"],
 		 * To be overwritten by subclasses.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-		 * @param {sap.ui.core.Control} oSlider An object representation of the control that should be rendered.
+		 * @param {sap.m.Slider} oSlider An object representation of the control that should be rendered.
 		 */
 		SliderRenderer.writeHandleTooltip = function(oRm, oSlider) {
 			oRm.attr("title", oSlider._formatValueByCustomElement(oSlider.toFixed(oSlider.getValue())));
@@ -157,7 +157,7 @@ sap.ui.define(['./SliderUtilities', "sap/ui/core/InvisibleText"],
 		 * To be overwritten by subclasses.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-		 * @param {sap.ui.core.Control} oSlider An object representation of the control that should be rendered.
+		 * @param {sap.m.Slider} oSlider An object representation of the control that should be rendered.
 		 */
 		SliderRenderer.writeAccessibilityState = function(oRm, oSlider, mOptions) {
 			var fSliderValue = oSlider.getValue(),
@@ -213,6 +213,7 @@ sap.ui.define(['./SliderUtilities', "sap/ui/core/InvisibleText"],
 			this.renderTickmarksLabel(oRm, oSlider, oSlider.getMin());
 			oRm.openStart("li")
 				.class(SliderRenderer.CSS_CLASS + "Tick")
+				.attr("data-ui5-active-tickmark", this.shouldRenderFirstActiveTickmark(oSlider))
 				.style("width", fTickmarksDistance + "%")
 				.openEnd()
 				.close("li");
@@ -224,14 +225,16 @@ sap.ui.define(['./SliderUtilities', "sap/ui/core/InvisibleText"],
 				}
 
 				oRm.openStart("li").class(SliderRenderer.CSS_CLASS + "Tick")
-					.style("width", fTickmarksDistance + "%")
-					.openEnd()
+					.style("width", fTickmarksDistance + "%");
+				this.applyTickmarkStyles(oRm, oSlider, i, iTickmarksToRender);
+				oRm.openEnd()
 					.close("li");
 			}
 
 			this.renderTickmarksLabel(oRm, oSlider, oSlider.getMax());
 			oRm.openStart("li")
 				.class(SliderRenderer.CSS_CLASS + "Tick")
+				.attr("data-ui5-active-tickmark", this.shouldRenderLastActiveTickmark(oSlider))
 				.style("width", "0")
 				.openEnd()
 				.close("li");
@@ -241,7 +244,7 @@ sap.ui.define(['./SliderUtilities', "sap/ui/core/InvisibleText"],
 
 		SliderRenderer.renderTickmarksLabel = function (oRm, oSlider, fValue) {
 			var fOffset = oSlider._getPercentOfValue(fValue);
-			var sLeftOrRightPosition = sap.ui.getCore().getConfiguration().getRTL() ? "right" : "left";
+			var sLeftOrRightPosition = Configuration.getRTL() ? "right" : "left";
 			var sValue;
 			fValue = oSlider.toFixed(fValue, oSlider.getDecimalPrecisionOfNumber(oSlider.getStep()));
 
@@ -287,7 +290,7 @@ sap.ui.define(['./SliderUtilities', "sap/ui/core/InvisibleText"],
 		 * This method is reserved for derived classes to add extra CSS classes to the HTML root element of the control.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-		 * @param {sap.ui.core.Control} oSlider An object representation of the control that should be rendered.
+		 * @param {sap.m.Slider} oSlider An object representation of the control that should be rendered.
 		 * @since 1.36
 		 */
 		SliderRenderer.addClass = function(oRm, oSlider) {
@@ -298,29 +301,37 @@ sap.ui.define(['./SliderUtilities', "sap/ui/core/InvisibleText"],
 		 * This method is reserved for derived classes to add extra CSS classes to the inner element.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-		 * @param {sap.ui.core.Control} oSlider An object representation of the control that should be rendered.
+		 * @param {sap.m.Slider} oSlider An object representation of the control that should be rendered.
 		 * @since 1.38
 		 */
 		SliderRenderer.addInnerClass = function(oRm, oSlider) {
 			oRm.class(SliderRenderer.CSS_CLASS + "Inner");
+
+			if (oSlider.getProperty("handlePressed")) {
+				oRm.class(SliderRenderer.CSS_CLASS + "Pressed");
+			}
 		};
 
 		/**
 		 * This method is reserved for derived classes to add extra CSS classes to the progress indicator element.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-		 * @param {sap.ui.core.Control} oSlider An object representation of the control that should be rendered.
+		 * @param {sap.m.Slider} oSlider An object representation of the control that should be rendered.
 		 * @since 1.38
 		 */
 		SliderRenderer.addProgressIndicatorClass = function(oRm, oSlider) {
 			oRm.class(SliderRenderer.CSS_CLASS + "Progress");
+
+			if (oSlider.getEnableTickmarks()) {
+				oRm.class(SliderRenderer.CSS_CLASS + "ProgressWithTickmarks");
+			}
 		};
 
 		/**
 		 * This method is reserved for derived classes to add extra CSS classes to the handle element.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-		 * @param {sap.ui.core.Control} oSlider An object representation of the control that should be rendered.
+		 * @param {sap.m.Slider} oSlider An object representation of the control that should be rendered.
 		 * @since 1.38
 		 */
 		SliderRenderer.addHandleClass = function(oRm, oSlider) {
@@ -331,10 +342,24 @@ sap.ui.define(['./SliderUtilities', "sap/ui/core/InvisibleText"],
 		 * This hook method is reserved for derived classes to render the labels.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-		 * @param {sap.ui.core.Control} oSlider An object representation of the control that should be rendered.
+		 * @param {sap.m.Slider} oSlider An object representation of the control that should be rendered.
 		 */
 		SliderRenderer.renderLabels = function (oRm, oSlider) {
 			oSlider.getAggregation("_handlesLabels").forEach(oRm.renderControl, oRm);
+		};
+
+		SliderRenderer.applyTickmarkStyles = function(oRm, oSlider,iTickmarkIndex, iTickmarksToRender) {
+			var iProgressTickmarks = (parseInt(oSlider._sProgressValue) / 100) * iTickmarksToRender;
+			var bRender = iTickmarkIndex <= iProgressTickmarks;
+			oRm.attr("data-ui5-active-tickmark", bRender);
+		};
+
+		SliderRenderer.shouldRenderFirstActiveTickmark = function () {
+			return true;
+		};
+
+		SliderRenderer.shouldRenderLastActiveTickmark = function (oSlider) {
+			return oSlider.getValue() === oSlider.getMax();
 		};
 
 		return SliderRenderer;

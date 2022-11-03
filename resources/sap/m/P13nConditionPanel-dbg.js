@@ -1,6 +1,6 @@
-/*
- * ! OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+/*!
+ * OpenUI5
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -112,13 +112,12 @@ sap.ui.define([
 	 * @param {object} [mSettings] initial settings for the new control
 	 * @class The ConditionPanel Control will be used to implement the Sorting, Filtering and Grouping panel of the new Personalization dialog.
 	 * @extends sap.ui.core.Control
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @constructor
 	 * @public
 	 * @since 1.26.0
 	 * @experimental since version 1.26 !!! THIS CONTROL IS ONLY FOR INTERNAL USE !!!
 	 * @alias sap.m.P13nConditionPanel
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var P13nConditionPanel = Control.extend("sap.m.P13nConditionPanel", /** @lends sap.m.P13nConditionPanel.prototype */ {
 		metadata: {
@@ -679,7 +678,7 @@ sap.ui.define([
 	 * sets the LayoutMode.
 	 *
 	 * @private
-	 * @param {string} sLayoutMode define the layout mode for the condition row. The value can be Desktop, Tablet or Phone.
+	 * @param {string} sMode define the layout mode for the condition row. The value can be "Desktop", "Tablet" or "Phone".
 	 */
 	P13nConditionPanel.prototype._updateConditionFieldSpans = function(sMode) {
 		if (this._aConditionsFields) {
@@ -751,13 +750,13 @@ sap.ui.define([
 		this._iConditionPageSize = 10;
 
 		this._oInvisibleTextField = new InvisibleText({
-			text: this._oRb.getText("CONDITIONPANEL_FIELD_ARIA_LABEL")
+			text: this._oRb.getText("CONDITIONPANEL_FIELD_LABEL")
 		});
 		this._oInvisibleTextOperatorInputValue = new InvisibleText({
 			text: this._oRb.getText("CONDITIONPANEL_FIELD_VALUE_ARIA_LABEL")
 		});
 		this._oInvisibleTextOperator = new InvisibleText({
-			text: this._oRb.getText("CONDITIONPANEL_OPERATOR_LABEL")
+			text: this._oRb.getText("CONDITIONPANEL_OPERATOR_ARIA_LABEL")
 		});
 		this._oInvisibleTextOperatorAddButton = new InvisibleText({
 			text: this._oRb.getText("CONDITIONPANEL_ADD_SCREENREADER_DESCRIPTION")
@@ -827,17 +826,14 @@ sap.ui.define([
 			//icon: sap.ui.core.IconPool.getIconURI("decline"),
 			//tooltip: "Remove All",
 			visible: true,
-			press: function(oEvent) {
-
-				that._aConditionKeys.forEach(function(sKey, iIndex) {
-					if (iIndex >= 0) {
+			press: function() {
+				that._aConditionKeys.forEach(function(sKey) {
 						this.fireDataChange({
 							key: sKey,
-							index: iIndex,
+							index: 0,
 							operation: "remove",
 							newData: null
 						});
-					}
 				}, that);
 
 				this._iFirstConditionIndex = 0;
@@ -1167,11 +1163,11 @@ sap.ui.define([
 	 * appends a new condition grid with all containing controls in the main grid
 	 *
 	 * @private
-	 * @param {grid} oTargetGrid the main grid in which the new condition grid will be added
+	 * @param {sap.ui.layout.Grid} oTargetGrid the main grid in which the new condition grid will be added
 	 * @param {object} oConditionGridData the condition data for the new added condition grid controls
 	 * @param {string} sKey the key for the new added condition grid
 	 * @param {int} iPos the index of the new condition in the targetGrid
-         * @param {boolean} bUseRowFromAbove use the key from the row above for creating a new row
+	 * @param {boolean} bUseRowFromAbove use the key from the row above for creating a new row
 	 */
 	P13nConditionPanel.prototype._createConditionRow = function(oTargetGrid, oConditionGridData, sKey, iPos, bUseRowFromAbove) {
 		var oGrid,
@@ -1379,6 +1375,9 @@ sap.ui.define([
 						var vValue = oConditionGridData[field["ID"]];
 
 						if (oControl instanceof Select) {
+							if (typeof vValue === "string") {
+								vValue = oConditionGrid.oType.parseValue(vValue, "string");
+							}
 							if (typeof vValue === "boolean") {
 								oControl.setSelectedIndex(vValue ? 2 : 1);
 							}
@@ -1474,8 +1473,8 @@ sap.ui.define([
 	 * press handler for the remove Condition buttons
 	 *
 	 * @private
-	 * @param {grid} oTargetGrid the main grid
-	 * @param {grid} oConditionGrid from where the Remove is triggered
+	 * @param {sap.ui.layout.Grid} oTargetGrid the main grid
+	 * @param {sap.ui.layout.Grid} oConditionGrid from where the Remove is triggered
 	 */
 	P13nConditionPanel.prototype._handleRemoveCondition = function(oTargetGrid, oConditionGrid) {
 		// search index of the condition grid to set the focus later to the previous condition
@@ -1503,8 +1502,8 @@ sap.ui.define([
 	 * press handler for the add condition buttons
 	 *
 	 * @private
-	 * @param {grid} oTargetGrid the main grid
-	 * @param {grid} oSourceConditionGrid from where the Add is triggered
+	 * @param {sap.ui.layout.Grid} oTargetGrid the main grid
+	 * @param {sap.ui.layout.Grid} oSourceConditionGrid from where the Add is triggered
          * @param {boolean} bUseRowFromAbove use the key from the row above for creating a new row
 	 */
 	P13nConditionPanel.prototype._handleAddCondition = function(oTargetGrid, oSourceConditionGrid, bUseRowFromAbove) {
@@ -1531,7 +1530,7 @@ sap.ui.define([
 	 * returns the selectedKeyFields item from the KeyField control.
 	 *
 	 * @private
-	 * @param {control} oKeyFieldCtrl the Select/ComboBox
+	 * @param {sap.ui.core.Control} oKeyFieldCtrl the Select/ComboBox
 	 * @returns {object} the selected Keyfields object
 	 */
 	P13nConditionPanel.prototype._getCurrentKeyFieldItem = function(oKeyFieldCtrl) {
@@ -1555,7 +1554,7 @@ sap.ui.define([
 	 * @param {object} oCurrentKeyField object of the current selected KeyField which contains type of the column ("string", "date", "time", "numeric" or "boolean") and
 	 *        a maxLength information
 	 * @param {object} oFieldInfo
-	 * @param {grid} oConditionGrid which should contain the new created field
+	 * @param {sap.ui.layout.Grid} oConditionGrid which should contain the new created field
 	 * @returns {sap.ui.core.Control} the created control instance either Input or DatePicker
 	 */
 	P13nConditionPanel.prototype._createValueField = function(oCurrentKeyField, oFieldInfo, oConditionGrid) {
@@ -1768,7 +1767,7 @@ sap.ui.define([
 	 * fill all operations from the aOperation array into the select control items list
 	 *
 	 * @private
-	 * @param {control} oCtrl the select control which should be filled
+	 * @param {sap.ui.core.Control} oCtrl the select control which should be filled
 	 * @param {array} aOperations array of operations
 	 * @param {string} sType the type prefix for resource access
 	 */
@@ -1812,7 +1811,7 @@ sap.ui.define([
 	 * fill all KeyFieldItems from the aItems array into the select control items list
 	 *
 	 * @private
-	 * @param {control} oCtrl the select control which should be filled
+	 * @param {sap.m.ComboBox} oCtrl the select control which should be filled
 	 * @param {array} aItems array of keyfields
 	 */
 	P13nConditionPanel.prototype._fillKeyFieldListItems = function(oCtrl, aItems) {
@@ -1832,8 +1831,8 @@ sap.ui.define([
 	 * change handler for the Operation field
 	 *
 	 * @private
-	 * @param {grid} oTargetGrid the main grid
-	 * @param {grid} oConditionGrid Grid which contains the Operation control which has been changed
+	 * @param {sap.ui.layout.Grid} oTargetGrid the main grid
+	 * @param {sap.ui.layout.Grid} oConditionGrid Grid which contains the Operation control which has been changed
 	 */
 	P13nConditionPanel.prototype._handleChangeOnOperationField = function(oTargetGrid, oConditionGrid) {
 		this._changeOperationValueFields(oTargetGrid, oConditionGrid);
@@ -1844,8 +1843,8 @@ sap.ui.define([
 	 * SelectionChange handler for the KeyField field
 	 *
 	 * @private
-	 * @param {grid} oTargetGrid the main grid
-	 * @param {grid} oConditionGrid Grid which contains the KeyField control which has been changed
+	 * @param {sap.ui.layout.Grid} oTargetGrid the main grid
+	 * @param {sap.ui.layout.Grid} oConditionGrid Grid which contains the KeyField control which has been changed
 	 */
 	P13nConditionPanel.prototype._handleSelectionChangeOnKeyField = function(oTargetGrid, oConditionGrid) {
 
@@ -1865,8 +1864,8 @@ sap.ui.define([
 	 * change handler for the KeyField field
 	 *
 	 * @private
-	 * @param {grid} oTargetGrid the main grid
-	 * @param {grid} oConditionGrid Grid which contains the KeyField control which has been changed
+	 * @param {sap.ui.layout.Grid} oTargetGrid the main grid
+	 * @param {sap.ui.layout.Grid} oConditionGrid Grid which contains the KeyField control which has been changed
 	 */
 	P13nConditionPanel.prototype._handleChangeOnKeyField = function(oTargetGrid, oConditionGrid) {
 
@@ -1887,8 +1886,8 @@ sap.ui.define([
 	 * creates the Value1/2 fields based on the KeyField Type
 	 *
 	 * @private
-	 * @param {grid} oTargetGrid the main grid
-	 * @param {grid} oConditionGrid Grid which contains the KeyField control which has been changed
+	 * @param {sap.ui.layout.Grid} oTargetGrid the main grid
+	 * @param {sap.ui.layout.Grid} oConditionGrid Grid which contains the KeyField control which has been changed
 	 */
 	P13nConditionPanel.prototype._createAndUpdateValueFields = function(oTargetGrid, oConditionGrid) {
 
@@ -1924,6 +1923,10 @@ sap.ui.define([
 					oConditionGrid.oType.validateValue(oValue);
 
 					sValue = oConditionGrid.oType.formatValue(oValue, "string");
+					if (sValue && sValue.toUpperCase && this.getDisplayFormat() === "UpperCase") {
+						sValue = sValue.toUpperCase();
+					}
+
 					oCtrl.setValue(sValue);
 				} catch (err) {
 					var sMsg = err.message;
@@ -1952,8 +1955,8 @@ sap.ui.define([
 	 * update the Operations for a condition row based on the type of the selected keyField
 	 *
 	 * @private
-	 * @param {grid} oTargetGrid the main grid
-	 * @param {grid} oConditionGrid Grid which contains the KeyField control and the Operations field which will be updated
+	 * @param {sap.ui.layout.Grid} oTargetGrid the main grid
+	 * @param {sap.ui.layout.Grid} oConditionGrid Grid which contains the KeyField control and the Operations field which will be updated
 	 */
 	P13nConditionPanel.prototype._updateOperationItems = function(oTargetGrid, oConditionGrid) {
 		var oKeyField = this._getCurrentKeyFieldItem(oConditionGrid.keyField);
@@ -1986,7 +1989,7 @@ sap.ui.define([
 	 * update the Items from all KeyFields
 	 *
 	 * @private
-	 * @param {grid} oTargetGrid the main grid
+	 * @param {sap.ui.layout.Grid} oTargetGrid the main grid
 	 * @param {boolean} bFillAll fills all KeyFields or only the none used
 	 * @param {boolean} bAppendLast adds only the last Keyfield to the Items of the selected controls
 	 */
@@ -2070,8 +2073,8 @@ sap.ui.define([
 	 * called when the user makes a change on the condition operation. The function will update all other fields in the condition grid.
 	 *
 	 * @private
-	 * @param {grid} oTargetGrid the main grid
-	 * @param {grid} oConditionGrid Grid which contains the Operation control which has been changed
+	 * @param {sap.ui.layout.Grid} oTargetGrid the main grid
+	 * @param {sap.ui.layout.Grid} oConditionGrid Grid which contains the Operation control which has been changed
 	 */
 	P13nConditionPanel.prototype._changeOperationValueFields = function(oTargetGrid, oConditionGrid) {
 		// var oKeyfield = oConditionGrid.keyField;
@@ -2267,7 +2270,7 @@ sap.ui.define([
 	 * called when the user makes a change in one of the condition fields. The function will update, remove or add the conditions for this condition.
 	 *
 	 * @private
-	 * @param {grid} oConditionGrid Grid which contains the Operation control which has been changed
+	 * @param {sap.ui.layout.Grid} oConditionGrid Grid which contains the Operation control which has been changed
 	 */
 	P13nConditionPanel.prototype._changeField = function(oConditionGrid, oEvent) {
 		var sKeyField = oConditionGrid.keyField.getSelectedKey();
@@ -2438,7 +2441,7 @@ sap.ui.define([
 	 * makes all controls in a condition Grid enabled or disabled
 	 *
 	 * @private
-	 * @param {grid} oConditionGrid instance
+	 * @param {sap.ui.layout.Grid} oConditionGrid instance
 	 * @param {boolean} bEnable state
 	 */
 	P13nConditionPanel.prototype._enableCondition = function(oConditionGrid, bEnable) {
@@ -2452,8 +2455,8 @@ sap.ui.define([
 	 * press handler for the remove condition buttons
 	 *
 	 * @private
-	 * @param {grid} oTargetGrid the main grid
-	 * @param {grid} oConditionGrid from where the remove is triggered
+	 * @param {sap.ui.layout.Grid} oTargetGrid the main grid
+	 * @param {sap.ui.layout.Grid} oConditionGrid from where the remove is triggered
 	 */
 	P13nConditionPanel.prototype._removeCondition = function(oTargetGrid, oConditionGrid) {
 		var sKey = this._getKeyFromConditionGrid(oConditionGrid);
@@ -2485,7 +2488,7 @@ sap.ui.define([
 	 * update the condition add/remove buttons visibility
 	 *
 	 * @private
-	 * @param {grid} oTargetGrid the main grid
+	 * @param {sap.ui.layout.Grid} oTargetGrid the main grid
 	 */
 	P13nConditionPanel.prototype._updateConditionButtons = function(oTargetGrid) {
 		var iMaxConditions = this._getMaxConditionsAsNumber();

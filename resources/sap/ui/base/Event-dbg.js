@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -23,7 +23,7 @@ sap.ui.define(['./Object', "sap/base/assert"],
 	 * @extends sap.ui.base.Object
 	 * @implements sap.ui.base.Poolable
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @alias sap.ui.base.Event
 	 * @public
 	 */
@@ -107,7 +107,7 @@ sap.ui.define(['./Object', "sap/base/assert"],
 	/**
 	 * Returns an object with all parameter values of the event.
 	 *
-	 * @returns {object} All parameters of the event
+	 * @returns {Object<string, any>} All parameters of the event
 	 * @public
 	 */
 	Event.prototype.getParameters = function() {

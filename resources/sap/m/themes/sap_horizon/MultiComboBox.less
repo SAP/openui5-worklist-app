@@ -1,11 +1,7 @@
-/* =================================== */
-/* CSS for control sap.m/MultiComboBox */
-/* Horizon theme                       */
-/* =================================== */
-
 .sapMMultiComboBox.sapMInputBaseReadonly.sapMMultiComboBoxHasToken.sapMFocus .sapMTokenizer {
 	left: 0;
 }
+
 .sapMMultiComboBoxPicker .sapMListHdrTBar {
 	border-radius: 0;
 }
@@ -13,28 +9,26 @@
 .sapMMultiComboBoxPicker .sapMMultiComboBoxSelectAll.sapMTB.sapMIBar.sapMMultiComboBoxSelectAllFocused,
 .sapMMultiComboBoxPicker .sapMValueStateHeaderRoot.sapMFocusable:focus {
 	outline: @sapContent_FocusWidth @sapContent_FocusStyle @sapContent_FocusColor;
+	outline-offset: -0.25rem;
 }
 
-.sapMMultiComboBoxPicker.sapMSuggestionsPopoverNoneState .sapMList {
-	&:not(.sapMSticky) li[data-sap-ui-first-suggestion-item]:focus,
-	&.sapMSticky .sapMMultiComboBoxSelectAllFocused {
-		border-top-left-radius:  @sapUiElementBorderCornerRadius;
-		border-top-right-radius:  @sapUiElementBorderCornerRadius;
+.sapMMultiComboBox .sapMTokenizer {
+	padding-top: 1px;
+}
+
+.sapUiSizeCondensed .sapUiTableDataCell .sapMMultiComboBox .sapMTokenizer {
+	padding-top: 0px;
+	.sapMToken {
+		margin-top: 0.0625rem;
+		margin-bottom: 0.0625rem;
 	}
 }
 
-.sapMMultiComboBoxPicker .sapMValueStateHeaderRoot:focus {
-	border-top-left-radius: @sapUiElementBorderCornerRadius;
-	border-top-right-radius: @sapUiElementBorderCornerRadius;
-}
-
-.sapMMultiComboBoxPicker li[data-sap-ui-last-suggestion-item]:focus {
-	border-bottom-left-radius: @sapUiElementBorderCornerRadius;
-	border-bottom-right-radius: @sapUiElementBorderCornerRadius;
-}
-
-.sapMMultiComboBoxSelectAll.sapMTB.sapMIBar {
-	& .sapMBarChild.sapMCb.sapMCbHasLabel:focus:after {
-		border: none;
+.sapUiSizeCompact {
+	.sapMMultiComboBox.sapMMultiComboBoxHasToken .sapMInputBaseContentWrapper.sapMInputBaseContentWrapperState:not(.sapMInputBaseContentWrapperSuccess) {
+		.sapMToken {
+			margin-top: 0.125rem;
+			margin-bottom: 0.125rem;
+		}
 	}
 }

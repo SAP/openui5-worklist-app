@@ -1,15 +1,18 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 //Provides control sap.ui.unified.PlanningCalendarRow.
-sap.ui.define(['sap/ui/core/Element',
+sap.ui.define([
+				'sap/ui/core/Core',
+				'sap/ui/core/Element',
 				'sap/m/CustomListItem',
 				'sap/ui/unified/DateTypeRange',
 				'sap/ui/unified/library'
 			], function (
+				Core,
 				Element,
 				CustomListItem,
 				DateTypeRange,
@@ -32,13 +35,12 @@ sap.ui.define(['sap/ui/core/Element',
 	 * The <code>sap.m.PlanningCalendarRow</code> allows you to modify appointments at row level.
 	 *
 	 * @extends sap.ui.core.Element
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.34
 	 * @alias sap.m.PlanningCalendarRow
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var PlanningCalendarRow = Element.extend("sap.m.PlanningCalendarRow", /** @lends sap.m.PlanningCalendarRow.prototype */ { metadata : {
 
@@ -362,7 +364,9 @@ sap.ui.define(['sap/ui/core/Element',
 	 */
 	PlanningCalendarRow.prototype._getPlanningCalendarCustomRowHeader = function() {
 		if (!this.oRowHeader) {
-			this.oRowHeader = new CustomListItem(this.getId() + "-CustomHead");
+			this.oRowHeader = new CustomListItem(this.getId() + "-CustomHead", {
+				accDescription: Core.getLibraryResourceBundle("sap.m").getText("PC_CUSTOM_ROW_HEADER_CONTENT_DESC")
+			});
 		}
 
 		return this.oRowHeader;

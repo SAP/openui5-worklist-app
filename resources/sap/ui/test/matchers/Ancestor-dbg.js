@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -21,6 +21,7 @@ sap.ui.define([
 	 *     ancestor: "object" // where "object" is a declarative matcher for the ancestor
 	 * }
 	 * </code></pre>
+	 * The declarative matcher for Ancestor does not support the <b>bDirect</b> parameter.
 	 *
 	 * @param {object|string} vAncestor the ancestor control to check, if undefined, validates every control to true. Can be a control or a control ID
 	 * @param {boolean} [bDirect] specifies if the ancestor should be a direct ancestor (parent)

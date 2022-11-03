@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -24,12 +24,11 @@ sap.ui.define(["./FlexBoxStylingHelper", "./library", "sap/ui/core/LayoutData"],
 	 * @class
 	 * Holds layout data for a FlexBox / HBox / VBox.
 	 * @extends sap.ui.core.LayoutData
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @alias sap.m.FlexItemData
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var FlexItemData = LayoutData.extend("sap.m.FlexItemData", /** @lends sap.m.FlexItemData.prototype */ { metadata : {
 
@@ -275,7 +274,7 @@ sap.ui.define(["./FlexBoxStylingHelper", "./library", "sap/ui/core/LayoutData"],
 	 * Returns the correct FlexBox item DOM reference.
 	 *
 	 * @param {string} [sSuffix] ID suffix to get the DOMRef for
-	 * @return {Element} The Element's DOM Element sub DOM Element or null
+	 * @return {Element|null} The Element's DOM Element, sub DOM Element or <code>null</code>
 	 * @protected
 	 */
 	FlexItemData.prototype.getDomRef = function(sSuffix) {

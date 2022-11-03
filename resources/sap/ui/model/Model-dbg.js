@@ -1,19 +1,21 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
 // Provides the base implementation for all model implementations
 sap.ui.define([
 	'sap/ui/core/message/MessageProcessor',
+	'./ManagedObjectBindingSupport',
 	'./BindingMode',
 	'./Context',
 	'./Filter',
 	"sap/base/util/deepEqual",
 	"sap/base/util/each"
 ],
-	function(MessageProcessor, BindingMode, Context, Filter, deepEqual, each) {
+	function(MessageProcessor, ManagedObjectBindingSupport, BindingMode, Context, Filter, deepEqual,
+		each) {
 	"use strict";
 
 
@@ -49,7 +51,7 @@ sap.ui.define([
 	 * @extends sap.ui.core.message.MessageProcessor
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @alias sap.ui.model.Model
@@ -101,7 +103,6 @@ sap.ui.define([
 			]
 		}
 	});
-
 
 	/**
 	 * Map of event names, that are provided by the model.
@@ -307,15 +308,10 @@ sap.ui.define([
 	/**
 	 * Fires event {@link #event:parseError parseError} to attached listeners.
 	 *
-	 * @param {object} [oParameters] Parameters to pass along with the event
-	 * @param {int} [oParameters.errorCode]
-	 * @param {string} [oParameters.url]
-	 * @param {string} [oParameters.reason]
-	 * @param {string} [oParameters.srcText]
-	 * @param {int} [oParameters.line]
-	 * @param {int} [oParameters.linepos]
-	 * @param {int} [oParameters.filepos]
-	 *
+	 * @param {object} [oParameters]
+	 *   Parameters to pass along with the event; May contain the following parameters:
+	 *   <code>errorCode</code>, <code>url</code>, <code>reason</code>, <code>srcText</code>,
+	 *   <code>line</code>, <code>linePos</code>, <code>filePos</code>
 	 * @returns {this} Reference to <code>this</code> in order to allow method chaining
 	 * @protected
 	 */
@@ -691,7 +687,7 @@ sap.ui.define([
 	 *   Force reload even if data is already available; for server-side models this should refetch
 	 *   the data from the server
 	 *
-	 * @return {sap.ui.model.Context}
+	 * @return {sap.ui.model.Context|undefined}
 	 *   The binding context, if it could be created synchronously
 	 * @public
 	 */
@@ -724,7 +720,7 @@ sap.ui.define([
 	 * @param {sap.ui.model.Context} [oContext] Context with which the path should be resolved
 	 * @param {object} [mParameters] Additional model-specific parameters
 	 *
-	 * @returns {any}
+	 * @returns {any|undefined}
 	 *   The value for the given path/context or <code>undefined</code> if data could not be found
 	 * @public
 	 */
@@ -771,14 +767,17 @@ sap.ui.define([
 	/**
 	 * Resolve the path relative to the given context.
 	 *
-	 * If a relative path is given (not starting with a '/') but no context,
-	 * then the path can't be resolved and undefined is returned.
+	 * If a relative path is given (not starting with a '/') but no context, then the path can't be
+	 * resolved and undefined is returned.
 	 *
-	 * For backward compatibility, the behavior of this method can be changed by
-	 * setting the 'legacySyntax' property. Then an unresolvable, relative path
-	 * is automatically converted into an absolute path.
+	 * If a context is given but no path, the resolved path is the context's path, see
+	 * {@link sap.ui.model.Context#getPath}.
 	 *
-	 * @param {string} sPath Path to resolve
+	 * For backward compatibility, the behavior of this method can be changed by setting the
+	 * 'legacySyntax' property. Then an unresolvable, relative path is automatically converted into
+	 * an absolute path.
+	 *
+	 * @param {string} [sPath] Path to resolve
 	 * @param {sap.ui.model.Context} [oContext] Context to resolve a relative path against
 	 *
 	 * @return {string} Resolved path or undefined
@@ -1120,7 +1119,7 @@ sap.ui.define([
 	 * model type.
 	 * @abstract
 	 * @public
-	 * @returns {sap.ui.model.MetaModel}
+	 * @returns {sap.ui.model.MetaModel|undefined}
 	 *   The meta model or <code>undefined</code> if no meta model exists.
 	 */
 	Model.prototype.getMetaModel = function() {
@@ -1230,6 +1229,16 @@ sap.ui.define([
 			_traverseFilter(oFilter.aFilters, fnCheck);
 		}
 	}
+
+	/**
+	 * Introduces data binding support on the ManagedObject prototype via mixin.
+	 * Called by the ManagedObject during property propagation.
+	 * @param {sap.ui.base.ManagedObject.prototype} ManagedObject
+	 *   the sap.ui.base.ManagedObject.prototype
+	 */
+	Model.prototype.mixinBindingSupport = function(ManagedObject) {
+		Object.assign(ManagedObject, ManagedObjectBindingSupport);
+	};
 
 	return Model;
 

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -11,9 +11,7 @@ sap.ui.define('sap/ui/debug/PropertyList', [
 	'sap/ui/core/Element',
 	'sap/ui/core/ElementMetadata',
 	'sap/base/util/isEmptyObject',
-	'sap/base/security/encodeXML',
-	'sap/ui/thirdparty/jquery',
-	'sap/ui/dom/jquery/rect' // jQuery Plugin "rect"
+	'sap/base/security/encodeXML'
 ],
 	function(
 		DataType,
@@ -21,8 +19,7 @@ sap.ui.define('sap/ui/debug/PropertyList', [
 		Element,
 		ElementMetadata,
 		isEmptyObject,
-		encodeXML,
-		jQuery
+		encodeXML
 	) {
 	"use strict";
 
@@ -35,7 +32,7 @@ sap.ui.define('sap/ui/debug/PropertyList', [
 	 *
 	 * @extends sap.ui.base.EventProvider
 	 * @author Martin Schaus
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @param {sap.ui.core.Core}
 	 *            oCore Core instance of the app; version might differ!
@@ -54,7 +51,6 @@ sap.ui.define('sap/ui/debug/PropertyList', [
 			this.oParentDomRef = oParentDomRef;
 		//	this.oCore = oWindow.sap.ui.getCore();
 			this.oCore = oCore;
-			this.bEmbedded = window.top === oWindow;
 			// Note: window.top is assumed to refer to the app window in embedded mode or to the testsuite window otherwise
 			var link = window.top.document.createElement("link");
 			link.rel = "stylesheet";
@@ -67,12 +63,6 @@ sap.ui.define('sap/ui/debug/PropertyList', [
 			oParentDomRef.addEventListener("focusin", this.onfocus);
 			this.onkeydown = PropertyList.prototype.onkeydown.bind(this);
 			oParentDomRef.addEventListener("keydown", this.onkeydown);
-			if ( !this.bEmbedded ) {
-				this.onmouseover = PropertyList.prototype.onmouseover.bind(this);
-				oParentDomRef.addEventListener("mouseover", this.onmouseover);
-				this.onmouseout = PropertyList.prototype.onmouseout.bind(this);
-				oParentDomRef.addEventListener("mouseout", this.onmouseout);
-			}
 			//this.oParentDomRef.style.backgroundColor = "#e0e0e0";
 			//this.oParentDomRef.style.border = "solid 1px gray";
 			//this.oParentDomRef.style.padding = "2px";
@@ -88,10 +78,6 @@ sap.ui.define('sap/ui/debug/PropertyList', [
 		this.oParentDomRef.removeEventListener("change", this.onchange);
 		this.oParentDomRef.removeEventListener("focusin", this.onfocus);
 		this.oParentDomRef.removeEventListener("keydown", this.onkeydown);
-		if ( !this.bEmbedded ) {
-			this.oParentDomRef.removeEventListener("mouseover", this.onmouseover);
-			this.oParentDomRef.removeEventListener("mouseout", this.onmouseout);
-		}
 	};
 
 	/**
@@ -109,11 +95,8 @@ sap.ui.define('sap/ui/debug/PropertyList', [
 		}
 		var oMetadata = oControl.getMetadata(),
 			aHTML = [];
-		aHTML.push("<span data-sap-ui-quickhelp='" + this._calcHelpId(oMetadata) + "'>Type : " + oMetadata.getName() + "</span><br >");
+		aHTML.push("Type : " + oMetadata.getName() + "<br >");
 		aHTML.push("Id : " + oControl.getId() + "<br >");
-		if ( !this.bEmbedded ) {
-			aHTML.push("<div id='sap-ui-quickhelp' class='sapDbgQH'>Help</div>");
-		}
 		aHTML.push("<div class='sapDbgSeparator'>&nbsp;</div>");
 		aHTML.push("<table class='sapDbgPropertyList' cellspacing='1'><tbody>");
 
@@ -162,7 +145,7 @@ sap.ui.define('sap/ui/debug/PropertyList', [
 				oType = oSetting.multiple === false ? DataType.getType(oSetting.altTypes[0]) : oSetting.getType();
 
 			aHTML.push("<tr><td>");
-			aHTML.push("<span data-sap-ui-quickhelp='", this._calcHelpId(oSetting._oParent, sName), "' >", sName, '</span>');
+			aHTML.push(sName);
 			aHTML.push("</td><td>");
 			var sTitle = "";
 
@@ -203,7 +186,7 @@ sap.ui.define('sap/ui/debug/PropertyList', [
 				aHTML.push("<input type='text' " + sValueClass + " value='" + encodeXML("" + oValue) + "'" + sTitle + " data-name='" + sName + "'>");
 			}
 			aHTML.push("</td></tr>");
-		}.bind(this));
+		});
 	};
 
 	/**
@@ -262,223 +245,6 @@ sap.ui.define('sap/ui/debug/PropertyList', [
 					oSetting.set(oControl, vValue);
 					oField.classList.remove("sapDbgComplexValue");
 				}
-			}
-		}
-	};
-
-	PropertyList.prototype.showQuickHelp = function(oSource) {
-		if ( this.oQuickHelpTimer ) {
-			clearTimeout(this.oQuickHelpTimer);
-			this.oQuickHelpTimer = undefined;
-		}
-		var oTooltipDomRef = this.oParentDomRef.ownerDocument.getElementById("sap-ui-quickhelp");
-		if ( oTooltipDomRef ) {
-			this.sCurrentHelpId = oSource.getAttribute("data-sap-ui-quickhelp");
-			var oRect = jQuery(oSource).rect();
-			oTooltipDomRef.style.left = (oRect.left + 40 + 10) + "px";
-			oTooltipDomRef.style.top = (oRect.top - 40) + "px";
-			oTooltipDomRef.style.display = 'block';
-			oTooltipDomRef.style.opacity = '0.2';
-			if ( this.mHelpDocs[this.sCurrentHelpId] ) {
-				this.updateQuickHelp(this.mHelpDocs[this.sCurrentHelpId], 2000);
-			} else {
-				oTooltipDomRef.innerHTML = "<b>Quickhelp</b> for " + this.sCurrentHelpId + " is being retrieved...";
-				this.sCurrentHelpDoc = this.sCurrentHelpId;
-				this.sCurrentHelpDocPart = undefined;
-				if ( this.sCurrentHelpId.indexOf('#') >= 0 ) {
-					this.sCurrentHelpDoc = this.sCurrentHelpId.substring(0, this.sCurrentHelpId.indexOf('#'));
-					this.sCurrentHelpDocPart = this.sCurrentHelpId.substring(this.sCurrentHelpId.indexOf('#') + 1);
-				}
-				var sUrl = this.oWindow.jQuery.sap.getModulePath(this.sCurrentHelpDoc, ".control");
-				var that = this;
-				jQuery.ajax({
-					url : sUrl,
-					dataType : 'xml',
-					error : function(xhr,status) {
-						that.receiveQuickHelp(undefined);
-					},
-					success : function(data) {
-						that.receiveQuickHelp(data);
-					}
-				});
-				this.oQuickHelpTimer = setTimeout(function () {
-					that.hideQuickHelp();
-				}, 2000);
-			}
-		}
-	};
-
-	// ---- Quickhelp ----
-
-	PropertyList.prototype.receiveQuickHelp = function(oDocument) {
-		if ( oDocument ) {
-			var oControlNode = oDocument.getElementsByTagName("control")[0];
-			if ( oControlNode ) {
-				var get = function(oXMLNode, sName) {
-					var result = [];
-					var oCandidate = oXMLNode.firstChild;
-					while ( oCandidate ) {
-						if ( sName === oCandidate.nodeName ) {
-							result.push(oCandidate);
-						}
-						oCandidate = oCandidate.nextSibling;
-					}
-					return result;
-				};
-				var aName = get(oControlNode, "name");
-				var sName = '';
-				if ( aName[0] ) {
-					sName = aName[0].text || aName[0].textContent;
-				}
-				var aDocumentation = get(oControlNode, "documentation");
-				if ( aDocumentation[0] ) {
-					if ( sName && aDocumentation[0] ) {
-						var doc = [];
-						doc.push("<div class='sapDbgQHClassTitle'>", sName.replace('/', '.'), "</div>");
-						doc.push("<div class='sapDbgQHDocPadding'>", aDocumentation[0].text || aDocumentation[0].textContent, "</div>");
-						this.mHelpDocs[this.sCurrentHelpDoc] = doc.join("");
-					}
-				}
-				var aProperties = get(oControlNode, "properties");
-				if ( aProperties[0] ) {
-					aProperties = get(aProperties[0], "property");
-				}
-				for (var i = 0, l = aProperties.length; i < l; i++) {
-					var oProperty = aProperties[i];
-					var sName = oProperty.getAttribute("name");
-					var sType = oProperty.getAttribute("type") || "string";
-					var sDefaultValue = oProperty.getAttribute("defaultValue") || "empty/undefined";
-					var aDocumentation = get(oProperty, "documentation");
-					if ( sName && aDocumentation[0] ) {
-						var doc = [];
-						doc.push("<div class='sapDbgQHSettingDoc'>", sName, "</div>");
-						doc.push("<div class='sapDbgQHDocPadding'><i><strong>Type</strong></i>: ", sType, "</div>");
-						doc.push("<div class='sapDbgQHDocPadding'>", aDocumentation[0].text || aDocumentation[0].textContent, "</div>");
-						doc.push("<div class='sapDbgQHDocPadding'><i><strong>Default Value</strong></i>: ", sDefaultValue, "</div>");
-						this.mHelpDocs[this.sCurrentHelpDoc + "#" + sName] = doc.join("");
-					}
-				}
-				var aProperties = get(oControlNode, "aggregations");
-				if ( aProperties[0] ) {
-					aProperties = get(aProperties[0], "aggregation");
-				}
-				for (var i = 0, l = aProperties.length; i < l; i++) {
-					var oProperty = aProperties[i];
-					var sName = oProperty.getAttribute("name");
-					var sType = oProperty.getAttribute("type") || "sap.ui.core/Control";
-					var sDefaultValue = oProperty.getAttribute("defaultValue") || "empty/undefined";
-					var aDocumentation = get(oProperty, "documentation");
-					if ( sName && aDocumentation[0] && !this.mHelpDocs[this.sCurrentHelpDoc + "#" + sName]) {
-						var doc = [];
-						doc.push("<div class='sapDbgQHSettingTitle'>", sName, "</div>");
-						doc.push("<div class='sapDbgQHDocPadding'><i><strong>Type</strong></i>: ", sType, "</div>");
-						doc.push("<div class='sapDbgQHDocPadding'>", aDocumentation[0].text || aDocumentation[0].textContent, "</div>");
-						doc.push("<div class='sapDbgQHDocPadding'><i><strong>Default Value</strong></i>: ", sDefaultValue, "</div>");
-						this.mHelpDocs[this.sCurrentHelpDoc + "#" + sName] = doc.join("");
-					}
-				}
-			}
-			if ( this.mHelpDocs[this.sCurrentHelpId] ) {
-				this.updateQuickHelp(this.mHelpDocs[this.sCurrentHelpId], 2000);
-			} else {
-				this.updateQuickHelp(undefined, 0);
-			}
-		} else {
-			this.updateQuickHelp(undefined, 0);
-		}
-	};
-
-	PropertyList.prototype.updateQuickHelp = function(sNewContent, iTimeout) {
-		if ( this.oQuickHelpTimer ) {
-			clearTimeout(this.oQuickHelpTimer);
-			this.oQuickHelpTimer = undefined;
-		}
-		var oTooltipDomRef = this.oParentDomRef.ownerDocument.getElementById("sap-ui-quickhelp");
-		if ( oTooltipDomRef ) {
-			if ( !sNewContent ) {
-				oTooltipDomRef.innerHTML = "<i>No quick help...</i>";
-				oTooltipDomRef.style.display = 'none';
-			} else {
-				oTooltipDomRef.innerHTML = sNewContent;
-				this.oQuickHelpTimer = setTimeout(function () {
-					this.hideQuickHelp();
-				}.bind(this), iTimeout);
-			}
-		}
-	};
-
-	PropertyList.prototype.hideQuickHelp = function() {
-		var oTooltipDomRef = this.oParentDomRef.ownerDocument.getElementById("sap-ui-quickhelp");
-		if ( oTooltipDomRef ) {
-			oTooltipDomRef.style.display = 'none';
-		}
-		this.bMovedOverTooltip = false;
-	};
-
-	PropertyList.prototype._calcHelpId = function(oMetadata, sName) {
-		var sHelpId = oMetadata.getName();
-		if ( sName ) {
-			sHelpId = sHelpId + "#" + sName;
-		}
-		return sHelpId;
-	};
-
-	PropertyList.prototype._isChildOfQuickHelp = function(oDomRef) {
-		while ( oDomRef ) {
-			if ( oDomRef.id === "sap-ui-quickhelp" ) {
-				return true;
-			}
-			oDomRef = oDomRef.parentNode;
-		}
-		return false;
-	};
-
-	/**
-	 * TODO: missing internal JSDoc... @author please update
-	 * @private
-	 */
-	PropertyList.prototype.onmouseover = function(oEvent) {
-		var oSource = oEvent.target;
-		if ( this._isChildOfQuickHelp(oSource) ) {
-			// if the user enters the tooltip with the mouse, we don't close it automatically
-			if ( this.oQuickHelpTimer ) {
-				clearTimeout(this.oQuickHelpTimer);
-				this.oQuickHelpTimer = undefined;
-			}
-			this.bMovedOverTooltip = true;
-			var oTooltipDomRef = this.oParentDomRef.ownerDocument.getElementById("sap-ui-quickhelp");
-			if ( oTooltipDomRef ) {
-				oTooltipDomRef.style.opacity = '';
-			}
-		} else if ( oSource.getAttribute("data-sap-ui-quickhelp") ) {
-			this.showQuickHelp(oSource);
-		}
-	};
-
-	/**
-	 * TODO: missing internal JSDoc... @author please update
-	 * @private
-	 */
-	PropertyList.prototype.onmouseout = function(oEvent) {
-		var oSource = oEvent.target;
-		if ( this._isChildOfQuickHelp(oSource) ) {
-			if ( this.oQuickHelpTimer ) {
-				clearTimeout(this.oQuickHelpTimer);
-				this.oQuickHelpTimer = undefined;
-			}
-			this.bMovedOverTooltip = false;
-			this.oQuickHelpTimer = setTimeout(function () {
-				this.hideQuickHelp();
-			}.bind(this), 50);
-		} else if (oSource.getAttribute("data-sap-ui-quickhelp")) {
-			if ( this.oQuickHelpTimer ) {
-				clearTimeout(this.oQuickHelpTimer);
-				this.oQuickHelpTimer = undefined;
-			}
-			if ( !this.bMovedOverTooltip ) {
-				this.oQuickHelpTimer = setTimeout(function () {
-					this.hideQuickHelp();
-				}.bind(this), 800);
 			}
 		}
 	};

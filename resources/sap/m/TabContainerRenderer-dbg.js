@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -20,7 +20,7 @@ sap.ui.define([],
 		 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer
-		 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered
+		 * @param {sap.m.TabContainer} oControl An object representation of the control that should be rendered
 		 */
 		TabContainerRenderer.render = function(oRm, oControl) {
 			var oTabStrip = oControl._getTabStrip(),
@@ -90,7 +90,7 @@ sap.ui.define([],
 		/**
 		 * Returns the DOM ID of the content element.
 		 *
-		 * @param {sap.ui.core.Control} oControl The <code>TabContainer</code> for which the DOM ID is looking for
+		 * @param {sap.m.TabContainer} oControl The <code>TabContainer</code> for which the DOM ID is looking for
 		 * @returns {string} The ID of the DOM element, corresponding to the tab content
 		 */
 		TabContainerRenderer.getContentDomId = function(oControl) {

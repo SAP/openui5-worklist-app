@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -10,15 +10,16 @@ sap.ui.define([
 	"sap/base/util/isPlainObject",
 	"sap/base/util/ObjectPath",
 	"sap/base/assert",
-	"sap/base/util/extend"
-], function(Log, isPlainObject, ObjectPath, assert, extend) {
+	"sap/base/util/extend",
+	"sap/ui/core/Configuration"
+], function(Log, isPlainObject, ObjectPath, assert, extend, Configuration) {
 	"use strict";
 
 	/**
 	 * @classdesc Base Class for a Renderer.
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @namespace
 	 * @public
 	 * @alias sap.ui.core.Renderer
@@ -237,7 +238,7 @@ sap.ui.define([
 		var TextDirection = sapUiCore.TextDirection;
 
 		var sTextAlign = "",
-			bRTL = sap.ui.getCore().getConfiguration().getRTL();
+			bRTL = Configuration.getRTL();
 
 		switch (oTextAlign) {
 		case TextAlign.End:

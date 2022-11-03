@@ -18,22 +18,26 @@
 
 .sapMLnk:active:not(.sapMLnkDsbl),
 .sapMLnk:focus:not(.sapMLnkDsbl) {
-	color: @sapUiLinkActive;
+	color: @sapUiLinkActiveColor;
 }
 .sapMLnk:visited {
-	color: @sapUiLinkVisited;
+	color: @sapUiLinkVisitedColor;
 }
 .sapMLnk:hover:not(.sapMLnkDsbl) {
-	color: @sapUiLinkHover;
+	color: @sapUiLinkHoverColor;
 }
 
 .sapUiInverted-CTX .sapUiLnk {
-	color: @sapUiLinkInverted;
+	color: @sapUiLinkInvertedColor;
 }
 
 .sapMLnk.sapMLnkWrapping {
 	white-space: normal;
 	word-wrap: break-word;
+}
+
+.sapMLnk.sapMLinkContainsEmptyIdicator {
+	pointer-events: none;
 }
 
 .sapMLnkMaxWidth {
@@ -112,6 +116,14 @@ html.sap-desktop .sapMLnk:focus:not(.sapMLnkDsbl) {
 .sapMLnk .sapMEmptyIndicator {
 	color: @sapUiBaseText;
 }
+
+
+.sapMListTblRow.sapMLIBActive .sapMLnk,
+.sapMListTblSubRow.sapMLIBActive .sapMLnk,
+.sapMLIB.sapMLIBActive .sapMLink {
+	text-decoration: none;
+	text-shadow: none;
+ }
 
 /* Compact size */
 .sapUiSizeCompact .sapUiFormEdit .sapMLnk {

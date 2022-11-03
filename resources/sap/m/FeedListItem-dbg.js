@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -15,7 +15,8 @@ sap.ui.define([
 	"./FeedListItemRenderer",
 	"sap/m/Avatar",
 	"sap/m/AvatarShape",
-	"sap/m/AvatarSize"
+	"sap/m/AvatarSize",
+	"sap/ui/core/Configuration"
 ],
 function(
 	ListItemBase,
@@ -28,7 +29,8 @@ function(
 	FeedListItemRenderer,
 	Avatar,
 	AvatarShape,
-	AvatarSize
+	AvatarSize,
+	Configuration
 	) {
 	"use strict";
 
@@ -54,13 +56,12 @@ function(
 	 * @extends sap.m.ListItemBase
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.12
 	 * @alias sap.m.FeedListItem
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var FeedListItem = ListItemBase.extend("sap.m.FeedListItem", /** @lends sap.m.FeedListItem.prototype */ {
 		metadata: {
@@ -246,7 +247,9 @@ function(
 					}
 				}
 			}
-		}
+		},
+
+		renderer: FeedListItemRenderer
 	});
 
 	FeedListItem._oRb = sap.ui.getCore().getLibraryResourceBundle("sap.m");
@@ -325,7 +328,7 @@ function(
 			return;
 		}
 
-		sTheme = sap.ui.getCore().getConfiguration().getTheme();
+		sTheme = Configuration.getTheme();
 		oActionSheetPopover = event.getSource().getParent();
 		oActionSheetPopover.removeStyleClass("sapContrast sapContrastPlus");
 
@@ -432,7 +435,7 @@ function(
             oItemDomRef = oItem.getDomRef(),
             mPosition = this.getParent().getAccessbilityPosition(oItem);
 
-        if ( oItem instanceof sap.m.FeedListItem ) {
+        if ( oItem instanceof FeedListItem ) {
             oItemDomRef.setAttribute("aria-posinset", mPosition.posInset);
             oItemDomRef.setAttribute("aria-setsize", mPosition.setSize);
         }
@@ -545,7 +548,7 @@ function(
 	 * this value, the text of the FeedListItem is collapsed once the text reaches this limit.
 	 *
 	 * @private
-	 * @returns {String} Collapsed string based on the "maxCharacter" property. If the size of the string before collapsing
+	 * @returns {string} Collapsed string based on the "maxCharacter" property. If the size of the string before collapsing
 	 * is smaller than the provided threshold, it returns null.
 	 */
 	FeedListItem.prototype._getCollapsedText = function() {
@@ -650,8 +653,8 @@ function(
 	 * Converts an HTML text to plain text by removing all the HTML tags
 	 *
 	 * @private
-	 * @param {String} htmlText The HtmlText to be converted
-	 * @returns {String} plain text
+	 * @param {string} htmlText The HtmlText to be converted
+	 * @returns {string} plain text
 	 */
 	FeedListItem.prototype._convertHtmlToPlainText = function(htmlText) {
 		var oRegex = /(<([^>]+)>)/ig;
@@ -662,8 +665,8 @@ function(
 	 * Converts the plain text to HTML text by adding the corresponding HTML tags
 	 *
 	 * @private
-	 * @param {String} inputText The input plain text
-	 * @returns {String} the HTML text
+	 * @param {string} inputText The input plain text
+	 * @returns {string} the HTML text
 	 */
 	FeedListItem.prototype._convertPlainToHtmlText = function(inputText) {
 		var sFullText = this._sFullText;

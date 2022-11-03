@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -18,11 +18,11 @@ sap.ui.define(['./Event', './Object', './ObjectPool', "sap/base/assert"],
 	 * @abstract
 	 * @extends sap.ui.base.Object
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @public
 	 * @alias sap.ui.base.EventProvider
 	 */
-	var EventProvider = BaseObject.extend("sap.ui.base.EventProvider", /* @lends sap.ui.base.EventProvider */ {
+	var EventProvider = BaseObject.extend("sap.ui.base.EventProvider", /** @lends sap.ui.base.EventProvider.prototype */ {
 
 		constructor : function() {
 
@@ -335,7 +335,7 @@ sap.ui.define(['./Event', './Object', './ObjectPool', "sap/base/assert"],
 	 * structured, this can be overwritten to make the object hierarchy visible to the eventing and
 	 * enables the use of event bubbling within this object hierarchy.
 	 *
-	 * @return {sap.ui.base.EventProvider} The parent event provider
+	 * @return {sap.ui.base.EventProvider|null} The parent event provider
 	 * @protected
 	 */
 	EventProvider.prototype.getEventingParent = function() {

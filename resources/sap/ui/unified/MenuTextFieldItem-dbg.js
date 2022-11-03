@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -9,22 +9,27 @@ sap.ui.define([
 	'sap/ui/core/ValueStateSupport',
 	'./MenuItemBase',
 	'./library',
-	'sap/ui/core/IconPool',
 	'sap/ui/core/library',
 	'sap/ui/Device',
 	'sap/base/Log',
 	'sap/ui/events/PseudoEvents',
-	'sap/ui/dom/jquery/cursorPos' // jQuery Plugin "cursorPos"
+	'sap/ui/core/InvisibleText',
+	'sap/ui/core/Core',
+	'sap/ui/core/Configuration',
+	'sap/ui/core/IconPool', // required by RenderManager#icon
+	'sap/ui/dom/jquery/cursorPos' // provides jQuery.fn.cursorPos
 ],
 	function(
 		ValueStateSupport,
 		MenuItemBase,
 		library,
-		IconPool,
 		coreLibrary,
 		Device,
 		Log,
-		PseudoEvents
+		PseudoEvents,
+		InvisibleText,
+		Core,
+		Configuration
 	) {
 	"use strict";
 
@@ -47,13 +52,12 @@ sap.ui.define([
 	 * @extends sap.ui.unified.MenuItemBase
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @since 1.21.0
 	 *
 	 * @constructor
 	 * @public
 	 * @alias sap.ui.unified.MenuTextFieldItem
-	 * @ui5-metamodel This control/element will also be described in the UI5 (legacy) design time meta model
 	 */
 	var MenuTextFieldItem = MenuItemBase.extend("sap.ui.unified.MenuTextFieldItem", /** @lends sap.ui.unified.MenuTextFieldItem.prototype */ { metadata : {
 
@@ -83,7 +87,6 @@ sap.ui.define([
 	}});
 
 
-	(function() {
 
 	MenuTextFieldItem.prototype.render = function(oRenderManager, oItem, oMenu, oInfo){
 		var rm = oRenderManager,
@@ -136,7 +139,9 @@ sap.ui.define([
 		rm.openStart("div", itemId + "-str").class("sapUiMnuTfItmStretch").openEnd().close("div"); // Helper to strech the width if needed
 		rm.openStart("div").class("sapUiMnuTfItemWrppr").openEnd();
 		rm.voidStart("input", itemId + "-tf").attr("tabindex", "-1");
-		rm.attr("value", oItem.getValue());
+		if (oItem.getValue()) {
+			rm.attr("value", oItem.getValue());
+		}
 		rm.class("sapUiMnuTfItemTf").class(bIsEnabled ? "sapUiMnuTfItemTfEnbl" : "sapUiMnuTfItemTfDsbl");
 		if (!bIsEnabled) {
 			rm.attr("disabled", "disabled");
@@ -147,7 +152,7 @@ sap.ui.define([
 				disabled: null, // Prevent aria-disabled as a disabled attribute is enough
 				multiline: false,
 				autocomplete: "none",
-				labelledby: {value: /*oMenu.getId() + "-label " + */itemId + "-lbl", append: true}
+				describedby: itemId + "-lbl " + oItem._fnInvisibleCountInformationFactory(oInfo).getId()
 			});
 		}
 		rm.voidEnd().close("div").close("div");
@@ -158,6 +163,12 @@ sap.ui.define([
 		rm.close("li");
 	};
 
+	MenuTextFieldItem.prototype.exit = function() {
+		if (this._invisibleCountInformation) {
+			this._fnInvisibleCountInformationFactory().destroy();
+			this._invisibleCountInformation = null;
+		}
+	};
 
 	MenuTextFieldItem.prototype.hover = function(bHovered, oMenu){
 		this.$().toggleClass("sapUiMnuItmHov", bHovered);
@@ -308,7 +319,9 @@ sap.ui.define([
 		$tf.toggleClass("sapUiMnuTfItemTfErr", sValueState == ValueState.Error);
 		$tf.toggleClass("sapUiMnuTfItemTfWarn", sValueState == ValueState.Warning);
 		var sTooltip = ValueStateSupport.enrichTooltip(this, this.getTooltip_AsString());
-		this.$().attr("title", sTooltip ? sTooltip : "");
+		if (sTooltip) {
+			this.$().attr("title", sTooltip);
+		}
 		return this;
 	};
 
@@ -327,7 +340,7 @@ sap.ui.define([
 		var $lbl = this.$("lbl");
 		var offsetLeft = $lbl.length ? $lbl.get(0).offsetLeft : 0;
 
-		if (sap.ui.getCore().getConfiguration().getRTL()) {
+		if (Core.getConfiguration().getRTL()) {
 			$tf.parent().css({"width": "auto", "right": (this.$().outerWidth(true) - offsetLeft + ($lbl.outerWidth(true) - $lbl.outerWidth())) + "px"});
 		} else {
 			$tf.parent().css({"width": "auto", "left": (offsetLeft + $lbl.outerWidth(true)) + "px"});
@@ -336,7 +349,7 @@ sap.ui.define([
 
 
 	MenuTextFieldItem.prototype._checkCursorPosForNav = function(bForward) {
-		var bRtl = sap.ui.getCore().getConfiguration().getRTL();
+		var bRtl = Configuration.getRTL();
 		var bBack = bForward ? bRtl : !bRtl;
 		var $input = this.$("tf");
 		var iPos = $input.cursorPos();
@@ -350,8 +363,18 @@ sap.ui.define([
 		return true;
 	};
 
+	MenuTextFieldItem.prototype._fnInvisibleCountInformationFactory = function(oInfo) {
+		if (!this._invisibleCountInformation) {
+			this._invisibleCountInformation = new InvisibleText({
+				text: Core.getLibraryResourceBundle("sap.ui.unified").getText("UNIFIED_MENU_ITEM_COUNT_TEXT", [
+					oInfo.iItemNo,
+					oInfo.iTotalItems
+				])
+			}).toStatic();
+		}
 
-	}());
+		return this._invisibleCountInformation;
+	};
 
 
 	return MenuTextFieldItem;

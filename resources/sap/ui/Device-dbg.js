@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -11,7 +11,7 @@
  * This API is independent from any other part of the UI5 framework. This allows it to be loaded beforehand, if it is needed, to create the UI5 bootstrap
  * dynamically depending on the capabilities of the browser or device.
  *
- * @version 1.96.2
+ * @version 1.108.0
  * @namespace
  * @name sap.ui.Device
  * @public
@@ -32,7 +32,7 @@ if (typeof window.sap.ui !== "object") {
 
 	//Skip initialization if API is already available
 	if (typeof window.sap.ui.Device === "object" || typeof window.sap.ui.Device === "function") {
-		var apiVersion = "1.96.2";
+		var apiVersion = "1.108.0";
 		window.sap.ui.Device._checkAPIVersion(apiVersion);
 		return;
 	}
@@ -40,7 +40,7 @@ if (typeof window.sap.ui !== "object") {
 	var Device = {};
 
 	////-------------------------- Logging -------------------------------------
-	/* since we cannot use the logging from jquery.sap.global.js, we need to come up with a separate
+	/* since we cannot use the logging from sap/base/Log.js, we need to come up with a separate
 	 * solution for the device API
 	 */
 
@@ -105,7 +105,7 @@ if (typeof window.sap.ui !== "object") {
 
 	//Only used internal to make clear when Device API is loaded in wrong version
 	Device._checkAPIVersion = function(sVersion) {
-		var v = "1.96.2";
+		var v = "1.108.0";
 		if (v != sVersion) {
 			oLogger.log(WARNING, "Device API version differs: " + v + " <-> " + sVersion);
 		}
@@ -156,6 +156,18 @@ if (typeof window.sap.ui !== "object") {
 		}
 	}
 
+	var oReducedNavigator;
+	var setDefaultNavigator = function () {
+		oReducedNavigator = {
+			userAgent: window.navigator.userAgent,
+			platform: window.navigator.platform
+		};
+		// Only add property standalone in case navigator has this property
+		if (window.navigator.hasOwnProperty("standalone")) {
+			oReducedNavigator.standalone = window.navigator.standalone;
+		}
+	};
+	setDefaultNavigator();
 	//******** OS Detection ********
 
 	/**
@@ -183,7 +195,7 @@ if (typeof window.sap.ui !== "object") {
 	/**
 	 * The version of the operating system as <code>string</code>.
 	 *
-	 * Might be empty if no version can be determined.
+	 * Might be empty if no version can reliably be determined.
 	 *
 	 * @name sap.ui.Device.os.versionStr
 	 * @type string
@@ -192,7 +204,7 @@ if (typeof window.sap.ui !== "object") {
 	/**
 	 * The version of the operating system as <code>float</code>.
 	 *
-	 * Might be <code>-1</code> if no version can be determined.
+	 * Might be <code>-1</code> if no version can reliably be determined.
 	 *
 	 * @name sap.ui.Device.os.version
 	 * @type float
@@ -236,20 +248,6 @@ if (typeof window.sap.ui !== "object") {
 	 * @public
 	 */
 	/**
-	 * If this flag is set to <code>true</code>, a Blackberry operating system is used.
-	 *
-	 * @name sap.ui.Device.os.blackberry
-	 * @type boolean
-	 * @public
-	 */
-	/**
-	 * If this flag is set to <code>true</code>, a Windows Phone operating system is used.
-	 *
-	 * @name sap.ui.Device.os.windows_phone
-	 * @type boolean
-	 * @public
-	 */
-	/**
 	 * Windows operating system name.
 	 *
 	 * @see sap.ui.Device.os.name
@@ -284,40 +282,24 @@ if (typeof window.sap.ui !== "object") {
 	 * @name sap.ui.Device.os.OS.ANDROID
 	 * @public
 	 */
-	/**
-	 * Blackberry operating system name.
-	 *
-	 * @see sap.ui.Device.os.name
-	 * @name sap.ui.Device.os.OS.BLACKBERRY
-	 * @public
-	 */
-	/**
-	 * Windows Phone operating system name.
-	 *
-	 * @see sap.ui.Device.os.name
-	 * @name sap.ui.Device.os.OS.WINDOWS_PHONE
-	 * @public
-	 */
 
 	var OS = {
 		"WINDOWS": "win",
 		"MACINTOSH": "mac",
 		"LINUX": "linux",
 		"IOS": "iOS",
-		"ANDROID": "Android",
-		"BLACKBERRY": "bb",
-		"WINDOWS_PHONE": "winphone"
+		"ANDROID": "Android"
 	};
 
-	function getOS(userAgent, platform) { // may return null!!
+	function getOS() { // may return null!!
 
-		userAgent = userAgent || navigator.userAgent;
+		var userAgent = oReducedNavigator.userAgent;
 
 		var rPlatform, // regular expression for platform
 			aMatches;
 
 		function getDesktopOS() {
-			var sPlatform = platform || navigator.platform;
+			var sPlatform = oReducedNavigator.platform;
 			if (sPlatform.indexOf("Win") != -1) {
 				// userAgent in windows 7 contains: windows NT 6.1
 				// userAgent in windows 8 contains: windows NT 6.2 or higher
@@ -357,39 +339,10 @@ if (typeof window.sap.ui !== "object") {
 			return null;
 		}
 
-		// Windows Phone. User agent includes other platforms and therefore must be checked first:
-		rPlatform = /Windows Phone (?:OS )?([\d.]*)/;
-		aMatches = userAgent.match(rPlatform);
-		if (aMatches) {
-			return ({
-				"name": OS.WINDOWS_PHONE,
-				"versionStr": aMatches[1]
-			});
-		}
-
-		// BlackBerry 10:
-		if (userAgent.indexOf("(BB10;") > 0) {
-			rPlatform = /\sVersion\/([\d.]+)\s/;
-			aMatches = userAgent.match(rPlatform);
-			if (aMatches) {
-				return {
-					"name": OS.BLACKBERRY,
-					"versionStr": aMatches[1]
-				};
-			} else {
-				return {
-					"name": OS.BLACKBERRY,
-					"versionStr": '10'
-				};
-			}
-		}
-
-		// iOS, Android, BlackBerry 6.0+:
 		rPlatform = /\(([a-zA-Z ]+);\s(?:[U]?[;]?)([\D]+)((?:[\d._]*))(?:.*[\)][^\d]*)([\d.]*)\s/;
 		aMatches = userAgent.match(rPlatform);
 		if (aMatches) {
 			var rAppleDevices = /iPhone|iPad|iPod/;
-			var rBbDevices = /PlayBook|BlackBerry/;
 			if (aMatches[0].match(rAppleDevices)) {
 				aMatches[3] = aMatches[3].replace(/_/g, ".");
 				//result[1] contains info of devices
@@ -402,11 +355,6 @@ if (typeof window.sap.ui !== "object") {
 				return ({
 					"name": OS.ANDROID,
 					"versionStr": aMatches[3]
-				});
-			} else if (aMatches[0].match(rBbDevices)) {
-				return ({
-					"name": OS.BLACKBERRY,
-					"versionStr": aMatches[4]
 				});
 			}
 		}
@@ -425,8 +373,8 @@ if (typeof window.sap.ui !== "object") {
 		return getDesktopOS();
 	}
 
-	function setOS(customUA, customPlatform) {
-		Device.os = getOS(customUA, customPlatform) || {};
+	function setOS() {
+		Device.os = getOS() || {};
 		Device.os.OS = OS;
 		Device.os.version = Device.os.versionStr ? parseFloat(Device.os.versionStr) : -1;
 
@@ -439,8 +387,6 @@ if (typeof window.sap.ui !== "object") {
 		}
 	}
 	setOS();
-	// expose for unit test
-	Device._setOS = setOS;
 
 
 
@@ -493,6 +439,9 @@ if (typeof window.sap.ui !== "object") {
 	 * a tablet or phone device is detected.
 	 *
 	 * <b>Note:</b> This information might not be available for all browsers.
+	 * <b>Note:</b> The flag is also set to <code>true</code> for any touch device,
+	 * including laptops with touchscreen monitor.
+	 * For more information, see the documentation for {@link sap.ui.Device.system.combi} devices.
 	 *
 	 * @name sap.ui.Device.browser.mobile
 	 * @type boolean
@@ -551,9 +500,8 @@ if (typeof window.sap.ui !== "object") {
 	/**
 	 * If this flag is set to <code>true</code>, the Safari browser runs in standalone fullscreen mode on iOS.
 	 *
-	 * <b>Note:</b> This flag is only available if the Safari browser was detected. Furthermore, if this mode is detected,
-	 * technically not a standard Safari is used. There might be slight differences in behavior and detection, e.g.
-	 * the availability of {@link sap.ui.Device.browser.version}.
+	 * <b>Note:</b> This flag is only available if the Safari browser was detected. There might be slight
+	 * differences in behavior and detection, e.g. regarding the availability of {@link sap.ui.Device.browser.version}.
 	 *
 	 * @name sap.ui.Device.browser.fullscreen
 	 * @type boolean
@@ -563,11 +511,12 @@ if (typeof window.sap.ui !== "object") {
 	/**
 	 * If this flag is set to <code>true</code>, the Safari browser runs in webview mode on iOS.
 	 *
-	 * <b>Note:</b> This flag is only available if the Safari browser was detected. Furthermore, if this mode is detected,
-	 * technically not a standard Safari is used. There might be slight differences in behavior and detection, e.g.
-	 * the availability of {@link sap.ui.Device.browser.version}.
+	 * <b>Note:</b> Since iOS 11 it is no longer reliably possible to detect whether an application runs in <code>webview</code>.
+	 * The flag is <code>true</code> if the browser's user agent contains 'SAPFioriClient'. Applications
+	 * using WKWebView have the possibility to customize the user agent, and to explicitly add this information.
 	 *
 	 * @name sap.ui.Device.browser.webview
+	 * @deprecated as of version 1.98.
 	 * @type boolean
 	 * @since 1.31.0
 	 * @public
@@ -625,11 +574,10 @@ if (typeof window.sap.ui !== "object") {
 		"ANDROID": "an"
 	};
 
-	var ua = navigator.userAgent;
+	function getBrowser() {
+		var sUserAgent = oReducedNavigator.userAgent,
+			sLowerCaseUserAgent = sUserAgent.toLowerCase();
 
-
-
-	function getBrowser(customUa, customNav) {
 		/*!
 		 * Taken from jQuery JavaScript Library v1.7.1
 		 * http://jquery.com/
@@ -645,16 +593,12 @@ if (typeof window.sap.ui !== "object") {
 		 *
 		 * Date: Mon Nov 21 21:11:03 2011 -0500
 		 */
-		function calcBrowser(customUa) {
-			var sUserAgent = (customUa || ua).toLowerCase(); // use custom user-agent if given
-
+		function calcBrowser() {
 			var rwebkit = /(webkit)[ \/]([\w.]+)/;
-			var ropera = /(opera)(?:.*version)?[ \/]([\w.]+)/;
 			var rmozilla = /(mozilla)(?:.*? rv:([\w.]+))?/;
 
-			var browserMatch = rwebkit.exec(sUserAgent) ||
-				ropera.exec(sUserAgent) ||
-				sUserAgent.indexOf("compatible") < 0 && rmozilla.exec(sUserAgent) || [];
+			var browserMatch = rwebkit.exec(sLowerCaseUserAgent) ||
+				sLowerCaseUserAgent.indexOf("compatible") < 0 && rmozilla.exec(sLowerCaseUserAgent) || [];
 
 			var oRes = {
 				browser: browserMatch[1] || "",
@@ -664,17 +608,16 @@ if (typeof window.sap.ui !== "object") {
 			return oRes;
 		}
 
-		var oBrowser = calcBrowser(customUa);
-		var sUserAgent = customUa || ua;
-		var oNavigator = customNav || window.navigator;
+		var oBrowser = calcBrowser();
 
 		// jQuery checks for user agent strings. We differentiate between browsers
 		var oExpMobile;
 		var oResult;
+		var fVersion;
 		if (oBrowser.mozilla) {
 			oExpMobile = /Mobile/;
 			if (sUserAgent.match(/Firefox\/(\d+\.\d+)/)) {
-				var fVersion = parseFloat(RegExp.$1);
+				fVersion = parseFloat(RegExp.$1);
 				oResult = {
 					name: BROWSER.FIREFOX,
 					versionStr: "" + fVersion,
@@ -692,7 +635,7 @@ if (typeof window.sap.ui !== "object") {
 			}
 		} else if (oBrowser.webkit) {
 			// webkit version is needed for calculation if the mobile android device is a tablet (calculation of other mobile devices work without)
-			var regExpWebkitVersion = sUserAgent.toLowerCase().match(/webkit[\/]([\d.]+)/);
+			var regExpWebkitVersion = sLowerCaseUserAgent.match(/webkit[\/]([\d.]+)/);
 			var webkitVersion;
 			if (regExpWebkitVersion) {
 				webkitVersion = regExpWebkitVersion[1];
@@ -728,31 +671,24 @@ if (typeof window.sap.ui !== "object") {
 				};
 			} else { // Safari might have an issue with sUserAgent.match(...); thus changing
 				var oExp = /Version\/(\d+\.\d+).*Safari/;
-				var bStandalone = oNavigator.standalone;
-				if (oExp.test(sUserAgent)) {
-					var aParts = oExp.exec(sUserAgent);
-					var fVersion = parseFloat(aParts[1]);
+				if (oExp.test(sUserAgent) || /iPhone|iPad|iPod/.test(sUserAgent)) {
+					var bStandalone = oReducedNavigator.standalone;
 					oResult =  {
 						name: BROWSER.SAFARI,
-						versionStr: "" + fVersion,
-						fullscreen: false,
-						webview: false,
-						version: fVersion,
+						fullscreen: bStandalone === undefined ? false : bStandalone,
+						webview: /SAPFioriClient/.test(sUserAgent),
 						mobile: oExpMobile.test(sUserAgent),
 						webkit: true,
 						webkitVersion: webkitVersion
 					};
-				} else if (/iPhone|iPad|iPod/.test(sUserAgent) && !(/CriOS/.test(sUserAgent)) && !(/FxiOS/.test(sUserAgent)) && (bStandalone === true || bStandalone === false)) {
-					//WebView or Standalone mode on iOS
-					oResult = {
-						name: BROWSER.SAFARI,
-						version: -1,
-						fullscreen: bStandalone,
-						webview: !bStandalone,
-						mobile: oExpMobile.test(sUserAgent),
-						webkit: true,
-						webkitVersion: webkitVersion
-					};
+					var aParts = oExp.exec(sUserAgent);
+					if (aParts) {
+						fVersion = parseFloat(aParts[1]);
+						oResult.versionStr = "" + fVersion;
+						oResult.version = fVersion;
+					} else {
+						oResult.version = -1;
+					}
 				} else { // other webkit based browser
 					oResult = {
 						mobile: oExpMobile.test(sUserAgent),
@@ -778,7 +714,6 @@ if (typeof window.sap.ui !== "object") {
 
 		return oResult;
 	}
-	Device._testUserAgent = getBrowser; // expose the user-agent parsing (mainly for testing), but don't let it be overwritten
 
 	function setBrowser() {
 		Device.browser = getBrowser();
@@ -812,6 +747,9 @@ if (typeof window.sap.ui !== "object") {
 	 *
 	 * <b>Note:</b> This flag indicates whether the used browser supports touch events or not.
 	 * This does not necessarily mean that the used device has a touchable screen.
+	 * <b>Note:</b> This flag also affects other {@link sap.ui.Device} properties.
+	 * For more information, see the documentation for {@link sap.ui.Device.browser.mobile} and
+	 * {@link sap.ui.Device.system.combi} devices.
 	 *
 	 * @name sap.ui.Device.support.touch
 	 * @type boolean
@@ -883,10 +821,14 @@ if (typeof window.sap.ui !== "object") {
 	 * This is also the recommended way of detecting touch feature support, according to the Chrome Developers
 	 * (https://www.chromestatus.com/feature/4764225348042752).
 	*/
-	Device.support.touch = !!(('ontouchstart' in window)
-	|| (navigator.maxTouchPoints > 0)
-	|| (window.DocumentTouch && document instanceof window.DocumentTouch)
-	|| (window.TouchEvent && Device.browser.firefox));
+	var detectTouch = function () {
+		return !!(('ontouchstart' in window)
+			|| (window.navigator.maxTouchPoints > 0)
+			|| (window.DocumentTouch && document instanceof window.DocumentTouch)
+			|| (window.TouchEvent && Device.browser.firefox));
+	};
+
+	Device.support.touch = detectTouch();
 
 	Device.support.pointer = !!window.PointerEvent;
 
@@ -1250,7 +1192,7 @@ if (typeof window.sap.ui !== "object") {
 	 * <li><code>mParams.name</code>: The name of the entered interval, if available</li>
 	 * </ul>
 	 *
-	 * @param {function}
+	 * @param {function({from: number, to: number, unit: string, name: string | undefined})}
 	 *            fnFunction The handler function to call when the event occurs. This function will be called in the context of the
 	 *                       <code>oListener</code> instance (if present) or on the <code>window</code> instance. A map with information
 	 *                       about the entered range set is provided as a single argument to the handler (see details above).
@@ -1409,7 +1351,7 @@ if (typeof window.sap.ui !== "object") {
 	 * @param {string} sName The name of the range set. The range set must be initialized beforehand ({@link sap.ui.Device.media.initRangeSet})
 	 * @param {int} [iWidth] An optional width, based on which the range should be determined;
 	 *             If <code>iWidth</code> is not a number, the window size will be used.
-	 * @returns {object} Information about the current active interval of the range set. The returned object has the same structure as the argument of the event handlers ({@link sap.ui.Device.media.attachHandler})
+	 * @returns {{from: number, to: number, unit: string, name: string | undefined}} Information about the current active interval of the range set. The returned object has the same structure as the argument of the event handlers ({@link sap.ui.Device.media.attachHandler})
 	 *
 	 * @name sap.ui.Device.media.getCurrentRange
 	 * @function
@@ -1581,8 +1523,8 @@ if (typeof window.sap.ui !== "object") {
 		return oSystem;
 	}
 
-	function isTablet(customUA) {
-		var sUserAgent = customUA || navigator.userAgent;
+	function isTablet() {
+		var sUserAgent = oReducedNavigator.userAgent;
 		if (Device.os.ios) {
 			return /ipad/i.test(sUserAgent);
 		} else if (Device.os.windows || Device.os.macintosh || Device.os.linux) {
@@ -1598,45 +1540,7 @@ if (typeof window.sap.ui !== "object") {
 		} else {
 			//in real mobile device
 			if (Device.support.touch) { // eslint-disable-line no-lonely-if
-				if (Device.browser.chrome && Device.os.android && Device.os.version >= 4.4) {
-					// From Android version 4.4, WebView also uses Chrome as Kernel.
-					// We can use the user agent pattern defined in Chrome to do phone/tablet detection
-					// According to the information here: https://developer.chrome.com/multidevice/user-agent#chrome_for_android_user_agent,
-					//  the existence of "Mobile" indicates it's a phone. But because the crosswalk framework which is used in Fiori Client
-					//  inserts another "Mobile" to the user agent for both tablet and phone, we need to check whether "Mobile Safari/<Webkit Rev>" exists.
-					return !/Mobile Safari\/[.0-9]+/.test(sUserAgent);
-				} else {
-					var densityFactor = window.devicePixelRatio ? window.devicePixelRatio : 1; // may be undefined in Windows Phone devices
-					// On Android sometimes window.screen.width returns the logical CSS pixels, sometimes the physical device pixels;
-					// Tests on multiple devices suggest this depends on the Webkit version.
-					// The Webkit patch which changed the behavior was done here: https://bugs.webkit.org/show_bug.cgi?id=106460
-					// Chrome 27 with Webkit 537.36 returns the logical pixels,
-					// Chrome 18 with Webkit 535.19 returns the physical pixels.
-					// The BlackBerry 10 browser with Webkit 537.10+ returns the physical pixels.
-					// So it appears like somewhere above Webkit 537.10 we do not hve to divide by the devicePixelRatio anymore.
-					if (Device.os.android && Device.browser.webkit && (parseFloat(Device.browser.webkitVersion) > 537.10)) {
-						densityFactor = 1;
-					}
-
-					//this is how android distinguishes between tablet and phone
-					//http://android-developers.blogspot.de/2011/07/new-tools-for-managing-screen-sizes.html
-					var bTablet = (Math.min(window.screen.width / densityFactor, window.screen.height / densityFactor) >= 600);
-
-					// special workaround for Nexus 7 where the window.screen.width is 600px or 601px in portrait mode (=> tablet)
-					// but window.screen.height 552px in landscape mode (=> phone), because the browser UI takes some space on top.
-					// So the detected device type depends on the orientation :-(
-					// actually this is a Chrome bug, as "width"/"height" should return the entire screen's dimensions and
-					// "availWidth"/"availHeight" should return the size available after subtracting the browser UI
-					if (isLandscape() &&
-						(window.screen.height === 552 || window.screen.height === 553) // old/new Nexus 7
-						&&
-						(/Nexus 7/i.test(sUserAgent))) {
-						bTablet = true;
-					}
-
-					return bTablet;
-				}
-
+				return Device.browser.chrome && Device.os.android && !/Mobile Safari\/[.0-9]+/.test(sUserAgent);
 			} else {
 				// This simple android phone detection can be used here because this is the mobile emulation mode in desktop browser
 				var bAndroidPhone = (/(?=android)(?=.*mobile)/i.test(sUserAgent));
@@ -1646,15 +1550,13 @@ if (typeof window.sap.ui !== "object") {
 		}
 	}
 
-	function setSystem(customUA) {
-		Device.system = getSystem(customUA);
+	function setSystem() {
+		Device.system = getSystem();
 		if (Device.system.tablet || Device.system.phone) {
 			Device.browser.mobile = true;
 		}
 	}
 	setSystem();
-	// expose the function for unit test
-	Device._getSystem = getSystem;
 
 	//******** Orientation Detection ********
 
@@ -1977,6 +1879,22 @@ if (typeof window.sap.ui !== "object") {
 	//Always initialize the default media range set
 	Device.media.initRangeSet();
 	Device.media.initRangeSet(RANGESETS["SAP_STANDARD_EXTENDED"]);
+
+	// Only for test purposes
+	Device._setCustomNavigator = function (oCustomNavigator, bTouch) {
+		// Reset to device capabilities in case no custom navigator is given
+		if (!oCustomNavigator) {
+			Device.support.touch = detectTouch();
+			setDefaultNavigator();
+		} else {
+			Device.support.touch = bTouch;
+			oReducedNavigator = Object.assign(oReducedNavigator, oCustomNavigator);
+		}
+
+		setOS();
+		setBrowser();
+		setSystem();
+	};
 
 	// define module if API is available
 	if (sap.ui.define) {

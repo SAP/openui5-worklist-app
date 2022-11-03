@@ -61,8 +61,8 @@
 	.sapUiIcon:after {
 		content: "";
 		position: absolute;
-		right: 0;
-		top: 0;
+		right: (@sapMPIPopoverCloseIconMargin * -1);
+		top: (@sapMPIPopoverCloseIconMargin * -1);
 		width: @sapMPIPopoverCloseIconWidth + (@sapMPIPopoverCloseIconMargin * 2);
 		height: @sapMPIPopoverCloseIconHeight + (@sapMPIPopoverCloseIconMargin * 2);
 	}
@@ -83,6 +83,7 @@
 	height: 100%;
 	-webkit-justify-content: flex-end;
 	justify-content: flex-end;
+	flex-shrink: 0;
 	border-top-left-radius: 0.5rem;
 	border-bottom-left-radius: 0.5rem;
 }
@@ -142,10 +143,6 @@
 
 .sapMPIValueGreaterHalf .sapMPITextLeft {
 	display: inline-block;
-}
-
-.sapMPIAnimate .sapMPIText {
-	display: none;
 }
 
 /* Progress Indicator Bar */

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -36,7 +36,7 @@ sap.ui.define([
 	 * Applies a sap.ui.layout.cssgrid.GridSettings to a provided DOM element or Control.
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @extends sap.ui.base.ManagedObject
 	 *
@@ -45,7 +45,6 @@ sap.ui.define([
 	 * @constructor
 	 * @public
 	 * @alias sap.ui.layout.cssgrid.GridLayoutBase
-	 * @ui5-metamodel This simple type will also be described in the UI5 (legacy) designtime metamodel
 	 */
 	var GridLayoutBase = ManagedObject.extend("sap.ui.layout.cssgrid.GridLayoutBase", {
 		metadata: {
@@ -201,9 +200,10 @@ sap.ui.define([
 	};
 
 	/**
-	 * Should return sap.ui.layout.cssgrid.GridSettings - The active GridSettings
-	 * Must be implemented by child classes
+	 * Should return the active GridSettings.
+	 * Must be implemented by child classes.
 	 * @abstract
+	 * @returns {sap.ui.layout.cssgrid.GridSettings}
 	 * @public
 	 */
 	GridLayoutBase.prototype.getActiveGridSettings = function () {

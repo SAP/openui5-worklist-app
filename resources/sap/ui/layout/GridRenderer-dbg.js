@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(["sap/ui/Device", "sap/ui/layout/library"],
@@ -15,7 +15,7 @@ sap.ui.define(["sap/ui/Device", "sap/ui/layout/library"],
 	/**
 	 * @author SAP SE
 	 * @version
-	 * 1.96.2
+	 * 1.108.0
 	 * @namespace
 	 */
 	var GridRenderer = {
@@ -29,7 +29,7 @@ sap.ui.define(["sap/ui/Device", "sap/ui/layout/library"],
 	 * @param {sap.ui.core.RenderManager}
 	 *            oRm the RenderManager that can be used for writing to the render
 	 *            output buffer
-	 * @param {sap.ui.core.Control}
+	 * @param {sap.ui.layout.Grid}
 	 *            oControl an object representation of the control that should be
 	 *            rendered
 	 */
@@ -168,7 +168,7 @@ sap.ui.define(["sap/ui/Device", "sap/ui/layout/library"],
 				// sSpanL needed for XL if XL is not defined at all
 				var sSpanL;
 				var sSpan = oLay.getSpan();
-				if (!sSpan || !sSpan.lenght == 0) {
+				if (!sSpan) {
 					aSpan = aDefaultSpan;
 				} else {
 					aSpan = SPANPATTERN.exec(sSpan);

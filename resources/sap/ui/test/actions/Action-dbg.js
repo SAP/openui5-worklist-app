@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -64,7 +64,7 @@ function (ManagedObject, QUnitUtils, Opa5, Device, jQueryDOM, _OpaLogger) {
 		 * A control may have many elements in its DOM representation. The most suitable one is chosen by priority:
 		 * <ol>
 		 *     <li>If the user provided an idSuffix, return the element that matches it, or null</li>
-		 *     <li>If there is a control adapter for the action - return the element that matches it. See {@link sap.ui.test.Press.controlAdapters} for an example</li>
+		 *     <li>If there is a control adapter for the action - return the element that matches it. See <code>controlAdapters</code> at {@link sap.ui.test.Press} for an example</li>
 		 *     <li>If there is no control adapter, or it matches no elements, return the focusDomRef of the control. Note that some controls may not have a focusDomRef.</li>
 		 * </ol>
 		 * @param {object} oControl the control to execute an action on
@@ -207,9 +207,12 @@ function (ManagedObject, QUnitUtils, Opa5, Device, jQueryDOM, _OpaLogger) {
 		 *
 		 * @param {string} sName Name of the mouse event
 		 * @param {Element} oDomRef DOM element on which the event is going to be triggered
+		 * @param {boolean} bShiftKey Indicates whether the shift key is down in addition
+	 	 * @param {boolean} bAltKey Indicates whether the alt key is down in addition
+	 	 * @param {boolean} bCtrlKey Indicates whether the ctrl key is down in addition
 		 * @private
 		 */
-		_createAndDispatchMouseEvent: function (sName, oDomRef) {
+		_createAndDispatchMouseEvent: function (sName, oDomRef, bShiftKey, bAltKey, bCtrlKey, iClientX, iClientY) {
 			// ignore scrolled down stuff (client X, Y not set)
 			// and assume stuff is over the whole screen (screen X, Y not set)
 			// See file jquery.sap.events.js for some insights to the magic
@@ -224,8 +227,14 @@ function (ManagedObject, QUnitUtils, Opa5, Device, jQueryDOM, _OpaLogger) {
 				radiusY: 1,
 				rotationAngle: 0,
 				button: iLeftMouseButtonIndex,
-				type: sName // include the type so jQuery.event.fixHooks can copy properties properly
+				type: sName, // include the type so jQuery.event.fixHooks can copy properties properly
+				shiftKey: bShiftKey,
+				altKey: bAltKey,
+				ctrlKey: bCtrlKey,
+				clientX: iClientX,
+				clientY: iClientY
 			});
+
 			oDomRef.dispatchEvent(oMouseEvent);
 		},
 
@@ -278,10 +287,10 @@ function (ManagedObject, QUnitUtils, Opa5, Device, jQueryDOM, _OpaLogger) {
 		},
 
 		_createAndDispatchScrollEvent: function (oDomRef, oOptions) {
-			if (oOptions.x) {
+			if (oOptions.x != null) {
 				oDomRef.scrollLeft = oOptions.x;
 			}
-			if (oOptions.y) {
+			if (oOptions.y != null) {
 				oDomRef.scrollTop = oOptions.y;
 			}
 			var oScrollEvent = new Event("scroll", {

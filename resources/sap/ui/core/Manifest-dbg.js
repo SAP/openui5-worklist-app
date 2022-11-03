@@ -1,6 +1,6 @@
 /*
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -8,6 +8,7 @@
 sap.ui.define([
 	'sap/ui/base/Object',
 	'sap/ui/thirdparty/URI',
+	'sap/ui/VersionInfo',
 	'sap/base/util/Version',
 	'sap/base/Log',
 	'sap/ui/dom/includeStylesheet',
@@ -16,11 +17,13 @@ sap.ui.define([
 	'sap/base/util/merge',
 	'sap/base/util/isPlainObject',
 	'sap/base/util/LoaderExtensions',
-	"sap/base/util/isEmptyObject"
+	'sap/ui/core/Configuration',
+	'./_UrlResolver'
 ],
 	function(
 		BaseObject,
 		URI,
+		VersionInfo,
 		Version,
 		Log,
 		includeStylesheet,
@@ -29,7 +32,8 @@ sap.ui.define([
 		merge,
 		isPlainObject,
 		LoaderExtensions,
-		isEmptyObject
+		Configuration,
+		_UrlResolver
 	) {
 	"use strict";
 
@@ -137,7 +141,7 @@ sap.ui.define([
 	 * @class The Manifest class.
 	 * @extends sap.ui.base.Object
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @alias sap.ui.core.Manifest
 	 * @since 1.33.0
 	 */
@@ -273,8 +277,13 @@ sap.ui.define([
 				vI18n = JSON.parse(JSON.stringify(vI18n));
 				sBaseBundleUrlRelativeTo = vI18n.bundleUrlRelativeTo || sBaseBundleUrlRelativeTo;
 
-				// resolve bundleUrls of terminologies
-				this._processResourceConfiguration(vI18n, sBaseBundleUrlRelativeTo);
+				// resolve bundleUrls including terminology bundles
+				_UrlResolver._processResourceConfiguration(vI18n, {
+					alreadyResolvedOnRoot: false,
+					baseURI: this._oBaseUri,
+					manifestBaseURI: this._oManifestBaseUri,
+					relativeTo: sBaseBundleUrlRelativeTo
+				});
 
 				// merge activeTerminologies and settings object into mParams
 				var mParams = Object.assign({
@@ -377,15 +386,15 @@ sap.ui.define([
 			var sMinUI5Version = this.getEntry("/sap.ui5/dependencies/minUI5Version");
 			if (sMinUI5Version &&
 				Log.isLoggable(Log.Level.WARNING) &&
-				sap.ui.getCore().getConfiguration().getDebug()) {
-				sap.ui.getVersionInfo({async: true}).then(function(oVersionInfo) {
+				Configuration.getDebug()) {
+				VersionInfo.load().then(function(oVersionInfo) {
 					var oMinVersion = getVersionWithoutSuffix(sMinUI5Version);
 					var oVersion = getVersionWithoutSuffix(oVersionInfo && oVersionInfo.version);
 					if (oMinVersion.compareTo(oVersion) > 0) {
 						Log.warning("Component \"" + this.getComponentName() + "\" requires at least version \"" + oMinVersion.toString() + "\" but running on \"" + oVersion.toString() + "\"!");
 					}
 				}.bind(this), function(e) {
-					Log.warning("The validation of the version for Component \"" + this.getComponentName() + "\" failed! Reasion: " + e);
+					Log.warning("The validation of the version for Component \"" + this.getComponentName() + "\" failed! Reason: " + e);
 				}.bind(this));
 			}
 
@@ -598,7 +607,7 @@ sap.ui.define([
 						Log.error("Resource root for \"" + sResourceRoot + "\" is absolute and therefore won't be registered! \"" + sResourceRootPath + "\"", this.getComponentName());
 						continue;
 					}
-					sResourceRootPath = this._resolveUri(oResourceRootURI).toString();
+					sResourceRootPath = this.resolveUri(sResourceRootPath);
 					var mPaths = {};
 					mPaths[sResourceRoot.replace(/\./g, "/")] = sResourceRootPath;
 					sap.ui.loader.config({paths:mPaths});
@@ -633,23 +642,9 @@ sap.ui.define([
 		 * @since 1.60.1
 		 */
 		resolveUri: function(sUri, sRelativeTo) {
-			var oUri = this._resolveUri(new URI(sUri), sRelativeTo);
-			return oUri && oUri.toString();
-		},
-
-
-		/**
-		 * Resolves the given URI relative to the Component by default
-		 * or optional relative to the manifest when passing 'manifest'
-		 * as second parameter.
-		 *
-		 * @param {URI} oUri URI to resolve
-		 * @param {string} [sRelativeTo] defines to which base URI the given URI will be resolved to; one of ‘component' (default) or 'manifest'
-		 * @return {URI} resolved URI
-		 * @private
-		 */
-		_resolveUri: function(oUri, sRelativeTo) {
-			return Manifest._resolveUriRelativeTo(oUri, sRelativeTo === "manifest" ? this._oManifestBaseUri : this._oBaseUri);
+			var oRelativeToBaseUri = sRelativeTo === "manifest" ? this._oManifestBaseUri : this._oBaseUri;
+			var oResultUri = _UrlResolver._resolveUri(sUri, oRelativeToBaseUri);
+			return oResultUri && oResultUri.toString();
 		},
 
 		/**
@@ -757,66 +752,6 @@ sap.ui.define([
 	Manifest._rManifestTemplate = /\{\{([^\}\}]+)\}\}/g;
 
 	/**
-	 * Resolves the given URI relative to the given base URI.
-	 *
-	 * @param {URI} oUri URI to resolve
-	 * @param {URI} oBase Base URI
-	 * @return {URI} resolved URI
-	 * @static
-	 * @private
-	 */
-	Manifest._resolveUriRelativeTo = function(oUri, oBase) {
-		if (oUri.is("absolute") || (oUri.path() && oUri.path()[0] === "/")) {
-			return oUri;
-		}
-		var oPageBase = new URI(document.baseURI).search("");
-		oBase = oBase.absoluteTo(oPageBase);
-		return oUri.absoluteTo(oBase).relativeTo(oPageBase);
-	};
-
-	/**
-	 * Function that loops through the model config and resolves the bundle urls
-	 * of terminologies relative to the component or relative to the manifest
-	 *
-	 * @example
-	 * {
-	 *   "oil": {
-	 *     "bundleUrl": "i18n/terminologies/oil.i18n.properties"
-	 *   },
-	 *   "retail": {
-	 *     "bundleName": "i18n.terminologies.retail.i18n.properties"
-	 *   }
-	 * }
-	 *
-	 * @param {object} mSettings Map with model config settings
-	 * @param {string} sBaseBundleUrlRelativeTo BundleUrlRelativeTo info from base config
-	 * @param {boolean} [bAlreadyResolvedOnRoot] Whether the bundleUrl was already resolved (usually by the sap.ui.core.Component)
-	 * @private
-	 * @ui5-restricted sap.ui.core.Component
-	 */
-	Manifest.prototype._processResourceConfiguration = function (mSettings, sBaseBundleUrlRelativeTo, bAlreadyResolvedOnRoot) {
-		var that = this;
-		Object.keys(mSettings).forEach(function(sKey) {
-			if (sKey === "bundleUrl" && !bAlreadyResolvedOnRoot) {
-				var sBundleUrl = mSettings[sKey];
-				mSettings[sKey] = that.resolveUri(sBundleUrl, mSettings["bundleUrlRelativeTo"] || sBaseBundleUrlRelativeTo);
-			}
-			if (sKey === "terminologies") {
-				var mTerminologies = mSettings[sKey];
-				for (var sTerminology in mSettings[sKey]) {
-					that._processResourceConfiguration(mTerminologies[sTerminology], sBaseBundleUrlRelativeTo);
-				}
-			}
-			if (sKey === "enhanceWith") {
-				var aEnhanceWith = mSettings[sKey];
-				for (var i = 0; i < aEnhanceWith.length; i++) {
-					that._processResourceConfiguration(aEnhanceWith[i], sBaseBundleUrlRelativeTo);
-				}
-			}
-		});
-	};
-
-	/**
 	 * Function to load the manifest by URL
 	 *
 	 * @param {object} mOptions the configuration options
@@ -852,7 +787,7 @@ sap.ui.define([
 		var oManifestUrl = new URI(sManifestUrl);
 		["sap-language", "sap-client"].forEach(function(sName) {
 			if (!oManifestUrl.hasQuery(sName)) {
-				var sValue = sap.ui.getCore().getConfiguration().getSAPParam(sName);
+				var sValue = Configuration.getSAPParam(sName);
 				if (sValue) {
 					oManifestUrl.addQuery(sName, sValue);
 				}
@@ -874,7 +809,7 @@ sap.ui.define([
 			dataType: "json",
 			async: typeof bAsync !== "undefined" ? bAsync : false,
 			headers: {
-				"Accept-Language": sap.ui.getCore().getConfiguration().getLanguageTag()
+				"Accept-Language": Configuration.getLanguageTag()
 			},
 			failOnError: typeof bFailOnError !== "undefined" ? bFailOnError : true
 		});

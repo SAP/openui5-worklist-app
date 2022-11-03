@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -21,7 +21,7 @@ sap.ui.define(['sap/ui/core/LayoutData'],
 		 * @see {@link topic:32d4b9c2b981425dbc374d3e9d5d0c2e Grid Controls}
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @extends sap.ui.core.LayoutData
 		 *
@@ -30,7 +30,6 @@ sap.ui.define(['sap/ui/core/LayoutData'],
 		 * @public
 		 * @constructor
 		 * @alias sap.f.GridContainerItemLayoutData
-		 * @ui5-metamodel This control/element will also be described in the UI5 (legacy) designtime metamodel
 		 */
 		var GridContainerItemLayoutData = LayoutData.extend("sap.f.GridContainerItemLayoutData", /** @lends sap.f.GridContainerItemLayoutData.prototype */ {
 			metadata: {

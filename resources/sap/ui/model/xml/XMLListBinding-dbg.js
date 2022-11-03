@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -14,8 +14,6 @@ sap.ui.define([
 ],
 	function(ChangeReason, ClientListBinding, XMLHelper, deepEqual, each) {
 	"use strict";
-
-
 
 	/**
 	 *
@@ -32,55 +30,6 @@ sap.ui.define([
 	 * @extends sap.ui.model.ClientListBinding
 	 */
 	var XMLListBinding = ClientListBinding.extend("sap.ui.model.xml.XMLListBinding");
-
-	/**
-	 * Return contexts for the list or a specified subset of contexts
-	 * @param {int} [iStartIndex=0] the startIndex where to start the retrieval of contexts
-	 * @param {int} [iLength=length of the list] determines how many contexts to retrieve beginning from the start index.
-	 * Default is the whole list length.
-	 *
-	 * @return {sap.ui.model.Context[]} the contexts array
-	 * @protected
-	 */
-	XMLListBinding.prototype.getContexts = function(iStartIndex, iLength) {
-		this.iLastStartIndex = iStartIndex;
-		this.iLastLength = iLength;
-
-		if (!iStartIndex) {
-			iStartIndex = 0;
-		}
-		if (!iLength) {
-			iLength = Math.min(this.iLength, this.oModel.iSizeLimit);
-		}
-
-		var aContexts = this._getContexts(iStartIndex, iLength),
-			aContextData = [];
-
-		if (this.bUseExtendedChangeDetection) {
-			for (var i = 0; i < aContexts.length; i++) {
-				aContextData.push(this.getContextData(aContexts[i]));
-			}
-
-			//Check diff
-			if (this.aLastContexts && iStartIndex < this.iLastEndIndex) {
-				aContexts.diff = this.diffData(this.aLastContextData, aContextData);
-			}
-
-			this.iLastEndIndex = iStartIndex + iLength;
-			this.aLastContexts = aContexts.slice(0);
-			this.aLastContextData = aContextData.slice(0);
-		}
-
-		return aContexts;
-	};
-
-	XMLListBinding.prototype.getCurrentContexts = function() {
-		if (this.bUseExtendedChangeDetection) {
-			return this.aLastContexts || [];
-		} else {
-			return this.getContexts(this.iLastStartIndex, this.iLastLength);
-		}
-	};
 
 	/**
 	 * Returns the entry data as required for change detection/diff. For the XMLModel this is the
@@ -127,7 +76,7 @@ sap.ui.define([
 	 * Checks whether this Binding would provide new values and in case it changed, fires a change
 	 * event with change reason <code>Change</code>.
 	 *
-	 * @param {boolean} bForceupdate
+	 * @param {boolean} [bForceupdate]
 	 *   Whether the change event is fired regardless of the binding's state
 	 *
 	 */
@@ -182,7 +131,5 @@ sap.ui.define([
 		}
 	};
 
-
 	return XMLListBinding;
-
 });

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -32,58 +32,61 @@ sap.ui.define([
 		 * @extends sap.m.ListItemBase
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @private
 		 * @alias sap.m.MenuListItem
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
-		var MenuListItem = ListItemBase.extend("sap.m.MenuListItem", /** @lends sap.m.MenuListItem.prototype */ { metadata : {
+		var MenuListItem = ListItemBase.extend("sap.m.MenuListItem", /** @lends sap.m.MenuListItem.prototype */ {
+			metadata : {
 
-			library : "sap.m",
-			properties : {
+				library : "sap.m",
+				properties : {
 
-				/**
-				 * Enabled items can be selected.
-				 */
-				enabled : {type : "boolean", group : "Misc", defaultValue : true},
+					/**
+					 * Enabled items can be selected.
+					 */
+					enabled : {type : "boolean", group : "Misc", defaultValue : true},
 
-				/**
-				 * Defines the title of the <code>MenuListItem</code>.
-				 */
-				title : {type : "string", group : "Misc", defaultValue : null},
+					/**
+					 * Defines the title of the <code>MenuListItem</code>.
+					 */
+					title : {type : "string", group : "Misc", defaultValue : null},
 
-				/**
-				 * Defines the icon of the <code>MenuListItem</code>.
-				 */
-				icon : {type : "sap.ui.core.URI", group : "Misc", defaultValue : null},
+					/**
+					 * Defines the icon of the <code>MenuListItem</code>.
+					 */
+					icon : {type : "sap.ui.core.URI", group : "Misc", defaultValue : null},
 
-				/**
-				 * By default, one or more requests are sent to get the density perfect version of the icon if the given version of the icon doesn't exist on the server.
-				 * <b>Note:</b> If bandwidth is a key factor for the application, set this value to <code>false</code>.
-				 */
-				iconDensityAware : {type : "boolean", group : "Misc", defaultValue : true},
+					/**
+					 * By default, one or more requests are sent to get the density perfect version of the icon if the given version of the icon doesn't exist on the server.
+					 * <b>Note:</b> If bandwidth is a key factor for the application, set this value to <code>false</code>.
+					 */
+					iconDensityAware : {type : "boolean", group : "Misc", defaultValue : true},
 
-				/**
-				 * Defines the <code>title</code> text directionality with enumerated options. By default, the control inherits text direction from the DOM.
-				 */
-				titleTextDirection : {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
+					/**
+					 * Defines the <code>title</code> text directionality with enumerated options. By default, the control inherits text direction from the DOM.
+					 */
+					titleTextDirection : {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
 
-				/**
-				 * Defines whether a visual separator should be rendered before the item.
-				 * <b>Note:</b> If an item is invisible, its separator is also not displayed.
-				 */
-				startsSection : {type : "boolean", group : "Behavior", defaultValue : false}
+					/**
+					 * Defines whether a visual separator should be rendered before the item.
+					 * <b>Note:</b> If an item is invisible, its separator is also not displayed.
+					 */
+					startsSection : {type : "boolean", group : "Behavior", defaultValue : false}
+				},
+				associations: {
+					/**
+					 * The <code>MenuItem</code> that this control renders.
+					 * Used internally in sap.m.Menu.
+					 */
+					menuItem: { type: "sap.m.MenuItem", multiple: false }
+				}
 			},
-			associations: {
-				/**
-				 * The <code>MenuItem</code> that this control renders.
-				 * Used internally in sap.m.Menu.
-				 */
-				menuItem: { type: "sap.m.MenuItem", multiple: false }
-			}
-		}});
+
+			renderer: MenuListItemRenderer
+		});
 
 
 		MenuListItem.prototype.exit = function() {
@@ -112,7 +115,7 @@ sap.ui.define([
 
 			if (oImage) {
 				oImage.setSrc(sSrc);
-				if (oImage instanceof sap.m.Image) {
+				if (oImage.isA("sap.m.Image")) {
 					oImage.setDensityAware(bIconDensityAware);
 				}
 			} else {
@@ -124,7 +127,7 @@ sap.ui.define([
 				}, sap.m.Image).setParent(this, null, true);
 			}
 
-			if (oImage instanceof sap.m.Image) {
+			if (oImage.isA("sap.m.Image")) {
 				oImage.addStyleClass(sImgStyle, true);
 			} else {
 				oImage.addStyleClass(sImgStyle + "Icon", true);

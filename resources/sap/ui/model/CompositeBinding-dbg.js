@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -148,6 +148,9 @@ sap.ui.define([
 
 			this.bRawValues = this.oType.getUseRawValues();
 			this.bInternalValues = this.oType.getUseInternalValues();
+			this.oType.processPartTypes(this.aBindings.map(function (oBinding) {
+				return oBinding.getType();
+			}));
 
 			if (this.bRawValues && this.bInternalValues) {
 				throw new Error(this.oType + " has both 'bUseRawValues' & 'bUseInternalValues' set to true. Only one of them is allowed to be true");
@@ -825,7 +828,7 @@ sap.ui.define([
 	 * Check whether this Binding would provide new values and in case it changed,
 	 * inform interested parties about this.
 	 *
-	 * @param {boolean} bForceUpdate Whether an update should be forced
+	 * @param {boolean} [bForceUpdate] Whether an update should be forced
 	 *
 	 */
 	CompositeBinding.prototype.checkUpdate = function(bForceUpdate){

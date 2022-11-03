@@ -1,7 +1,7 @@
 /*!
 
 * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
 
 */
@@ -27,7 +27,7 @@ sap.ui.define(["sap/ui/core/library", "sap/ui/core/InvisibleText"],
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oControl an object representation of the control that should be rendered
+	 * @param {sap.m.Token} oControl an object representation of the control that should be rendered
 	 */
 	TokenRenderer.render = function(oRm, oControl){
 		var sTooltip = oControl._getTooltip(oControl, oControl.getEditable() && oControl.getProperty("editableParent"));
@@ -40,7 +40,9 @@ sap.ui.define(["sap/ui/core/library", "sap/ui/core/InvisibleText"],
 		var vSetSize = oControl.getProperty("setsize");
 
 		// write the HTML into the render manager
-		oRm.openStart("div", oControl).attr("tabindex", "-1").class("sapMToken");
+		oRm.openStart("div", oControl).class("sapMToken");
+
+		this._setAttributes(oRm, oControl);
 
 		if (oControl.getSelected()) {
 			oRm.class("sapMTokenSelected");
@@ -99,7 +101,7 @@ sap.ui.define(["sap/ui/core/library", "sap/ui/core/InvisibleText"],
 	 * Renders the inner HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oControl an object representation of the control that should be rendered
+	 * @param {sap.m.Token} oControl an object representation of the control that should be rendered
 	 */
 	TokenRenderer._renderInnerControl = function(oRm, oControl){
 		var sTextDir = oControl.getTextDirection();
@@ -116,6 +118,22 @@ sap.ui.define(["sap/ui/core/library", "sap/ui/core/InvisibleText"],
 			oRm.text(title);
 		}
 		oRm.close("span");
+	};
+
+
+/**
+	 * Callback for specific rendering of token tabindex attributes.
+	 *
+	 * @param {sap.ui.core.RenderManager}
+	 *            oRm the RenderManager currently rendering this control
+	 * @param {sap.m.Token}
+	 *            oControl the Token that should be rendered
+	 * @private
+	 *
+	 * @ui5-restricted sap.ui.mdc.field.TokenDisplayRenderer
+	 */
+	TokenRenderer._setAttributes = function(oRm, oControl) {
+		oRm.attr("tabindex", "-1");
 	};
 
 

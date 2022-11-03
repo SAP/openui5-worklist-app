@@ -1,10 +1,10 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-// Disable some ESLint rules. camelcase (some "_" in names to indicate indexed variables (like in math)), valid-jsdoc (not completed yet), no-warning-comments (some TODOs are left)
+// Disable some ESLint rules. camelcase (some "_" in names to indicate indexed variables (like in math)), valid-jsdoc (not completed yet)
 // All other warnings, errors should be resolved
 /*eslint camelcase:0, valid-jsdoc:0, no-warning-comments:0, max-len:0 */
 
@@ -52,7 +52,9 @@ sap.ui.define([
 	 * <li>if an associated property (e.g. text property) of an additional measure is contained in
 	 * the select binding parameter
 	 * <li>if a dimension or a measure of the current analytical info is not contained in the select
-	 * binding parameter
+	 * binding parameter, unless the dimension or measure has been added automatically by the
+	 * binding, because a property associated to the dimension or measure has been added as a
+	 * "visible" or "inResult" column
 	 * </ul>
 	 *
 	 * @param {sap.ui.model.analytics.AnalyticalBinding} oBinding
@@ -61,16 +63,10 @@ sap.ui.define([
 	 *   array if there are no additional select properties needed
 	 */
 	function getAdditionalSelects(oBinding) {
-		var oAnalyticalQueryRequest
+		var oColumn, aComputedSelect, sComputedSelect, oDimension, i, j, oMeasure, n, sPropertyName,
+			oAnalyticalQueryRequest
 				= new odata4analytics.QueryResultRequest(oBinding.oAnalyticalQueryResult),
-			aComputedSelect,
-			sComputedSelect,
-			oDimension,
-			i,
-			j,
-			oMeasure,
-			n,
-			sPropertyName,
+
 			aSelect = oBinding.mParameters.select.split(","),
 			bError = trimAndCheckForDuplicates(aSelect, oBinding.sPath);
 
@@ -106,6 +102,10 @@ sap.ui.define([
 				sPropertyName = aComputedSelect[i];
 				j = aSelect.indexOf(sPropertyName);
 				if (j < 0) {
+					oColumn = oBinding.mAnalyticalInfoByProperty[sPropertyName];
+					if (!oColumn || (!oColumn.visible && !oColumn.inResult)) {
+						continue; // ignore automatically added columns
+					}
 					oLogger.warning("Ignored the 'select' binding parameter, because"
 							+ " it does not contain the property '" + sPropertyName + "'",
 						oBinding.sPath);
@@ -149,7 +149,7 @@ sap.ui.define([
 	 */
 	function logUnsupportedPropertyInSelect(sPath, sSelectedProperty, oDimensionOrMeasure) {
 		var sDimensionOrMeasure = oDimensionOrMeasure
-				instanceof sap.ui.model.analytics.odata4analytics.Dimension
+				instanceof odata4analytics.Dimension
 					? "dimension" : "measure";
 
 		if (oDimensionOrMeasure.getName() === sSelectedProperty) {
@@ -248,10 +248,10 @@ sap.ui.define([
 	 *   A comma-separated list of property names that need to be selected.<br/>
 	 *   If the <code>select</code> parameter is given, it has to contain all properties that are
 	 *   contained in the analytical information (see
-	 *   {@link sap.ui.model.analytics.AnalyticalBinding#updateAnalyticalInfo}) and their associated
-	 *   dimensions and measures. It must not contain additional dimensions or measures or
-	 *   associated properties for additional dimensions or measures. But it may contain additional
-	 *   properties like a text property of a dimension that is also selected.<br/>
+	 *   {@link sap.ui.model.analytics.AnalyticalBinding#updateAnalyticalInfo}). It must not contain
+	 *   additional dimensions or measures or associated properties for additional dimensions or
+	 *   measures. But it may contain additional properties like a text property of a dimension that
+	 *   is also selected.<br/>
 	 *   All properties of the <code>select</code> parameter are also considered in
 	 *   {@link sap.ui.model.analytics.AnalyticalBinding#getDownloadUrl}.<br/>
 	 *   The <code>select</code> parameter must not contain any duplicate entry.<br/>
@@ -587,18 +587,31 @@ sap.ui.define([
 	 *
 	 * @function
 	 * @name sap.ui.model.analytics.AnalyticalBinding.prototype.getNodeContexts
-	 * @param {object}
-	 *            mParameters specifying the aggregation level for which contexts shall be fetched. Supported parameters are:
-	 * <ul>
-	 * <li>oContext: parent context identifying the requested group of child contexts</li>
-	 * <li>level: level number for oContext, because it might occur at multiple levels; context with group ID <code>"/"</code> has level 0</li>
-	 * <li>numberOfExpandedLevels: number of child levels that shall be fetched automatically</li>
-	 * <li>startIndex: index of first child entry to return from the parent context (zero-based)</li>
-	 * <li>length: number of entries to return; counting begins at the given start index</li>
-	 * <li>threshold: number of additional entries that shall be locally available in the binding for subsequent
-	 * accesses to child entries of the given parent context. </li>
-	 * </ul>
-	 * @return {array}
+	 * @param {sap.ui.model.Context} oContext
+	 *            Parent context identifying the requested group of child contexts
+	 * @param {object|int} mParameters
+	 *            Parameters, specifying the aggregation level for which contexts shall be fetched
+	 *            or (legacy signature variant) index of first child entry to return from the parent context (zero-based)
+	 * @param {int} mParameters.level
+	 *            Level number for oContext, because it might occur at multiple levels; context with group ID <code>"/"</code> has level 0
+	 * @param {int} [mParameters.numberOfExpandedLevels=0]
+	 *            Number of child levels that shall be fetched automatically
+	 * @param {int} [mParameters.startIndex=0]
+	 *            Index of first child entry to return from the parent context (zero-based)
+	 * @param {int} [mParameters.length=<model size limit>]
+	 *            Number of entries to return; counting begins at the given start index
+	 * @param {int} [mParameters.threshold=0]
+	 *            Number of additional entries that shall be locally available in the binding for subsequent
+	 *            accesses to child entries of the given parent context
+	 * @param {int} [iLength=<model size limit>]
+	 *            Same meaning as <code>mParameters.length</code>, legacy signature variant only
+	 * @param {int} [iThreshold=0]
+	 *            Same meaning as <code>mParameters.threshold</code>, legacy signature variant only
+	 * @param {int} [iLevel]
+	 *            Same meaning as <code>mParameters.level</code>, legacy signature variant only
+	 * @param {int} [iNumberOfExpandedLevels=0]
+	 *            Same meaning as <code>mParameters.numberOfExpandedLevels</code>, legacy signature variant only
+	 * @returns {sap.ui.model.Context[]}
 	 *            Array containing the requested contexts of class sap.ui.model.Context, limited by the number of entries contained
 	 *            in the entity set at that aggregation level.
 	 *            The array will contain less than the requested number of contexts, if some are not locally available and an OData request is
@@ -1128,42 +1141,53 @@ sap.ui.define([
 	/**
 	 * Updates the binding's structure with new analytical information.
 	 *
-	 * Analytical information is the mapping of UI columns to properties in the bound OData entity set. Every column object contains
-	 * the name of the bound property and in addition:
+	 * Analytical information is the mapping of UI columns to properties in the bound OData entity
+	 * set. Every column object contains the <code>name</code> of the bound property and in
+	 * addition:
 	 * <ol>
 	 *   <li>A column bound to a dimension property has further boolean properties:
 	 *     <ul>
-	 *       <li>grouped: dimension will be used for building groups</li>
-	 *       <li>visible: if the column is visible, values for the related property will be fetched from the OData service</li>
-	 *       <li>inResult: if the column is not visible, but declared to be part of the result, values for the related property
-	 *       will also be fetched from the OData service</li>
+	 *       <li>grouped: dimension is used for building groups</li>
+	 *       <li>inResult: if the column is not visible, but declared to be part of the result,
+	 *         values for the related property are also fetched from the OData service</li>
+	 *       <li>visible: if the column is visible, values for the related property are fetched from
+	 *         the OData service</li>
 	 *     </ul>
 	 *   </li>
 	 *   <li>A column bound to a measure property has further boolean properties:
 	 *     <ul>
-	 *       <li>total: totals and sub-totals will be provided for the measure at all aggregation levels</li>
+	 *       <li>inResult: if the column is not visible, but declared to be part of the result,
+	 *         values for the related property are also fetched from the OData service</li>
+	 *       <li>total: totals and sub-totals are provided for the measure at all aggregation
+	 *         levels</li>
+	 *       <li>visible: if the column is visible, values for the related property are fetched from
+	 *         the OData service</li>
 	 *     </ul>
 	 *   </li>
 	 *   <li>A column bound to a hierarchy property has further properties:
 	 *     <ul>
-	 *       <li>grouped: boolean value; indicates whether the hierarchy will be used for building
+	 *       <li>grouped: boolean value; indicates whether the hierarchy is used for building
 	 *           groups</li>
 	 *       <li>level: integer value; the hierarchy level is mandatory for at least one of those
-	 *           columns that represent the same hierarchy.</li>
+	 *           columns that represent the same hierarchy</li>
 	 *     </ul>
 	 *   </li>
 	 * </ol>
 	 *
-	 * Invoking this function resets the state of the binding and subsequent data requests such as calls to getNodeContexts() will
-	 * need to trigger OData requests in order to fetch the data that are in line with this analytical information.
+	 * Invoking this function resets the state of the binding and subsequent data requests such as
+	 * calls to getNodeContexts() trigger OData requests in order to fetch the data that are in line
+	 * with this analytical information.
 	 *
-	 * Please be aware that a call of this function might lead to additional back-end requests, as well as a control re-rendering later on.
+	 * Be aware that a call of this function might lead to additional back-end requests, as well as
+	 * a control re-rendering later on.
 	 * Whenever possible use the API of the analytical control, instead of relying on the binding.
 	 *
 	 * @function
 	 * @name sap.ui.model.analytics.AnalyticalBinding.prototype.updateAnalyticalInfo
-	 * @param {array}
-	 *            aColumns an array with objects holding the analytical information for every column, from left to right.
+	 * @param {object[]} aColumns
+	 *   An array with objects holding the analytical information for every column
+	 * @param {boolean} bForceChange
+	 *   Whether to fire a change event asynchronously even if columns didn't change
 	 * @protected
 	 */
 	AnalyticalBinding.prototype.updateAnalyticalInfo = function(aColumns, bForceChange) {
@@ -1476,7 +1500,6 @@ sap.ui.define([
 						oGroupIdRange.threshold);
 			}
 
-			// TODO check current code works, but it would be more natural if this _considerRequestGrouping would be outside of this loop
 			var aRequestId = [];
 			for (var j = -1, sGroupId2; (sGroupId2 = aGroupId[++j]) !== undefined; ) {
 				aRequestId.push(this._getRequestId(AnalyticalBinding._requestType.groupMembersQuery, {groupId: sGroupId2}));
@@ -2425,7 +2448,7 @@ sap.ui.define([
 				aGroupMembersAutoExpansionRequestDetails.push(oLevelMembersRequestDetails);
 				aRequestId.push(oLevelMembersRequestDetails.sRequestId);
 			} else if (oLevelFilter && oLevelFilter.aFilters.length > 0) {
-				if (!oLevelFilter._bMultiFilter || oLevelFilter.bAnd) { // TODO remove this test once impl got mature to get rid of access to internal member; it is a consistency check if break-up will deliver expected results...
+				if (!oLevelFilter._bMultiFilter || oLevelFilter.bAnd) {
 					oLogger.fatal("level filter in wrong shape; cannot break it up");
 				}
 				for (var i = 0; i < oLevelFilter.aFilters.length; i++) { // break up level filter into its tuple filters combined with logical OR
@@ -2558,9 +2581,11 @@ sap.ui.define([
 	};
 
 	/**
+	 * @param {object} oAnalyticalQueryRequest
 	 * @param {boolean} bAddAdditionalSelects
 	 *   Whether additional selects, computed from select binding parameter, shall be added to the
 	 *   $select query option.
+	 * @param {object} mParameters
 	 * @private
 	 */
 	AnalyticalBinding.prototype._getQueryODataRequestOptions = function(oAnalyticalQueryRequest,
@@ -2941,7 +2966,7 @@ sap.ui.define([
 			this.mServiceFinalLength[sGroupId] = true;
 			this._setServiceKey(this._getKeyIndexMapping(sGroupId, 0), AnalyticalBinding._artificialRootContextGroupId);
 			this.bNeedsUpdate = true;
-			// simulate the async behavior for the root context in case of having no sums (TODO: reconsider!)
+			// simulate the async behavior for the root context in case of having no sums
 			setTimeout(function() {
 				if (that._cleanupGroupingForCompletedRequest(oRequestDetails.sRequestId)) {
 					that.fireDataReceived({__simulateAsyncAnalyticalBinding: true});
@@ -3359,6 +3384,8 @@ sap.ui.define([
 					oLogger.fatal("assertion failed: failed to determine position of " + oGroupMembersRequestDetails.sGroupId + " in group " + sParentGroupId);
 				} else if (!iPositionInParentGroup) {
 					that.mFinalLength[oRequestDetails.sGroupId_Missing_AtLevel] = true;
+					// iStartIndex must be reset to 0, because a new group starts
+					oGroupMembersRequestDetails.iStartIndex = 0;
 				} else if (that._getKey(sParentGroupId, iPositionInParentGroup - 1) !== undefined) {
 					var sPreviousGroupMemberKey = that._getKey(sParentGroupId, iPositionInParentGroup - 1);
 					var sPreviousGroupId = that._getGroupIdFromContext(that.oModel.getContext('/' + sPreviousGroupMemberKey),
@@ -3789,6 +3816,7 @@ sap.ui.define([
 	};
 
 	/**
+	 * @param {string} sGroupId
 	 * @param {int} iNumLevels anchestors starting at the root if greater than 0, or starting at the parent of sGroupId if less than 0.
 	 * @private
 	 */
@@ -4215,8 +4243,6 @@ sap.ui.define([
 
 	// substitute for indexOf in the key array for some group
 	AnalyticalBinding.prototype._findKeyIndex = function(sGroupId, sKey) {
-		// TODO optimize by first looking into mMultiUnitKey; if not found, search in mServiceKey; if not found, return -1
-
 		// naive implementation follows
 		var aKeyIndex = this.mKeyIndex[sGroupId];
 		var aServiceKey = this.mServiceKey[sGroupId];
@@ -4601,10 +4627,14 @@ sap.ui.define([
 							bChangeDetected = true;
 							return false;
 						}
+
+						return true;
 					});
 					if (bChangeDetected) {
 						return false;
 					}
+
+					return true;
 				});
 			}
 			if (!mChangedEntities && !mEntityTypes) { // default
@@ -4623,8 +4653,7 @@ sap.ui.define([
 	/**
 	 * Check whether this Binding would provide new values and in case it changed, inform interested parties about this.
 	 *
-	 * @param {boolean}
-	 *            bForceUpdate
+	 * @param {boolean} [bForceUpdate]
 	 * @param {object} mChangedEntities
 	 * @private
 	 */
@@ -4640,10 +4669,14 @@ sap.ui.define([
 							bChangeDetected = true;
 							return false;
 						}
+
+						return true;
 					});
 					if (bChangeDetected) {
 						return false;
 					}
+
+					return true;
 				});
 			}
 		}
@@ -4782,6 +4815,7 @@ sap.ui.define([
 			return this.oModel._createRequestUrl(sPath, null, aParam).replace(/ /g, "%20");
 		}
 
+		return undefined;
 	};
 
 	//**********************************

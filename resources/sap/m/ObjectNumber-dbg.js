@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -8,13 +8,12 @@
 sap.ui.define([
 	'./library',
 	'sap/ui/core/Control',
-	'sap/ui/core/Renderer',
 	'sap/ui/core/library',
 	"sap/ui/core/LabelEnablement",
 	"sap/ui/events/KeyCodes",
 	'./ObjectNumberRenderer'
 ],
-	function(library, Control, Renderer, coreLibrary, LabelEnablement, KeyCodes, ObjectNumberRenderer) {
+	function(library, Control, coreLibrary, LabelEnablement, KeyCodes, ObjectNumberRenderer) {
 	"use strict";
 
 
@@ -47,102 +46,105 @@ sap.ui.define([
 	 *
 	 * @extends sap.ui.core.Control
 	 * @implements sap.ui.core.IFormContent
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.12
 	 * @alias sap.m.ObjectNumber
 	 * @see {@link fiori:https://experience.sap.com/fiori-design-web/object-display-elements/#-object-status Object Number}
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var ObjectNumber = Control.extend("sap.m.ObjectNumber", /** @lends sap.m.ObjectNumber.prototype */ { metadata : {
+	var ObjectNumber = Control.extend("sap.m.ObjectNumber", /** @lends sap.m.ObjectNumber.prototype */ {
+		metadata : {
 
-		interfaces : ["sap.ui.core.IFormContent"],
-		library : "sap.m",
-		designtime: "sap/m/designtime/ObjectNumber.designtime",
-		properties : {
+			interfaces : ["sap.ui.core.IFormContent"],
+			library : "sap.m",
+			designtime: "sap/m/designtime/ObjectNumber.designtime",
+			properties : {
 
-			/**
-			 * Defines the number field.
-			 */
-			number : {type : "string", group : "Misc", defaultValue : null},
+				/**
+				 * Defines the number field.
+				 */
+				number : {type : "string", group : "Misc", defaultValue : null},
 
-			/**
-			 * Defines the number units qualifier.
-			 * @deprecated as of version 1.16.1, replaced by <code>unit</code> property
-			 */
-			numberUnit : {type : "string", group : "Misc", defaultValue : null, deprecated: true},
+				/**
+				 * Defines the number units qualifier.
+				 * @deprecated as of version 1.16.1, replaced by <code>unit</code> property
+				 */
+				numberUnit : {type : "string", group : "Misc", defaultValue : null, deprecated: true},
 
-			/**
-			 * Indicates if the object number should appear emphasized.
-			 */
-			emphasized : {type : "boolean", group : "Appearance", defaultValue : true},
+				/**
+				 * Indicates if the object number should appear emphasized.
+				 */
+				emphasized : {type : "boolean", group : "Appearance", defaultValue : true},
 
-			/**
-			 * Determines the object number's value state. Setting this state will cause the number to be rendered in state-specific colors.
-			 */
-			state : {type : "sap.ui.core.ValueState", group : "Misc", defaultValue : ValueState.None},
+				/**
+				 * Determines the object number's value state. Setting this state will cause the number to be rendered in state-specific colors.
+				 */
+				state : {type : "sap.ui.core.ValueState", group : "Misc", defaultValue : ValueState.None},
 
-			/**
-			 * Defines the number units qualifier. If numberUnit and unit are both set, the unit value is used.
-			 * @since 1.16.1
-			 */
-			unit : {type : "string", group : "Misc", defaultValue : null},
+				/**
+				 * Defines the number units qualifier. If numberUnit and unit are both set, the unit value is used.
+				 * @since 1.16.1
+				 */
+				unit : {type : "string", group : "Misc", defaultValue : null},
 
-			/**
-			 * Available options for the number and unit text direction are LTR(left-to-right) and RTL(right-to-left). By default, the control inherits the text direction from its parent control.
-			 */
-			textDirection : {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
+				/**
+				 * Available options for the number and unit text direction are LTR(left-to-right) and RTL(right-to-left). By default, the control inherits the text direction from its parent control.
+				 */
+				textDirection : {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
 
-			/**
-			 * Sets the horizontal alignment of the number and unit.
-			 */
-			textAlign : {type : "sap.ui.core.TextAlign", group : "Appearance", defaultValue : TextAlign.Begin},
+				/**
+				 * Sets the horizontal alignment of the number and unit.
+				 */
+				textAlign : {type : "sap.ui.core.TextAlign", group : "Appearance", defaultValue : TextAlign.Begin},
 
-			/**
-			 * Indicates if the <code>ObjectNumber</code> text and icon can be clicked/tapped by the user.
-			 *
-			 * <b>Note:</b> If you set this property to <code>true</code>, you have to set also the <code>number</code> or <code>unit</code> property.
-			 *
-			 * @since 1.86
-			 */
-			active : {type : "boolean", group : "Misc", defaultValue : false},
+				/**
+				 * Indicates if the <code>ObjectNumber</code> text and icon can be clicked/tapped by the user.
+				 *
+				 * <b>Note:</b> If you set this property to <code>true</code>, you have to set also the <code>number</code> or <code>unit</code> property.
+				 *
+				 * @since 1.86
+				 */
+				active : {type : "boolean", group : "Misc", defaultValue : false},
 
-			/**
-			 * Determines whether the background color reflects the set <code>state</code> instead of the control's text.
-			 * @since 1.86
-			 */
-			inverted : {type : "boolean", group : "Misc", defaultValue : false},
+				/**
+				 * Determines whether the background color reflects the set <code>state</code> instead of the control's text.
+				 * @since 1.86
+				 */
+				inverted : {type : "boolean", group : "Misc", defaultValue : false},
 
-			/**
-			 * Specifies if an empty indicator should be displayed when there is no number.
-			 *
-			 * @since 1.89
-			 */
-			emptyIndicatorMode: { type: "sap.m.EmptyIndicatorMode", group: "Appearance", defaultValue: EmptyIndicatorMode.Off }
+				/**
+				 * Specifies if an empty indicator should be displayed when there is no number.
+				 *
+				 * @since 1.89
+				 */
+				emptyIndicatorMode: { type: "sap.m.EmptyIndicatorMode", group: "Appearance", defaultValue: EmptyIndicatorMode.Off }
+			},
+			associations : {
+				/**
+				 * Association to controls / ids which label this control (see WAI-ARIA attribute aria-labelledby).
+				 */
+				ariaLabelledBy: {type: "sap.ui.core.Control", multiple: true, singularName: "ariaLabelledBy"},
+
+				/**
+				 * Association to controls / ids which describe this control (see WAI-ARIA attribute aria-describedby).
+				 */
+				ariaDescribedBy: {type: "sap.ui.core.Control", multiple: true, singularName: "ariaDescribedBy"}
+			},
+			events : {
+
+				/**
+				 * Fires when the user clicks/taps on active <code>Object Number</code>.
+				 * @since 1.86
+				 */
+				press : {}
+			},
+			dnd: { draggable: true, droppable: false }
 		},
-		associations : {
-			/**
-			 * Association to controls / ids which label this control (see WAI-ARIA attribute aria-labelledby).
-			 */
-			ariaLabelledBy: {type: "sap.ui.core.Control", multiple: true, singularName: "ariaLabelledBy"},
 
-			/**
-			 * Association to controls / ids which describe this control (see WAI-ARIA attribute aria-describedby).
-			 */
-			ariaDescribedBy: {type: "sap.ui.core.Control", multiple: true, singularName: "ariaDescribedBy"}
-		},
-		events : {
-
-			/**
-			 * Fires when the user clicks/taps on active <code>Object Number</code>.
-			 * @since 1.86
-			 */
-			press : {}
-		},
-		dnd: { draggable: true, droppable: false }
-	}});
+		renderer: ObjectNumberRenderer
+	});
 
 
 	// returns translated text for the state

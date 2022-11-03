@@ -1,19 +1,17 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
 	'sap/ui/base/EventProvider',
-	'sap/ui/core/date/UniversalDate',
 	'sap/ui/unified/calendar/CalendarUtils',
 	'sap/ui/unified/calendar/CalendarDate',
 	'sap/ui/unified/library'
 ],
 	function(
 		EventProvider,
-		UniversalDate,
 		CalendarUtils,
 		CalendarDate,
 		unifiedLibrary
@@ -43,8 +41,8 @@ sap.ui.define([
 		});
 
 		/**
-		 * 24 hours as milliseconds
-		 * @type {number} milliseconds
+		 * 24 hours as milliseconds.
+		 * @type {int}
 		 * @private
 		 */
 		DateNavigation.HOURS24 = 1000 * 3600 * 24;
@@ -81,8 +79,8 @@ sap.ui.define([
 			return this._current;
 		};
 
-		DateNavigation.prototype.getEnd = function() {
-			var oCalEnd = CalendarUtils._createUniversalUTCDate(this.getStart(), undefined, true);
+		DateNavigation.prototype.getEnd = function(calendarType) {
+			var oCalEnd = CalendarUtils._createUniversalUTCDate(this.getStart(), calendarType, true);
 
 			switch (this.getUnit()) {
 				case Periods.Day:
@@ -91,14 +89,14 @@ sap.ui.define([
 					break;
 				case Periods.OneMonth:
 				case "OneMonth":
-					oCalEnd.setUTCMonth(oCalEnd.getUTCMonth() + 1);
-					oCalEnd.setUTCDate(oCalEnd.getUTCDate() - 1);
+					oCalEnd.setUTCMonth(oCalEnd.getUTCMonth() + 1, 1);
+					oCalEnd.setUTCDate(oCalEnd.getUTCDate() - 1, 1);
 					break;
 				case Periods.Hour:
 					oCalEnd.setUTCHours(oCalEnd.getUTCHours() + this.getStep() - 1);
 					break;
 				case Periods.Month:
-					oCalEnd.setUTCMonth(oCalEnd.getUTCMonth() + this.getStep() - 1);
+					oCalEnd.setUTCMonth(oCalEnd.getUTCMonth() + this.getStep() - 1, 1);
 					break;
 				default:
 					break;
@@ -107,9 +105,9 @@ sap.ui.define([
 			return CalendarUtils._createLocalDate(oCalEnd, true);
 		};
 
-		DateNavigation.prototype.next = function() {
-			var oNewCalStart = CalendarUtils._createUniversalUTCDate(this.getStart(), undefined, true);
-			var oNewCalCurrent = this.getCurrent() ? CalendarUtils._createUniversalUTCDate(this.getCurrent(), undefined, true) : CalendarUtils._createUniversalUTCDate(this.getStart(), undefined, true);
+		DateNavigation.prototype.next = function(calendarType) {
+			var oNewCalStart = CalendarUtils._createUniversalUTCDate(this.getStart(), calendarType, true);
+			var oNewCalCurrent = this.getCurrent() ? CalendarUtils._createUniversalUTCDate(this.getCurrent(), calendarType, true) : CalendarUtils._createUniversalUTCDate(this.getStart(), calendarType, true);
 
 			switch (this.getUnit()) {
 				case Periods.Hour:
@@ -130,10 +128,10 @@ sap.ui.define([
 
 					break;
 				case Periods.Month:
-					oNewCalCurrent.setUTCMonth(oNewCalCurrent.getUTCMonth() + this.getStep());
+					oNewCalCurrent.setUTCMonth(oNewCalCurrent.getUTCMonth() + this.getStep(), 1);
 					this.setCurrent(CalendarUtils._createLocalDate(oNewCalCurrent, true));
 
-					oNewCalStart.setUTCMonth(oNewCalStart.getUTCMonth() + this.getStep());
+					oNewCalStart.setUTCMonth(oNewCalStart.getUTCMonth() + this.getStep(), 1);
 					this.setStart(CalendarUtils._createLocalDate(oNewCalStart, true));
 
 					break;
@@ -150,9 +148,9 @@ sap.ui.define([
 			}
 		};
 
-		DateNavigation.prototype.previous = function() {
-			var oNewCalStart = CalendarUtils._createUniversalUTCDate(this.getStart(), undefined, true);
-			var oNewCalCurrent = this.getCurrent() ? CalendarUtils._createUniversalUTCDate(this.getCurrent(), undefined, true) : CalendarUtils._createUniversalUTCDate(this.getStart(), undefined, true);
+		DateNavigation.prototype.previous = function(calendarType) {
+			var oNewCalStart = CalendarUtils._createUniversalUTCDate(this.getStart(), calendarType, true);
+			var oNewCalCurrent = this.getCurrent() ? CalendarUtils._createUniversalUTCDate(this.getCurrent(), calendarType, true) : CalendarUtils._createUniversalUTCDate(this.getStart(), calendarType, true);
 
 			switch (this.getUnit()) {
 				case Periods.Hour:
@@ -173,12 +171,10 @@ sap.ui.define([
 					break;
 
 				case Periods.Month:
-					oNewCalCurrent.setUTCMonth(oNewCalCurrent.getUTCMonth() - this.getStep());
+					oNewCalCurrent.setUTCMonth(oNewCalCurrent.getUTCMonth() - this.getStep(), 1);
 					this.setCurrent(CalendarUtils._createLocalDate(oNewCalCurrent, true));
-
-					oNewCalStart.setUTCMonth(oNewCalStart.getUTCMonth() - this.getStep());
+					oNewCalStart.setUTCMonth(oNewCalStart.getUTCMonth() - this.getStep(), 1);
 					this.setStart(CalendarUtils._createLocalDate(oNewCalStart, true));
-
 					break;
 				case Periods.OneMonth:
 				case "OneMonth":
@@ -193,11 +189,11 @@ sap.ui.define([
 			}
 		};
 
-		DateNavigation.prototype.toDate = function(oToDate) {
+		DateNavigation.prototype.toDate = function(oToDate, calendarType) {
 			var oNewCalStart,
 				oCalEnd,
 				iHoursOffset,
-				oNewCurrent = CalendarUtils._createUniversalUTCDate(oToDate, undefined, true),
+				oNewCurrent = CalendarUtils._createUniversalUTCDate(oToDate, calendarType, true),
 				oNewUTCCurrent = CalendarUtils._createUTCDate(oToDate, true);
 
 			this.setCurrent(oToDate);
@@ -206,40 +202,39 @@ sap.ui.define([
 				case Periods.OneMonth:
 				case "OneMonth":
 					if (CalendarUtils.monthsDiffer(this.getStart(), oToDate)) {
-						var oFirstMonthCalDate = CalendarUtils.getFirstDateOfMonth(oNewUTCCurrent);
+						var oFirstMonthCalDate = CalendarUtils._getFirstDateOfMonth(CalendarDate.fromLocalJSDate(oToDate));
 
-						this.setStart(CalendarUtils._createLocalDate(oFirstMonthCalDate, true));
+						this.setStart(oFirstMonthCalDate.toLocalJSDate());
 					}
 
 					break;
 				case Periods.Day:
-					oCalEnd = CalendarUtils._createUniversalUTCDate(this.getStart(), undefined, true);
+					oCalEnd = CalendarUtils._createUniversalUTCDate(this.getStart(), calendarType, true);
 					oCalEnd.setUTCDate(oCalEnd.getUTCDate() + this.getStep());
 
 					if (oToDate.valueOf() >= oCalEnd.valueOf()) {
 						iHoursOffset = 1 + Math.ceil((oToDate.valueOf() - oCalEnd.valueOf()) / (DateNavigation.HOURS24));
-						oNewCalStart = CalendarUtils._createUniversalUTCDate(this.getStart(), undefined, true);
+						oNewCalStart = CalendarUtils._createUniversalUTCDate(this.getStart(), calendarType, true);
 						oNewCalStart.setUTCDate(oNewCalStart.getUTCDate() + iHoursOffset);
 
 						this.setStart(CalendarUtils._createLocalDate(oNewCalStart, true));
 					} else if (oToDate.valueOf() < this.getStart().valueOf()) {
-						oNewCalStart = CalendarUtils._createUniversalUTCDate(oToDate, undefined, true);
+						oNewCalStart = CalendarUtils._createUniversalUTCDate(oToDate, calendarType, true);
 
 						this.setStart(CalendarUtils._createLocalDate(oNewCalStart, true));
 					}
 
 					break;
 				case Periods.Month:
-					oCalEnd = CalendarUtils._createUniversalUTCDate(this.getStart());
-					oCalEnd.setUTCMonth(oCalEnd.getUTCMonth() + this.getStep());
-
+					oCalEnd = CalendarUtils._createUniversalUTCDate(this.getStart(), calendarType, true);
+					oCalEnd.setUTCMonth(oCalEnd.getUTCMonth() + this.getStep(), 1);
 					if (oNewCurrent.getTime() >= oCalEnd.valueOf()) {
 						iHoursOffset = 1 + CalendarUtils._monthsBetween(oToDate, CalendarUtils._createLocalDate(oCalEnd, true));
-						oNewCalStart = CalendarUtils._createUniversalUTCDate(this.getStart(), undefined, true);
-						oNewCalStart.setUTCMonth(oNewCalStart.getUTCMonth() + iHoursOffset);
+						oNewCalStart = CalendarUtils._createUniversalUTCDate(this.getStart(), calendarType, true);
+						oNewCalStart.setUTCMonth(oNewCalStart.getUTCMonth() + iHoursOffset, 1);
 						this.setStart(CalendarUtils._createLocalDate(oNewCalStart, true));
 					} else if (oToDate.valueOf() < this.getStart().valueOf()) {
-						oNewCalStart = CalendarUtils._createUniversalUTCDate(oToDate, undefined, true);
+						oNewCalStart = CalendarUtils._createUniversalUTCDate(oToDate, calendarType, true);
 						this.setStart(CalendarUtils._createLocalDate(oNewCalStart, true));
 					}
 
@@ -251,10 +246,10 @@ sap.ui.define([
 					}
 					break;
 				case Periods.Hour:
-					oCalEnd = this.getEnd(this.getStart());
-					var oCalutcEnd = CalendarUtils._createUniversalUTCDate(oCalEnd, undefined, true);
+					oCalEnd = this.getEnd();
+					var oCalutcEnd = CalendarUtils._createUniversalUTCDate(oCalEnd, calendarType, true);
 
-					if (oNewCurrent.getTime() < CalendarUtils._createUniversalUTCDate(this.getStart(), undefined, true).getTime() || oNewCurrent.getTime() > oCalutcEnd.getTime()) {
+					if (oNewCurrent.getTime() < CalendarUtils._createUniversalUTCDate(this.getStart(), calendarType, true).getTime() || oNewCurrent.getTime() > oCalutcEnd.getTime()) {
 						this.setStart(oToDate);
 					}
 					break;

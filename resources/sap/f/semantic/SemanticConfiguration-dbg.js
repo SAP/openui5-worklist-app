@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -32,11 +32,10 @@ sap.ui.define([
 	* @class
 	* Defines the visual properties and placement for each supported semantic type.
 	*
-	* @version 1.96.2
+	* @version 1.108.0
 	* @private
 	* @since 1.46.0
 	* @alias sap.f.semantic.SemanticConfiguration
-	* @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	*/
 	var SemanticConfiguration = BaseObject.extend("sap.f.semantic.SemanticConfiguration", {
 		getInterface: function() {
@@ -58,7 +57,7 @@ sap.ui.define([
 	/**
 	* Checks and determines if the type is supported.
 	*
-	* @param {String} sType
+	* @param {string} sType
 	* @returns {boolean}
 	*/
 	SemanticConfiguration.isKnownSemanticType = function (sType) {
@@ -68,7 +67,7 @@ sap.ui.define([
 	/**
 	* Returns the configuration of the semantic type.
 	*
-	* @param {String} sType
+	* @param {string} sType
 	* @returns {Object | null}
 	*/
 	SemanticConfiguration.getConfiguration = function (sType) {
@@ -79,7 +78,7 @@ sap.ui.define([
 	* Returns the settings (ui5 properties) of the semantic type,
 	* defined in the configuration, that will be applied.
 	*
-	* @param {String} sType
+	* @param {string} sType
 	* @returns {Object | null}
 	*/
 	SemanticConfiguration.getSettings = function (sType) {
@@ -94,8 +93,8 @@ sap.ui.define([
 	* Returns the constraints of the semantic type,
 	* defined in the configuration.
 	*
-	* @param {String} sType
-	* @returns {String | null}
+	* @param {string} sType
+	* @returns {string | null}
 	*/
 	SemanticConfiguration.getConstraints = function (sType) {
 		if (SemanticConfiguration.isKnownSemanticType(sType)) {
@@ -109,8 +108,8 @@ sap.ui.define([
 	* Returns the placement of the semantic type,
 	* defined in the configuration.
 	*
-	* @param {String} sType
-	* @returns {String | null}
+	* @param {string} sType
+	* @returns {string | null}
 	*/
 	SemanticConfiguration.getPlacement = function (sType) {
 		if (SemanticConfiguration.isKnownSemanticType(sType)) {
@@ -123,8 +122,8 @@ sap.ui.define([
 	* Returns the order of the semantic type,
 	* defined in the configuration.
 	*
-	* @param {String} sType
-	* @returns {Number | null}
+	* @param {string} sType
+	* @returns {int | null}
 	*/
 	SemanticConfiguration.getOrder = function (sType) {
 		if (SemanticConfiguration.isKnownSemanticType(sType)) {

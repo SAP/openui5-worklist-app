@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -151,20 +151,23 @@ sap.ui.define([
 		 * @private
 		 */
 		_getCommandInfo: function () {
-			var oCommand,
-				oControl = this.getParent(),
-				oComponent = Component.getOwnerComponentFor(this);
+			if (!this.oCommand) {
+				var oCommand,
+					oControl = this.getParent(),
+					oComponent = Component.getOwnerComponentFor(this);
 
-			//if no owner found check the parent chain to find the next owner component...
-			while (!oComponent && oControl && oControl.getParent()) {
-				oComponent = Component.getOwnerComponentFor(oControl);
-				oControl = oControl.getParent();
-			}
+				//if no owner found check the parent chain to find the next owner component...
+				while (!oComponent && oControl && oControl.getParent()) {
+					oComponent = Component.getOwnerComponentFor(oControl);
+					oControl = oControl.getParent();
+				}
 
-			if (oComponent) {
-				oCommand = oComponent.getCommand(this.getCommand());
+				if (oComponent) {
+					oCommand = oComponent.getCommand(this.getCommand());
+				}
+				this.oCommand = oCommand ? Object.assign({}, oCommand) : null;
 			}
-			return oCommand ? Object.assign({}, oCommand) : null;
+			return this.oCommand;
 		},
 
 		/**

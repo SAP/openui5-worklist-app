@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -9,11 +9,12 @@ sap.ui.define([
 	'sap/ui/thirdparty/jquery',
 	'sap/ui/Device',
 	"sap/ui/core/Element",
+	"sap/ui/core/format/TimezoneUtil",
+	"sap/ui/core/format/DateFormat",
 	'./InputBase',
 	'./DateTimeField',
 	'./Button',
 	'./ResponsivePopover',
-	"./ValueStateHeader",
 	'sap/ui/core/date/UniversalDate',
 	'./library',
 	'sap/ui/core/Control',
@@ -32,17 +33,20 @@ sap.ui.define([
 	"sap/ui/unified/calendar/CustomYearPicker",
 	"sap/ui/core/LabelEnablement",
 	"sap/ui/unified/library",
+	"sap/ui/core/Configuration",
+	"sap/ui/core/date/CalendarWeekNumbering",
 	"sap/ui/dom/jquery/cursorPos"
 ],
 	function(
 		jQuery,
 		Device,
 		Element,
+		TimezoneUtil,
+		DateFormat,
 		InputBase,
 		DateTimeField,
 		Button,
 		ResponsivePopover,
-		ValueStateHeader,
 		UniversalDate,
 		library,
 		Control,
@@ -59,7 +63,9 @@ sap.ui.define([
 		CustomMonthPicker,
 		CustomYearPicker,
 		LabelEnablement,
-		unifiedLibrary
+		unifiedLibrary,
+		Configuration,
+		CalendarWeekNumbering
 	) {
 	"use strict";
 
@@ -148,131 +154,168 @@ sap.ui.define([
 	 * the close event), or select Cancel.
 	 *
 	 * @extends sap.m.DateTimeField
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.22.0
 	 * @alias sap.m.DatePicker
 	 * @see {@link fiori:https://experience.sap.com/fiori-design-web/date-picker/ Date Picker}
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var DatePicker = DateTimeField.extend("sap.m.DatePicker", /** @lends sap.m.DatePicker.prototype */ { metadata : {
+	var DatePicker = DateTimeField.extend("sap.m.DatePicker", /** @lends sap.m.DatePicker.prototype */ {
+		metadata : {
 
-		library : "sap.m",
-		properties : {
+			library : "sap.m",
+			properties : {
 
-			/**
-			 * Displays date in this given type in input field. Default value is taken from locale settings.
-			 * Accepted are values of <code>sap.ui.core.CalendarType</code> or an empty string. If no type is set, the default type of the
-			 * configuration is used.
-			 * <b>Note:</b> If data binding on <code>value</code> property with type <code>sap.ui.model.type.Date</code> is used, this property will be ignored.
-			 * @since 1.28.6
-			 */
-			displayFormatType : {type : "string", group : "Appearance", defaultValue : ""},
+				/**
+				 * Displays date in this given type in input field. Default value is taken from locale settings.
+				 * Accepted are values of <code>sap.ui.core.CalendarType</code> or an empty string. If no type is set, the default type of the
+				 * configuration is used.
+				 * <b>Note:</b> If data binding on <code>value</code> property with type <code>sap.ui.model.type.Date</code> is used, this property will be ignored.
+				 * @since 1.28.6
+				 */
+				displayFormatType : {type : "string", group : "Appearance", defaultValue : ""},
 
-			/**
-			 * If set, the days in the calendar popup are also displayed in this calendar type
-			 * If not set, the dates are only displayed in the primary calendar type
-			 * @since 1.34.1
-			 */
-			secondaryCalendarType : {type : "sap.ui.core.CalendarType", group : "Appearance", defaultValue : null},
+				/**
+				 * If set, the days in the calendar popup are also displayed in this calendar type
+				 * If not set, the dates are only displayed in the primary calendar type
+				 * @since 1.34.1
+				 */
+				secondaryCalendarType : {type : "sap.ui.core.CalendarType", group : "Appearance", defaultValue : null},
 
-			/**
-			 * Minimum date that can be shown and selected in the <code>DatePicker</code>. This must be a JavaScript date object.
-			 *
-			 * <b>Note:</b> If the <code>minDate</code> is set to be after the <code>maxDate</code>,
-			 * the <code>maxDate</code> and the <code>minDate</code> are switched before rendering.
-			 * @since 1.38.0
-			 */
-			minDate : {type : "object", group : "Misc", defaultValue : null},
+				/**
+				 * Minimum date that can be shown and selected in the <code>DatePicker</code>. This must be a JavaScript date object.
+				 *
+				 * <b>Note:</b> If the <code>minDate</code> is set to be after the <code>maxDate</code>,
+				 * the <code>maxDate</code> and the <code>minDate</code> are switched before rendering.
+				 * @since 1.38.0
+				 */
+				minDate : {type : "object", group : "Misc", defaultValue : null},
 
-			/**
-			 * Maximum date that can be shown and selected in the <code>DatePicker</code>. This must be a JavaScript date object.
-			 *
-			 * <b>Note:</b> If the <code>maxDate</code> is set to be before the <code>minDate</code>,
-			 * the <code>maxDate</code> and the <code>minDate</code> are switched before rendering.
-			 * @since 1.38.0
-			 */
-			maxDate : {type : "object", group : "Misc", defaultValue : null},
+				/**
+				 * Maximum date that can be shown and selected in the <code>DatePicker</code>. This must be a JavaScript date object.
+				 *
+				 * <b>Note:</b> If the <code>maxDate</code> is set to be before the <code>minDate</code>,
+				 * the <code>maxDate</code> and the <code>minDate</code> are switched before rendering.
+				 * @since 1.38.0
+				 */
+				maxDate : {type : "object", group : "Misc", defaultValue : null},
 
-			/**
-			 * Hides or shows the popover's footer.
-			 *
-			 * @since 1.70
-			 */
-			showFooter : {type : "boolean", group : "Misc", defaultValue : false},
+				/**
+				 * Hides or shows the popover's footer.
+				 *
+				 * @since 1.70
+				 */
+				showFooter : {type : "boolean", group : "Misc", defaultValue : false},
 
-			/**
-			 * Determines whether there is a shortcut navigation to Today. When used in Month, Year or
-			 * Year-range picker view, the calendar navigates to Day picker view.
-			 *
-			 * Note: The Current date button appears if the <code>displayFormat</code> property allows entering day.
-			 *
-			 * @since 1.95
-			 */
-			showCurrentDateButton : {type : "boolean", group : "Behavior", defaultValue : false}
+				/**
+				 * Determines whether there is a shortcut navigation to Today. When used in Month, Year or
+				 * Year-range picker view, the calendar navigates to Day picker view.
+				 *
+				 * Note: The Current date button appears if the <code>displayFormat</code> property allows entering day.
+				 *
+				 * @since 1.95
+				 */
+				showCurrentDateButton : {type : "boolean", group : "Behavior", defaultValue : false},
 
+				/**
+				 * Determines whether the input field of the picker is hidden or visible.
+				 * When set to <code>true</code>, the input field becomes invisible and there is no way to open the picker popover.
+				 * In that case it can be opened by another control through calling of picker's <code>openBy</code> method, and
+				 * the opening control's DOM reference must be provided as parameter.
+				 *
+				 * Note: Since the picker is not responsible for accessibility attributes of the control which opens its popover,
+				 * those attributes should be added by the application developer. The following is recommended to be added to the
+				 * opening control: a text or tooltip that describes the action (example: "Open Date Picker"), and also aria-haspopup
+				 * attribute with value of <code>sap.ui.core.aria.HasPopup.Dialog</code>.
+				 *
+				 * @since 1.97
+				 */
+				 hideInput: { type: "boolean", group: "Misc", defaultValue: false },
+
+				 /**
+				 * If set, the calendar week numbering is used for display.
+				 * If not set, the calendar week numbering of the global configuration is used.
+				 * @since 1.108.0
+				 */
+				calendarWeekNumbering : { type : "sap.ui.core.date.CalendarWeekNumbering", group : "Appearance", defaultValue: null}
+
+			},
+
+			aggregations : {
+
+				/**
+				 * Date Range with type to visualize special days in the Calendar.
+				 * If one day is assigned to more than one Type, only the first one will be used.
+				 *
+				 * To set a single date (instead of a range), set only the startDate property of the sap.ui.unified.DateRange class.
+				 *
+				 * <b>Note:</b> Since 1.48 you could set a non-working day via the sap.ui.unified.CalendarDayType.NonWorking
+				 * enum type just as any other special date type using sap.ui.unified.DateRangeType.
+				 *
+				 * @since 1.38.5
+				 */
+				specialDates : {type : "sap.ui.core.Element", multiple : true, singularName : "specialDate"},
+
+				/**
+				 * Internal aggregation that contains the inner picker pop-up.
+				 *
+				 * @since 1.70
+				 */
+				_popup: { type: "sap.m.ResponsivePopover", multiple : false, visibility: "hidden" }
+			},
+
+			associations: {
+
+				/**
+				 * Association to the <code>CalendarLegend</code> explaining the colors of the <code>specialDates</code>.
+				 *
+				 * <b>Note</b> The legend does not have to be rendered but must exist, and all required types must be assigned.
+				 * @since 1.38.5
+				 */
+				legend: { type: "sap.ui.core.Control", multiple: false}
+			},
+			events : {
+
+				/**
+				 * Fired when navigating in <code>Calendar</code> popup.
+				 * @since 1.46.0
+				 */
+				navigate : {
+					parameters : {
+
+						/**
+						 * Date range containing the start and end date displayed in the <code>Calendar</code> popup.
+						 */
+						dateRange : {type : "sap.ui.unified.DateRange"},
+
+						/**
+						 * Indicates if the event is fired, due to popup being opened.
+						 */
+						afterPopupOpened : {type : "boolean"}
+
+					}
+				},
+
+				/**
+				 * Fired when <code>value help</code> dialog opens.
+				 * @since 1.102.0
+				 */
+				afterValueHelpOpen : {},
+
+				/**
+				 * Fired when <code>value help</code> dialog closes.
+				 * @since 1.102.0
+				 */
+				afterValueHelpClose : {}
+			},
+			designtime: "sap/m/designtime/DatePicker.designtime",
+			dnd: { draggable: false, droppable: true }
 		},
 
-		aggregations : {
-
-			/**
-			 * Date Range with type to visualize special days in the Calendar.
-			 * If one day is assigned to more than one Type, only the first one will be used.
-			 *
-			 * To set a single date (instead of a range), set only the startDate property of the sap.ui.unified.DateRange class.
-			 *
-			 * <b>Note:</b> Since 1.48 you could set a non-working day via the sap.ui.unified.CalendarDayType.NonWorking
-			 * enum type just as any other special date type using sap.ui.unified.DateRangeType.
-			 *
-			 * @since 1.38.5
-			 */
-			specialDates : {type : "sap.ui.core.Element", multiple : true, singularName : "specialDate"},
-
-			/**
-			 * Internal aggregation that contains the inner picker pop-up.
-			 *
-			 * @since 1.70
-			 */
-			_popup: { type: "sap.m.ResponsivePopover", multiple : false, visibility: "hidden" }
-		},
-
-		associations: {
-
-			/**
-			 * Association to the <code>CalendarLegend</code> explaining the colors of the <code>specialDates</code>.
-			 *
-			 * <b>Note</b> The legend does not have to be rendered but must exist, and all required types must be assigned.
-			 * @since 1.38.5
-			 */
-			legend: { type: "sap.ui.core.Control", multiple: false}
-		},
-		events : {
-
-			/**
-			 * Fired when navigating in <code>Calendar</code> popup.
-			 * @since 1.46.0
-			 */
-			navigate : {
-				parameters : {
-
-					/**
-					 * Date range containing the start and end date displayed in the <code>Calendar</code> popup.
-					 */
-					dateRange : {type : "sap.ui.unified.DateRange"},
-
-					/**
-					 * Indicates if the event is fired, due to popup being opened.
-					 */
-					afterPopupOpened : {type : "boolean"}
-
-				}
-			}
-		},
-		designtime: "sap/m/designtime/DatePicker.designtime",
-		dnd: { draggable: false, droppable: true }
-	}});
+		renderer: DatePickerRenderer
+	});
 
 
 	/**
@@ -333,7 +376,8 @@ sap.ui.define([
 			id: this.getId() + "-icon",
 			src: this.getIconSrc(),
 			noTabStop: true,
-			tooltip: oResourceBundle.getText("OPEN_PICKER_TEXT")
+			decorative: false,
+			useIconTooltip: false
 		});
 
 		// idicates whether the picker is still open
@@ -888,8 +932,8 @@ sap.ui.define([
 	 * Removes a <code>specialDate</code> from the aggregation <code>specialDates</code>.
 	 *
 	 * @since 1.38.5
-	 * @param {sap.ui.unified.DateTypeRange} oSpecialDate The <code>specialDate</code> to remove or its index or id
-	 * @return {sap.ui.unified.DateTypeRange} The removed <code>specialDate</code> or null
+	 * @param {sap.ui.unified.DateTypeRange} oSpecialDate The <code>specialDate</code> to remove or its index or ID
+	 * @returns {sap.ui.unified.DateTypeRange|null} The removed <code>specialDate</code> or <code>null</code>
 	 * @public
 	 */
 	DatePicker.prototype.removeSpecialDate = function(oSpecialDate){
@@ -1029,22 +1073,9 @@ sap.ui.define([
 
 	};
 
-	// overwrite _getInputValue to do the conversion there
-	DatePicker.prototype._getInputValue = function(sValue) {
-
-		sValue = (typeof sValue == "undefined") ? this._$input.val() : sValue.toString();
-
-		var oDate = this._parseValue(sValue, true);
-		sValue = this._formatValue(oDate, true);
-
-		return sValue;
-
-	};
-
-	// overwrite _getInputValue to do the output conversion
 	DatePicker.prototype.updateDomValue = function(sValue) {
 
-		if (this.isActive() && (this._$input.val() !== sValue)) {
+		if (this.isActive() && this._$input.val() !== sValue) {
 			// dom value updated other than value property
 			this._bCheckDomValue = true;
 
@@ -1054,18 +1085,25 @@ sap.ui.define([
 			var oDate = this._parseValue(sValue, true);
 			sValue = this._formatValue(oDate);
 
-			// update the DOM value when necessary
-			// otherwise cursor can goto end of text unnecessarily
-			this._$input.val(sValue);
-			if (document.activeElement === this._$input[0]) {
-				this._$input.cursorPos(this._curpos);
+			// if set to true, handle the user input and data
+			// model updates concurrency in order to not overwrite
+			// values coming from the user
+			if (this._bPreferUserInteraction) {
+				this.handleInputValueConcurrency(sValue);
+			} else {
+				// update the DOM value when necessary
+				// otherwise cursor can goto end of text unnecessarily
+				this._$input.val(sValue);
+				if (document.activeElement === this._$input[0]) {
+					this._$input.cursorPos(this._curpos);
+				}
 			}
 		}
 
 		return this;
 	};
 
-	function _open(){
+	function _open(oDomRef){
 		this._createPopup();
 
 		this._createPopupContent();
@@ -1096,7 +1134,7 @@ sap.ui.define([
 
 		this._fillDateRange();
 
-		this._openPopup();
+		this._openPopup(oDomRef);
 
 		// Fire navigate event when the calendar popup opens
 		this.fireNavigate({
@@ -1162,13 +1200,33 @@ sap.ui.define([
 	};
 
 	// to be overwritten by DateTimePicker
-	DatePicker.prototype._openPopup = function(){
+	DatePicker.prototype._openPopup = function(oDomRef){
 		if (!this._oPopup) {
 			return;
 		}
-		this._oPopup._getPopup().setAutoCloseAreas([this.getDomRef()]);
-		this._oPopup.openBy(this);
+		if (!oDomRef) {
+			oDomRef = this.getDomRef();
+		}
+		this._oPopup._getPopup().setExtraContent([oDomRef]);
+		this._oPopup.openBy(oDomRef || this);
+	};
 
+	/**
+	 * Opens the picker popover. The popover is positioned relatively to the control given as <code>oDomRef</code> parameter on tablet or desktop
+	 * and is full screen on phone. Therefore the control parameter is only used on tablet or desktop and is ignored on phone.
+	 *
+	 * Note: use this method to open the picker popover only when the <code>hideInput</code> property is set to <code>true</code>. Please consider
+	 * opening of the picker popover by another control only in scenarios that comply with Fiori guidelines. For example, opening the picker popover
+	 * by another popover is not recommended.
+	 * The application developer should implement the following accessibility attributes to the opening control: a text or tooltip that describes
+	 * the action (example: "Open Date Picker"), and aria-haspopup attribute with value of <code>sap.ui.core.aria.HasPopup.Dialog</code>.
+	 *
+	 * @since 1.97
+	 * @param {HTMLElement} oDomRef DOM reference of the opening control. On tablet or desktop, the popover is positioned relatively to this control.
+	 * @public
+	 */
+	DatePicker.prototype.openBy = function(oDomRef) {
+		_open.call(this, oDomRef);
 	};
 
 	/**
@@ -1195,12 +1253,12 @@ sap.ui.define([
 		var CalendarConstructor = this._getCalendarConstructor();
 
 		if (!this._getCalendar()) {
-
 			this._oCalendar = new CalendarConstructor(this.getId() + "-cal", {
 				intervalSelection: this._bIntervalSelection,
 				minDate: this.getMinDate(),
 				maxDate: this.getMaxDate(),
 				legend: this.getLegend(),
+				calendarWeekNumbering: this.getCalendarWeekNumbering(),
 				startDateChange: function () {
 						this.fireNavigate({
 							dateRange: this._getVisibleDatesRange(this._getCalendar())
@@ -1213,8 +1271,6 @@ sap.ui.define([
 			this._getCalendar().addSelectedDate(this._oDateRange);
 			this._getCalendar()._setSpecialDatesControlOrigin(this);
 			this._getCalendar().attachCancel(_cancel, this);
-			this._getCalendar().setPopupMode(true);
-
 			if (this.$().closest(".sapUiSizeCompact").length > 0) {
 				this._getCalendar().addStyleClass("sapUiSizeCompact");
 			}
@@ -1238,18 +1294,22 @@ sap.ui.define([
 					this._oPopup.getBeginButton().setEnabled(false);
 				}
 			}
-			this._oCalendarAfterRenderDelegate = {
-				onAfterRendering: function() {
-					var oPopup = this._oPopup && this._oPopup._getPopup();
-					oPopup && oPopup._oLastPosition && oPopup._applyPosition(oPopup._oLastPosition);
-
-					if (this._oPopup.isOpen()) {
-						this._oCalendar.focus();
-					}
-				}.bind(this)
-			};
-			this._oCalendar.addDelegate(this._oCalendarAfterRenderDelegate);
+			this._attachAfterRenderingDelegate();
 		}
+	};
+
+	DatePicker.prototype._attachAfterRenderingDelegate = function()	{
+		this._oCalendarAfterRenderDelegate = {
+			onAfterRendering: function() {
+				var oPopup = this._oPopup && this._oPopup._getPopup();
+				oPopup && oPopup._oLastPosition && oPopup._applyPosition(oPopup._oLastPosition);
+
+				if (this._oPopup.isOpen()) {
+					this._oCalendar.focus();
+				}
+			}.bind(this)
+		};
+		this._oCalendar.addDelegate(this._oCalendarAfterRenderDelegate);
 	};
 
 	/**
@@ -1281,12 +1341,18 @@ sap.ui.define([
 	};
 
 	DatePicker.prototype._fillDateRange = function(){
-
+		var sFormattedDate;
 		var oDate = this.getDateValue();
 
 		if (oDate &&
 			oDate.getTime() >= this._oMinDate.getTime() &&
 			oDate.getTime() <= this._oMaxDate.getTime()) {
+
+			sFormattedDate = this._getPickerParser().format(
+				oDate,
+				this._getTimezone(true)
+			);
+			oDate = this._getPickerParser().parse(sFormattedDate, TimezoneUtil.getLocalTimezone())[0];
 
 			this._getCalendar().focusDate(new Date(oDate.getTime()));
 			if (!this._oDateRange.getStartDate() || this._oDateRange.getStartDate().getTime() != oDate.getTime()) {
@@ -1295,10 +1361,17 @@ sap.ui.define([
 		} else {
 			var oInitialFocusedDateValue = this.getInitialFocusedDateValue();
 			var oFocusDate = oInitialFocusedDateValue ? oInitialFocusedDateValue : new Date();
-			var iMaxTimeMillis = this._oMaxDate.getTime();
 
-			if (oFocusDate.getTime() < this._oMinDate.getTime() || oFocusDate.getTime() > iMaxTimeMillis) {
+			sFormattedDate = this._getPickerParser().format(
+				oFocusDate,
+				this._getTimezone(true)
+			);
+			oFocusDate = this._getPickerParser().parse(sFormattedDate, TimezoneUtil.getLocalTimezone())[0];
+
+			if (oFocusDate.getTime() < this._oMinDate.getTime()) {
 				oFocusDate = this._oMinDate;
+			} else if (oFocusDate.getTime() > this._oMaxDate.getTime()) {
+				oFocusDate = this._oMaxDate;
 			}
 			this._getCalendar().focusDate(oFocusDate);
 
@@ -1333,6 +1406,13 @@ sap.ui.define([
 		var oDateOld = this.getDateValue(),
 			oDate = this._getSelectedDate(),
 			sValue = "";
+
+		var sFormattedDate = this._getPickerParser().format(oDate, TimezoneUtil.getLocalTimezone());
+		var oParts = this._getPickerParser().parse(
+			sFormattedDate,
+			this._getTimezone(true)
+		);
+		oDate = oParts && oParts[0];
 
 		// do not use this.onChange() because output pattern will change date (e.g. only last 2 number of year -> 1966 -> 2066 )
 		if (!deepEqual(oDate, oDateOld)) {
@@ -1374,6 +1454,10 @@ sap.ui.define([
 		this._selectDate();
 	};
 
+	DatePicker.prototype._getTimezone = function(bUseDefaultAsFallback) {
+		return Configuration.getTimezone();
+	};
+
 	/* sets cursor inside the input in order to focus it */
 	DatePicker.prototype._focusInput = function(){
 
@@ -1387,7 +1471,7 @@ sap.ui.define([
 
 	/**
 	 * Getter for DatePicker's Calendar instance.
-	 * @returns {object} The _header object
+	 * @returns {sap.ui.unified.Calendar} The calendar object
 	 * @private
 	 */
 	DatePicker.prototype._getCalendar = function () {
@@ -1530,12 +1614,10 @@ sap.ui.define([
 		this.addStyleClass(InputBase.ICON_PRESSED_CSS_CLASS);
 		this._renderedDays = this._getCalendar().$("-Month0-days").find(".sapUiCalItem").length;
 
-		this.$("inner").attr("aria-owns", this.getId() + "-cal");
-		this.$("inner").attr("aria-expanded", true);
-
 		InstanceManager.addPopoverInstance(this._oPopup);
 
 		this._oCalendar.focus();
+		this.fireAfterValueHelpOpen();
 	}
 
 	function _handleClose() {
@@ -1543,11 +1625,11 @@ sap.ui.define([
 			this._oPopup.getBeginButton().setEnabled(false);
 		}
 		this.removeStyleClass(InputBase.ICON_PRESSED_CSS_CLASS);
-		this.$("inner").attr("aria-expanded", false);
 
 		this._getCalendar()._closePickers();
 
 		InstanceManager.removePopoverInstance(this._oPopup);
+		this.fireAfterValueHelpClose();
 	}
 
 	function _resizeCalendar(oEvent){
@@ -1562,8 +1644,6 @@ sap.ui.define([
 		}
 
 	}
-
-
 
 	function _checkSpecialDate(oSpecialDate) {
 
@@ -1585,6 +1665,14 @@ sap.ui.define([
 		}
 
 	}
+
+	DatePicker.prototype._getPickerParser = function() {
+		if (!this._calendarParser) {
+			this._calendarParser = DateFormat.getDateTimeWithTimezoneInstance({ showTimezone: false });
+		}
+
+		return this._calendarParser;
+	};
 
 	/**
 	 * Fired when the input operation has finished and the value has changed.

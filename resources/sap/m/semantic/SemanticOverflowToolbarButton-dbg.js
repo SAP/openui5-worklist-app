@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -22,15 +22,14 @@ sap.ui.define(['sap/m/OverflowToolbarButton', 'sap/m/ButtonRenderer'],
 	 * @extends sap.m.OverflowToolbarButton
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @private
 	 * @since 1.38
-	 * @alias sap.m.SemanticOverflowToolbarButton
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
+	 * @alias sap.m.semantic.SemanticOverflowToolbarButton
 	 */
-	var SemanticOverflowToolbarButton = OverflowToolbarButton.extend("sap.m.semantic.SemanticOverflowToolbarButton", /** @lends sap.m.SemanticOverflowToolbarButton.prototype */ {
+	var SemanticOverflowToolbarButton = OverflowToolbarButton.extend("sap.m.semantic.SemanticOverflowToolbarButton", /** @lends sap.m.semantic.SemanticOverflowToolbarButton.prototype */ {
 		metadata: {
 			library: "sap.m"
 		},

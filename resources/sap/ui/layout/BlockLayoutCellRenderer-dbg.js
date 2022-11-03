@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -84,7 +84,7 @@ sap.ui.define(['./library', 'sap/ui/core/library', "sap/base/Log"],
 
 				var level = blockLayoutCell.getTitleLevel(),
 					autoLevel = level === TitleLevel.Auto,
-					tag = autoLevel ? "h2" : level;
+					tag = autoLevel ? "h2" : level.toLowerCase();
 
 				var aTitleClassesSeparated = titleClass.split(" ");
 

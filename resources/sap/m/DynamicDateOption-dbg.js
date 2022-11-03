@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -9,16 +9,22 @@ sap.ui.define([
 	'sap/ui/core/Element',
 	'./Label',
 	'./StepInput',
+	'./DateTimePicker',
 	'sap/ui/unified/Calendar',
 	'sap/ui/unified/DateRange',
-	'sap/ui/unified/calendar/MonthPicker'],
+	'sap/ui/unified/calendar/MonthPicker',
+	'sap/ui/unified/calendar/CustomMonthPicker',
+	'sap/ui/core/format/TimezoneUtil'],
 	function(
 		Element,
 		Label,
 		StepInput,
+		DateTimePicker,
 		Calendar,
 		DateRange,
-		MonthPicker) {
+		MonthPicker,
+		CustomMonthPicker,
+		TimezoneUtil) {
 		"use strict";
 
 		/**
@@ -32,12 +38,11 @@ sap.ui.define([
 		 * @extends sap.ui.core.Element
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @public
 		 * @since 1.92
 		 * @alias sap.m.DynamicDateOption
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 * @experimental Since 1.92. This class is experimental and provides only limited functionality. Also the API might be changed in future.
 		 */
 		var DynamicDateOption = Element.extend("sap.m.DynamicDateOption", /** @lends sap.m.DynamicDateOption.prototype */ {
@@ -96,15 +101,26 @@ sap.ui.define([
 		 * @public
 		 */
 		DynamicDateOption.prototype.createValueHelpUI = function(oControl, fnControlsUpdated) {
-			var oValue = oControl.getValue();
-			var aParams = this.getValueHelpUITypes(oControl);
-			var aControls = [];
-			var oInputControl;
+			var oValue = oControl.getValue() && Object.assign({}, oControl.getValue()),
+				aParams = this.getValueHelpUITypes(oControl),
+				valueHelpUiTypesCount = aParams.length,
+				aControls = [],
+				oInputControl;
 
 			if (!oControl.aControlsByParameters) {
 				oControl.aControlsByParameters = {};
 			}
 			oControl.aControlsByParameters[this.getKey()] = [];
+
+			if (oValue && oValue.values) {
+				oValue.values = oValue.values.map(function(val) {
+					if (val instanceof Date) {
+						return oControl._reverseConvertDate(val);
+					}
+
+					return val;
+				});
+			}
 
 			for (var i = 0; i < aParams.length; i++) {
 				if (aParams[i].getText()) {
@@ -116,7 +132,12 @@ sap.ui.define([
 					);
 				}
 
-				oInputControl = this._createControl(i, aParams[i].getType(), oValue, fnControlsUpdated);
+				var bUTC = false;
+				if (oControl && oValue) {
+					bUTC = oControl._checkFormatterUTCTimezone(oValue.operator);
+				}
+
+				oInputControl = this._createControl(i, aParams[i].getType(), oValue, fnControlsUpdated, valueHelpUiTypesCount, bUTC);
 
 				aControls.push(oInputControl);
 				oControl.aControlsByParameters[this.getKey()].push(oInputControl);
@@ -148,9 +169,15 @@ sap.ui.define([
 						}
 						break;
 					case "month":
+					case "custommonth":
 					case "date":
 					case "daterange":
 						if (!oInputControl.getSelectedDates() || oInputControl.getSelectedDates().length == 0) {
+							return false;
+						}
+						break;
+					case "datetime":
+						if (!oInputControl.getDateValue()) {
 							return false;
 						}
 						break;
@@ -191,6 +218,20 @@ sap.ui.define([
 						}
 
 						vOutput = oInputControl.getSelectedDates()[0].getStartDate();
+					break;
+					case "custommonth":
+						if (!oInputControl.getSelectedDates() || !oInputControl.getSelectedDates().length) {
+							return null;
+						}
+
+						vOutput = [oInputControl.getSelectedDates()[0].getStartDate().getMonth(), oInputControl.getSelectedDates()[0].getStartDate().getFullYear()];
+						break;
+					case "datetime":
+						if (!oInputControl.getDateValue()) {
+							return null;
+						}
+
+						vOutput = oInputControl.getDateValue();
 						break;
 					case "daterange":
 						if (!oInputControl.getSelectedDates().length) {
@@ -199,6 +240,8 @@ sap.ui.define([
 
 						var oEndDate = oInputControl.getSelectedDates()[0].getEndDate() || oInputControl.getSelectedDates()[0].getStartDate();
 						vOutput = [oInputControl.getSelectedDates()[0].getStartDate(), oEndDate];
+						break;
+					default:
 						break;
 				}
 
@@ -281,7 +324,7 @@ sap.ui.define([
 
 		// PRIVATE
 
-		DynamicDateOption.prototype._createControl = function(iIndex, sUIType, oValue, fnControlsUpdated) {
+		DynamicDateOption.prototype._createControl = function(iIndex, sUIType, oValue, fnControlsUpdated, valueHelpUiTypesCount, bUTC) {
 			var oInputControl;
 
 			switch (sUIType) {
@@ -289,13 +332,26 @@ sap.ui.define([
 					oInputControl = this._createIntegerControl(oValue, iIndex, fnControlsUpdated);
 					break;
 				case "date":
-					oInputControl = this._createDateControl(oValue, iIndex, fnControlsUpdated);
+					oInputControl = this._createDateControl(oValue, iIndex, fnControlsUpdated, bUTC);
+					break;
+				case "datetime":
+					if (valueHelpUiTypesCount === 1) {
+						// Returns DateTimePicker PopupContent control (single "datetime" option)
+						oInputControl = this._createDateTimeInnerControl(oValue, iIndex, fnControlsUpdated, bUTC);
+					} else if (valueHelpUiTypesCount === 2) {
+						oInputControl = this._createDateTimeControl(oValue, iIndex, fnControlsUpdated, bUTC);
+					}
 					break;
 				case "daterange":
-					oInputControl = this._createDateRangeControl(oValue, iIndex, fnControlsUpdated);
+					oInputControl = this._createDateRangeControl(oValue, iIndex, fnControlsUpdated, bUTC);
 					break;
 				case "month":
 					oInputControl = this._createMonthControl(oValue, iIndex, fnControlsUpdated);
+					break;
+				case "custommonth":
+					oInputControl = this._createCustomMonthControl(oValue, iIndex, fnControlsUpdated);
+					break;
+				default:
 					break;
 			}
 
@@ -320,14 +376,37 @@ sap.ui.define([
 			return oControl;
 		};
 
-		DynamicDateOption.prototype._createDateControl = function(oValue, iIndex, fnControlsUpdated) {
+		DynamicDateOption.prototype._createDateTimeControl = function(oValue, iIndex, fnControlsUpdated) {
+			var oControl = new DateTimePicker({timezone: TimezoneUtil.getLocalTimezone()});
+
+			if (oValue && this.getKey() === oValue.operator) {
+				oControl.setDateValue(oValue.values[iIndex]);
+			}
+
+			if (fnControlsUpdated instanceof Function) {
+				oControl.attachChange(function() {
+					fnControlsUpdated(this);
+				}, this);
+			}
+
+			return oControl;
+		};
+
+		DynamicDateOption.prototype._createDateControl = function(oValue, iIndex, fnControlsUpdated, bUTC) {
 			var oControl = new Calendar({
 				width: "100%"
 			});
+			var oInputControlValue;
 
 			if (oValue && this.getKey() === oValue.operator) {
+				oInputControlValue = new Date(oValue.values[iIndex].getTime());
+
+				if (bUTC) {
+					oInputControlValue.setMinutes(oInputControlValue.getMinutes() + new Date().getTimezoneOffset());
+				}
+
 				oControl.addSelectedDate(new DateRange({
-					startDate: oValue.values[iIndex]
+					startDate: oInputControlValue
 				}));
 			}
 
@@ -340,7 +419,59 @@ sap.ui.define([
 			return oControl;
 		};
 
-		DynamicDateOption.prototype._createDateRangeControl = function(oValue, iIndex, fnControlsUpdated) {
+		/**
+		 * Returns DateTimePicker PopupContent control (single "datetime" option)
+		 */
+		DynamicDateOption.prototype._createDateTimeInnerControl = function(oValue, iIndex, fnControlsUpdated, bUTC) {
+			var oControl = new DateTimePicker({
+					width: "100%"
+				}),
+				oPopupContent;
+
+			// DateTimePicker is created, but only its internal PopupContent control is used
+			oControl._createPopup();
+			oControl._createPopupContent();
+			oPopupContent = oControl._oPopupContent;
+			oPopupContent.setForcePhoneView(true);
+			oPopupContent.getCalendar().removeAllSelectedDates();
+
+			if (oValue && this.getKey() === oValue.operator) {
+				var oValueCopy = new Date(oValue.values[iIndex]); // a copy is used to prevent time setting on pressing Cancel button
+
+				if (bUTC) {
+					oValueCopy.setMinutes(oValueCopy.getMinutes() + new Date().getTimezoneOffset());
+				}
+
+				oPopupContent.getCalendar().addSelectedDate(new DateRange({
+					startDate: oValueCopy
+				}));
+				oPopupContent.getClocks()._setTimeValues(oValueCopy);
+			}
+
+			if (fnControlsUpdated instanceof Function) {
+				// capture live clock changes and update the value
+				oPopupContent.getClocks().getAggregation("_clocks").forEach(function(oClock) {
+					oClock.attachChange(function(oEvent) {
+						fnControlsUpdated(this);
+					}.bind(this));
+				}.bind(this));
+
+				// capture live AM/PM changes and update the value
+				if (oPopupContent.getClocks().getAggregation("_buttonAmPm")) {
+					oPopupContent.getClocks().getAggregation("_buttonAmPm").attachSelectionChange(function(oEvent) {
+						fnControlsUpdated(this);
+					}.bind(this));
+				}
+
+				oPopupContent.getCalendar().attachSelect(function() {
+					fnControlsUpdated(this);
+				}, this);
+			}
+
+			return oPopupContent;
+		};
+
+		DynamicDateOption.prototype._createDateRangeControl = function(oValue, iIndex, fnControlsUpdated, bUTC) {
 			var oControl = new Calendar({
 				intervalSelection: true,
 				width: "100%"
@@ -348,9 +479,17 @@ sap.ui.define([
 			if (oValue && this.getKey() === oValue.operator) {
 				// a date range UI type maps to 2 consecutive date parameters from the value
 				// they also should be the last 2 parameters
+				var oInputControlStartValue = new Date(oValue.values[iIndex].getTime());
+				var oInputControlEndValue = new Date(oValue.values[iIndex + 1].getTime());
+
+				if (bUTC) {
+					oInputControlStartValue.setMinutes(oInputControlStartValue.getMinutes() + new Date().getTimezoneOffset());
+					oInputControlEndValue.setMinutes(oInputControlEndValue.getMinutes() + new Date().getTimezoneOffset());
+				}
+
 				oControl.addSelectedDate(new DateRange({
-					startDate: oValue.values[iIndex],
-					endDate: oValue.values[iIndex + 1]
+					startDate: oInputControlStartValue,
+					endDate: oInputControlEndValue
 				}));
 			}
 
@@ -369,6 +508,28 @@ sap.ui.define([
 				iMonth = (oValue && this.getKey() === oValue.operator) ? oValue.values[iIndex] : oDate.getMonth();
 
 			oControl.setMonth(iMonth);
+			oControl.addSelectedDate(new DateRange({
+				startDate: oDate
+			}));
+
+			if (fnControlsUpdated instanceof Function) {
+				oControl.attachSelect(function() {
+					fnControlsUpdated(this);
+				}, this);
+			}
+
+			return oControl;
+		};
+
+		DynamicDateOption.prototype._createCustomMonthControl = function(oValue, iIndex, fnControlsUpdated) {
+			var oControl = new CustomMonthPicker(),
+				oDate = new Date(),
+				iMonth = (oValue && iIndex >= 0 && this.getKey() === oValue.operator) ? oValue.values[iIndex] : oDate.getMonth(),
+				iYear = (oValue  && iIndex >= 0 && this.getKey() === oValue.operator) ? oValue.values[iIndex + 1] : oDate.getFullYear();
+
+			oDate.setDate(1);
+			oDate.setMonth(iMonth);
+			oDate.setYear(iYear);
 			oControl.addSelectedDate(new DateRange({
 				startDate: oDate
 			}));

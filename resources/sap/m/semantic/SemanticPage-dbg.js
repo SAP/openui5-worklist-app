@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -109,13 +109,12 @@ function(
 	 * @abstract
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.30.0
 	 * @alias sap.m.semantic.SemanticPage
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var SemanticPage = Control.extend("sap.m.semantic.SemanticPage", /** @lends sap.m.semantic.SemanticPage.prototype */ {
 		metadata: {
@@ -277,7 +276,9 @@ function(
 			},
 			dnd: { draggable: false, droppable: true },
 			designtime: "sap/m/designtime/semantic/SemanticPage.designtime"
-		}
+		},
+
+		renderer: SemanticPageRenderer
 	});
 
 	SemanticPage.prototype.init = function () {
@@ -736,7 +737,7 @@ function(
 	SemanticPage.prototype._getPage = function () {
 
 		var oPage = this.getAggregation("_page");
-		if (!oPage) {
+		if (!oPage && !this._bIsBeingDestroyed) {
 			this.setAggregation("_page", new Page(this.getId() + "-page"));
 			oPage = this.getAggregation("_page");
 		}

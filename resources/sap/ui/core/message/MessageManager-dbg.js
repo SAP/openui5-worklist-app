@@ -1,33 +1,23 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides the implementation for a MessageManager
 sap.ui.define([
-	'sap/ui/base/EventProvider',
-	'sap/ui/base/ManagedObject',
-	'sap/ui/model/message/MessageModel',
-	'./Message',
-	'./ControlMessageProcessor',
-	'sap/ui/core/message/MessageProcessor',
-	"sap/base/util/deepEqual",
+	"./ControlMessageProcessor",
+	"./Message",
 	"sap/base/Log",
-	'sap/base/util/merge'
-],
-	function(
-		EventProvider,
-		ManagedObject,
-		MessageModel,
-		Message,
-		ControlMessageProcessor,
-		MessageProcessor,
-		deepEqual,
-		Log,
-		merge
-	) {
-
+	"sap/base/util/deepEqual",
+	"sap/base/util/merge",
+	"sap/ui/base/EventProvider",
+	"sap/ui/base/ManagedObject",
+	"sap/ui/core/Configuration",
+	"sap/ui/core/message/MessageProcessor",
+	"sap/ui/model/message/MessageModel"
+], function (ControlMessageProcessor, Message, Log, deepEqual, merge, EventProvider, ManagedObject,
+		Configuration, MessageProcessor, MessageModel) {
 	"use strict";
 	/*global Map */
 
@@ -46,7 +36,7 @@ sap.ui.define([
 	 * @extends sap.ui.base.EventProvider
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @alias sap.ui.core.message.MessageManager
@@ -60,7 +50,7 @@ sap.ui.define([
 			this.mObjects = {};
 			this.mMessages = {};
 
-			var bHandleValidation = sap.ui.getCore().getConfiguration().getHandleValidation();
+			var bHandleValidation = Configuration.getHandleValidation();
 			if (bHandleValidation) {
 				sap.ui.getCore().attachValidationSuccess(bHandleValidation, this._handleSuccess, this);
 				sap.ui.getCore().attachValidationError(bHandleValidation, this._handleError, this);

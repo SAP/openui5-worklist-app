@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -21,7 +21,12 @@ sap.ui.define([
 	"./MonthRenderer",
 	"sap/ui/dom/containsOrEquals",
 	"sap/ui/events/KeyCodes",
-	"sap/ui/thirdparty/jquery"
+	"sap/ui/thirdparty/jquery",
+	'sap/ui/core/InvisibleMessage',
+	"sap/ui/core/Configuration",
+	"sap/ui/core/date/CalendarWeekNumbering",
+	"sap/ui/core/date/CalendarUtils",
+	"sap/base/Log"
 ], function(
 	Control,
 	Device,
@@ -38,9 +43,16 @@ sap.ui.define([
 	MonthRenderer,
 	containsOrEquals,
 	KeyCodes,
-	jQuery
+	jQuery,
+	InvisibleMessage,
+	Configuration,
+	CalendarWeekNumbering,
+	CalendarDateUtils,
+	Log
 ) {
 	"use strict";
+
+	var InvisibleMessageMode = coreLibrary.InvisibleMessageMode;
 
 	// shortcut for sap.ui.core.CalendarType
 	var CalendarType = coreLibrary.CalendarType;
@@ -65,13 +77,12 @@ sap.ui.define([
 	 * If used inside the calendar the properties and aggregation are directly taken from the parent
 	 * (To not duplicate and sync DateRanges and so on...)
 	 * @extends sap.ui.core.Control
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.28.0
 	 * @alias sap.ui.unified.calendar.Month
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var Month = Control.extend("sap.ui.unified.calendar.Month", /** @lends sap.ui.unified.calendar.Month.prototype */ { metadata : {
 
@@ -99,8 +110,9 @@ sap.ui.define([
 			showHeader : {type : "boolean", group : "Appearance", defaultValue : false},
 
 			/**
-			 * If set, the first day of the displayed week is this day. Valid values are 0 to 6.
-			 * If not a valid value is set, the default of the used locale is used.
+			 * If the property is set, this day marks the start of the displayed week. Valid values are 0 to 6.
+			 * If no valid property is set, the current locale's default is applied.
+			 * Note: This property should not be used with the calendarWeekNumbering property.
 			 * @since 1.28.9
 			 */
 			firstDayOfWeek : {type : "int", group : "Appearance", defaultValue : -1},
@@ -149,7 +161,15 @@ sap.ui.define([
 			 *
 			 * @since 1.90
 			 */
-			_focusedDate : {type : "object", group : "Data", visibility: "hidden", defaultValue: null}
+			_focusedDate : {type : "object", group : "Data", visibility: "hidden", defaultValue: null},
+
+			/**
+			 * If set, the calendar week numbering is used for display.
+			 * If not set, the calendar week numbering of the global configuration is used.
+			 * Note: This property should not be used with firstDayOfWeek property.
+			 * @since 1.108.0
+			 */
+			 calendarWeekNumbering : { type : "sap.ui.core.date.CalendarWeekNumbering", group : "Appearance", defaultValue: null}
 
 		},
 		aggregations : {
@@ -246,26 +266,31 @@ sap.ui.define([
 
 
 		}
-	}});
+	}, renderer: MonthRenderer});
 
 	Month.prototype.init = function(){
 
 		// set default calendar type from configuration
-		var sCalendarType = sap.ui.getCore().getConfiguration().getCalendarType();
+		var sCalendarType = Configuration.getCalendarType();
 		this.setProperty("primaryCalendarType", sCalendarType);
 		this.setProperty("secondaryCalendarType", sCalendarType);
 
 		this._oFormatYyyymmdd = DateFormat.getInstance({pattern: "yyyyMMdd", calendarType: CalendarType.Gregorian});
 		this._oFormatLong = DateFormat.getInstance({style: "long", calendarType: sCalendarType});
 
-		this._mouseMoveProxy = jQuery.proxy(this._handleMouseMove, this);
+		this._mouseMoveProxy = this._handleMouseMove.bind(this);
 
 		this._iColumns = 7;
+
+		this._oMinDate = CalendarUtils._minDate(this.getPrimaryCalendarType());
+		this._oMaxDate = CalendarUtils._maxDate(this.getPrimaryCalendarType());
 
 		// Currently visible days
 		this._aVisibleDays = [];
 
 		this._bAlwaysShowSpecialDates = false;
+
+		this._oUnifiedRB = sap.ui.getCore().getLibraryResourceBundle("sap.ui.unified");
 	};
 
 	Month.prototype._getAriaRole = function(){
@@ -294,6 +319,12 @@ sap.ui.define([
 		return this.getDomRef() && this._oItemNavigation.getItemDomRefs()[this._oItemNavigation.getFocusedIndex()];
 	};
 
+	Month.prototype.onBeforeRendering = function() {
+		if (this.getFirstDayOfWeek() !== -1 && this.getCalendarWeekNumbering() !== "Default") {
+			Log.warning("Both properties firstDayOfWeek and calendarWeekNumbering should not be used at the same time!");
+		}
+	};
+
 	Month.prototype.onAfterRendering = function(){
 		this.bSpaceButtonPressed = false;
 		_initItemNavigation.call(this);
@@ -301,6 +332,7 @@ sap.ui.define([
 		// check if day names are too big -> use smaller ones
 		_checkNamesLength.call(this);
 
+		this._oInvisibleMessage = InvisibleMessage.getInstance();
 	};
 
 	Month.prototype.onmouseover = function(oEvent) {
@@ -350,7 +382,7 @@ sap.ui.define([
 			$CheckRef = jQuery(aDomRefs[i]);
 			iCheckDate = $CheckRef.data('sapDay');
 
-			if (iCheckDate > iDate1 && iCheckDate < iDate2) {
+			if (iCheckDate > iDate1 && iCheckDate < iDate2 && this._isInAllowedRange(iCheckDate)) {
 				$CheckRef.addClass('sapUiCalItemSelBetween');
 			} else {
 				$CheckRef.removeClass('sapUiCalItemSelBetween');
@@ -359,6 +391,11 @@ sap.ui.define([
 				}
 			}
 		}
+	};
+
+	Month.prototype._isInAllowedRange = function(iCheckDate) {
+		return this._oFormatYyyymmdd.parse(iCheckDate).getTime() > this._oMinDate.toLocalJSDate().getTime()
+			&& this._oFormatYyyymmdd.parse(iCheckDate).getTime() < this._oMaxDate.toLocalJSDate().getTime();
 	};
 
 	Month.prototype.onsapfocusleave = function(oEvent){
@@ -471,7 +508,6 @@ sap.ui.define([
 	 * @param {object} oDate JavaScript date object for focused date.
 	 * @returns {this} <code>this</code> to allow method chaining
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	Month.prototype.displayDate = function(oDate){
 		var oCalDate = CalendarDate.fromLocalJSDate(oDate, this.getPrimaryCalendarType());
@@ -533,7 +569,7 @@ sap.ui.define([
 		if (oParent && oParent.getLocale) {
 			return oParent.getLocale();
 		} else if (!this._sLocale) {
-			this._sLocale = sap.ui.getCore().getConfiguration().getFormatSettings().getFormatLocale().toString();
+			this._sLocale = Configuration.getFormatSettings().getFormatLocale().toString();
 		}
 
 		return this._sLocale;
@@ -739,8 +775,14 @@ sap.ui.define([
 		}
 
 		if (iFirstDayOfWeek < 0 || iFirstDayOfWeek > 6) {
-			var oLocaleData = this._getLocaleData();
-			iFirstDayOfWeek = oLocaleData.getFirstDayOfWeek();
+			var oWeekConfigurationValues = CalendarDateUtils.getWeekConfigurationValues(this.getCalendarWeekNumbering(), new Locale(this._getLocale()));
+
+			if (oWeekConfigurationValues) {
+				iFirstDayOfWeek = oWeekConfigurationValues.firstDayOfWeek;
+			} else {
+				var oLocaleData = this._getLocaleData();
+				iFirstDayOfWeek = oLocaleData.getFirstDayOfWeek();
+			}
 		}
 
 		return iFirstDayOfWeek;
@@ -985,21 +1027,16 @@ sap.ui.define([
 		if ($Target.hasClass("sapUiCalItem")) {
 			var oOldFocusedDate = this._getDate();
 			if (containsOrEquals(this.getDomRef(), oEvent.target)) {
-				var oFocusedDate = CalendarDate.fromLocalJSDate(this._oFormatYyyymmdd.parse($Target.attr("data-sap-day")), this.getPrimaryCalendarType());
+				var oFocusedDate = CalendarDate.fromUTCDate(this._oFormatYyyymmdd.parse($Target.attr("data-sap-day"), true), this.getPrimaryCalendarType());
 
 				if (!oFocusedDate.isSame(oOldFocusedDate)) {
-					if ($Target.hasClass("sapUiCalItemOtherMonth")) {
-						// in other month -> change month
-						this.fireFocus({date: oFocusedDate.toLocalJSDate(), otherMonth: true});
-					} else {
-						this._oDate = oFocusedDate;
-						var bSelected = this._selectDay(oFocusedDate, true);
-						if (bSelected) {
-							// remember last selected enabled date
-							this._oMoveSelectedDate = new CalendarDate(oFocusedDate, this.getPrimaryCalendarType());
-						}
-						this._bMoveChange = true;
+					this._oDate = oFocusedDate;
+					var bSelected = this._selectDay(oFocusedDate, true);
+					if (bSelected) {
+						// remember last selected enabled date
+						this._oMoveSelectedDate = new CalendarDate(oFocusedDate, this.getPrimaryCalendarType());
 					}
+					this._bMoveChange = true;
 				}
 			}
 		}
@@ -1022,8 +1059,8 @@ sap.ui.define([
 
 		var $oEventTarget = jQuery(oEvent.target),
 			oExtractedDate = $oEventTarget.siblings().eq(0).attr("data-sap-day"),
-			oParsedDate = this._oFormatYyyymmdd.parse(oExtractedDate),
-			oFirstDayOfWeekCalendarDate = CalendarDate.fromLocalJSDate(oParsedDate, this.getPrimaryCalendarType());
+			oParsedDate = this._oFormatYyyymmdd.parse(oExtractedDate, true),
+			oFirstDayOfWeekCalendarDate = CalendarDate.fromUTCDate(oParsedDate, this.getPrimaryCalendarType());
 
 		this._handleWeekSelection(oFirstDayOfWeekCalendarDate, true);
 	};
@@ -1329,7 +1366,6 @@ sap.ui.define([
 	 * @param {object} oDate JavaScript date object for focused date.
 	 * @returns {boolean} flag if focusable
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	Month.prototype.checkDateFocusable = function(oDate){
 
@@ -1499,10 +1535,10 @@ sap.ui.define([
 			sExtractedDate = oTarget.getAttribute("data-sap-day") || oTarget.parentNode.getAttribute("data-sap-day");
 		}
 
-		oParsedDate = this._oFormatYyyymmdd.parse(sExtractedDate);
+		oParsedDate = this._oFormatYyyymmdd.parse(sExtractedDate, true);
 
 		// Return null for cases like user clicking on an empty space, today's border, etc...
-		return oParsedDate ? CalendarDate.fromLocalJSDate(oParsedDate, this.getPrimaryCalendarType()) : null;
+		return oParsedDate ? CalendarDate.fromUTCDate(oParsedDate, this.getPrimaryCalendarType()) : null;
 	};
 
 	/**
@@ -1520,19 +1556,21 @@ sap.ui.define([
 		var iSelectedWeekNumber = this._calculateWeekNumber(oStartDate),
 			oEndDate = this._getLastWeekDate(oStartDate),
 			bSingleSelection = this.getSingleSelection(),
-			bIntervalSelection = this.getIntervalSelection();
+			bIntervalSelection = this.getIntervalSelection(),
+			oFirstEnabledDateOfWeek = this._checkDateEnabled(oStartDate) ? oStartDate : new CalendarDate(this._oMinDate),
+			oLastEnabledDateOfweek = this._checkDateEnabled(oEndDate) ? oEndDate : new CalendarDate(this._oMaxDate);
 
 		if (!bSingleSelection && !bIntervalSelection) {
 			// Selecting each day separately
-			this._handleWeekSelectionByMultipleDays(iSelectedWeekNumber, oStartDate, oEndDate);
+			this._handleWeekSelectionByMultipleDays(iSelectedWeekNumber, oFirstEnabledDateOfWeek, oLastEnabledDateOfweek);
 		} else if (bSingleSelection && bIntervalSelection) {
 			// Selecting the week as a whole interval
-			this._handleWeekSelectionBySingleInterval(iSelectedWeekNumber, oStartDate, oEndDate);
+			this._handleWeekSelectionBySingleInterval(iSelectedWeekNumber, oFirstEnabledDateOfWeek, oLastEnabledDateOfweek);
 		}
 
 		// When this method is called due to a week number's press, then focus
 		// should be moved to the first date, since the week number itself isn't focusable
-		bFocusStartDate && this._focusDate(oStartDate);
+		bFocusStartDate && this._focusDate(oFirstEnabledDateOfWeek);
 
 		return this;
 	};
@@ -1561,26 +1599,30 @@ sap.ui.define([
 	/**
 	 * Calculates week number.
 	 *
-	 * @param {sap.ui.unified.calendar.CalendarDate} oStartDate Start date of the week
+	 * @param {sap.ui.unified.calendar.CalendarDate} oDate Start date of the week
 	 * @returns {int} Week number
 	 * @private
 	 */
 	Month.prototype._calculateWeekNumber = function (oDate) {
-		var oEndDate = this._getLastWeekDate(oDate);
 		var oLocale = new Locale(this._getLocale());
+		var oEndDate = this._getLastWeekDate(oDate);
 		var oLocaleData = this._getLocaleData();
-		var oDateFormat = DateFormat.getInstance({pattern: "w", calendarType: this.getPrimaryCalendarType()}, oLocale);
+		var oDateFormat;
 		var iWeekNumber;
+
+		oDateFormat = DateFormat.getInstance({pattern: "w", calendarType: this.getPrimaryCalendarType(), calendarWeekNumbering: this.getCalendarWeekNumbering()}, oLocale);
+
+		var bIsRegionUS = oLocaleData.firstDayStartsFirstWeek();
 
 		// Because the date we use to calculate the week number may be in one year and in the same time
 		// includes days in a new month into a new year, we explicitly changed the week number
-		// US calendar weeks overlap Jan 1st is always week 1 while Dec 31st is always last week number
-		var bIsRegionUS = oLocaleData.firstDayStartsFirstWeek();
-		if (oDate.getMonth() === 11 && oEndDate.getMonth() === 0 && bIsRegionUS) {
-			iWeekNumber = 1;
+		// US calendar weeks overlap, Jan 1st is always week 1, while Dec 31st is always last week.
+		if (oEndDate.getMonth() === 0 && this._oDate.getMonth() === 0  && bIsRegionUS) {
+			iWeekNumber = oDateFormat.format(oEndDate.toUTCJSDate(), true);
 		} else {
-			iWeekNumber = oDateFormat.format(oDate.toLocalJSDate());
+			iWeekNumber = oDateFormat.format(oDate.toUTCJSDate(), true);
 		}
+
 		return iWeekNumber;
 	};
 
@@ -1731,7 +1773,7 @@ sap.ui.define([
 
 	/**
 	 * Returns the last week's date based on that week's start date.
-	 * @param {sap.ui.unified.calendar.CalendarDate} oStartDate Week's start date
+	 * @param {sap.ui.unified.calendar.CalendarDate} oWeekStartDate Week's start date
 	 * @returns {sap.ui.unified.calendar.CalendarDate} Last week's date
 	 * @private
 	 */
@@ -1815,7 +1857,7 @@ sap.ui.define([
 
 	/**
 	 * Selects a given date.
-	 * @param{sap.ui.unified.calendar.CalendarDate} oDate the date to select
+	 * @param {sap.ui.unified.calendar.CalendarDate} oDate the date to select
 	 * @param {boolean} bMove Whether there is move mode
 	 * @return {boolean} true if the date was really selected, false otherwise
 	 * @private
@@ -1879,6 +1921,7 @@ sap.ui.define([
 				oDateRange.setProperty("startDate", oDate.toLocalJSDate()); // no-rerendering
 				oDateRange.setProperty("endDate", undefined); // no-rerendering
 			}
+			this._oInvisibleMessage.announce(this._oUnifiedRB.getText("APPOINTMENT_SELECTED"), InvisibleMessageMode.Assertive);
 		} else {
 			// multiple selection
 			if (this.getIntervalSelection()) {
@@ -1897,6 +1940,7 @@ sap.ui.define([
 					}
 				} else {
 					// not selected -> select
+					this._oInvisibleMessage.announce(this._oUnifiedRB.getText("APPOINTMENT_SELECTED"), InvisibleMessageMode.Assertive);
 					oDateRange = new DateRange({startDate: oDate.toLocalJSDate()});
 					oAggOwner.addAggregation("selectedDates", oDateRange, true); // no re-rendering
 				}
@@ -1959,7 +2003,7 @@ sap.ui.define([
 		}
 
 		if (!this._oItemNavigation) {
-			this._oItemNavigation = new ItemNavigation();
+			this._oItemNavigation = new ItemNavigation(undefined, undefined, this._bNotInTabChain);
 			this._oItemNavigation.attachEvent(ItemNavigation.Events.AfterFocus, _handleAfterFocus, this);
 			this._oItemNavigation.attachEvent(ItemNavigation.Events.FocusAgain, _handleFocusAgain, this);
 			this._oItemNavigation.attachEvent(ItemNavigation.Events.BorderReached, this._handleBorderReached, this);
@@ -1985,36 +2029,40 @@ sap.ui.define([
 
 	function _handleAfterFocus(oControlEvent){
 
-		var iIndex = oControlEvent.getParameter("index");
-		var oEvent = oControlEvent.getParameter("event");
+		var iIndex = oControlEvent.getParameter("index"),
+			oEvent = oControlEvent.getParameter("event"),
+			oOldDate = this._getDate(),
+			oFocusedDate = new CalendarDate(oOldDate, this.getPrimaryCalendarType()),
+			bOtherMonth = false,
+			bFireFocus = true,
+			aDomRefs = this._oItemNavigation.getItemDomRefs(),
+			// find out what day was focused
+			oDomRef = aDomRefs[iIndex],
+			sDayAttribute = oDomRef.getAttribute("data-sap-day"),
+			oDomRefDay;
 
 		if (!oEvent) {
 			return; // happens if focus is set via ItemNavigation.focusItem directly
 		}
 
-		var oOldDate = this._getDate();
-		var oFocusedDate = new CalendarDate(oOldDate, this.getPrimaryCalendarType());
-		var bOtherMonth = false;
-		var bFireFocus = true;
-
-		var aDomRefs = this._oItemNavigation.getItemDomRefs();
-		var i = 0;
-
-		// find out what day was focused
-		var $DomRef = jQuery(aDomRefs[iIndex]);
-		var $DomRefDay;
 		/* eslint-disable no-lonely-if */
-		if ($DomRef.hasClass("sapUiCalItemOtherMonth")) {
+		if (oDomRef.classList.contains("sapUiCalItemOtherMonth") || oDomRef.classList.contains("sapUiCalItemDsbl")) {
 			if (oEvent.type === "saphomemodifiers" && (oEvent.metaKey || oEvent.ctrlKey)) {
 				// on ctrl+home key focus first day of month
-				oFocusedDate.setDate(1);
+				for (var i = 0; i < aDomRefs.length; ++i) {
+					oDomRefDay = aDomRefs[i];
+					if (!(oDomRefDay.classList.contains("sapUiCalItemOtherMonth") || oDomRefDay.classList.contains("sapUiCalItemDsbl"))) {
+						oFocusedDate = CalendarDate.fromUTCDate(this._oFormatYyyymmdd.parse(oDomRefDay.getAttribute("data-sap-day"), true), this.getPrimaryCalendarType());
+						break;
+					}
+				}
 				this._focusDate(oFocusedDate);
 			} else if (oEvent.type === "sapendmodifiers" && (oEvent.metaKey || oEvent.ctrlKey)) {
 				// on ctrl+end key focus last day of month
-				for ( i = aDomRefs.length - 1; i > 0; i--) {
-					$DomRefDay = jQuery(aDomRefs[i]);
-					if (!$DomRefDay.hasClass("sapUiCalItemOtherMonth")) {
-						oFocusedDate = CalendarDate.fromLocalJSDate(this._oFormatYyyymmdd.parse($DomRefDay.attr("data-sap-day")), this.getPrimaryCalendarType());
+				for (var i = aDomRefs.length - 1; i > 0; --i) {
+					oDomRefDay = aDomRefs[i];
+					if (!(oDomRefDay.classList.contains("sapUiCalItemOtherMonth") || oDomRefDay.classList.contains("sapUiCalItemDsbl"))) {
+						oFocusedDate = CalendarDate.fromUTCDate(this._oFormatYyyymmdd.parse(oDomRefDay.getAttribute("data-sap-day"), true), this.getPrimaryCalendarType());
 						break;
 					}
 				}
@@ -2022,14 +2070,15 @@ sap.ui.define([
 			} else {
 				// focus old date again, but tell parent about the new date
 				bOtherMonth = true;
-				oFocusedDate = CalendarDate.fromLocalJSDate(this._oFormatYyyymmdd.parse($DomRef.attr("data-sap-day")), this.getPrimaryCalendarType());
+				oFocusedDate = CalendarDate.fromUTCDate(this._oFormatYyyymmdd.parse(sDayAttribute, true), this.getPrimaryCalendarType());
 				if (!oFocusedDate) {
 					oFocusedDate = new CalendarDate(oOldDate); // e.g. year > 9999
 				}
 				this._focusDate(oOldDate);
 
 				if (oEvent.type === "mousedown" ||
-						(this._sTouchstartYyyyMMdd && oEvent.type === "focusin" && this._sTouchstartYyyyMMdd === $DomRef.attr("data-sap-day"))) {
+						(this._sTouchstartYyyyMMdd && oEvent.type === "focusin" && this._sTouchstartYyyyMMdd === sDayAttribute)
+					|| oDomRef.classList.contains("sapUiCalItemDsbl")) {
 					// don't focus date in other month via mouse -> don't switch month in calendar while selecting day
 					bFireFocus = false;
 					this.fireFocus({date: oOldDate.toLocalJSDate(), otherMonth: false, restoreOldDate: true});
@@ -2037,20 +2086,18 @@ sap.ui.define([
 
 				// on touch devices a focusin is fired asyncrounously after the touch/mouse handling on DOM element if the focus was changed in the meantime
 				// focus old date again and do not fire focus event
-				if (oEvent.originalEvent && oEvent.originalEvent.type === "touchstart") {
-					this._sTouchstartYyyyMMdd = $DomRef.attr("data-sap-day");
-				} else {
-					this._sTouchstartYyyyMMdd = undefined;
-				}
+				this._sTouchstartYyyyMMdd = oEvent.originalEvent && (oEvent.originalEvent.type === "touchstart")
+					? sDayAttribute
+					: undefined;
 			}
 		} else {
 			// day in current month focused
-			if (jQuery(oEvent.target).hasClass("sapUiCalWeekNum")) {
+			if (oEvent.target.classList.contains("sapUiCalWeekNum")) {
 				// click on week number - focus old date
 				this._focusDate(oFocusedDate);
 			} else  {
 				// not if clicked on week number
-				oFocusedDate = CalendarDate.fromLocalJSDate(this._oFormatYyyymmdd.parse($DomRef.attr("data-sap-day")), this.getPrimaryCalendarType());
+				oFocusedDate = CalendarDate.fromUTCDate(this._oFormatYyyymmdd.parse(sDayAttribute, true), this.getPrimaryCalendarType());
 				this._oDate = oFocusedDate;
 			}
 			this._sTouchstartYyyyMMdd = undefined;
@@ -2058,7 +2105,7 @@ sap.ui.define([
 
 		if (oEvent.type === "mousedown" && this.getIntervalSelection()) {
 			// as in the focus event the month can be changed, store the last target here
-			this._sLastTargetId = $DomRef.attr("id");
+			this._sLastTargetId = oDomRef.id;
 		}
 
 		if (bFireFocus) {
@@ -2127,12 +2174,13 @@ sap.ui.define([
 			this.setDate(oDate.toLocalJSDate());
 		}
 
-		var sYyyymmdd = this._oFormatYyyymmdd.format(oDate.toUTCJSDate(), true);
-		var aDomRefs = this._oItemNavigation.getItemDomRefs();
-		var $DomRefDay;
-		for ( var i = 0; i < aDomRefs.length; i++) {
-			$DomRefDay = jQuery(aDomRefs[i]);
-			if ($DomRefDay.attr("data-sap-day") === sYyyymmdd) {
+		var sYyyymmdd = this._oFormatYyyymmdd.format(oDate.toUTCJSDate(), true),
+			aDomRefs = this._oItemNavigation.getItemDomRefs(),
+			oDomRefDay;
+
+		for (var i = 0; i < aDomRefs.length; i++) {
+			oDomRefDay = aDomRefs[i];
+			if (oDomRefDay.getAttribute("data-sap-day") === sYyyymmdd) {
 				if (document.activeElement !== aDomRefs[i]) {
 					if (bSkipFocus || Device.system.phone) {
 						this._oItemNavigation.setFocusedIndex(i);

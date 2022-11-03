@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -15,11 +15,11 @@ sap.ui.define([
 	"sap/ui/core/ContextMenuSupport",
 	"sap/ui/core/util/ResponsivePaddingsEnablement",
 	"sap/ui/core/library",
-	"sap/ui/Device",
 	"sap/ui/core/Element",
 	"./TitlePropagationSupport",
 	"./PageRenderer",
-	"sap/ui/thirdparty/jquery"
+	"sap/ui/thirdparty/jquery",
+	"sap/ui/core/Configuration"
 ],
 function(
 	library,
@@ -31,11 +31,11 @@ function(
 	ContextMenuSupport,
 	ResponsivePaddingsEnablement,
 	coreLibrary,
-	Device,
 	Element,
 	TitlePropagationSupport,
 	PageRenderer,
-	jQuery
+	jQuery,
+	Configuration
 ) {
 		"use strict";
 
@@ -91,11 +91,10 @@ function(
 		 * @extends sap.ui.core.Control
 		 * @mixes sap.ui.core.ContextMenuSupport
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @public
 		 * @alias sap.m.Page
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		var Page = Control.extend("sap.m.Page", /** @lends sap.m.Page.prototype */ {
 			metadata: {
@@ -272,7 +271,9 @@ function(
 				},
 				dnd: { draggable: false, droppable: true },
 				designtime: "sap/m/designtime/Page.designtime"
-			}
+			},
+
+			renderer: PageRenderer
 		});
 
 		ContextMenuSupport.apply(Page.prototype);
@@ -434,7 +435,7 @@ function(
 			}
 
 			var $footer = jQuery(this.getDomRef()).find(".sapMPageFooter").last(),
-				useAnimation = sap.ui.getCore().getConfiguration().getAnimation();
+				useAnimation = Configuration.getAnimation();
 
 			if (!this.getFloatingFooter()) {
 				this.setProperty("showFooter", bShowFooter);
@@ -599,7 +600,7 @@ function(
 		 * @private
 		 */
 		Page.prototype._getHeaderTag = function (oLandmarkInfo) {
-			if (oLandmarkInfo && oLandmarkInfo.getHeaderRole() !== AccessibleLandmarkRole.None) {
+			if (oLandmarkInfo && oLandmarkInfo.getHeaderRole()) {
 				return DIV;
 			}
 
@@ -614,7 +615,7 @@ function(
 		 * @private
 		 */
 		Page.prototype._getSubHeaderTag = function (oLandmarkInfo) {
-			if (oLandmarkInfo && oLandmarkInfo.getSubHeaderRole() !== AccessibleLandmarkRole.None) {
+			if (oLandmarkInfo && oLandmarkInfo.getSubHeaderRole()) {
 				return DIV;
 			}
 
@@ -629,7 +630,7 @@ function(
 		 * @private
 		 */
 		Page.prototype._getFooterTag = function (oLandmarkInfo) {
-			if (oLandmarkInfo && oLandmarkInfo.getFooterRole() !== AccessibleLandmarkRole.None) {
+			if (oLandmarkInfo && oLandmarkInfo.getFooterRole()) {
 				return DIV;
 			}
 
@@ -646,7 +647,6 @@ function(
 		 * @param {int} [time=0] The duration of animated scrolling in milliseconds. The value <code>0</code> results in immediate scrolling without animation.
 		 * @returns {this} <code>this</code> to facilitate method chaining.
 		 * @public
-		 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		Page.prototype.scrollTo = function (y, time) {
 			if (this._oScroller) {

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -11,9 +11,10 @@ sap.ui.define([
 	'sap/ui/core/Control',
 	'sap/ui/Device',
 	"sap/base/Log",
-	"sap/ui/thirdparty/jquery"
+	"sap/ui/thirdparty/jquery",
+	"sap/ui/core/Configuration"
 ],
-	function(InstanceManager, Popup, coreLibrary, Control, Device, Log, jQuery) {
+	function(InstanceManager, Popup, coreLibrary, Control, Device, Log, jQuery, Configuration) {
 		"use strict";
 
 		// shortcut for sap.ui.core.Dock
@@ -70,7 +71,7 @@ sap.ui.define([
 		 * The message toast has the same behavior on all devices. However, you can adjust the width of the control, for example, for use on a desktop device.
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @namespace
 		 * @public
@@ -224,7 +225,7 @@ sap.ui.define([
 
 			oMessageToastDomRef.className = CSSCLASS + " " + ENABLESELECTIONCLASS + " " + BELIZECONTRAST + " " + BELIZECONTRASTPLUS;
 
-			if (sap.ui.getCore().getConfiguration().getAccessibility()) {
+			if (Configuration.getAccessibility()) {
 				oMessageToastDomRef.setAttribute("role", "alert");
 			}
 
@@ -324,7 +325,7 @@ sap.ui.define([
 			var sCssTransition = "opacity " + mSettings.animationTimingFunction + " " + mSettings.animationDuration + "ms",
 				sTransitionEnd = "webkitTransitionEnd." + CSSCLASS + " transitionend." + CSSCLASS;
 
-			if (sap.ui.getCore().getConfiguration().getAnimation() && mSettings.animationDuration > 0) {
+			if (Configuration.getAnimation() && mSettings.animationDuration > 0) {
 				$MessageToastDomRef[0].style.webkitTransition = sCssTransition;
 				$MessageToastDomRef[0].style.transition = sCssTransition;
 				$MessageToastDomRef[0].style.opacity = 0;

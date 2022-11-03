@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -11,28 +11,21 @@
  */
 
 sap.ui.define([
+	'sap/ui/core/Core',
+	'sap/ui/core/Configuration',
 	'sap/ui/thirdparty/URI',
 	'../Element',
 	'sap/base/util/UriParameters',
 	'sap/base/Log',
 	'sap/base/util/extend',
-	'sap/ui/core/ThemeCheck',
-	'sap/base/util/LoaderExtensions',
-	'sap/ui/thirdparty/jquery',
+	'sap/base/util/syncFetch',
+	'sap/ui/core/theming/ThemeManager',
 	'./ThemeHelper'
 ],
-	function(URI, Element, UriParameters, Log, extend, ThemeCheck, LoaderExtensions, jQuery, ThemeHelper) {
+	function(Core, Configuration, URI, Element, UriParameters, Log, extend, syncFetch, ThemeManager, ThemeHelper) {
 	"use strict";
 
-	var oCfgData = window["sap-ui-config"] || {};
-
-	var syncCallBehavior = 0; // ignore
-	if (oCfgData['xx-nosync'] === 'warn' || /(?:\?|&)sap-ui-xx-nosync=(?:warn)/.exec(window.location.search)) {
-		syncCallBehavior = 1;
-	}
-	if (oCfgData['xx-nosync'] === true || oCfgData['xx-nosync'] === 'true' || /(?:\?|&)sap-ui-xx-nosync=(?:x|X|true)/.exec(window.location.search)) {
-		syncCallBehavior = 2;
-	}
+	var syncCallBehavior = Configuration.getSyncCallBehavior();
 
 		/**
 		 * A helper used for (read-only) access to CSS parameters at runtime.
@@ -60,8 +53,6 @@ sap.ui.define([
 
 		var bUseInlineParameters = UriParameters.fromQuery(window.location.search).get("sap-ui-xx-no-inline-theming-parameters") !== "true";
 
-		var oComputedScopeStyle, oDummyScopeElement;
-
 		/**
 		 * Resolves relative URLs in parameter values.
 		 * Only for inline-parameters.
@@ -79,33 +70,6 @@ sap.ui.define([
 			}
 
 			return sUrl;
-		}
-
-		/**
-		 * Checks the given parameter value if it contains a relative URL.
-		 * If so we read a second css-variable containing a ui5:// url which needs to be resolved.
-		 * @param {string} sParam parameter name
-		 * @returns {string} the parameter value, if necessary a ui5://... URL is resolved
-		 */
-		function checkAndResolveUI5Url(sParamValue, sParameterName) {
-
-			var aMatch = rCssUrl.exec(sParamValue);
-			if (aMatch && aMatch[1]) {
-				// read companion-variable, can contain a ui5:// url, or an already absolute url
-				var oBodyStyle = window.getComputedStyle(document.body || document.documentElement);
-				sParamValue = oBodyStyle.getPropertyValue("--" + sParameterName + "__asResolvedUrl").trim();
-				if (sParamValue) {
-					// JSON.parse helps us get a consistent escaping situation
-					sParamValue = JSON.parse(sParamValue);
-					var sResolvedUrl = LoaderExtensions.resolveUI5Url(sParamValue);
-					// stringify again to preserve original escaping
-					sParamValue = "url(" + JSON.stringify(sResolvedUrl) + ")";
-				} else {
-					Log.error("The parameter '" + sParameterName + "' contains a url, but no matching resolved-url CSS variable could be found.");
-				}
-			}
-
-			return sParamValue;
 		}
 
 		function mergeParameterSet(mCurrent, mNew, sThemeBaseUrl) {
@@ -145,37 +109,18 @@ sap.ui.define([
 					mergeParameterSet(mParameters["scopes"][sScopeName], mNewParameters["scopes"][sScopeName], sThemeBaseUrl);
 				}
 			}
-
-			var aScopeList = Object.keys(mParameters["scopes"]);
-			if (aScopeList.length) {
-				if (aScopeList.length > 1) {
-					Log.error("There are multiple theming parameter scopes available but only a single scope is supported. Only the first scope '" + aScopeList[0] + "' is used for retrieval of parameters.");
-				}
-				// Add dummy scope element
-				if (!oComputedScopeStyle) {
-					oDummyScopeElement = document.createElement("span");
-					oDummyScopeElement.classList.add(aScopeList[0]);
-					document.documentElement.appendChild(oDummyScopeElement);
-					oComputedScopeStyle = window.getComputedStyle(oDummyScopeElement);
-				}
-			}
 		}
 
 		function forEachStyleSheet(fnCallback) {
-			jQuery("link[id^=sap-ui-theme-]").each(function() {
-				fnCallback(this.getAttribute("id"));
+			document.querySelectorAll("link[id^=sap-ui-theme-]").forEach(function(linkNode) {
+				fnCallback(linkNode.getAttribute("id"));
 			});
 		}
 
 		function parseParameters(sId) {
-			// only parse parameters if the given lib does not support CSS variables
-			if (libSupportsCSSVariables(sId)) {
-				return false;
-			}
-
 			var oUrl = getThemeBaseUrlForId(sId);
 
-			var bThemeApplied = ThemeCheck.checkStyle(sId);
+			var bThemeApplied = ThemeHelper.checkStyle(sId);
 
 			if (!bThemeApplied) {
 				Log.warning("Parameters have been requested but theme is not applied, yet.", "sap.ui.core.theming.Parameters");
@@ -184,8 +129,8 @@ sap.ui.define([
 			// In some browsers (e.g. Safari) it might happen that after switching the theme or adopting the <link>'s href,
 			// the parameters from the previous stylesheet are taken. This can be prevented by checking whether the theme is applied.
 			if (bThemeApplied && bUseInlineParameters) {
-				var $link = jQuery(document.getElementById(sId));
-				var sDataUri = $link.css("background-image");
+				var oLink = document.getElementById(sId);
+				var sDataUri = window.getComputedStyle(oLink).getPropertyValue("background-image");
 				var aParams = /\(["']?data:text\/plain;utf-8,(.*?)['"]?\)$/i.exec(sDataUri);
 				if (aParams && aParams.length >= 2) {
 					var sParams = aParams[1];
@@ -209,43 +154,12 @@ sap.ui.define([
 			return false; //could not parse parameters OR theme is not applied OR library has no parameters
 		}
 
-		function libSupportsCSSVariables(sId) {
-			var sLibName = sId.replace("sap-ui-theme-", "").replace(/\./g, "-");
-			var sVariablesMarker = !!(window.getComputedStyle(document.body || document.documentElement).getPropertyValue("--sapUiTheme-" + sLibName).trim());
-			// retreive scope list from metadata (if the theme supports them)
-			if (sVariablesMarker) {
-				var oMetadata =  ThemeHelper.getMetadata(sId);
-				if (oMetadata && oMetadata.Scopes && oMetadata.Scopes.length > 0) {
-					var mScopes = {};
-					oMetadata.Scopes.forEach(function(sScope) {
-						mScopes[sScope] = {};
-					});
-
-					// merge empty scopes into parameters cache
-					// will be filled one-by-one when accessing scoped variables later
-					mergeParameters({
-						"default": {},
-						scopes: mScopes
-					});
-				}
-			}
-			return sVariablesMarker;
-		}
-
 		/**
 		 * Load parameters for a library/theme combination as identified by the URL of the library.css
 		 * @param {string} sId the library name for which parameters might be loaded
-		 * @param {boolean} [bGetAll] whether the loadParameters call stems from a Parameters.get() call
 		 */
-		function loadParameters(sId, bGetAll) {
+		function loadParameters(sId) {
 			var oUrl = getThemeBaseUrlForId(sId);
-
-			// [Compatibility]: the legacy sync API must return a map of ALL parameter values.
-			// With CSS wariables supported, we can only get this map by requesting the library-parameters.json.
-			// The DOM API does not provide an enumeration of all variables.
-			if (libSupportsCSSVariables(sId) && !bGetAll) {
-				return;
-			}
 
 			// try to parse the inline-parameters for the given library
 			// this may fail for a number of reasons, see below
@@ -313,27 +227,46 @@ sap.ui.define([
 		 * @param {boolean[]} aWithCredentials probing values for requesting with or without credentials
 		 */
 		function loadParametersJSON(sUrl, sThemeBaseUrl, aWithCredentials) {
-			var bCurrentWithCredentials = aWithCredentials.shift();
+			var oHeaders = {
+				Accept: syncFetch.ContentTypes.JSON
+			};
 
-			var mHeaders = bCurrentWithCredentials ? {
+			var bCurrentWithCredentials = aWithCredentials.shift();
+			if (bCurrentWithCredentials) {
 				// the X-Requested-With Header is essential for the Theming-Service to determine if a GET request will be handled
 				// This forces a preflight request which should give us valid Allow headers:
 				//   Access-Control-Allow-Origin: ... fully qualified requestor origin ...
 				//   Access-Control-Allow-Credentials: true
-				"X-Requested-With": "XMLHttpRequest"
-			} : {};
+				oHeaders["X-Requested-With"] = "XMLHttpRequest";
+			}
+
+			function fnErrorCallback(error) {
+				// ignore failure at least temporarily as long as there are libraries built using outdated tools which produce no json file
+				Log.error("Could not load theme parameters from: " + sUrl, error); // could be an error as well, but let's avoid more CSN messages...
+
+				if (aWithCredentials.length > 0) {
+					// In a CORS scenario, IF we have sent credentials on the first try AND the request failed,
+					// we expect that a service could have answered with the following Allow header:
+					//     Access-Control-Allow-Origin: *
+					// In this case we must not send credentials, otherwise the service would have answered with:
+					//     Access-Control-Allow-Origin: https://...
+					//     Access-Control-Allow-Credentials: true
+					// Due to security constraints, the browser does not hand out any more information in a CORS scenario,
+					// so now we try again without credentials.
+					Log.warning("Initial library-parameters.json request failed ('withCredentials=" + bCurrentWithCredentials + "'; sUrl: '" + sUrl + "').\n" +
+								"Retrying with 'withCredentials=" + !bCurrentWithCredentials + "'.", "sap.ui.core.theming.Parameters");
+					loadParametersJSON(sUrl, sThemeBaseUrl, aWithCredentials);
+				}
+			}
 
 			// load and evaluate parameter file
-			jQuery.ajax({
-				url: sUrl,
-				dataType: 'json',
-				async: false,
-				xhrFields: {
-					// default is false
-					withCredentials: bCurrentWithCredentials
-				},
-				headers: mHeaders,
-				success: function(data, textStatus, xhr) {
+			try {
+				var response = syncFetch(sUrl, {
+					credentials: bCurrentWithCredentials ? "include" : "omit",
+					headers: oHeaders
+				});
+				if (response.ok) {
+					var data = response.json();
 					// Once we have a successful request we track the credentials setting for this origin
 					var sThemeOrigin = new URI(sThemeBaseUrl).origin();
 					mOriginsNeedingCredentials[sThemeOrigin] = bCurrentWithCredentials;
@@ -347,57 +280,36 @@ sap.ui.define([
 					} else {
 						mergeParameters(data, sThemeBaseUrl);
 					}
-				},
-				error: function(xhr, textStatus, error) {
-					// ignore failure at least temporarily as long as there are libraries built using outdated tools which produce no json file
-					Log.error("Could not load theme parameters from: " + sUrl, error); // could be an error as well, but let's avoid more CSN messages...
-
-					if (aWithCredentials.length > 0) {
-						// In a CORS scenario, IF we have sent credentials on the first try AND the request failed,
-						// we expect that a service could have answered with the following Allow header:
-						//     Access-Control-Allow-Origin: *
-						// In this case we must not send credentials, otherwise the service would have answered with:
-						//     Access-Control-Allow-Origin: https://...
-						//     Access-Control-Allow-Credentials: true
-						// Due to security constraints, the browser does not hand out any more information in a CORS scenario,
-						// so now we try again without credentials.
-						Log.warning("Initial library-parameters.json request failed ('withCredentials=" + bCurrentWithCredentials + "'; sUrl: '" + sUrl + "').\n" +
-									"Retrying with 'withCredentials=" + !bCurrentWithCredentials + "'.", "sap.ui.core.theming.Parameters");
-						loadParametersJSON(sUrl, sThemeBaseUrl, aWithCredentials);
-					}
+				} else {
+					throw new Error(response.statusText || response.status);
 				}
-			});
+
+			} catch (error) {
+				fnErrorCallback(error);
+			}
 		}
 
 		/**
 		 * Retrieves a map containing all inline-parameters.
-		 * Parameters from CSS Variables are dynamically written to the mParameters data-structure on demand,
-		 * everytime a parameter is read from a CSS variable via DOM API.
 		 *
-		 * IMPORTANT: See 'bGetAll' for special SYNC path for Parameters.get() and libraries with CSS Variables
-		 *
-		 * @param {boolean} bAsync whether to load and parse the parameters asynchronously
-		 * @param {boolean} bGetAll SYNC path only: when Parameters.get() is called,
-		 *                          we might need to enforce the loading of a library-parameters.json for libraries using CSS Variables instead of inline-parameters
+		 * @param {boolean} bAsync=undefined whether to load and parse the parameters asynchronously, default sync
 		 * @returns {object} a map of all parameters
 		 */
-		function getParameters(bAsync, bGetAll) {
+		function getParameters(bAsync) {
 			// Inital loading
 			if (!mParameters) {
 				// Merge an empty parameter set to initialize the internal object
 				mergeParameters({}, "");
 
-				sTheme = sap.ui.getCore().getConfiguration().getTheme();
-
 				forEachStyleSheet(function (sId) {
 					if (bAsync) {
-						if (ThemeCheck.checkStyle(sId)) {
+						if (ThemeHelper.checkStyle(sId)) {
 							parseParameters(sId);
 						} else {
 							aParametersToLoad.push(sId);
 						}
 					} else {
-						loadParameters(sId, bGetAll);
+						loadParameters(sId);
 					}
 				});
 			}
@@ -410,7 +322,7 @@ sap.ui.define([
 
 			aParametersToLoad.forEach(function (sId) {
 				// Only parse parameters in case theme is already applied. Else keep parameter ID for later
-				if (ThemeCheck.checkStyle(sId)) {
+				if (ThemeHelper.checkStyle(sId)) {
 					parseParameters(sId);
 				} else {
 					aPendingThemes.push(sId);
@@ -423,13 +335,10 @@ sap.ui.define([
 
 		/**
 		 * Loads library-parameters.json files if some libraries are missing.
-		 * @param {boolean} bGetAll whether we need to enforce the loading of library-parameters.json files for libraries with CSS variables
 		 */
-		function loadPendingLibraryParameters(bGetAll) {
+		function loadPendingLibraryParameters() {
 			// lazy loading of further library parameters
-			aParametersToLoad.forEach(function(sLibId) {
-				loadParameters(sLibId, bGetAll);
-			});
+			aParametersToLoad.forEach(loadParameters);
 
 			// clear queue
 			aParametersToLoad = [];
@@ -450,27 +359,6 @@ sap.ui.define([
 			}
 		};
 
-		function lookUpParameter(mParams, sParameterName, bUseScope) {
-			var sParam = mParams[sParameterName];
-
-			// if not found in cache it we read a CSS variable
-			if (!sParam) {
-				// In case scope is available use dummy element with given scope else use the computed style
-				// of document.body or if body is not available the scope of document.documentElement
-				var oComputedStyle = bUseScope ? oComputedScopeStyle : window.getComputedStyle(document.body || document.documentElement);
-				sParam = oComputedStyle.getPropertyValue("--" + sParameterName).trim();
-				// DOM Api returns "" for unkown variables, UI5 Api must return undefined
-				sParam = sParam != "" ? sParam : undefined;
-				if (sParam) {
-					sParam = checkAndResolveUI5Url(sParam, sParameterName);
-					// cache the url-resolved parameter value for later usage
-					mParams[sParameterName] = sParam;
-				}
-			}
-
-			return sParam;
-		}
-
 		/**
 		 * Returns parameter value from given map and handles legacy parameter names
 		 *
@@ -480,31 +368,38 @@ sap.ui.define([
 		 * @param {boolean} mOptions.loadPendingParameters If set to "true" and no parameter value is found,
 		 *                                                 all pending parameters will be loaded (see Parameters._addLibraryTheme)
 		 * @param {boolean} mOptions.async whether the parameter value should be retrieved asynchronous
-		 * @returns {string} parameter value or undefined
+		 * @returns {string|undefined} parameter value or undefined
 		 * @private
 		 */
 		function getParam(mOptions) {
-			var bAsync = mOptions.async, bUseScope = false, oParams = getParameters(bAsync);
+			var bAsync = mOptions.async, oParams = getParameters(bAsync);
 			if (mOptions.scopeName) {
 				oParams = oParams["scopes"][mOptions.scopeName];
-				bUseScope = true;
 			} else {
 				oParams = oParams["default"];
 			}
 
-			var sParamValue = lookUpParameter(oParams, mOptions.parameterName, bUseScope);
+			var sParamValue = oParams[mOptions.parameterName];
+
 			// [Compatibility]: if a parameter contains a prefix, we cut off the ":" and try again
 			// e.g. "my.lib:paramName"
 			if (!sParamValue) {
 				var iIndex = mOptions.parameterName.indexOf(":");
 				if (iIndex != -1) {
 					var sParamNameWithoutColon = mOptions.parameterName.substr(iIndex + 1);
-					sParamValue = lookUpParameter(oParams, sParamNameWithoutColon, bUseScope);
+					sParamValue = oParams[sParamNameWithoutColon];
 				}
 			}
 
 			// Sync: Fallback path for when parameter could not be found so far, library.css MIGHT be not loaded
 			if (mOptions.loadPendingParameters && typeof sParamValue === "undefined" && !bAsync) {
+				// Include library theme in case it's not already done, since link tag for library
+				// is added asynchronous after initLibrary has been executed
+				var aAllLibrariesRequireCss = Core.getAllLibrariesRequiringCss();
+				aAllLibrariesRequireCss.forEach(function (oLibThemingInfo) {
+					ThemeManager._includeLibraryThemeAndEnsureThemeRoot(oLibThemingInfo);
+				});
+
 				loadPendingLibraryParameters();
 				sParamValue = getParam({
 					parameterName: mOptions.parameterName,
@@ -554,7 +449,7 @@ sap.ui.define([
 		 * @ui5-restricted sap.ui.core
 		 * @param {boolean} [bAvoidLoading] Whether loading of parameters should be avoided
 		 * @param {boolean} [bAsync] Whether loading of parameters should be asynchronous
-		 * @return {array|undefined} Scope names
+		 * @return {string[]|undefined} Scope names
 		 */
 		Parameters._getScopes = function(bAvoidLoading, bAsync) {
 			if ( bAvoidLoading && !mParameters ) {
@@ -641,16 +536,6 @@ sap.ui.define([
 		 * </p>
 		 *
 		 * <p>
-		 * <b>Important, since 1.93:</b>
-		 * When using the <code>Parameters.get()</code> API to retrieve theming parameters defined as CSS variables,
-		 * please be aware that the API can also unknowingly retrieve arbitrary CSS variables defined in the DOM.
-		 * All CSS variables defined via the <code>:root</code> pseudo-class can be retrieved this way.
-		 * Please make sure to only access theming parameters defined in a UI5 theme/library.
-		 * </p>
-		 *
-		 * <br/>
-		 *
-		 * <p>
 		 * The following API variants are available (see also the below examples):
 		 * <ul>
 		 * <li> <b>(deprecated since 1.92)</b> If no parameter is given a key-value map containing all parameters is returned</li>
@@ -681,7 +566,7 @@ sap.ui.define([
 		 *
 		 * @example <caption>Scenario 2: Some Parameters are missing </caption>
 		 *  // "sapUiParam1", "sapUiParam2" are already available
-		 *  // "sapUiParam3" is not yet available missing
+		 *  // "sapUiParam3" is not yet available
 		 *  Parameters.get({
 		 *     name: ["sapUiParam1", "sapUiParam2", "sapUiParam3"],
 		 *     callback: function(mParams) {
@@ -725,11 +610,14 @@ sap.ui.define([
 			var sParamName, fnAsyncCallback, bAsync, aNames, iIndex;
 			var findRegisteredCallback = function (oCallbackInfo) { return oCallbackInfo.callback === fnAsyncCallback; };
 
-			if (!sap.ui.getCore().isInitialized()) {
+			if (!Core.isInitialized()) {
 				Log.warning("Called sap.ui.core.theming.Parameters.get() before core has been initialized. " +
 					"Consider using the API only when required, e.g. onBeforeRendering.");
 			}
 
+			if (!sTheme) {
+				sTheme = Configuration.getTheme();
+			}
 			// Parameters.get() without arguments returns
 			// copy of complete default parameter set
 			if (arguments.length === 0) {
@@ -743,10 +631,11 @@ sap.ui.define([
 				);
 
 				// first try to load all pending parameters
-				loadPendingLibraryParameters(true);
+				loadPendingLibraryParameters();
+
 				// retrieve parameters
 				// optionally might also trigger a sync JSON request, if a library was loaded but not parsed yet
-				var oParams = getParameters(false, true);
+				var oParams = getParameters();
 				return Object.assign({}, oParams["default"]);
 			}
 
@@ -808,8 +697,9 @@ sap.ui.define([
 			}
 
 			if (bAsync && fnAsyncCallback && Object.keys(vResult).length !== aNames.length) {
-				if (!sap.ui.getCore().isThemeApplied()) {
+				if (!ThemeManager.themeLoaded) {
 					resolveWithParameter = function () {
+						ThemeManager.detachEvent("ThemeChanged", resolveWithParameter);
 						var vParams = this.get({ // Don't pass callback again
 							name: vName.name,
 							scopeElement: vName.scopeElement
@@ -821,18 +711,17 @@ sap.ui.define([
 
 						fnAsyncCallback(vParams);
 						aCallbackRegistry.splice(aCallbackRegistry.findIndex(findRegisteredCallback), 1);
-						sap.ui.getCore().detachThemeChanged(resolveWithParameter);
 					}.bind(this);
 
 					// Check if identical callback is already registered and reregister with current parameters
 					iIndex = aCallbackRegistry.findIndex(findRegisteredCallback);
 					if (iIndex >= 0) {
-						sap.ui.getCore().detachThemeChanged(aCallbackRegistry[iIndex].eventHandler);
+						ThemeManager.detachEvent("ThemeChanged", aCallbackRegistry[iIndex].eventHandler);
 						aCallbackRegistry[iIndex].eventHandler = resolveWithParameter;
 					} else {
 						aCallbackRegistry.push({ callback: fnAsyncCallback, eventHandler: resolveWithParameter });
 					}
-					sap.ui.getCore().attachThemeChanged(resolveWithParameter);
+					ThemeManager.attachEvent("ThemeChanged", resolveWithParameter);
 					return undefined; // Don't return partial result in case we expect themeChanged event.
 				} else {
 					Log.error("One or more parameters could not be found.", "sap.ui.core.theming.Parameters");
@@ -857,7 +746,7 @@ sap.ui.define([
 				"default": {},
 				"scopes": {}
 			};
-			sTheme = sap.ui.getCore().getConfiguration().getTheme();
+			sTheme = Configuration.getTheme();
 			forEachStyleSheet(function(sId) {
 				var sLibname = sId.substr(13); // length of sap-ui-theme-
 				if (mLibraryParameters[sLibname]) {
@@ -878,14 +767,23 @@ sap.ui.define([
 		 * @deprecated since 1.92
 		 */
 		Parameters.reset = function() {
+			this._reset.apply(this, arguments);
+		};
+
+		/**
+		 * Resets the CSS parameters which finally will reload the parameters
+		 * the next time they are queried via the method <code>get</code>.
+		 *
+		 * @private
+		 * @ui5-restricted sap.ui.core.theming
+		 */
+		Parameters._reset = function() {
 			// hidden parameter {boolean} bOnlyWhenNecessary
 			var bOnlyWhenNecessary = arguments[0] === true;
-			if ( !bOnlyWhenNecessary || sap.ui.getCore().getConfiguration().getTheme() !== sTheme ) {
+			if ( !bOnlyWhenNecessary || Configuration.getTheme() !== sTheme ) {
+				sTheme = Configuration.getTheme();
+				aParametersToLoad = [];
 				mParameters = null;
-				if (oDummyScopeElement) {
-					document.documentElement.removeChild(oDummyScopeElement);
-					oDummyScopeElement = oComputedScopeStyle = undefined;
-				}
 				ThemeHelper.reset();
 			}
 		};
@@ -910,7 +808,7 @@ sap.ui.define([
 			}
 
 			if (bForce && !logo) {
-				return sap.ui.resource('sap.ui.core', 'themes/base/img/1x1.gif');
+				return sap.ui.require.toUrl('sap/ui/core/themes/base/img/1x1.gif');
 			}
 
 			return logo;

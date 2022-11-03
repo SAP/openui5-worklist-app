@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -35,7 +35,7 @@ sap.ui.define([
 	 * @extends sap.ui.base.Object
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @param {object} [mParameters] a map which contains the following parameter properties:
 	 * @param {string} [mParameters.id] The message id: will be generated if no id is set
@@ -293,7 +293,8 @@ sap.ui.define([
 	 *
 	 * @param {string} sTarget The message target
 	 *
-	 * @deprecated As a message may have multiple targets, use {@link #setTargets} instead
+	 * @deprecated since 1.79.0; As a message may have multiple targets, use {@link #setTargets}
+	 *   instead
 	 * @public
 	 */
 	Message.prototype.setTarget = function(sTarget) {
@@ -305,7 +306,8 @@ sap.ui.define([
 	 *
 	 * @returns {string} The message target
 	 *
-	 * @deprecated As a message may have multiple targets, use {@link #getTargets} instead
+	 * @deprecated since 1.79.0; As a message may have multiple targets, use {@link #getTargets}
+	 *   instead
 	 * @public
 	 */
 	Message.prototype.getTarget = function() {

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -72,115 +72,118 @@ function(
 	 * @implements sap.ui.core.Toolbar,sap.m.IBar
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.16
 	 * @alias sap.m.Toolbar
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var Toolbar = Control.extend("sap.m.Toolbar", /** @lends sap.m.Toolbar.prototype */ { metadata : {
+	var Toolbar = Control.extend("sap.m.Toolbar", /** @lends sap.m.Toolbar.prototype */ {
+		metadata : {
 
-		interfaces : [
-			"sap.ui.core.Toolbar",
-			"sap.m.IBar"
-		],
-		library : "sap.m",
-		properties : {
+			interfaces : [
+				"sap.ui.core.Toolbar",
+				"sap.m.IBar"
+			],
+			library : "sap.m",
+			properties : {
 
-			/**
-			 * Defines the width of the control.
-			 * By default, Toolbar is a block element. If the width is not explicitly set, the control will assume its natural size.
-			 */
-			width : {type : "sap.ui.core.CSSSize", group : "Appearance", defaultValue : null},
+				/**
+				 * Defines the width of the control.
+				 * By default, Toolbar is a block element. If the width is not explicitly set, the control will assume its natural size.
+				 */
+				width : {type : "sap.ui.core.CSSSize", group : "Appearance", defaultValue : null},
 
-			/**
-			 * Indicates that the whole toolbar is clickable. The Press event is fired only if Active is set to true.
-			 * Note: This property should be used when there are no interactive controls inside the toolbar and the toolbar itself is meant to be interactive.
-			 */
-			active : {type : "boolean", group : "Behavior", defaultValue : false},
+				/**
+				 * Indicates that the whole toolbar is clickable. The Press event is fired only if Active is set to true.
+				 * Note: This property should be used when there are no interactive controls inside the toolbar and the toolbar itself is meant to be interactive.
+				 */
+				active : {type : "boolean", group : "Behavior", defaultValue : false},
 
-			/**
-			 * Sets the enabled property of all controls defined in the content aggregation.
-			 * Note: This property does not apply to the toolbar itself, but rather to its items.
-			 */
-			enabled : {type : "boolean", group : "Behavior", defaultValue : true},
+				/**
+				 * Sets the enabled property of all controls defined in the content aggregation.
+				 * Note: This property does not apply to the toolbar itself, but rather to its items.
+				 */
+				enabled : {type : "boolean", group : "Behavior", defaultValue : true},
 
-			/**
-			 * Defines the height of the control. By default, the <code>height</code>
-			 * property depends on the used theme and the <code>design</code> property.
-			 *
-			 * <b>Note:</b> It is not recommended to use this property if the
-			 * <code>sapMTBHeader-CTX</code> class is used
-			 */
-			height : {type : "sap.ui.core.CSSSize", group : "Appearance", defaultValue : ''},
+				/**
+				 * Defines the height of the control. By default, the <code>height</code>
+				 * property depends on the used theme and the <code>design</code> property.
+				 *
+				 * <b>Note:</b> It is not recommended to use this property if the
+				 * <code>sapMTBHeader-CTX</code> class is used
+				 */
+				height : {type : "sap.ui.core.CSSSize", group : "Appearance", defaultValue : ''},
 
-			/**
-			 * Defines the toolbar design.
-			 *
-			 * <b>Note:</b> Design settings are theme-dependent. They also determine the default height of the toolbar.
-			 * @since 1.16.8
-			 */
-			design : {type : "sap.m.ToolbarDesign", group : "Appearance", defaultValue : ToolbarDesign.Auto},
+				/**
+				 * Defines the toolbar design.
+				 *
+				 * <b>Note:</b> Design settings are theme-dependent. They also determine the default height of the toolbar.
+				 * @since 1.16.8
+				 */
+				design : {type : "sap.m.ToolbarDesign", group : "Appearance", defaultValue : ToolbarDesign.Auto},
 
-			/**
-			 * Defines the visual style of the <code>Toolbar</code>.
-			 *
-			 * <b>Note:</b> The visual styles are theme-dependent.
-			 * @since 1.54
-			 */
-			style : {type : "sap.m.ToolbarStyle", group : "Appearance", defaultValue : ToolbarStyle.Standard},
+				/**
+				 * Defines the visual style of the <code>Toolbar</code>.
+				 *
+				 * <b>Note:</b> The visual styles are theme-dependent.
+				 * @since 1.54
+				 */
+				style : {type : "sap.m.ToolbarStyle", group : "Appearance", defaultValue : ToolbarStyle.Standard},
 
-			/**
-			 * Defines the aria-haspopup attribute of the <code>Toolbar</code>. if the active <code>design</code> is true.
-			 *
-			 * <b>Guidance for choosing appropriate value:</b>
-			 * <ul>
-			 * <li> We recommend that you use the {@link sap.ui.core.aria.HasPopup} enumeration.</li>
-			 * <li> If you use controls based on <code>sap.m.Popover</code> or <code>sap.m.Dialog</code>,
-			 * then you must use <code>AriaHasPopup.Dialog</code> (both <code>sap.m.Popover</code> and
-			 * <code>sap.m.Dialog</code> have role "dialog" assigned internally).</li>
-			 * <li> If you use other controls, or directly <code>sap.ui.core.Popup</code>, you need to check
-			 * the container role/type and map the value of <code>ariaHasPopup</code> accordingly.</li>
-			 * </ul>
-			 *
-			 * @since 1.79.0
-			 */
-			ariaHasPopup : {type: "string", group : "Accessibility", defaultValue : null}
-		},
-		defaultAggregation : "content",
-		aggregations : {
+				/**
+				 * Defines the aria-haspopup attribute of the <code>Toolbar</code>. if the active <code>design</code> is true.
+				 *
+				 * <b>Guidance for choosing appropriate value:</b>
+				 * <ul>
+				 * <li> We recommend that you use the {@link sap.ui.core.aria.HasPopup} enumeration.</li>
+				 * <li> If you use controls based on <code>sap.m.Popover</code> or <code>sap.m.Dialog</code>,
+				 * then you must use <code>AriaHasPopup.Dialog</code> (both <code>sap.m.Popover</code> and
+				 * <code>sap.m.Dialog</code> have role "dialog" assigned internally).</li>
+				 * <li> If you use other controls, or directly <code>sap.ui.core.Popup</code>, you need to check
+				 * the container role/type and map the value of <code>ariaHasPopup</code> accordingly.</li>
+				 * </ul>
+				 *
+				 * @since 1.79.0
+				 */
+				ariaHasPopup : {type: "string", group : "Accessibility", defaultValue : null}
+			},
+			defaultAggregation : "content",
+			aggregations : {
 
-			/**
-			 * The content of the toolbar.
-			 */
-			content : {type : "sap.ui.core.Control", multiple : true, singularName : "content"}
-		},
-		associations : {
+				/**
+				 * The content of the toolbar.
+				 */
+				content : {type : "sap.ui.core.Control", multiple : true, singularName : "content"}
+			},
+			associations : {
 
-			/**
-			 * Association to controls / ids which label this control (see WAI-ARIA attribute aria-labelledby).
-			 */
-			ariaLabelledBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaLabelledBy"}
-		},
-		events : {
+				/**
+				 * Association to controls / ids which label this control (see WAI-ARIA attribute aria-labelledby).
+				 */
+				ariaLabelledBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaLabelledBy"}
+			},
+			events : {
 
-			/**
-			 * Fired when the user clicks on the toolbar, if the Active property is set to "true".
-			 */
-			press : {
-				parameters : {
+				/**
+				 * Fired when the user clicks on the toolbar, if the Active property is set to "true".
+				 */
+				press : {
+					parameters : {
 
-					/**
-					 * The toolbar item that was pressed
-					 */
-					srcControl : {type : "sap.ui.core.Control"}
+						/**
+						 * The toolbar item that was pressed
+						 */
+						srcControl : {type : "sap.ui.core.Control"}
+					}
 				}
-			}
+			},
+			designtime: "sap/m/designtime/Toolbar.designtime"
 		},
-		designtime: "sap/m/designtime/Toolbar.designtime"
-	}});
+
+		renderer: ToolbarRenderer
+	});
 
 	EnabledPropagator.call(Toolbar.prototype);
 
@@ -192,7 +195,7 @@ function(
 	 *
 	 * @static
 	 * @protected
-	 * @param {String} sWidth
+	 * @param {string} sWidth
 	 * @return {boolean}
 	 */
 	Toolbar.isRelativeWidth = function(sWidth) {
@@ -209,8 +212,8 @@ function(
 	 *
 	 * @static
 	 * @protected
-	 * @param {String} sId Control ID
-	 * @return {String} width
+	 * @param {string} sId Control ID
+	 * @return {string} width
 	 */
 	Toolbar.getOrigWidth = function(sId) {
 		var oControl = sap.ui.getCore().byId(sId);
@@ -230,7 +233,7 @@ function(
 	 * @static
 	 * @protected
 	 * @param {sap.ui.core.Control} oControl UI5 Control
-	 * @param {String} [sShrinkClass] Shrink item class name
+	 * @param {string} [sShrinkClass] Shrink item class name
 	 * @returns {true|false|undefined|Object}
 	 */
 	Toolbar.checkShrinkable = function(oControl, sShrinkClass) {
@@ -417,6 +420,12 @@ function(
 		}
 
 		return sRole;
+	};
+
+	Toolbar.prototype.getAccessibilityInfo = function () {
+		return {
+			children: this.getContent()
+		};
 	};
 
 	/*

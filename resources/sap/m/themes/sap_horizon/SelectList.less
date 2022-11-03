@@ -8,13 +8,26 @@
 @_sap_m_SelectListItemBelizeFocus_Height: 0.25rem; // 2 borders * 0.0625rem + 2 offsets (top and bottom) * 0.0625rem
 
 /* selected */
-.sapMSelectListItemBaseSelected {
+.sapMSelectListItemBase.sapMSelectListItemBaseSelected {
 	background: @sapUiListSelectionBackgroundColor;
+	color: @sapUiListTextColor;
+	border-bottom: 0.0625rem solid @sapUiListSelectionBorderColor;
+
+	&:hover {
+		background: @sapUiListHoverSelectionBackground;
+	}
 }
+
 
 /* pressed */
 html.sap-desktop .sapMSelectListItemBase.sapMSelectListItemBasePressed:focus {
 	outline: 0.0625rem dotted @sapUiContentContrastFocusColor;
+}
+
+.sapMSelectListItemBase.sapMSelectListItemBasePressed,
+.sapMSelectListItemBase.sapMSelectListItemBaseSelected.sapMSelectListItemBasePressed {
+	background-color: @sapUiListActiveBackground;
+	color: @sapUiListActiveTextColor;
 }
 
 .sapMSelectListItemBase.sapMSelectListItemBasePressed .sapMSelectListItemIcon {
@@ -33,7 +46,8 @@ html.sap-desktop .sapMSelectListItemBase:focus::after,
 .sapMComboBoxBasePicker-CTX .sapMSelectListItemBaseSelected::after {
 	pointer-events: none;
 	content: "";
-	border: @sapContent_FocusWidth @sapContent_FocusStyle @sapContent_FocusColor;
+	outline: @sapUiContentFocusWidth @sapUiContentFocusStyle @sapUiContentFocusColor;
+	outline-offset: -0.1875rem;
 	position: absolute;
 	top: 0;
 	right: 0;
@@ -48,17 +62,9 @@ html.sap-desktop .sapMSelectListItemBase:focus {
 }
 
 .sapMSelectListItemBase {
+	background-color: @sapUiListBackground;
+	border-color: @sapUiListBorderColor;
 	position: relative;
-
-	&:last-child:not(:only-child)::after {
-		border-bottom-left-radius: 0.75rem;
-		border-bottom-right-radius: 0.75rem;
-	}
-}
-
-.sapMSltPicker-CTX:not(.sapMSltPickerWithSubHeader) .sapMSelectListItemBase {
-	&:first-child::after {
-		border-top-left-radius: 0.75rem;
-		border-top-right-radius: 0.75rem;
-	}
+	font-size: @sapFontSize;
+	color: @sapUiListTextColor;
 }

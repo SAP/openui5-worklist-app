@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -8,7 +8,6 @@ sap.ui.define([
 	'sap/ui/unified/calendar/CalendarDate',
 	'sap/ui/unified/calendar/CalendarUtils',
 	'sap/ui/unified/calendar/Month',
-	'sap/ui/core/date/UniversalDate',
 	'sap/ui/core/IconPool',
 	'./PlanningCalendarLegend',
 	'sap/ui/core/InvisibleText',
@@ -19,7 +18,6 @@ sap.ui.define([
 		CalendarDate,
 		CalendarUtils,
 		Month,
-		UniversalDate,
 		IconPool,
 		PlanningCalendarLegend,
 		InvisibleText,
@@ -42,7 +40,7 @@ sap.ui.define([
 		 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer
-		 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered
+		 * @param {sap.m.SinglePlanningCalendarMonthGrid} oControl An object representation of the control that should be rendered
 		 */
 		SinglePlanningCalendarMonthGridRenderer.render = function(oRm, oControl) {
 			var oLocaleData = oControl._getCoreLocaleData();
@@ -341,7 +339,7 @@ sap.ui.define([
 
 			if (app.hasPrevious < 0) {
 				aClasses = ["sapUiCalendarAppArrowIconLeft", "sapUiCalendarAppArrowIcon"];
-				oRm.icon("sap-icon://arrow-left", aClasses, { title: null });
+				oRm.icon("sap-icon://arrow-left", aClasses, { title: null, role: "img" });
 			}
 
 			if (sIcon) {
@@ -350,6 +348,7 @@ sap.ui.define([
 
 				mAttributes["id"] = sId + "-Icon";
 				mAttributes["title"] = null;
+				mAttributes["role"] = "img";
 				oRm.icon(sIcon, aClasses, mAttributes);
 			}
 
@@ -363,7 +362,7 @@ sap.ui.define([
 
 			if (app.hasNext < 0) {
 				aClasses = ["sapUiCalendarAppArrowIconRight", "sapUiCalendarAppArrowIcon"];
-				oRm.icon("sap-icon://arrow-right", aClasses, { title: null });
+				oRm.icon("sap-icon://arrow-right", aClasses, { title: null, role: "img" });
 			}
 
 			oRm.openStart("span", sId + "-Descr");
@@ -379,15 +378,19 @@ sap.ui.define([
 		};
 
 		SinglePlanningCalendarMonthGridRenderer.renderDayNames = function(oRm, oControl, oLocaleData) {
-			var iFirstDayOfWeek = oLocaleData.getFirstDayOfWeek(),
+			var iAPIFirstDayOfWeek = oControl.getFirstDayOfWeek(),
+				iFirstDayOfWeek = iAPIFirstDayOfWeek > 0 ? iAPIFirstDayOfWeek : oLocaleData.getFirstDayOfWeek(),
 				sId = oControl.getId(),
 				sDayId,
 				sCalendarType = Core.getConfiguration().getCalendarType(),
 				aWeekDays = oLocaleData.getDaysStandAlone("abbreviated", sCalendarType),
 				aWeekDaysWide = oLocaleData.getDaysStandAlone("wide", sCalendarType),
-				oFirstRenderedDate = CalendarUtils._getFirstDateOfWeek(CalendarDate.fromLocalJSDate(oControl.getStartDate())),
+				oStartDate = new Date(oControl.getStartDate()),
+				oFirstRenderedDate,
 				iDayIndex;
 
+			oStartDate.setDate(oStartDate.getDate() - oStartDate.getDay() + iFirstDayOfWeek);
+			oFirstRenderedDate = CalendarDate.fromLocalJSDate(oStartDate);
 			oRm.openStart("div", sId + "-Names");
 			oRm.class("sapMSPCMonthDayNames");
 			oRm.openEnd(); // span element

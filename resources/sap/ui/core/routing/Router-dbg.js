@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -14,6 +14,7 @@ sap.ui.define([
 	'./History',
 	'sap/ui/thirdparty/crossroads',
 	"sap/base/util/UriParameters",
+	"sap/base/util/each",
 	"sap/base/util/deepEqual",
 	"sap/base/util/isEmptyObject",
 	"sap/base/Log",
@@ -31,6 +32,7 @@ sap.ui.define([
 		History,
 		crossroads,
 		UriParameters,
+		each,
 		deepEqual,
 		isEmptyObject,
 		Log,
@@ -43,7 +45,7 @@ sap.ui.define([
 		var oRouters = {};
 
 		/**
-		 * Instantiates a SAPUI5 Router
+		 * Instantiates a router
 		 *
 		 * @class
 		 * @extends sap.ui.base.EventProvider
@@ -164,7 +166,8 @@ sap.ui.define([
 		 *     {
 		 *          //same name as in the config.bypassed.target
 		 *          notFound: {
-		 *              viewName: "notFound",
+		 *              type: "View"
+		 *              name: "notFound",
 		 *              ...
 		 *              // more properties to place the view in the correct container
 		 *          }
@@ -287,14 +290,14 @@ sap.ui.define([
 					});
 				}
 
-				jQuery.each(oRoutes, function(sRouteName, oRouteConfig) {
+				each(oRoutes, function(sRouteName, oRouteConfig) {
 					if (oRouteConfig.name === undefined) {
 						oRouteConfig.name = sRouteName;
 					}
 					that.addRoute(oRouteConfig);
 				});
 
-				this._oRouter.bypassed.add(jQuery.proxy(this._onBypassed, this));
+				this._oRouter.bypassed.add(this._onBypassed.bind(this));
 
 				if (!oRouterHashChanger) {
 					oRouterHashChanger = HashChanger.getInstance().createRouterHashChanger();
@@ -591,7 +594,7 @@ sap.ui.define([
 				this._oRouter.removeAllRoutes();
 				this._oRouter = null;
 
-				jQuery.each(this._oRoutes, function(iRouteIndex, oRoute) {
+				each(this._oRoutes, function(iRouteIndex, oRoute) {
 					oRoute.destroy();
 				});
 				this._oRoutes = null;
@@ -659,7 +662,7 @@ sap.ui.define([
 			},
 
 			/**
-			 * @typedef {Object} sap.ui.core.routing.RouteInfo
+			 * @typedef {object} sap.ui.core.routing.RouteInfo
 			 * @property {string} name The route name
 			 * @property {Object.<string, string>} arguments The route data
 			 * @public
@@ -691,7 +694,7 @@ sap.ui.define([
 			 * Returns the route with the given name or <code>undefined</code> if no route is found.
 			 *
 			 * @param {string} sName Name of the route
-			 * @returns {sap.ui.core.routing.Route} Route with the provided name or <code>undefined</code>.
+			 * @returns {sap.ui.core.routing.Route|undefined} Route with the provided name or <code>undefined</code>.
 			 * @public
 			 * @since 1.25.1
 			 */
@@ -883,9 +886,9 @@ sap.ui.define([
 
 			/**
 			 * Returns the name of the last matched route.
-			 * If there's no route matched before, it returns undefined
+			 * If there's no route matched before, it returns <code>undefined</code>
 			 *
-			 * @returns {string} The name of the last matched route
+			 * @returns {string|undefined} The name of the last matched route
 			 */
 			_getLastMatchedRouteName: function() {
 				return this._oMatchedRoute && this._oMatchedRoute._oConfig.name;
@@ -1621,7 +1624,7 @@ sap.ui.define([
 		 * Get a registered router.
 		 *
 		 * @param {string} sName Name of the router
-		 * @returns {sap.ui.core.routing.Router} The router with the specified name, else undefined
+		 * @returns {sap.ui.core.routing.Router|undefined} The router with the specified name, else <code>undefined</code>
 		 * @public
 		 */
 		Router.getRouter = function (sName) {

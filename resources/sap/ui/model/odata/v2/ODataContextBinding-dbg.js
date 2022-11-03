@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -15,26 +15,35 @@ sap.ui.define([
 	"use strict";
 
 	/**
-	 * Constructor for odata.ODataContextBinding
-	 *
 	 * @class
-	 * The ContextBinding is a specific binding for a setting context for the model
+	 * Context binding for an OData V2 model.
 	 *
-	 * @param {sap.ui.model.Model} oModel
-	 * @param {string} sPath
-	 * @param {sap.ui.model.Context} oContext
+	 * @param {sap.ui.model.odata.v2.ODataModel} oModel The OData V2 model
+	 * @param {string} sPath The binding path in the model
+	 * @param {sap.ui.model.Context} [oContext]
+	 *   The context which is required as base for a relative path.
 	 * @param {object} [mParameters] A map which contains additional parameters for the binding.
-	 * @param {string} [mParameters.expand] For the OData <code>$expand</code> query option parameter which should be included in the request
-	 * @param {string} [mParameters.select] For the OData <code>$select</code> query option parameter which should be included in the request
-	 * @param {Object<string,string>} [mParameters.custom] An optional map of custom query parameters. Custom parameters must not start with <code>$</code>.
 	 * @param {boolean} [mParameters.createPreliminaryContext]
-	 *   Whether a preliminary context will be created
+	 *   Whether a preliminary context is created
+	 * @param {Object<string,string>} [mParameters.custom]
+	 *   An optional map of custom query parameters. Custom parameters must not start with
+	 *   <code>$</code>.
+	 * @param {string} [mParameters.expand]
+	 *   Value for the OData <code>$expand</code> query option parameter which is included in the
+	 *   request after URL encoding of the given value.
+	 * @param {string} [mParameters.groupId]
+	 *   The group id to be used for requests originating from the binding
+	 * @param {string} [mParameters.select]
+	 *   Value for the OData <code>$select</code> query option parameter which is included in the
+	 *   request after URL encoding of the given value.
 	 * @param {boolean} [mParameters.usePreliminaryContext]
-	 *   Whether a preliminary context will be used. When set to <code>true</code>, the model can
-	 *   bundle the OData calls for dependent bindings into fewer $batch requests. For more
-	 *   information, see
-	 *   {@link topic:6c47b2b39db9404582994070ec3d57a2#loio62149734b5c24507868e722fe87a75db Optimizing Dependent Bindings}
-	 * @abstract
+	 *   Whether a preliminary context is used. When set to <code>true</code>, the model can bundle
+	 *   the OData calls for dependent bindings into fewer $batch requests. For more information,
+	 *   see {@link topic:6c47b2b39db9404582994070ec3d57a2#loio62149734b5c24507868e722fe87a75db
+	 *   Optimizing Dependent Bindings}.
+	 * @param {string} [mParameters.batchGroupId]
+	 *   <b>Deprecated</b>, use <code>groupId</code> instead. Sets the batch group id to be used for
+	 *   requests originating from the binding.
 	 * @public
 	 * @alias sap.ui.model.odata.v2.ODataContextBinding
 	 * @extends sap.ui.model.ContextBinding
@@ -59,7 +68,7 @@ sap.ui.define([
 	/**
 	 * Returns the bound context.
 	 *
-	 * @returns {sap.ui.model.odata.v2.Context}
+	 * @returns {sap.ui.model.odata.v2.Context|null}
 	 *   The context object used by this context binding or <code>null</code>
 	 * @function
 	 * @name sap.ui.model.odata.v2.ODataContextBinding#getBoundContext
@@ -145,7 +154,7 @@ sap.ui.define([
 	/**
 	 * @see sap.ui.model.ContextBinding.prototype.checkUpdate
 	 *
-	 * @param {boolean} bForceUpdate unused
+	 * @param {boolean} [bForceUpdate] unused
 	 */
 	ODataContextBinding.prototype.checkUpdate = function(/*bForceUpdate*/) {
 		var oContext,
@@ -280,7 +289,7 @@ sap.ui.define([
 	 * @private
 	 */
 	ODataContextBinding.prototype.setContext = function(oContext) {
-		var oBindingContext, sContextPath, oData, bReloadNeeded, sResolvedPath,
+		var oBindingContext, sContextPath, oData, sNavigationProperty, bReloadNeeded, sResolvedPath,
 			bForceUpdate = oContext && oContext.isRefreshForced(),
 			bPreliminary = oContext && oContext.isPreliminary(),
 			bTransient = oContext && oContext.isTransient && oContext.isTransient(),
@@ -303,8 +312,12 @@ sap.ui.define([
 		if (Context.hasChanged(this.oContext, oContext)) {
 			this.oContext = oContext;
 			sResolvedPath = this.getResolvedPath();
-			// If path doesn't resolve or parent context is created, reset current context
-			if (!sResolvedPath || bTransient) {
+			if (sResolvedPath && bTransient) {
+				// prevent propagation of transient context if it refers to a navigation property
+				sNavigationProperty = this.oModel.oMetadata
+					._splitByLastNavigationProperty(sResolvedPath).lastNavigationProperty;
+			}
+			if (!sResolvedPath || sNavigationProperty) {
 				if (this.oElementContext !== null) {
 					this.oElementContext = null;
 					this._fireChange({ reason: ChangeReason.Context });
@@ -359,14 +372,17 @@ sap.ui.define([
 	};
 
 	ODataContextBinding.prototype._fireChange = function(mParameters, bForceUpdate, bUpdated) {
+		var bOldUpdated;
+
 		if (this.oElementContext) {
+			bOldUpdated = this.oElementContext.isUpdated();
 			this.oElementContext.setForceRefresh(bForceUpdate);
 			this.oElementContext.setUpdated(bUpdated);
 		}
 		ContextBinding.prototype._fireChange.call(this, mParameters);
 		if (this.oElementContext) {
 			this.oElementContext.setForceRefresh(false);
-			this.oElementContext.setUpdated(false);
+			this.oElementContext.setUpdated(bOldUpdated);
 		}
 	};
 

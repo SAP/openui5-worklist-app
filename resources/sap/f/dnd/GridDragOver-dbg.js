@@ -1,18 +1,18 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define(['sap/ui/base/Object', "sap/ui/thirdparty/jquery", "sap/base/Log"],
-	function(BaseObject, jQuery, Log) {
+sap.ui.define(['sap/ui/base/Object', "sap/ui/thirdparty/jquery", "sap/base/Log", "sap/ui/core/Configuration"],
+	function(BaseObject, jQuery, Log, Configuration) {
 	"use strict";
 
 	/**
 	 * Handles dragging of a control over a given grid container.
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @extends sap.ui.base.Object
 	 *
@@ -22,12 +22,14 @@ sap.ui.define(['sap/ui/base/Object', "sap/ui/thirdparty/jquery", "sap/base/Log"]
 	 */
 	var GridDragOver = BaseObject.extend("sap.f.dnd.GridDragOver", {
 		/**
-		 * @type {Number} The timeout to hold on same position, before drop is suggested
+		 * The timeout to hold on same position, before drop is suggested.
+		 * @type {int}
 		 */
 		_iTimeoutBeforeDrop: 200,
 
 		/**
-		 * @type {jQuery} The indicator to show in the grid
+		 * The indicator to show in the grid.
+		 * @type {jQuery}
 		 */
 		_$indicator: jQuery("<div class='sapUiDnDGridIndicator'></div>"),
 
@@ -140,7 +142,7 @@ sap.ui.define(['sap/ui/base/Object', "sap/ui/thirdparty/jquery", "sap/base/Log"]
 	};
 
 	/**
-	 * @typedef {Object} DropPosition
+	 * @typedef {object} DropPosition
 	 * @property {sap.ui.core.Control} targetControl The control over which, or next to which is the suggested drop position.
 	 * @property {string} position Is it before or after the target control. Possible values are <code>Before</code> and <code>After</code>.
 	 */
@@ -326,8 +328,7 @@ sap.ui.define(['sap/ui/base/Object', "sap/ui/thirdparty/jquery", "sap/base/Log"]
 	};
 
 	/**
-	 * Hide original indicator
-	 * @param {jQuery.Event} oDragEvent The drag event
+	 * Hide original indicator.
 	 */
 	GridDragOver.prototype._hideCoreDefaultIndicator = function() {
 		var oCoreDefaultIndicator = this._oCoreDragSession.getIndicator(),
@@ -345,7 +346,6 @@ sap.ui.define(['sap/ui/base/Object', "sap/ui/thirdparty/jquery", "sap/base/Log"]
 
 	/**
 	 * Resets the indicator used by the core drag and drop.
-	 * @param {jQuery.Event} oDragEvent The drag event
 	 */
 	GridDragOver.prototype._resetCoreDefaultIndicator = function() {
 		var oCoreDefaultIndicator = this._oCoreDragSession.getIndicator(),
@@ -382,8 +382,8 @@ sap.ui.define(['sap/ui/base/Object', "sap/ui/thirdparty/jquery", "sap/base/Log"]
 
 	/**
 	 * Prevents infinite move of position, caused by the rearrangement.
-	 * @param {Number} iPageX Mouse x
-	 * @param {Number} iPageY Mouse y
+	 * @param {number} iPageX Mouse x
+	 * @param {number} iPageY Mouse y
 	 * @returns {boolean} Should suggested position freeze
 	 */
 	GridDragOver.prototype._shouldFreeze = function(iPageX, iPageY) {
@@ -398,8 +398,8 @@ sap.ui.define(['sap/ui/base/Object', "sap/ui/thirdparty/jquery", "sap/base/Log"]
 	/**
 	 * Prevents infinite move of position, caused by the rearrangement.
 	 * Saves the current position
-	 * @param {Number} iPageX Mouse x
-	 * @param {Number} iPageY Mouse y
+	 * @param {number} iPageX Mouse x
+	 * @param {number} iPageY Mouse y
 	 */
 	GridDragOver.prototype._freezeCurrentPosition = function(iPageX, iPageY) {
 		this._mFreezePosition = {
@@ -569,8 +569,8 @@ sap.ui.define(['sap/ui/base/Object', "sap/ui/thirdparty/jquery", "sap/base/Log"]
 
 	/**
 	 * Gets the control from target aggregation which is on the given position (if any).
-	 * @param {Number} iPageX Mouse x
-	 * @param {Number} iPageY Mouse y
+	 * @param {number} iPageX Mouse x
+	 * @param {number} iPageY Mouse y
 	 * @returns {jQuery|null} The jQuery ref of the control which is on this position
 	 */
 	GridDragOver.prototype._findItemFromPoint = function(iPageX, iPageY) {
@@ -591,15 +591,15 @@ sap.ui.define(['sap/ui/base/Object', "sap/ui/thirdparty/jquery", "sap/base/Log"]
 
 	/**
 	 * Gets the closest control from target aggregation which is on the given position (if any).
-	 * @param {Number} iPageX Mouse x
-	 * @param {Number} iPageY Mouse y
+	 * @param {number} iPageX Mouse x
+	 * @param {number} iPageY Mouse y
 	 * @returns {jQuery|null} The jQuery ref of the control which is closest to this position
 	 */
 	GridDragOver.prototype._findClosestItem = function(iPageX, iPageY) {
 		// note: this method can be improved, currently it handles most of the cases, but not all of them
 
 		// try around
-		var bIsRtl = sap.ui.getCore().getConfiguration().getRTL(),
+		var bIsRtl = Configuration.getRTL(),
 			iIsRtlModifier = bIsRtl ? -1 : 1,
 			iStepX = 80 * iIsRtlModifier, // px
 			iStepY = 20, // px

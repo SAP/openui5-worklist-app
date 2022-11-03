@@ -1,18 +1,20 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
 	"sap/ui/core/delegate/ItemNavigation",
 	"sap/ui/events/KeyCodes",
 	"sap/base/Log",
-	"sap/f/library"
+	"sap/f/library",
+	"sap/ui/thirdparty/jquery"
 ], function (
 	ItemNavigation,
 	KeyCodes,
 	Log,
-	library
+	library,
+	jQuery
 ) {
 	"use strict";
 
@@ -29,14 +31,13 @@ sap.ui.define([
 	 *
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @extends sap.ui.core.delegate.ItemNavigation
 	 *
 	 * @private
 	 * @constructor
 	 * @alias sap.f.delegate.GridItemNavigation
-	 * @ui5-metamodel This control/element will also be described in the UI5 (legacy) designtime metamodel
 	 */
 	var GridItemNavigation = ItemNavigation.extend("sap.f.delegate.GridItemNavigation", /** @lends sap.f.GridItemNavigation.prototype */ {
 		metadata: {

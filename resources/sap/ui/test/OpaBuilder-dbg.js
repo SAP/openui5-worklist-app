@@ -1,6 +1,6 @@
 /*!
 * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
 */
 
@@ -285,7 +285,7 @@ sap.ui.define(
          *
          * @param {sap.ui.test.Opa5} [oOpaInstance] the Opa5 instance to operate on
          * @param {string | RegExp} [vId] the id of the target control(s)
-         * @param {string} [vControlType] the type of the target control(s)
+         * @param {string} [sControlType] the type of the target control(s)
          * @param {boolean} [bDialogElement] if true, only popover and dialogs are searched for
          * @param {sap.ui.test.matchers.Matcher | function | Array | Object} [vMatchers] additional matchers to filter target control(s)
          * @param {sap.ui.test.actions.Action | function | Array} [vActions] the actions to be performed on target control(s)
@@ -417,12 +417,12 @@ sap.ui.define(
         /**
          * Defines the control type of the target control(s).
          *
-         * @param {string} vControlType the type of the target control(s)
+         * @param {string} sControlType the type of the target control(s)
          * @returns {this} this OpaBuilder instance
          * @public
          */
-        OpaBuilder.prototype.hasType = function (vControlType) {
-            return this.options({controlType: vControlType});
+        OpaBuilder.prototype.hasType = function (sControlType) {
+            return this.options({controlType: sControlType});
         };
 
         /**
@@ -490,7 +490,7 @@ sap.ui.define(
          * Adds a matcher that checks for a certain number of aggregation items.
          *
          * @param {string} sAggregationName the aggregation name
-         * @param [int] iNumber length to check against
+         * @param {int} iNumber length to check against
          * @returns {this} this OpaBuilder instance
          * @public
          */
@@ -669,8 +669,8 @@ sap.ui.define(
          * @returns {this} this OpaBuilder instance
          * @public
          */
-        OpaBuilder.prototype.doEnterText = function (sText, bClearFirst, bKeepFocus, bPressEnterKey, sIdSuffix) {
-            return this.do(OpaBuilder.Actions.enterText(sText, bClearFirst, bKeepFocus, bPressEnterKey, sIdSuffix));
+        OpaBuilder.prototype.doEnterText = function (sText, bClearTextFirst, bKeepFocus, bPressEnterKey, sIdSuffix) {
+            return this.do(OpaBuilder.Actions.enterText(sText, bClearTextFirst, bKeepFocus, bPressEnterKey, sIdSuffix));
         };
 
         /**
@@ -1123,7 +1123,7 @@ sap.ui.define(
              * Creates a matcher function that returns an aggregation element of a control at a given index.
              * @param {string} sAggregationName the name of the aggregation that is used for matching
              * @param {int} iIndex the index within the aggregation
-             * @returns {function} the matcher function returns the item at a certain index in the aggregation or null if index not in range
+             * @returns {function(sap.ui.core.Control): sap.ui.base.ManagedObject} the matcher function returns the item at a certain index in the aggregation or <code>undefined</code> if index not in range
              * @public
              * @static
              */

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -76,7 +76,7 @@ sap.ui.define([
 			 *   corresponding number of milliseconds since 1 January, 1970 UTC.
 			 *   Otherwise the values are compared with the JavaScript operators <code>===</code>
 			 *   and <code>></code>.
-			 * @return {number}
+			 * @returns {number}
 			 *   The result of the comparison: <code>0</code> if the values are equal,
 			 *   <code>1</code> if the first value is larger, <code>-1</code> if the second value
 			 *   is larger, <code>NaN</code> if they cannot be compared
@@ -116,13 +116,13 @@ sap.ui.define([
 			 *   </ul>
 			 *   If the specified <code>sResponseBody</code> contains responses for change sets,
 			 *   then the corresponding response objects will be returned in a nested array.
-			 * @throws {Error}
+			 * @throws {Error} If
 			 *   <ul>
-			 *     <li> If the <code>sContentType</code> parameter does not represent a
+			 *     <li> the <code>sContentType</code> parameter does not represent a
 			 *       "multipart/mixed" media type with "boundary" parameter
-			 *     <li> If the "charset" parameter of the "Content-Type" header of a nested response
+			 *     <li> the "charset" parameter of the "Content-Type" header of a nested response
 			 *       has a value other than "UTF-8"
-			 *     <li> If there is no "Content-ID" header for a change set response or its value is
+			 *     <li> there is no "Content-ID" header for a change set response or its value is
 			 *       not a number
 			 *   </ul>
 			 *
@@ -139,13 +139,16 @@ sap.ui.define([
 			 * and URLs.
 			 *
 			 * @param {any} vValue
-			 *   The value according to "OData JSON Format Version 4.0" section
-			 *   "7.1 Primitive Value"
+			 *   The value according to <a href=
+			 *   "https://docs.oasis-open.org/odata/odata-json-format/v4.0/os/odata-json-format-v4.0-os.html#_Primitive_Value"
+			 *   >"OData JSON Format Version 4.0" section "7.1 Primitive Value"</a>
 			 * @param {string} sType
 			 *   The OData primitive type, for example "Edm.String"
 			 * @returns {string}
-			 *   The literal according to "OData Version 4.0 Part 2: URL Conventions" section
-			 *   "5.1.1.6.1 Primitive Literals"
+			 *   The literal according to <a href=
+			 *   "https://docs.oasis-open.org/odata/odata/v4.0/odata-v4.0-part2-url-conventions.html"
+			 *   >"OData Version 4.0 Part 2: URL Conventions"</a> section
+			 *   "5.1.1.11.1 Primitive Literals"
 			 * @throws {Error}
 			 *   If the value is undefined or the type is not supported
 			 *
@@ -241,7 +244,7 @@ sap.ui.define([
 						// "round" to millis: "HH:mm:ss.SSS"
 						sTimeOfDay = sTimeOfDay.slice(0, 12);
 					}
-					oTimeOfDay =  oTimeFormatter.parse(sTimeOfDay);
+					oTimeOfDay = oTimeFormatter.parse(sTimeOfDay);
 				}
 				if (!oTimeOfDay) {
 					throw new Error("Not a valid Edm.TimeOfDay value: " + sTimeOfDay);

@@ -1,25 +1,21 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides class sap.ui.unified.calendar.YearRangePicker
 sap.ui.define([
-	"sap/ui/core/Renderer",
 	"./YearPicker",
 	"./YearRangePickerRenderer",
 	"./CalendarDate",
-	"sap/ui/core/date/UniversalDate",
 	"./CalendarUtils",
 	"sap/ui/thirdparty/jquery"
 ],
 	function(
-		Renderer,
 		YearPicker,
 		YearRangePickerRenderer,
 		CalendarDate,
-		UniversalDate,
 		CalendarUtils,
 		jQuery
 	) {
@@ -33,23 +29,23 @@ sap.ui.define([
 	 *
 	 * @class
 	 * Renders a <code>YearPicker</code> with <code>ItemNavigation</code>.
-	*
-	* <b>Note:</b> This control is used inside the calendar and is not meant for
-	* standalone usage.
-	*
-	* The control is related to the <code>YearPicker</code> control through a
-	* <code>sap.ui.unified.Calendar</code> instance.
-	*
-	* The default value of the <code>rangeSize</code> property should be equal to the
-	* default value of the <code>years</code> property in <code>YearPicker</code>.
-	*
-	* As in all date-time controls, all public JS Date objects that are given
-	* (<code>setDate()</code>) or read (<code>getFirstRenderedDate</code>) have values
-	* which are considered as date objects in browser (local) timezone.
+	 *
+	 * <b>Note:</b> This control is used inside the calendar and is not meant for
+	 * standalone usage.
+	 *
+	 * The control is related to the <code>YearPicker</code> control through a
+	 * <code>sap.ui.unified.Calendar</code> instance.
+	 *
+	 * The default value of the <code>rangeSize</code> property should be equal to the
+	 * default value of the <code>years</code> property in <code>YearPicker</code>.
+	 *
+	 * As in all date-time controls, all public JS Date objects that are given
+	 * (<code>setDate()</code>) or read (<code>getFirstRenderedDate</code>) have values
+	 * which are considered as date objects in browser (local) timezone.
 	 * @extends sap.ui.unified.calendar.YearPicker
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @private
@@ -77,7 +73,8 @@ sap.ui.define([
 				 */
 				rangeSize: {type : "int", group : "Appearance", defaultValue: 20}
 			}
-		}
+		},
+		renderer: YearRangePickerRenderer
 	});
 
 	/**
@@ -144,7 +141,7 @@ sap.ui.define([
 	YearRangePicker.prototype._updatePage = function (bForward, iSelectedIndex, bFireEvent){
 
 		var aDomRefs = this._oItemNavigation.getItemDomRefs(),
-			oFirstDate = CalendarDate.fromLocalJSDate(this._oFormatYyyymmdd.parse(jQuery(aDomRefs[0]).attr("data-sap-year-start")), this.getPrimaryCalendarType()),
+			oFirstDate = CalendarDate.fromUTCDate(this._oFormatYyyymmdd.parse(jQuery(aDomRefs[0]).attr("data-sap-year-start"), true), this.getPrimaryCalendarType()),
 			iYears = this.getYears(),
 			iYearRangeSize = this.getRangeSize();
 
@@ -194,7 +191,7 @@ sap.ui.define([
 		var aDomRefs = this._oItemNavigation.getItemDomRefs(),
 			$DomRef = jQuery(aDomRefs[iIndex]),
 			sYyyymmdd = $DomRef.attr("data-sap-year-start"),
-			oDate = CalendarDate.fromLocalJSDate(this._oFormatYyyymmdd.parse(sYyyymmdd), this.getPrimaryCalendarType());
+			oDate = CalendarDate.fromUTCDate(this._oFormatYyyymmdd.parse(sYyyymmdd, true), this.getPrimaryCalendarType());
 
 		if ($DomRef.hasClass("sapUiCalItemDsbl")) {
 			return false; // don't select disabled items
@@ -204,6 +201,37 @@ sap.ui.define([
 		this.setProperty("year", oDate.getYear());
 
 		return true;
+	};
+
+	/**
+	 * Calculates the first and last displayed date about a given year range.
+	 * @param {integer} iYear the year about which the dates are calculated
+	 * @returns {object} two values - start and end date
+	 */
+	YearRangePicker.prototype._getDisplayedSecondaryDates = function(oDate){
+		var sSecondaryCalendarType = this.getSecondaryCalendarType(),
+			oFirstDate = new CalendarDate(oDate, oDate.getCalendarType()),
+			oLastDate = new CalendarDate(oDate, oDate.getCalendarType());
+
+		oFirstDate.setMonth(0, 1);
+		oFirstDate = new CalendarDate(oFirstDate, sSecondaryCalendarType);
+
+		oLastDate.setYear(oLastDate.getYear() + this.getRangeSize()); // create first day of next year range
+		oLastDate.setMonth(0, 1);
+		oLastDate.setDate(oLastDate.getDate() - 1); // go back one day to receive last day in previous year range
+		oLastDate = new CalendarDate(oLastDate, sSecondaryCalendarType);
+
+		return {start: oFirstDate, end: oLastDate};
+	};
+
+	YearRangePicker.prototype.setSecondaryCalendarType = function(sCalendarType){
+		this.setProperty("secondaryCalendarType", sCalendarType);
+		if (this._getSecondaryCalendarType()) {
+			this.setColumns(2);
+			this.setYears(8);
+			this.setRangeSize(8);
+		}
+		return this;
 	};
 
 	return YearRangePicker;

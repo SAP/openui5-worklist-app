@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -17,15 +17,15 @@ sap.ui.define([
 	'./ToolbarSpacer',
 	'./SegmentedButton',
 	'sap/ui/unified/Calendar',
-	'sap/ui/unified/calendar/CalendarDate',
 	'sap/ui/unified/calendar/CustomMonthPicker',
 	'sap/ui/unified/calendar/CustomYearPicker',
 	'sap/ui/unified/calendar/IndexPicker',
-	'sap/ui/core/format/DateFormat',
+	'sap/ui/core/Configuration',
+	'sap/ui/unified/calendar/CalendarDate',
 	'sap/ui/core/IconPool',
 	'sap/ui/core/InvisibleText',
 	'sap/ui/core/library',
-	"./PlanningCalendarHeaderRenderer"
+	'./PlanningCalendarHeaderRenderer'
 ],
 function(
 	Element,
@@ -39,11 +39,11 @@ function(
 	ToolbarSpacer,
 	SegmentedButton,
 	Calendar,
-	CalendarDate,
 	CustomMonthPicker,
 	CustomYearPicker,
 	IndexPicker,
-	DateFormat,
+	Configuration,
+	CalendarDate,
 	IconPool,
 	InvisibleText,
 	coreLibrary,
@@ -92,7 +92,7 @@ function(
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @private
@@ -100,135 +100,147 @@ function(
 	 * @alias sap.m.PlanningCalendarHeader
 	 */
 
-	var PlanningCalendarHeader = Control.extend("sap.m.PlanningCalendarHeader", /** @lends sap.m.PlanningCalendarHeader.prototype */ { metadata : {
+	var PlanningCalendarHeader = Control.extend("sap.m.PlanningCalendarHeader", /** @lends sap.m.PlanningCalendarHeader.prototype */ {
+		metadata : {
 
-		library : "sap.m",
+			library : "sap.m",
 
-		properties : {
+			properties : {
 
-			/**
-			 * Determines the title of the <code>PlanningCalendarHeader</code>.
-			 */
-			title: { type: "string", group: "Appearance", defaultValue: "" },
+				/**
+				 * Determines the title of the <code>PlanningCalendarHeader</code>.
+				 */
+				title: { type: "string", group: "Appearance", defaultValue: "" },
 
-			/**
-			 * Determines the start date used in the calendar picker, as a JavaScript date object. It is considered as a local date.
-			 * The time part will be ignored. The current date is used as default.
-			 */
-			startDate: { type : "object", group : "Data" },
+				/**
+				 * Determines the start date used in the calendar picker, as a JavaScript date object. It is considered as a local date.
+				 * The time part will be ignored. The current date is used as default.
+				 */
+				startDate: { type : "object", group : "Data" },
 
-			/**
-			 * Determines the text of the button which opens the calendar picker.
-			 */
-			pickerText : { type : "string", group : "Data" }
+				/**
+				 * Determines the text of the button which opens the calendar picker.
+				 */
+				pickerText : { type : "string", group : "Data" },
+
+				/**
+				 * If set, the calendar type is used for display.
+				 * If not set, the calendar type of the global configuration is used.
+				 * @private
+				 * @since 1.108.0
+				 */
+				_primaryCalendarType : {type : "sap.ui.core.CalendarType", group : "Appearance", defaultValue : null}
+
+			},
+
+			aggregations : {
+
+				/**
+				 * The controls to be passed to the toolbar.
+				 */
+				actions : { type : "sap.ui.core.Control", multiple: true, singularName: "action" },
+
+				/**
+				 * Hidden, for internal use only.
+				 * The toolbar which contains the title, the SegmentedButton for the views and the controls from the actions aggregation.
+				 *
+				 * @private
+				 */
+				_actionsToolbar : { type: "sap.m.OverflowToolbar", multiple: false, visibility : "hidden" },
+
+				/**
+				 * Hidden, for internal use only.
+				 * The toolbar which contains the navigation inner controls.
+				 *
+				 * @private
+				 */
+				_navigationToolbar : { type: "sap.m.Toolbar", multiple: false, visibility : "hidden" },
+
+				/**
+				 * Hidden, for internal use only.
+				 * The popup which contains the calendar for navigation.
+				 *
+				 * @private
+				 */
+				_calendarPicker : { type : "sap.ui.unified.Calendar", multiple : false, visibility : "hidden" },
+
+				/**
+				 * Hidden, for internal use only.
+				 * The popup which contains the month picker for navigation.
+				 *
+				 * @private
+				 */
+				_monthPicker : { type : "sap.ui.unified.internal.CustomMonthPicker", multiple : false, visibility : "hidden" },
+
+				/**
+				 * Hidden, for internal use only.
+				 * The popup which contains the year picker for navigation.
+				 *
+				 * @private
+				 */
+				_yearPicker : { type : "sap.ui.unified.internal.CustomYearPicker", multiple : false, visibility : "hidden" },
+
+				/**
+				 * Hidden, for internal use only.
+				 * The popup which contains the index picker for navigation.
+				 *
+				 * @private
+				 */
+				_indexPicker : { type : "sap.ui.unified.calendar.IndexPicker", multiple : false, visibility : "hidden" }
+
+			},
+
+			events : {
+
+				/**
+				 * <code>startDate</code> was changed while navigating backward in the <code>PlanningCalendarHeader</code>.
+				 * The new value can be obtained, using the <code>sap.m.PlanningCalendarHeader#getStartDate()</code> method.
+				 */
+				pressPrevious: {},
+
+				/**
+				 * <code>startDate</code> was changed while navigating through the Today button in the
+				 * <code>PlanningCalendarHeader</code>.
+				 * The new value can be obtained, using the <code>sap.m.PlanningCalendarHeader#getStartDate()</code> method.
+				 */
+				pressToday: {},
+
+				/**
+				 * <code>startDate</code> was changed while navigating forward in the <code>PlanningCalendarHeader</code>.
+				 * The new value can be obtained, using the <code>sap.m.PlanningCalendarHeader#getStartDate()</code> method.
+				 */
+				pressNext: {},
+
+				/**
+				 * A date was selected through the calendar picker.
+				 * The new value can be obtained, using the <code>sap.m.PlanningCalendarHeader#getStartDate()</code> method.
+				 */
+				dateSelect: {},
+
+				/**
+				 * The calendar picker popup was closed and no date was selected.
+				 */
+				cancel: {},
+
+				/**
+				 * The view was changed by user interaction.
+				 */
+				viewChange : {}
+			},
+
+			associations: {
+
+				/**
+				 * Association to control / ID which is shown in the picker popup.
+				 * @since 1.70.0
+				 */
+				currentPicker: { type: "sap.ui.core.Control", multiple: false }
+			}
 
 		},
 
-		aggregations : {
-
-			/**
-			 * The controls to be passed to the toolbar.
-			 */
-			actions : { type : "sap.ui.core.Control", multiple: true, singularName: "action" },
-
-			/**
-			 * Hidden, for internal use only.
-			 * The toolbar which contains the title, the SegmentedButton for the views and the controls from the actions aggregation.
-			 *
-			 * @private
-			 */
-			_actionsToolbar : { type: "sap.m.OverflowToolbar", multiple: false, visibility : "hidden" },
-
-			/**
-			 * Hidden, for internal use only.
-			 * The toolbar which contains the navigation inner controls.
-			 *
-			 * @private
-			 */
-			_navigationToolbar : { type: "sap.m.Toolbar", multiple: false, visibility : "hidden" },
-
-			/**
-			 * Hidden, for internal use only.
-			 * The popup which contains the calendar for navigation.
-			 *
-			 * @private
-			 */
-			_calendarPicker : { type : "sap.ui.unified.Calendar", multiple : false, visibility : "hidden" },
-
-			/**
-			 * Hidden, for internal use only.
-			 * The popup which contains the month picker for navigation.
-			 *
-			 * @private
-			 */
-			_monthPicker : { type : "sap.ui.unified.internal.CustomMonthPicker", multiple : false, visibility : "hidden" },
-
-			/**
-			 * Hidden, for internal use only.
-			 * The popup which contains the year picker for navigation.
-			 *
-			 * @private
-			 */
-			_yearPicker : { type : "sap.ui.unified.internal.CustomYearPicker", multiple : false, visibility : "hidden" },
-
-			/**
-			 * Hidden, for internal use only.
-			 * The popup which contains the index picker for navigation.
-			 *
-			 * @private
-			 */
-			_indexPicker : { type : "sap.ui.unified.calendar.IndexPicker", multiple : false, visibility : "hidden" }
-
-		},
-
-		events : {
-
-			/**
-			 * <code>startDate</code> was changed while navigating backward in the <code>PlanningCalendarHeader</code>.
-			 * The new value can be obtained, using the <code>sap.m.PlanningCalendarHeader#getStartDate()</code> method.
-			 */
-			pressPrevious: {},
-
-			/**
-			 * <code>startDate</code> was changed while navigating through the Today button in the
-			 * <code>PlanningCalendarHeader</code>.
-			 * The new value can be obtained, using the <code>sap.m.PlanningCalendarHeader#getStartDate()</code> method.
-			 */
-			pressToday: {},
-
-			/**
-			 * <code>startDate</code> was changed while navigating forward in the <code>PlanningCalendarHeader</code>.
-			 * The new value can be obtained, using the <code>sap.m.PlanningCalendarHeader#getStartDate()</code> method.
-			 */
-			pressNext: {},
-
-			/**
-			 * A date was selected through the calendar picker.
-			 * The new value can be obtained, using the <code>sap.m.PlanningCalendarHeader#getStartDate()</code> method.
-			 */
-			dateSelect: {},
-
-			/**
-			 * The calendar picker popup was closed and no date was selected.
-			 */
-			cancel: {},
-
-			/**
-			 * The view was changed by user interaction.
-			 */
-			viewChange : {}
-		},
-
-		associations: {
-
-			/**
-			 * Association to control / ID which is shown in the picker popup.
-			 * @since 1.70.0
-			 */
-			currentPicker: { type: "sap.ui.core.Control", multiple: false }
-		}
-
-	}});
+		renderer: PlanningCalendarHeaderRenderer
+	});
 
 	// Number of items to be skipped when removing content from actions aggregation.
 	// In the _actionsToolbar content are placed the sap.m.Title control, containing the value from the title property,
@@ -243,6 +255,7 @@ function(
 		var sOPHId = this.getId(),
 			sNavToolbarId = sOPHId + "-NavToolbar",
 			oRB = sap.ui.getCore().getLibraryResourceBundle("sap.m"),
+			sCalendarType = this.getProperty("_primaryCalendarType"),
 			oPicker,
 			oCalendarPicker,
 			oMonthPicker,
@@ -279,11 +292,11 @@ function(
 			}.bind(this)
 		});
 		oCalendarPicker = new Calendar(sOPHId + "-Cal", {
-			ariaLabelledBy: InvisibleText.getStaticId("sap.m", "PCH_RANGE_PICKER")
+			ariaLabelledBy: InvisibleText.getStaticId("sap.m", "PCH_RANGE_PICKER"),
+			primaryCalendarType: sCalendarType
 		});
 		oCalendarPicker.attachEvent("select", this._handlePickerDateSelect, this);
 		oCalendarPicker.attachEvent("cancel", this._handlePickerCancelEvent, this);
-		oCalendarPicker.setPopupMode(true);
 		this.setAggregation("_calendarPicker", oCalendarPicker);
 		this._oCalendarAfterRenderDelegate = {
 			onAfterRendering: function() {
@@ -298,20 +311,20 @@ function(
 		this.setAssociation("currentPicker", oCalendarPicker);
 
 		oMonthPicker = new CustomMonthPicker(sOPHId + "-MonthCal", {
-			ariaLabelledBy: InvisibleText.getStaticId("sap.m", "PCH_RANGE_PICKER")
+			ariaLabelledBy: InvisibleText.getStaticId("sap.m", "PCH_RANGE_PICKER"),
+			primaryCalendarType: sCalendarType
 		});
 		oMonthPicker.attachEvent("select", this._handlePickerDateSelect, this);
 		oMonthPicker.attachEvent("cancel", this._handlePickerCancelEvent, this);
-		oMonthPicker.setPopupMode(true);
 		this.setAggregation("_monthPicker", oMonthPicker);
 		this._oMonthPicker = oMonthPicker;
 
 		oYearPicker = new CustomYearPicker(sOPHId + "-YearCal", {
-			ariaLabelledBy: InvisibleText.getStaticId("sap.m", "PCH_RANGE_PICKER")
+			ariaLabelledBy: InvisibleText.getStaticId("sap.m", "PCH_RANGE_PICKER"),
+			primaryCalendarType: sCalendarType
 		});
 		oYearPicker.attachEvent("select", this._handlePickerDateSelect, this);
 		oYearPicker.attachEvent("cancel", this._handlePickerCancelEvent, this);
-		oYearPicker.setPopupMode(true);
 		this.setAggregation("_yearPicker", oYearPicker);
 		this._oYearPicker = oYearPicker;
 
@@ -384,6 +397,8 @@ function(
 		var bVisible = !!this.getActions().length || !!this.getTitle() || this._getOrCreateViewSwitch().getItems().length > 1;
 
 		this._getActionsToolbar().setProperty("visible", bVisible, true);
+
+		this.setPrimaryCalendarTypeToPickers(this.getProperty("_primaryCalendarType"));
 	};
 
 	PlanningCalendarHeader.prototype.setTitle = function (sTitle) {
@@ -448,6 +463,12 @@ function(
 		this._oPickerBtn.setText(sText);
 
 		return this;
+	};
+
+	PlanningCalendarHeader.prototype.setPrimaryCalendarTypeToPickers = function (sCalendarType) {
+		this._oCalendar.setPrimaryCalendarType(sCalendarType);
+		this._oMonthPicker.setPrimaryCalendarType(sCalendarType);
+		this._oYearPicker.setPrimaryCalendarType(sCalendarType);
 	};
 
 	/**
@@ -594,7 +615,7 @@ function(
 			var $Popover = this._oPopup.$();
 			var iOffsetX = Math.floor(($Popover.width() - this._oPickerBtn.$().width()) / 2);
 
-			this._oPopup.setOffsetX(sap.ui.getCore().getConfiguration().getRTL() ? iOffsetX : -iOffsetX);
+			this._oPopup.setOffsetX(Configuration.getRTL() ? iOffsetX : -iOffsetX);
 
 			var iOffsetY = this._oPickerBtn.$().height();
 
@@ -606,7 +627,7 @@ function(
 
 	/**
 	 * Creates the picker popup.
-	 * @returns {Popup} the created popup
+	 * @returns {sap.m.Popover} the created popup
 	 * @private
 	 */
 	PlanningCalendarHeader.prototype._createPopup = function () {

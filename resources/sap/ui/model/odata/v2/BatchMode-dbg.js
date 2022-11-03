@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -15,8 +15,8 @@ sap.ui.define(function() {
 	* @enum {string}
 	* @public
 	* @alias sap.ui.model.odata.v2.BatchMode
-	* @deprecated Use {@link sap.ui.model.odata.CountMode} to specify how the count of collections
-	*   is retrieved. Use the <code>useBatch</code> parameter of the
+	* @deprecated since 1.74.0; Use {@link sap.ui.model.odata.CountMode} to specify how the count of
+	    collections is retrieved. Use the <code>useBatch</code> parameter of the
 	*   {@link sap.ui.model.odata.v2.ODataModel} constructor to specify whether requests are sent in
 	*   $batch.
 	*/

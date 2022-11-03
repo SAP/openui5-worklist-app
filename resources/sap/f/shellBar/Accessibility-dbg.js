@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -17,7 +17,7 @@ sap.ui.define([
 
 	/**
 	 * This class is used to maintain all the accessibility roles, tooltips, etc., needed for the ShellBar control life cycle.
-	 * @alias sap/f/shellBar/Accessibility
+	 * @alias module:sap/f/shellBar/Accessibility
 	 * @since 1.64
 	 * @private
 	 */

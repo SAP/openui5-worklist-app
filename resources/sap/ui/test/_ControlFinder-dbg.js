@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -118,7 +118,7 @@ sap.ui.define([
      * Retrieves the property value of a control
      * @param {sap.ui.core.Control} oControl
      * @param {string} sProperty The property to look for
-     * @returns {object} The control value for the property or null if no such property is defined
+     * @returns {object|null} The control value for the property or null if no such property is defined
      * @private
      */
     _ControlFinder._getControlProperty = function (oControl, sProperty) {
@@ -128,9 +128,10 @@ sap.ui.define([
     };
 
      /**
-     * Retrieves the ID suffix of a DOM element
-     * @param {object} oElement DOM element
-     * @returns {string} ID suffix or undefined
+     * Retrieves the ID suffix of a DOM element that is part of the given UI5 control
+     * @param {Element} oElement DOM element
+     * @param {sap.ui.core.Control} oControl UI5 control
+     * @returns {string|false} ID suffix or false if the suffix can't be determined
      * @private
      */
     _ControlFinder._getDomElementIDSuffix = function (oElement, oControl) {

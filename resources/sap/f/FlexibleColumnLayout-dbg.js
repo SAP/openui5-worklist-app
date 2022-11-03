@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -8,6 +8,7 @@
 sap.ui.define([
 	"sap/ui/thirdparty/jquery",
 	"./library",
+	"sap/ui/core/library",
 	"sap/ui/Device",
 	"sap/ui/core/ResizeHandler",
 	"sap/ui/core/Control",
@@ -15,16 +16,18 @@ sap.ui.define([
 	"sap/m/Button",
 	"sap/m/NavContainer",
 	"sap/ui/core/Configuration",
-	"sap/ui/core/theming/Parameters",
 	'sap/ui/dom/units/Rem',
 	"./FlexibleColumnLayoutRenderer",
 	"sap/base/Log",
 	"sap/base/assert",
 	"sap/base/util/isEmptyObject",
-	"sap/base/util/merge"
+	"sap/base/util/merge",
+	"sap/ui/core/InvisibleMessage",
+	"sap/ui/dom/jquery/Focusable" // provides jQuery.fn.firstFocusableDomRef
 ], function(
 	jQuery,
 	library,
+	coreLibrary,
 	Device,
 	ResizeHandler,
 	Control,
@@ -32,13 +35,13 @@ sap.ui.define([
 	Button,
 	NavContainer,
 	Configuration,
-	Parameters,
 	DomUnitsRem,
 	FlexibleColumnLayoutRenderer,
 	Log,
 	assert,
 	isEmptyObject,
-	merge
+	merge,
+	InvisibleMessage
 ) {
 	"use strict";
 
@@ -46,6 +49,8 @@ sap.ui.define([
 	// shortcut for sap.f.LayoutType
 	var LT = library.LayoutType;
 
+	// shortcut for sap.ui.core.InvisibleMessageMode
+	var InvisibleMessageMode = coreLibrary.InvisibleMessageMode;
 
 	/**
 	 * Constructor for a new <code>sap.f.FlexibleColumnLayout</code>.
@@ -92,7 +97,7 @@ sap.ui.define([
 	 *
 	 * @extends sap.ui.core.Control
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
@@ -100,7 +105,6 @@ sap.ui.define([
 	 * @alias sap.f.FlexibleColumnLayout
 	 * @see {@link topic:59a0e11712e84a648bb990a1dba76bc7 Flexible Column Layout}
 	 * @see {@link fiori:https://experience.sap.com/fiori-design-web/flexible-column-layout/ Flexible Column Layout}
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var FlexibleColumnLayout = Control.extend("sap.f.FlexibleColumnLayout", {
 		metadata: {
@@ -642,13 +646,29 @@ sap.ui.define([
 					}
 				}
 			}
-		}
+		},
+
+		renderer: FlexibleColumnLayoutRenderer
 	});
 
 	FlexibleColumnLayout.DEFAULT_COLUMN_LABELS = {
 		"FirstColumn" : "FCL_BEGIN_COLUMN_REGION_TEXT",
 		"MiddleColumn" : "FCL_MID_COLUMN_REGION_TEXT",
 		"LastColumn" : "FCL_END_COLUMN_REGION_TEXT"
+	};
+
+	FlexibleColumnLayout.DEFAULT_ARROW_LABELS = {
+		"FirstColumnBackArrow" : "FCL_BEGIN_COLUMN_BACK_ARROW",
+		"MiddleColumnForwardArrow" : "FCL_MID_COLUMN_FORWARD_ARROW",
+		"MiddleColumnBackArrow" : "FCL_MID_COLUMN_BACK_ARROW",
+		"LastColumnForwardArrow" : "FCL_END_COLUMN_FORWARD_ARROW"
+	};
+
+	FlexibleColumnLayout.ARROW_AGGREGATION_TO_LABEL_MAP = {
+		"_beginColumnBackArrow" : "FirstColumnBackArrow",
+		"_midColumnForwardArrow" : "MiddleColumnForwardArrow",
+		"_midColumnBackArrow" : "MiddleColumnBackArrow",
+		"_endColumnForwardArrow" : "LastColumnForwardArrow"
 	};
 
 	FlexibleColumnLayout.COLUMN_RESIZING_ANIMATION_DURATION = 560; // ms
@@ -687,6 +707,15 @@ sap.ui.define([
 			end: 0
 		};
 
+		this._oInvisibleMessage = null;
+	};
+
+	FlexibleColumnLayout.prototype._announceMessage = function (sResourceBundleKey) {
+		var sText = FlexibleColumnLayout._getResourceBundle().getText(sResourceBundleKey);
+
+		if (this._oInvisibleMessage) {
+			this._oInvisibleMessage.announce(sText, InvisibleMessageMode.Polite);
+		}
 	};
 
 	/**
@@ -746,7 +775,7 @@ sap.ui.define([
 	 * @returns {sap.f.FlexibleColumnLayoutAccessibleLandmarkInfo} The formatted landmark info
 	 * @private
 	 */
-	 FlexibleColumnLayout.prototype._formatLandmarkInfo = function (oLandmarkInfo, sColumnName) {
+	 FlexibleColumnLayout.prototype._formatColumnLandmarkInfo = function (oLandmarkInfo, sColumnName) {
 		var sLabel = null;
 		if (oLandmarkInfo) {
 			sLabel = oLandmarkInfo["get" + sColumnName + "Label"]();
@@ -756,6 +785,27 @@ sap.ui.define([
 			role: "region",
 			label: sLabel || FlexibleColumnLayout._getResourceBundle().getText(FlexibleColumnLayout.DEFAULT_COLUMN_LABELS[sColumnName])
 		};
+	};
+
+	/**
+	 * Formats <code>FlexibleColumnLayoutAccessibleLandmarkInfo</code> label/tooltip of the provided <code>FlexibleColumnLayout</code> arrow.
+	 *
+	 * @param {sap.f.FlexibleColumnLayoutAccessibleLandmarkInfo} oLandmarkInfo FlexibleColumnLayout LandmarkInfo
+	 * @param {string} sArrowAggregationName arrow aggregation name of the layout
+	 * @private
+	 */
+	FlexibleColumnLayout.prototype._formatArrowLandmarkInfo = function (oLandmarkInfo, sArrowAggregationName) {
+		var sLabel = null,
+			sArrowName = FlexibleColumnLayout.ARROW_AGGREGATION_TO_LABEL_MAP[sArrowAggregationName];
+
+		if (oLandmarkInfo) {
+			sLabel = oLandmarkInfo["get" + sArrowName + "Label"]();
+		}
+
+		this.getAggregation(sArrowAggregationName).setTooltip(
+			sLabel ||
+			FlexibleColumnLayout._getResourceBundle().getText(FlexibleColumnLayout.DEFAULT_ARROW_LABELS[sArrowName]
+		));
 	};
 
 	/**
@@ -872,6 +922,10 @@ sap.ui.define([
 	};
 
 	FlexibleColumnLayout.prototype.onBeforeRendering = function () {
+		if (!this._oInvisibleMessage) {
+			this._oInvisibleMessage = InvisibleMessage.getInstance();
+		}
+
 		this._deregisterResizeHandler();
 		this._oAnimationEndListener.cancelAll();
 	};
@@ -1018,33 +1072,41 @@ sap.ui.define([
 	FlexibleColumnLayout.prototype._initButtons = function () {
 		var oBeginColumnBackArrow = new Button(this.getId() + "-beginBack", {
 			icon: "sap-icon://slim-arrow-left",
-			tooltip: FlexibleColumnLayout._getResourceBundle().getText("FCL_BEGIN_COLUMN_BACK_ARROW"),
 			type: "Transparent",
-			press: this._onArrowClick.bind(this, "left")
+			press: function () {
+				this._onArrowClick("left");
+				this._announceMessage("FCL_MIDDLE_COLUMN_EXPANDED_MESSAGE");
+			}.bind(this)
 		}).addStyleClass("sapFFCLNavigationButton").addStyleClass("sapFFCLNavigationButtonRight");
 		this.setAggregation("_beginColumnBackArrow", oBeginColumnBackArrow, true);
 
 		var oMidColumnForwardArrow = new Button(this.getId() + "-midForward", {
 			icon: "sap-icon://slim-arrow-right",
-			tooltip: FlexibleColumnLayout._getResourceBundle().getText("FCL_MID_COLUMN_FORWARD_ARROW"),
 			type: "Transparent",
-			press: this._onArrowClick.bind(this, "right")
+			press: function () {
+				this._onArrowClick("right");
+				this._announceMessage("FCL_FIRST_COLUMN_EXPANDED_MESSAGE");
+			}.bind(this)
 		}).addStyleClass("sapFFCLNavigationButton").addStyleClass("sapFFCLNavigationButtonLeft");
 		this.setAggregation("_midColumnForwardArrow", oMidColumnForwardArrow, true);
 
 		var oMidColumnBackArrow = new Button(this.getId() + "-midBack", {
 			icon: "sap-icon://slim-arrow-left",
-			tooltip: FlexibleColumnLayout._getResourceBundle().getText("FCL_MID_COLUMN_BACK_ARROW"),
 			type: "Transparent",
-			press: this._onArrowClick.bind(this, "left")
+			press: function () {
+				this._onArrowClick("left");
+				this._announceMessage("FCL_LAST_COLUMN_EXPANDED_MESSAGE");
+			}.bind(this)
 		}).addStyleClass("sapFFCLNavigationButton").addStyleClass("sapFFCLNavigationButtonRight");
 		this.setAggregation("_midColumnBackArrow", oMidColumnBackArrow, true);
 
 		var oEndColumnForwardArrow = new Button(this.getId() + "-endForward", {
 			icon: "sap-icon://slim-arrow-right",
-			tooltip: FlexibleColumnLayout._getResourceBundle().getText("FCL_END_COLUMN_FORWARD_ARROW"),
 			type: "Transparent",
-			press: this._onArrowClick.bind(this, "right")
+			press: function () {
+				this._onArrowClick("right");
+				this._announceMessage("FCL_MIDDLE_COLUMN_EXPANDED_MESSAGE");
+			}.bind(this)
 		}).addStyleClass("sapFFCLNavigationButton").addStyleClass("sapFFCLNavigationButtonLeft");
 		this.setAggregation("_endColumnForwardArrow", oEndColumnForwardArrow, true);
 	};
@@ -1128,8 +1190,8 @@ sap.ui.define([
 		var iPercentWidth,
 			iAvailableWidth,
 			aColumns = FlexibleColumnLayout.COLUMN_ORDER.slice(),
-			bRtl = sap.ui.getCore().getConfiguration().getRTL(),
-			sAnimationMode = sap.ui.getCore().getConfiguration().getAnimationMode(),
+			bRtl = Configuration.getRTL(),
+			sAnimationMode = Configuration.getAnimationMode(),
 			bHasAnimations = sAnimationMode !== Configuration.AnimationMode.none && sAnimationMode !== Configuration.AnimationMode.minimal,
 			aActiveColumns,
 			iVisibleColumnsCount,
@@ -1307,8 +1369,8 @@ sap.ui.define([
 	/**
 	 * Adjusts the column after resize
 	 *
-	 * @param sColumn, the column name
-	 * @param oOptions, the resize options
+	 * @param {string} sColumn the column name
+	 * @param {object} oOptions the resize options
 	 * @private
 	 */
 	FlexibleColumnLayout.prototype._afterColumnResize = function (sColumn, oOptions) {
@@ -1336,7 +1398,7 @@ sap.ui.define([
 	/**
 	 * Obtains the current width of a column
 	 *
-	 * @param sColumn, the column name
+	 * @param {string} sColumn the column name
 	 * @private
 	 */
 	FlexibleColumnLayout.prototype._getColumnWidth = function (sColumn) {
@@ -1365,8 +1427,8 @@ sap.ui.define([
 	 * Caches the new width of the column and fires an event if
 	 * width changed compared to previous cached value
 	 *
-	 * @param sColumn, the column name
-	 * @param iNewWidth, the new column width
+	 * @param {string} sColumn the column name
+	 * @param {number} iNewWidth the new column width
 	 * @private
 	 */
 	FlexibleColumnLayout.prototype._cacheColumnWidth = function(sColumn, iNewWidth) {
@@ -1433,8 +1495,8 @@ sap.ui.define([
 	/**
 	 * Checks if a column can be resized with an animation
 	 *
-	 * @param sColumn, the column name
-	 * @param oOptions, the column resize options
+	 * @param {string} sColumn the column name
+	 * @param {object} oOptions the column resize options
 	 * @returns {boolean|*}
 	 * @private
 	 */
@@ -1655,7 +1717,7 @@ sap.ui.define([
 		if (FlexibleColumnLayout.ARROWS_NAMES[sNewLayout][sShiftDirection] !== FlexibleColumnLayout.ARROWS_NAMES[sCurrentLayout][sShiftDirection] && bIsLayoutValid) {
 			var sOppositeShiftDirection = sShiftDirection === 'right' ? 'left' : 'right';
 
-			this._oColumnSeparatorArrows[FlexibleColumnLayout.ARROWS_NAMES[sNewLayout][sOppositeShiftDirection]].focus();
+			this._oColumnSeparatorArrows[FlexibleColumnLayout.ARROWS_NAMES[sNewLayout][sOppositeShiftDirection]].trigger("focus");
 		}
 		this._fireStateChange(true, false);
 	};
@@ -1779,7 +1841,6 @@ sap.ui.define([
 	 *         NOTE: It depends on the transition function how the object should be structured and which parameters are actually used to influence the transition.
 	 *         The "show", "slide" and "fade" transitions do not use any parameter.
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 * @returns {this} The <code>sap.f.FlexibleColumnLayout</code> instance
 	 */
 	FlexibleColumnLayout.prototype.to = function(sPageId, sTransitionName, oData, oTransitionParameters) {
@@ -1823,7 +1884,6 @@ sap.ui.define([
 	 *
 	 *         NOTE: it depends on the transition function how the object should be structured and which parameters are actually used to influence the transition.
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 * @returns {this} The <code>sap.f.FlexibleColumnLayout</code> instance
 	 */
 	FlexibleColumnLayout.prototype.backToPage = function(sPageId, oBackData, oTransitionParameters) {
@@ -1880,7 +1940,6 @@ sap.ui.define([
 	 *         NOTE: it depends on the transition function how the object should be structured and which parameters are actually used to influence the transition.
 	 *         The "show", "slide" and "fade" transitions do not use any parameter.
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 * @returns {this} The <code>sap.f.FlexibleColumnLayout</code> instance
 	 */
 	FlexibleColumnLayout.prototype.toBeginColumnPage = function(sPageId, sTransitionName, oData, oTransitionParameters) {
@@ -1912,7 +1971,6 @@ sap.ui.define([
 	 *         NOTE: it depends on the transition function how the object should be structured and which parameters are actually used to influence the transition.
 	 *         The "show", "slide" and "fade" transitions do not use any parameter.
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 * @returns {this} The <code>sap.f.FlexibleColumnLayout</code> instance
 	 */
 	FlexibleColumnLayout.prototype.toMidColumnPage = function(sPageId, sTransitionName, oData, oTransitionParameters) {
@@ -1944,7 +2002,6 @@ sap.ui.define([
 	 *         NOTE: it depends on the transition function how the object should be structured and which parameters are actually used to influence the transition.
 	 *         The "show", "slide" and "fade" transitions do not use any parameter.
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 * @returns {this} The <code>sap.f.FlexibleColumnLayout</code> instance
 	 */
 	FlexibleColumnLayout.prototype.toEndColumnPage = function(sPageId, sTransitionName, oData, oTransitionParameters) {
@@ -1996,7 +2053,6 @@ sap.ui.define([
 	 *
 	 *         NOTE: it depends on the transition function how the object should be structured and which parameters are actually used to influence the transition.
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 * @returns {this} The <code>sap.f.FlexibleColumnLayout</code> instance
 	 */
 	FlexibleColumnLayout.prototype.backToTopBeginColumn = function(oBackData, oTransitionParameters) {
@@ -2024,7 +2080,6 @@ sap.ui.define([
 	 *
 	 *         NOTE: it depends on the transition function how the object should be structured and which parameters are actually used to influence the transition.
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 * @returns {this} The <code>sap.f.FlexibleColumnLayout</code> instance
 	 */
 	FlexibleColumnLayout.prototype.backToTopMidColumn = function(oBackData, oTransitionParameters) {
@@ -2053,7 +2108,6 @@ sap.ui.define([
 	 *
 	 *         NOTE: it depends on the transition function how the object should be structured and which parameters are actually used to influence the transition.
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 * @returns {this} The <code>sap.f.FlexibleColumnLayout</code> instance
 	 */
 	FlexibleColumnLayout.prototype.backToTopEndColumn = function(oBackData, oTransitionParameters) {
@@ -2065,7 +2119,6 @@ sap.ui.define([
 	 * Returns the currently displayed Begin column page.
 	 *
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 * @returns {sap.ui.core.Control} The UI5 control in the Begin column
 	 */
 	FlexibleColumnLayout.prototype.getCurrentBeginColumnPage = function() {
@@ -2076,7 +2129,6 @@ sap.ui.define([
 	 * Returns the currently displayed Mid column page.
 	 *
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 * @returns {sap.ui.core.Control} The UI5 control in the Mid column
 	 */
 	FlexibleColumnLayout.prototype.getCurrentMidColumnPage = function() {
@@ -2087,7 +2139,6 @@ sap.ui.define([
 	 * Returns the currently displayed End column page.
 	 *
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 * @returns {sap.ui.core.Control} The UI5 control in the End column
 	 */
 	FlexibleColumnLayout.prototype.getCurrentEndColumnPage = function() {
@@ -2259,7 +2310,7 @@ sap.ui.define([
 	 * @since 1.91
 	 */
 	FlexibleColumnLayout.prototype.showPlaceholder = function(mSettings) {
-		if (!sap.ui.getCore().getConfiguration().getPlaceholder()) {
+		if (!Configuration.getPlaceholder()) {
 			return;
 		}
 

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -69,6 +69,9 @@ function(
 
 		// shortcut for sap.ui.core.OpenState
 		var OpenState = coreLibrary.OpenState;
+
+		// shortcut for sap.m.ButtonType
+		var ButtonType = library.ButtonType;
 
 		// shortcut for sap.m.DialogType
 		var DialogType = library.DialogType;
@@ -164,7 +167,7 @@ function(
 		* <li>If the <code>contentWidth</code> and/or <code>contentHeight</code> properties are set, the Dialog will try to fill those sizes.</li>
 		* <li>If there is no specific sizing, the Dialog will try to adjust its size to its content.</li>
 		* </ul>
-		* When using the <code>sap.m.Dialog</code> in SAP Quartz themes, the breakpoints and layout paddings could be determined by the Dialog's width. To enable this concept and add responsive paddings to an element of the Dialog control, you have to add the following classes depending on your use case: <code>sapUiResponsivePadding--header</code>, <code>sapUiResponsivePadding--subHeader</code>, <code>sapUiResponsivePadding--content</code>, <code>sapUiResponsivePadding--footer</code>.
+		* When using the <code>sap.m.Dialog</code> in SAP Quartz and Horizon themes, the breakpoints and layout paddings could be determined by the Dialog's width. To enable this concept and add responsive paddings to an element of the Dialog control, you have to add the following classes depending on your use case: <code>sapUiResponsivePadding--header</code>, <code>sapUiResponsivePadding--subHeader</code>, <code>sapUiResponsivePadding--content</code>, <code>sapUiResponsivePadding--footer</code>.
 		* <h4>Smartphones</h4>
 		* If the Dialog has one or two actions, they will cover the entire footer. If there are more actions, they will overflow.
 		* <h4>Tablets</h4>
@@ -175,13 +178,12 @@ function(
 		*
 		* @implements sap.ui.core.PopupInterface
 		* @author SAP SE
-		* @version 1.96.2
+		* @version 1.108.0
 		*
 		* @constructor
 		* @public
 		* @alias sap.m.Dialog
 		* @see {@link fiori:https://experience.sap.com/fiori-design-web/dialog/ Dialog}
-		* @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		*/
 		var Dialog = Control.extend("sap.m.Dialog", /** @lends sap.m.Dialog.prototype */ {
 			metadata: {
@@ -325,13 +327,23 @@ function(
 					customHeader: {type: "sap.m.IBar", multiple: false},
 
 					/**
-					 * The button which is rendered to the left side (right side in RTL mode) of the <code>endButton</code> in the footer area inside the Dialog. As of version 1.21.1, there's a new aggregation <code>buttons</code> created with which more than 2 buttons can be added to the footer area of the Dialog. If the new <code>buttons</code> aggregation is set, any change made to this aggregation has no effect anymore. With the Belize themes when running on a phone, this <code>button</code> (and the <code>endButton</code> together when set) is (are) rendered at the center of the footer area. While with the Quartz themes when running on a phone, this <code>button</code> (and the <code>endButton</code> together when set) is (are) rendered on the right side of the footer area. When running on other platforms, this <code>button</code> (and the <code>endButton</code> together when set) is (are) rendered at the right side (left side in RTL mode) of the footer area.
+					 * The button which is rendered to the left side (right side in RTL mode) of the <code>endButton</code> in the footer area inside the Dialog.
+					 * As of version 1.21.1, there's a new aggregation <code>buttons</code> created with which more than 2 buttons can be added to the footer area of the Dialog.
+					 * If the new <code>buttons</code> aggregation is set, any change made to this aggregation has no effect anymore.
+					 * With the Belize themes when running on a phone, this <code>button</code> (and the <code>endButton</code> together when set) is (are) rendered at the center of the footer area.
+					 * While with the Quartz themes when running on a phone, this <code>button</code> (and the <code>endButton</code> together when set) is (are) rendered on the right side of the footer area.
+					 * When running on other platforms, this <code>button</code> (and the <code>endButton</code> together when set) is (are) rendered at the right side (left side in RTL mode) of the footer area.
 					 * @since 1.15.1
 					 */
 					beginButton: {type: "sap.m.Button", multiple: false},
 
 					/**
-					 * The button which is rendered to the right side (left side in RTL mode) of the <code>beginButton</code> in the footer area inside the Dialog. As of version 1.21.1, there's a new aggregation <code>buttons</code> created with which more than 2 buttons can be added to the footer area of Dialog. If the new <code>buttons</code> aggregation is set, any change made to this aggregation has no effect anymore. With the Belize themes when running on a phone, this <code>button</code> (and the <code>beginButton</code> together when set) is (are) rendered at the center of the footer area. While with the Quartz themes when running on a phone, this <code>button</code> (and the <code>beginButton</code> together when set) is (are) rendered on the right side of the footer area. When running on other platforms, this <code>button</code> (and the <code>beginButton</code> together when set) is (are) rendered at the right side (left side in RTL mode) of the footer area.
+					 * The button which is rendered to the right side (left side in RTL mode) of the <code>beginButton</code> in the footer area inside the Dialog.
+					 * As of version 1.21.1, there's a new aggregation <code>buttons</code> created with which more than 2 buttons can be added to the footer area of Dialog.
+					 * If the new <code>buttons</code> aggregation is set, any change made to this aggregation has no effect anymore.
+					 * With the Belize themes when running on a phone, this <code>button</code> (and the <code>beginButton</code> together when set) is (are) rendered at the center of the footer area.
+					 * While with the Quartz themes when running on a phone, this <code>button</code> (and the <code>beginButton</code> together when set) is (are) rendered on the right side of the footer area.
+					 * When running on other platforms, this <code>button</code> (and the <code>beginButton</code> together when set) is (are) rendered at the right side (left side in RTL mode) of the footer area.
 					 * @since 1.15.1
 					 */
 					endButton: {type: "sap.m.Button", multiple: false},
@@ -381,7 +393,7 @@ function(
 					rightButton: {type: "sap.m.Button", multiple: false, deprecated: true},
 
 					/**
-					 * In the Dialog focus is set first on the <code>beginButton</code> and then on <code>endButton</code>, when available. If another control needs to get the focus, set the <code>initialFocus</code> with the control which should be focused on. Setting <code>initialFocus</code> to input controls doesn't open the On-Screen keyboard on mobile device as, due to browser limitation, the On-Screen keyboard can't be opened with JavaScript code. The opening of On-Screen keyboard must be triggered by real user action.
+					 * In the Dialog focus is set first on the <code>beginButton</code> and then on <code>endButton</code>, when available. If another control needs to get the focus, set the <code>initialFocus</code> with the control which should be focused on. Setting <code>initialFocus</code> to input controls doesn't open the On-Screen keyboard on mobile device as, due to browser restriction, the On-Screen keyboard can't be opened with JavaScript code. The opening of On-Screen keyboard must be triggered by real user action.
 					 * @since 1.15.0
 					 */
 					initialFocus: {type: "sap.ui.core.Control", multiple: false},
@@ -437,7 +449,9 @@ function(
 					}
 				},
 				designtime: "sap/m/designtime/Dialog.designtime"
-			}
+			},
+
+			renderer: DialogRenderer
 		});
 
 		ResponsivePaddingsEnablement.call(Dialog.prototype, {
@@ -454,11 +468,17 @@ function(
 
 		Dialog._bPaddingByDefault = (Core.getConfiguration().getCompatibilityVersion("sapMDialogWithPadding").compareTo("1.16") < 0);
 
-		Dialog._mIcons = {};
-		Dialog._mIcons[ValueState.Success] = IconPool.getIconURI("sys-enter-2");
-		Dialog._mIcons[ValueState.Warning] = IconPool.getIconURI("alert");
-		Dialog._mIcons[ValueState.Error] = IconPool.getIconURI("error");
-		Dialog._mIcons[ValueState.Information] = IconPool.getIconURI("information");
+		Dialog._initIcons = function () {
+			if (Dialog._mIcons) {
+				return;
+			}
+
+			Dialog._mIcons = {};
+			Dialog._mIcons[ValueState.Success] = IconPool.getIconURI("sys-enter-2");
+			Dialog._mIcons[ValueState.Warning] = IconPool.getIconURI("alert");
+			Dialog._mIcons[ValueState.Error] = IconPool.getIconURI("error");
+			Dialog._mIcons[ValueState.Information] = IconPool.getIconURI("information");
+		};
 
 		/* =========================================================== */
 		/*                  begin: Lifecycle functions                 */
@@ -513,6 +533,8 @@ function(
 			this._initTitlePropagationSupport();
 
 			this._initResponsivePaddingsEnablement();
+
+			this._oAriaDescribedbyText = new InvisibleText({id: this.getId() + "-ariaDescribedbyText"});
 		};
 
 		Dialog.prototype.onBeforeRendering = function () {
@@ -544,10 +566,13 @@ function(
 			this._createToolbarButtons();
 
 			if (Core.getConfiguration().getAccessibility() && this.getState() != ValueState.None) {
-				var oValueState = new InvisibleText({text: this.getValueStateString(this.getState())});
+				if (!this._oValueState) {
+					this._oValueState = new InvisibleText();
 
-				this.setAggregation("_valueState", oValueState);
-				this.addAriaLabelledBy(oValueState.getId());
+					this.setAggregation("_valueState", this._oValueState);
+					this.addAriaLabelledBy(this._oValueState.getId());
+				}
+				this._oValueState.setText(this.getValueStateString(this.getState()));
 			}
 
 			// title alignment
@@ -559,6 +584,8 @@ function(
 				oHeader._setRootAccessibilityRole("heading");
 				oHeader._setRootAriaLevel("2");
 			}
+
+			this._oAriaDescribedbyText.setText(this._getAriaDescribedByText());
 		};
 
 		Dialog.prototype.onAfterRendering = function () {
@@ -608,6 +635,11 @@ function(
 				this._toolbarSpacer.destroy();
 				this._toolbarSpacer = null;
 			}
+
+			if (this._oAriaDescribedbyText) {
+				this._oAriaDescribedbyText.destroy();
+				this._oAriaDescribedbyText = null;
+			}
 		};
 		/* =========================================================== */
 		/*                   end: Lifecycle functions                  */
@@ -619,8 +651,8 @@ function(
 		/**
 		 * Open the dialog.
 		 *
+		 * @return {this} <code>this</code> to allow method chaining
 		 * @public
-		 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		Dialog.prototype.open = function () {
 
@@ -668,8 +700,8 @@ function(
 		/**
 		 * Close the dialog.
 		 *
+		 * @return {this} <code>this</code> to allow method chaining
 		 * @public
-		 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		Dialog.prototype.close = function () {
 			this._bOpenAfterClose = false;
@@ -704,7 +736,6 @@ function(
 		 * @returns {boolean} Whether the dialog is open.
 		 * @public
 		 * @since 1.9.1
-		 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		Dialog.prototype.isOpen = function () {
 			return !!this.oPopup && this.oPopup.isOpen();
@@ -733,6 +764,7 @@ function(
 			if (sState === ValueState.None) {
 				sDefaultIcon = "";
 			} else {
+				Dialog._initIcons();
 				sDefaultIcon = Dialog._mIcons[sState];
 			}
 
@@ -907,8 +939,40 @@ function(
 				this._isSpaceOrEnterPressed = true;
 			}
 
+			var iKeyCode = oEvent.which || oEvent.keyCode;
+
+			if ((oEvent.ctrlKey || oEvent.metaKey) && iKeyCode === KeyCodes.ENTER) {
+
+				var oPositiveButton = this._findFirstPositiveButton();
+
+				if (oPositiveButton) {
+
+					oPositiveButton.firePress();
+					oEvent.stopPropagation();
+					oEvent.preventDefault();
+					return;
+				}
+			}
+
 			this._handleKeyboardDragResize(oEvent);
 		};
+
+		/**
+		 * Finds first positive button
+		 * We call positive the buttons with type "Accept" or "Emphasized"
+		 *
+		 * @private
+		 */
+		 Dialog.prototype._findFirstPositiveButton = function () {
+			var aButtons = this.getButtons();
+
+			for (var i = 0; i < aButtons.length; i++) {
+				var oButton = aButtons[i];
+				if (oButton.getType() === ButtonType.Accept || oButton.getType() === ButtonType.Emphasized) {
+					return oButton;
+				}
+			}
+		 };
 
 		/**
 		 * Handles the keyboard drag/resize functionality
@@ -1089,9 +1153,10 @@ function(
 			}
 
 			$this.css(oStyles);
+			$this.css(this._calcMaxSizes());
 
 			if (!this._oManuallySetSize && !this._bDisableRepositioning) {
-				this._positionDialog();
+				$this.css(this._calcPosition());
 			}
 
 			//In Chrome when the dialog is stretched the footer is not rendered in the right position;
@@ -1209,7 +1274,12 @@ function(
 			oPosition = {
 				top: Math.round(oAreaDimensions.top + iTop)
 			};
-			oPosition[this._bRTL ? "right" : "left"] = Math.round(oAreaDimensions.left + iLeft);
+
+			if (this._bRTL) {
+				oPosition.right = Math.round(window.innerWidth - oAreaDimensions.right + iLeft);
+			} else {
+				oPosition.left = Math.round(oAreaDimensions.left + iLeft);
+			}
 
 			return oPosition;
 		};
@@ -1224,7 +1294,7 @@ function(
 				$this = this.$(),
 				iHeaderHeight = $this.find(".sapMDialogTitle").height() || 0,
 				iSubHeaderHeight = $this.find(".sapMDialogSubHeader").height() || 0,
-				iFooterHeight = $this.find("footer").height() || 0,
+				iFooterHeight = $this.find("> footer").height() || 0,
 				iHeightAsPadding = iHeaderHeight + iSubHeaderHeight + iFooterHeight,
 				iMaxHeight,
 				iMaxWidth;
@@ -1235,14 +1305,6 @@ function(
 			} else {
 				iMaxWidth = this._percentOfSize(oAreaDimensions.width, 100 - 2 * HORIZONTAL_MARGIN); // 90% of available width
 				iMaxHeight = this._percentOfSize(oAreaDimensions.height, 100 - 2 * VERTICAL_MARGIN) - iHeightAsPadding; // 94% of available height minus paddings for headers and footer
-			}
-
-			if (iMaxHeight < parseInt($this.css("min-height"))) {
-				Log.error("Height of Within Area is not enough to fit dialog");
-			}
-
-			if (iMaxWidth < parseInt($this.css("min-width"))) {
-				Log.error("Width of Within Area is not enough to fit dialog");
 			}
 
 			return {
@@ -1399,7 +1461,7 @@ function(
 				return null;
 			}
 
-			return this.$().find('header.sapMDialogTitle')[0];
+			return this.$().find('header.sapMDialogTitle .sapMDialogTitleGroup')[0];
 		};
 
 		/**
@@ -1694,6 +1756,24 @@ function(
 		 */
 		Dialog.prototype._isDraggableOrResizable = function () {
 			return !this.getStretch() && (this.getDraggable() || this.getResizable());
+		};
+
+		/**
+		 * Returns the correct message to be read by the aria-describedby attribute
+		 * @private
+		 */
+		Dialog.prototype._getAriaDescribedByText = function () {
+			var oRb = Core.getLibraryResourceBundle("sap.m");
+			if (this.getResizable() && this.getDraggable()) {
+				return oRb.getText("DIALOG_HEADER_ARIA_DESCRIBEDBY_DRAGGABLE_RESIZABLE");
+			}
+			if (this.getDraggable()) {
+				return oRb.getText("DIALOG_HEADER_ARIA_DESCRIBEDBY_DRAGGABLE");
+			}
+			if (this.getResizable()) {
+				return oRb.getText("DIALOG_HEADER_ARIA_DESCRIBEDBY_RESIZABLE");
+			}
+			return "";
 		};
 
 		/* =========================================================== */

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -11,6 +11,7 @@ sap.ui.define([
 	'sap/ui/core/ResizeHandler',
 	'./library',
 	'sap/ui/core/library',
+	'sap/ui/core/Core',
 	'sap/ui/events/KeyCodes',
 	'sap/ui/Device',
 	"sap/base/security/encodeXML",
@@ -23,6 +24,7 @@ function(
 	ResizeHandler,
 	library,
 	coreLibrary,
+	oCore,
 	KeyCodes,
 	Device,
 	encodeXML,
@@ -82,99 +84,102 @@ function(
 	 * @extends sap.m.InputBase
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.9.0
 	 * @alias sap.m.TextArea
 	 * @see {@link fiori:https://experience.sap.com/fiori-design-web/text-area/ Text Area}
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var TextArea = InputBase.extend("sap.m.TextArea", /** @lends sap.m.TextArea.prototype */ { metadata : {
+	var TextArea = InputBase.extend("sap.m.TextArea", /** @lends sap.m.TextArea.prototype */ {
+		metadata : {
 
-		library : "sap.m",
-		designtime: "sap/m/designtime/TextArea.designtime",
-		properties : {
+			library : "sap.m",
+			designtime: "sap/m/designtime/TextArea.designtime",
+			properties : {
 
-			/**
-			 * Defines the number of visible text lines for the control.
-			 * <b>Note:</b> The <code>height</code> property wins over the <code>rows</code> property, if both are set.
-			 */
-			rows : {type : "int", group : "Appearance", defaultValue : 2},
+				/**
+				 * Defines the number of visible text lines for the control.
+				 * <b>Note:</b> The <code>height</code> property wins over the <code>rows</code> property, if both are set.
+				 */
+				rows : {type : "int", group : "Appearance", defaultValue : 2},
 
-			/**
-			 * Defines the visible width of the control, in average character widths.
-			 * <b>Note:</b> The <code>width</code> property wins over the <code>cols</code> property, if both are set.
-			 */
-			cols : {type : "int", group : "Appearance", defaultValue : 20},
+				/**
+				 * Defines the visible width of the control, in average character widths.
+				 * <b>Note:</b> The <code>width</code> property wins over the <code>cols</code> property, if both are set.
+				 */
+				cols : {type : "int", group : "Appearance", defaultValue : 20},
 
-			/**
-			 * Defines the height of the control.
-			 */
-			height : {type : "sap.ui.core.CSSSize", group : "Appearance", defaultValue : null},
+				/**
+				 * Defines the height of the control.
+				 */
+				height : {type : "sap.ui.core.CSSSize", group : "Appearance", defaultValue : null},
 
-			/**
-			 * Defines the maximum number of characters that the <code>value</code> can be.
-			 */
-			maxLength : {type : "int", group : "Behavior", defaultValue : 0},
+				/**
+				 * Defines the maximum number of characters that the <code>value</code> can be.
+				 */
+				maxLength : {type : "int", group : "Behavior", defaultValue : 0},
 
-			/**
-			 * Determines whether the characters, exceeding the maximum allowed character count, are visible in the input field.
-			 *
-			 * If set to <code>false</code> the user is not allowed to enter more characters than what is set in the <code>maxLength</code> property.
-			 * If set to <code>true</code> the characters exceeding the <code>maxLength</code> value are selected on paste and the counter below
-			 * the input field displays their number.
-			 *  @since 1.48
-			 */
-			showExceededText: {type: "boolean", group: "Behavior", defaultValue: false},
+				/**
+				 * Determines whether the characters, exceeding the maximum allowed character count, are visible in the input field.
+				 *
+				 * If set to <code>false</code> the user is not allowed to enter more characters than what is set in the <code>maxLength</code> property.
+				 * If set to <code>true</code> the characters exceeding the <code>maxLength</code> value are selected on paste and the counter below
+				 * the input field displays their number.
+				 *  @since 1.48
+				 */
+				showExceededText: {type: "boolean", group: "Behavior", defaultValue: false},
 
-			/**
-			 * Indicates how the control wraps the text, e.g. <code>Soft</code>, <code>Hard</code>, <code>Off</code>.
-			 */
-			wrapping : {type : "sap.ui.core.Wrapping", group : "Behavior", defaultValue : Wrapping.None},
+				/**
+				 * Indicates how the control wraps the text, e.g. <code>Soft</code>, <code>Hard</code>, <code>Off</code>.
+				 */
+				wrapping : {type : "sap.ui.core.Wrapping", group : "Behavior", defaultValue : Wrapping.None},
 
-			/**
-			 * Indicates when the <code>value</code> property gets updated with the user changes. Setting it to <code>true</code> updates the <code>value</code> property whenever the user has modified the text shown on the text area.
-			 * @since 1.30
-			 */
-			valueLiveUpdate : {type : "boolean", group : "Behavior", defaultValue : false},
+				/**
+				 * Indicates when the <code>value</code> property gets updated with the user changes. Setting it to <code>true</code> updates the <code>value</code> property whenever the user has modified the text shown on the text area.
+				 * @since 1.30
+				 */
+				valueLiveUpdate : {type : "boolean", group : "Behavior", defaultValue : false},
 
-			/**
-			 * Indicates the ability of the control to automatically grow and shrink dynamically with its content.
-			 * <b>Note:</b> This property should not be used when the <code>height</code> property is set.
-			 * @since 1.38.0
-			 */
-			growing : {type : "boolean", group : "Behavior", defaultValue : false},
+				/**
+				 * Indicates the ability of the control to automatically grow and shrink dynamically with its content.
+				 * <b>Note:</b> This property should not be used when the <code>height</code> property is set.
+				 * @since 1.38.0
+				 */
+				growing : {type : "boolean", group : "Behavior", defaultValue : false},
 
-			/**
-			 * Defines the maximum number of lines that the control can grow.
-			 * @since 1.38.0
-			 */
-			growingMaxLines : {type : "int", group : "Behavior", defaultValue : 0}
+				/**
+				 * Defines the maximum number of lines that the control can grow.
+				 * @since 1.38.0
+				 */
+				growingMaxLines : {type : "int", group : "Behavior", defaultValue : 0}
 
-		},
-		aggregations: {
-			// The hidden aggregation for internal usage
-			_counter: {type: "sap.m.Text", multiple: false, visibility: "hidden"}
-		},
-		events : {
+			},
+			aggregations: {
+				// The hidden aggregation for internal usage
+				_counter: {type: "sap.m.Text", multiple: false, visibility: "hidden"}
+			},
+			events : {
 
-			/**
-			 * Is fired whenever the user has modified the text shown on the text area.
-			 */
-			liveChange : {
-				parameters : {
+				/**
+				 * Is fired whenever the user has modified the text shown on the text area.
+				 */
+				liveChange : {
+					parameters : {
 
-					/**
-					 * The new <code>value</code> of the control.
-					 */
-					value : {type : "string"}
+						/**
+						 * The new <code>value</code> of the control.
+						 */
+						value : {type : "string"}
+					}
 				}
-			}
+			},
+			dnd: { draggable: false, droppable: true }
 		},
-		dnd: { draggable: false, droppable: true }
-	}});
+
+		renderer: TextAreaRenderer
+	});
 
 	/**
 	 * Initializes the control.
@@ -302,7 +307,6 @@ function(
 	 */
 	TextArea.prototype._setGrowingMaxHeight = function () {
 		var oHiddenDiv = this.getDomRef('hidden'),
-			oCore = sap.ui.getCore(),
 			oLoadedLibraries = oCore.getLoadedLibraries(),
 			fLineHeight,
 			fMaxHeight,
@@ -595,7 +599,7 @@ function(
 	};
 
 	TextArea.prototype._getCounterValue = function () {
-		var oBundle = sap.ui.getCore().getLibraryResourceBundle("sap.m"),
+		var oBundle = oCore.getLibraryResourceBundle("sap.m"),
 				iCharactersExceeded = this.getMaxLength() - this.getValue().length,
 				bExceeded = (iCharactersExceeded < 0 ? true : false),
 				sMessageBundleKey = "TEXTAREA_CHARACTER" + ( Math.abs(iCharactersExceeded) === 1 ? "" : "S") + "_" + (bExceeded ? "EXCEEDED" : "LEFT");
@@ -613,8 +617,8 @@ function(
 	 */
 	TextArea.prototype._behaviour = (function(oDevice) {
 		return {
-			INSIDE_SCROLLABLE_WITHOUT_FOCUS : oDevice.os.ios || oDevice.os.blackberry || oDevice.browser.chrome,
-			PAGE_NON_SCROLLABLE_AFTER_FOCUS : oDevice.os.android && oDevice.os.version >= 4.1
+			INSIDE_SCROLLABLE_WITHOUT_FOCUS : oDevice.os.ios || oDevice.browser.chrome,
+			PAGE_NON_SCROLLABLE_AFTER_FOCUS : oDevice.os.android
 		};
 	}(Device));
 
@@ -663,41 +667,6 @@ function(
 			// to prevent the rubber-band effect we are calling prevent default on touchmove
 			// from jquery.sap.mobile but this breaks the scrolling nature of the textarea
 			oEvent.setMarked();
-		}
-	};
-
-	// Flag for the Fiori Client on Windows Phone
-	var _bMSWebView = Device.os.windows_phone && (/MSAppHost/i).test(navigator.appVersion);
-
-	/**
-	 * Special handling for the focusing issue in SAP Fiori Client on Windows Phone.
-	 * @param {jQuery.Event} oEvent The event object
-	 * @private
-	 */
-	TextArea.prototype.onfocusin = function(oEvent) {
-		var scrollContainer,
-			$this = this.$();
-
-		InputBase.prototype.onfocusin.apply(this, arguments);
-
-		// Workaround for the scroll-into-view bug in the WebView Windows Phone 8.1
-		// As the browser does not scroll the window as it should, scroll the parent scroll container to make the hidden text visible
-
-		function scrollIntoView() {
-			jQuery(window).scrollTop(0);
-			scrollContainer.scrollTop($this.offset().top - scrollContainer.offset().top + scrollContainer.scrollTop());
-		}
-
-		if (_bMSWebView && $this.height() + $this.offset().top > 260) {
-			for (scrollContainer = $this.parent(); scrollContainer[0]; scrollContainer = scrollContainer.parent()) {
-				if (scrollContainer.css("overflow-y") == "auto") {
-					// make sure to have enough padding to be able to scroll even the bottom control to the top of the screen
-					scrollContainer.children().last().css("padding-bottom", jQuery(window).height() + "px");
-					// do scroll
-					window.setTimeout(scrollIntoView, 100);
-					return;
-				}
-			}
 		}
 	};
 

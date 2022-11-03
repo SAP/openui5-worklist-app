@@ -1,12 +1,12 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // A renderer for the ScrollBar control
-sap.ui.define(['sap/ui/Device', "sap/ui/dom/getScrollbarSize"],
-	function(Device, getScrollbarSize) {
+sap.ui.define(['sap/ui/Device', "sap/ui/dom/getScrollbarSize", "sap/ui/core/Configuration"],
+	function(Device, getScrollbarSize, Configuration) {
 	"use strict";
 
 
@@ -24,10 +24,10 @@ sap.ui.define(['sap/ui/Device', "sap/ui/dom/getScrollbarSize"],
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRM RenderManager that can be used for writing to the Render-Output-Buffer
-	 * @param {sap.ui.core.Control} oControl Object representation of the control that should be rendered
+	 * @param {sap.ui.core.ScrollBar} oControl Object representation of the control that should be rendered
 	 */
 	ScrollBarRenderer.render = function(oRM, oScrollBar){
-		var bRTL = sap.ui.getCore().getConfiguration().getRTL();
+		var bRTL = Configuration.getRTL();
 
 		oRM.openStart("div", oScrollBar);
 		oRM.class("sapUiScrollBar");

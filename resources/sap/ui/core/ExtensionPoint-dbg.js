@@ -1,11 +1,11 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define(["sap/base/Log", "sap/base/util/ObjectPath", "sap/ui/core/mvc/View", "sap/ui/core/Component"],
-	function(Log, ObjectPath, View, Component) {
+sap.ui.define(["sap/base/Log", "sap/ui/core/mvc/View", "sap/ui/core/Component"],
+	function(Log, View, Component) {
 
 	"use strict";
 
@@ -53,7 +53,7 @@ sap.ui.define(["sap/base/Log", "sap/base/util/ObjectPath", "sap/ui/core/mvc/View
 	 */
 	// Following we attach all additional module API functions to the original sap.ui.extensionpoint factory.
 	// For compatibility we cannot change the actual return value of this module.
-	var ExtensionPoint = sap.ui.extensionpoint;
+	var ExtensionPoint = sap.ui.extensionpoint || {};
 
 	/**
 	 * API documentation see ExtensionPoint.load() and sap.ui.extensionpoint().
@@ -113,7 +113,7 @@ sap.ui.define(["sap/base/Log", "sap/base/util/ObjectPath", "sap/ui/core/mvc/View
 					// We cannot model the Fragment class as a dependency of the ExtensionPoint class,
 					// since the XML Fragments rely on the XMLTP for parsing and thus create a cyclic dependency:
 					// XMLTP -> ExtensionPoint -> Fragment -> XMLTP
-					var Fragment = sap.ui.require("sap.ui.core.Fragment");
+					var Fragment = sap.ui.require("sap/ui/core/Fragment");
 
 					oFactoryConfig.fragmentName = oExtensionConfig.fragmentName;
 					oFactoryConfig.containingView = oView;
@@ -236,7 +236,12 @@ sap.ui.define(["sap/base/Log", "sap/base/util/ObjectPath", "sap/ui/core/mvc/View
 							next.index += aControls.length;
 							next = next._nextSibling;
 						}
+
+						this._aControls = aControls;
 					},
+
+					// the resolved controls of this ExtensionPoint
+					_aControls: [],
 
 					// only used internally to check for a marker object
 					_isExtensionPoint: true,

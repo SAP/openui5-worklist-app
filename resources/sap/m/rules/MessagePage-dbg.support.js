@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -22,7 +22,7 @@ function(SupportLib) {
 	/**
 	 * Determines <code>Control</code> computed height.
 	 * @param {sap.ui.core.Control} oControl
-	 * @returns {Number}
+	 * @returns {number}
 	 */
 	var getControlHeight = function(oControl) {
 		return oControl.getDomRef().getBoundingClientRect().height;
@@ -42,7 +42,7 @@ function(SupportLib) {
 		resolution: "Use Message Page in a container with set height, such as sap.m.App",
 		resolutionurls: [{
 			text: "sap.m.MessagePage API Reference",
-			href: "https://openui5.hana.ondemand.com/#/api/sap.m.MessagePage"
+			href: "https://sdk.openui5.org/api/sap.m.MessagePage"
 		}],
 		check: function (oIssueManager, oCoreFacade, oScope) {
 			oScope.getElementsByClassName("sap.m.MessagePage").forEach(function(oMPage) {

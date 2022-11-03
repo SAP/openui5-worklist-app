@@ -1,7 +1,7 @@
 /*!
 
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -71,22 +71,31 @@ sap.ui.define(['./Binding', './Filter', './FilterType', './Sorter', 'sap/base/ut
 
 	// the 'abstract methods' to be implemented by child classes
 	/**
+	 * Returns all current contexts of this list binding in no special order. Just like
+	 * {@link #getCurrentContexts}, this method does not request any data from a back end and does
+	 * not change the binding's state. In contrast to {@link #getCurrentContexts}, it does not only
+	 * return those contexts that were last requested by a control, but all contexts that are
+	 * currently available in the binding.
+	 *
+	 * @returns {sap.ui.model.Context[]}
+	 *   All current contexts of this list binding, in no special order
+	 *
+	 * @function
+	 * @name sap.ui.model.ListBinding.prototype.getAllCurrentContexts
+	 * @public
+	 * @since 1.97.0
+	 */
+
+	/**
 	 * Returns an array of binding contexts for the bound target list.
 	 *
-	 * <h4>Extended Change Detection</h4>
-	 * If extended change detection is enabled using
-	 * {@link sap.ui.model.ListBinding.prototype.enableExtendedChangeDetection}, the context array
-	 * may carry an additional property named <code>diff</code>, which contains an array of actual
-	 * changes on the context array compared to the last call of <code>getContexts()</code>. In case
-	 * no <code>diff</code> property is available on the context array, the list is completely
-	 * different and needs to be recreated. In case the <code>diff</code> property contains an empty
-	 * array, there have been no changes on the list.
-	 *
-	 * Sample diff array:
-	 * <code>[{index: 1, type: "delete"}, {index: 4, type: "insert}]</code>
+	 * In case of extended change detection, the context array may have an additional
+	 * <code>diff</code> property, see
+	 * {@link topic:7cdff73f308b4b10bdf7d83b7aba72e7 documentation on extended change detection} for
+	 * details.
 	 *
 	 * <strong>Note:</strong>The public usage of this method is deprecated, as calls from outside of
-	 * controls will lead to unexpected side effects. To avoid these side effect, use
+	 * controls will lead to unexpected side effects. To avoid this, use
 	 * {@link sap.ui.model.ListBinding.prototype.getCurrentContexts} instead.
 	 *
 	 * @function
@@ -94,7 +103,8 @@ sap.ui.define(['./Binding', './Filter', './FilterType', './Sorter', 'sap/base/ut
 	 * @param {int} [iStartIndex=0]
 	 *   The startIndex where to start the retrieval of contexts
 	 * @param {int} [iLength=length of the list]
-	 *   Determines how many contexts to retrieve beginning from the start index.
+	 *   Determines how many contexts to retrieve beginning from the start index; default is the
+	 *   whole list length up to the model's size limit; see {@link sap.ui.model.Model#setSizeLimit}
 	 * @param {int} [iMaximumPrefetchSize]
 	 *   The maximum number of contexts to read before and after the given range; with this,
 	 *   controls can prefetch data that is likely to be needed soon, e.g. when scrolling down in a
@@ -104,6 +114,9 @@ sap.ui.define(['./Binding', './Filter', './FilterType', './Sorter', 'sap/base/ut
 	 *   This parameter is model-specific and not implemented by all models
 	 * @return {sap.ui.model.Context[]}
 	 *   The array of contexts for each row of the bound list
+	 * @throws {Error}
+	 *   If <code>bKeepCurrent</code> is set and extended change detection is enabled or
+	 *   <code>iMaximumPrefetchSize</code> is set
 	 *
 	 * @protected
 	 */
@@ -160,7 +173,7 @@ sap.ui.define(['./Binding', './Filter', './FilterType', './Sorter', 'sap/base/ut
 	 *
 	 * @function
 	 * @name sap.ui.model.ListBinding.prototype.sort
-	 * @param {sap.ui.model.Sorter|Array} aSorters
+	 * @param {sap.ui.model.Sorter|sap.ui.model.Sorter[]} aSorters
 	 *   The Sorter object or an array of sorters which defines the sort order
 	 * @return {this}
 	 *   Returns <code>this</code> to facilitate method chaining
@@ -168,13 +181,38 @@ sap.ui.define(['./Binding', './Filter', './FilterType', './Sorter', 'sap/base/ut
 	 */
 
 	/**
-	 * Returns an array of currently used binding contexts of the bound control.
+	 * Checks whether keeping current contexts untouched is supported.
 	 *
-	 * This method does not trigger any data requests from the back end or a delta calculation, but
-	 * just returns the context array as last requested by the control. This can be used by the
-	 * application to get access to the data currently displayed by a list control.
+	 * @param {int} [iMaximumPrefetchSize]
+	 *   The maximum number of contexts to read before and after the given range
+	 * @throws {Error}
+	 *   If extended change detection is enabled, or if <code>iMaximumPrefetchSize</code> is set
 	 *
-	 * @return {sap.ui.model.Context[]} The array of contexts for each row of the bound list
+	 * @private
+	 */
+	ListBinding.prototype._checkKeepCurrentSupported = function (iMaximumPrefetchSize) {
+		if (this.bUseExtendedChangeDetection) {
+			throw new Error("Unsupported operation: " + this.getMetadata().getName()
+				+ "#getContexts, must not use bKeepCurrent if extended change detection is"
+				+ " enabled");
+		}
+		if (iMaximumPrefetchSize) {
+			throw new Error("Unsupported operation: " + this.getMetadata().getName()
+				+ "#getContexts, must not use both iMaximumPrefetchSize and bKeepCurrent");
+		}
+	};
+
+	/**
+	 * Returns the contexts of this list binding as last requested by the control and in the same
+	 * order the control has received them.
+	 *
+	 * This method does not request any data from a back end and does not change the binding's
+	 * state.
+	 *
+	 * @return {sap.ui.model.Context[]}
+	 *   The contexts of this list binding as last requested by the control and in the same order
+	 *   the control has received them
+	 *
 	 * @since 1.28
 	 * @public
 	 */
@@ -535,7 +573,7 @@ sap.ui.define(['./Binding', './Filter', './FilterType', './Sorter', 'sap/base/ut
 	 *   A callback function to filter only relevant messages. The callback returns whether the
 	 *   given {@link sap.ui.core.message.Message} is considered. If no callback function is given,
 	 *   all messages are considered.
-	 * @returns {Promise<sap.ui.model.Filter>}
+	 * @returns {Promise<sap.ui.model.Filter|null>}
 	 *   A Promise that resolves with a {@link sap.ui.model.Filter} representing the entries with
 	 *   messages; it resolves with <code>null</code> if the binding is not resolved or if the
 	 *   binding knows that there is no message for any entry

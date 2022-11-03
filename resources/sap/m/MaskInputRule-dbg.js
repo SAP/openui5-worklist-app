@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -20,12 +20,11 @@ sap.ui.define(['sap/ui/core/Element', "sap/base/Log"], function(Element, Log) {
 	 *
 	 * @author SAP SE
 	 * @extends sap.ui.core.Element
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @public
 	 * @constructor
 	 * @since 1.34.0
 	 * @alias sap.m.MaskInputRule
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var MaskInputRule = Element.extend("sap.m.MaskInputRule", /** @lends sap.m.MaskInputRule.prototype */ {
 		metadata : {
@@ -48,7 +47,7 @@ sap.ui.define(['sap/ui/core/Element', "sap/base/Log"], function(Element, Log) {
 	/*
 	 * Sets <code>maskFormatSymbol</code> property.
 	 * @override
-	 * @param {String} sNewMaskFormatSymbol The new format symbol
+	 * @param {string} sNewMaskFormatSymbol The new format symbol
 	 * @returns {this} The <code>this</code> pointer for chaining
 	 */
 	MaskInputRule.prototype.setMaskFormatSymbol = function (sNewMaskFormatSymbol) {
@@ -63,7 +62,7 @@ sap.ui.define(['sap/ui/core/Element', "sap/base/Log"], function(Element, Log) {
 	/*
 	 * Sets <code>regex</code> property.
 	 * @override
-	 * @param {String} sNewRegex The new regular expression
+	 * @param {string} sNewRegex The new regular expression
 	 * @returns {this} The <code>this</code> pointer for chaining
 	 */
 	MaskInputRule.prototype.setRegex = function (sNewRegex) {
@@ -77,7 +76,7 @@ sap.ui.define(['sap/ui/core/Element', "sap/base/Log"], function(Element, Log) {
 
 	/**
 	 * Converts the rule into a string.
-	 * @returns {String} String representation of this instance
+	 * @returns {string} String representation of this instance
 	 */
 	MaskInputRule.prototype.toString = function(){
 		return this.getMaskFormatSymbol() + ":" + this.getRegex();
@@ -103,7 +102,7 @@ sap.ui.define(['sap/ui/core/Element', "sap/base/Log"], function(Element, Log) {
 
 	/**
 	 * Checks if the specified regular expression is valid.
-	 * @param {String} sRegex The regular expression string to be validated
+	 * @param {string} sRegex The regular expression string to be validated
 	 * @returns {boolean} True of the specified regular expression string is valid, false otherwise
 	 * @private
 	 */

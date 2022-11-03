@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -26,10 +26,9 @@ sap.ui.define([
 	"sap/base/Log",
 	"sap/ui/thirdparty/jquery",
 	"sap/ui/events/KeyCodes",
-	// jQuery Plugin "control"
-	"sap/ui/dom/jquery/control",
-	// jQuery Plugin "scrollLeftRTL"
-	"sap/ui/dom/jquery/scrollLeftRTL"
+	"sap/ui/core/Configuration",
+	"sap/ui/dom/jquery/control", // jQuery Plugin "control"
+	"sap/ui/dom/jquery/scrollLeftRTL" // jQuery Plugin "scrollLeftRTL"
 ],
 function(
 	Control,
@@ -52,7 +51,8 @@ function(
 	TabStripRenderer,
 	Log,
 	jQuery,
-	KeyCodes
+	KeyCodes,
+	Configuration
 ) {
 		"use strict";
 
@@ -73,7 +73,7 @@ function(
 		 * space is exceeded, a horizontal scrollbar appears.
 		 *
 		 * @extends sap.ui.core.Control
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @private
@@ -187,7 +187,9 @@ function(
 
 				// after the tabstrip is instantiated, add the select
 				this.setProperty('hasSelect', bHasSelect, true);
-			}
+			},
+
+			renderer: TabStripRenderer
 		});
 
 		/**
@@ -235,7 +237,7 @@ function(
 		 *
 		 * @type {number}
 		 */
-		TabStrip.SCROLL_ANIMATION_DURATION = sap.ui.getCore().getConfiguration().getAnimation() ? 500 : 0;
+		TabStrip.SCROLL_ANIMATION_DURATION = Configuration.getAnimation() ? 500 : 0;
 
 
 		/**
@@ -246,7 +248,7 @@ function(
 		 */
 		TabStrip.prototype.init = function () {
 			this._bDoScroll = !Device.system.phone;
-			this._bRtl = sap.ui.getCore().getConfiguration().getRTL();
+			this._bRtl = Configuration.getRTL();
 			this._iCurrentScrollLeft = 0;
 			this._iMaxOffsetLeft = null;
 			this._scrollable = null;
@@ -347,7 +349,7 @@ function(
 		/**
 		 * Finds the DOM element that should get the focus.
 		 *
-		 * @returns {null | Element} The element that have to receive the focus or null
+		 * @returns {null | Element} The element that should receive the focus or <code>null</code>
 		 * @public
 		 * @override
 		 */
@@ -401,8 +403,10 @@ function(
 			this._oItemNavigation.setPageSize(5);
 			//alt+right/left is used for browser navigation
 			this._oItemNavigation.setDisabledModifiers({
-				sapnext: ["alt"],
-				sapprevious: ["alt"]
+				sapnext: ["alt", "meta"],
+				sapprevious: ["alt", "meta"],
+				saphome : ["alt", "meta"],
+				sapend : ["meta"]
 			});
 
 			//Attach ItemNavigation to the control delegate queue
@@ -645,7 +649,7 @@ function(
 		/**
 		 * Create the instance of the <code>TabStripSelect</code>.
 		 *
-		 * @param { array<sap.m.TabStripItem> } aTabStripItems Array with the <code>TabStripItems</code>
+		 * @param { Array<sap.m.TabStripItem> } aTabStripItems Array with the <code>TabStripItems</code>
 		 * @returns {CustomSelect} The created <code>CustomSelect</code>
 		 * @private
 		 */
@@ -755,7 +759,7 @@ function(
 				this.fireItemPress({
 					item: oItem
 				});
-			} else if (oEvent && !oEvent.isDefaultPrevented()) {
+			} else if (oEvent instanceof jQuery.Event && !oEvent.isDefaultPrevented()) {
 				oEvent.preventDefault();
 			}
 		};
@@ -1338,7 +1342,7 @@ function(
 
 
 			oPicker.setOffsetX(Math.round(
-				sap.ui.getCore().getConfiguration().getRTL() ?
+				Configuration.getRTL() ?
 					this.getPicker().$().width() - this.$().width() :
 					this.$().width() - this.getPicker().$().width()
 			)); // LTR or RTL mode considered

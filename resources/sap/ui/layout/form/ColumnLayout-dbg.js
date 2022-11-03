@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -60,50 +60,53 @@ sap.ui.define([
 	 * This control cannot be used stand-alone, it just renders a <code>Form</code> control,
 	 * so it must be assigned to a <code>Form</code> control using the <code>layout</code> aggregation.
 	 * @extends sap.ui.layout.form.FormLayout
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.56.0
 	 * @alias sap.ui.layout.form.ColumnLayout
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var ColumnLayout = FormLayout.extend("sap.ui.layout.form.ColumnLayout", /** @lends sap.ui.layout.form.ColumnLayout.prototype */ { metadata : {
+	var ColumnLayout = FormLayout.extend("sap.ui.layout.form.ColumnLayout", /** @lends sap.ui.layout.form.ColumnLayout.prototype */ {
+		metadata : {
 
-		library : "sap.ui.layout",
-		properties : {
+			library : "sap.ui.layout",
+			properties : {
 
-			/**
-			 * Number of columns for extra-large size.
-			 *
-			 * The number of columns for extra-large size must not be smaller than the number of columns for large size.
-			 */
-			columnsXL : {type : "sap.ui.layout.form.ColumnsXL", group : "Appearance", defaultValue : 2},
+				/**
+				 * Number of columns for extra-large size.
+				 *
+				 * The number of columns for extra-large size must not be smaller than the number of columns for large size.
+				 */
+				columnsXL : {type : "sap.ui.layout.form.ColumnsXL", group : "Appearance", defaultValue : 2},
 
-			/**
-			 * Number of columns for large size.
-			 *
-			 * The number of columns for large size must not be smaller than the number of columns for medium size.
-			 */
-			columnsL : {type : "sap.ui.layout.form.ColumnsL", group : "Appearance", defaultValue : 2},
+				/**
+				 * Number of columns for large size.
+				 *
+				 * The number of columns for large size must not be smaller than the number of columns for medium size.
+				 */
+				columnsL : {type : "sap.ui.layout.form.ColumnsL", group : "Appearance", defaultValue : 2},
 
-			/**
-			 * Number of columns for medium size.
-			 */
-			columnsM : {type : "sap.ui.layout.form.ColumnsM", group : "Appearance", defaultValue : 1},
+				/**
+				 * Number of columns for medium size.
+				 */
+				columnsM : {type : "sap.ui.layout.form.ColumnsM", group : "Appearance", defaultValue : 1},
 
-			/**
-			 * Defines how many cells a label uses if the column is large.
-			 */
-			labelCellsLarge : {type : "sap.ui.layout.form.ColumnCells", group : "Appearance", defaultValue : 4},
+				/**
+				 * Defines how many cells a label uses if the column is large.
+				 */
+				labelCellsLarge : {type : "sap.ui.layout.form.ColumnCells", group : "Appearance", defaultValue : 4},
 
-			/**
-			 * Defines how many cells are empty at the end of a row.
-			 * This could be used to keep the fields small on large screens.
-			 */
-			emptyCellsLarge : {type : "sap.ui.layout.form.EmptyCells", group : "Appearance", defaultValue : 0}
-		}
-	}});
+				/**
+				 * Defines how many cells are empty at the end of a row.
+				 * This could be used to keep the fields small on large screens.
+				 */
+				emptyCellsLarge : {type : "sap.ui.layout.form.EmptyCells", group : "Appearance", defaultValue : 0}
+			}
+		},
+
+		renderer: ColumnLayoutRenderer
+	});
 
 	/* eslint-disable no-lonely-if */
 

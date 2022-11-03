@@ -29,7 +29,9 @@
 	overflow: hidden;
 	position: relative;
 	outline: none;
-	display: inline-block;
+	display: flex;
+	flex-direction: column-reverse;
+	justify-content: flex-end;
 	white-space: initial; /* To not inherit */
 	box-sizing: border-box;
 	text-align: center;
@@ -90,7 +92,7 @@
 	width: 100%;
 	float: left;
 	color: @sapUiContentLabelColor;
-	font-size: 0.625rem;
+	font-size: @sapMFontSmallSize;
 }
 
 .sapUiCalHead {
@@ -306,6 +308,7 @@ html.sap-desktop .sapUiCalHead > button.sapUiCalDsbl:focus,
 }
 
 .sapUiCalItemDsbl{
+	pointer-events: none;
 	color: fade(@sapUiBaseText, 50);
 	background-color: fade(lighten(@sapUiContentForegroundColor,5), 50);
 }
@@ -334,6 +337,10 @@ html.sap-desktop .sapUiCalHead > button.sapUiCalDsbl:focus,
 
 .sapUiCalItemNow{
 	color: @sapUiHighlight;
+}
+
+.sapUiCalItemNow.sapUiCalItemDsbl {
+	color: fade(@sapUiBaseText, 50);
 }
 
 .sapUiCalItemWeekEnd{
@@ -436,6 +443,34 @@ html.sap-desktop .sapUiCalHead > button.sapUiCalDsbl:focus,
 	overflow: hidden;
 	white-space: nowrap;
 	line-height: 100%;
+}
+
+.sapUiCalMonthPicker.sapUiCalMonthSecType,
+.sapUiCalYearPicker.sapUiCalMonthSecType {
+	.sapUiCalItem {
+		line-height: 1.875rem;
+		&:focus {
+			line-height: 1.75rem;
+		}
+		& > .sapUiCalItemSecText{
+			width: 100%;
+			display: flex;
+			justify-content: center;
+		}
+	}
+}
+
+.sapUiSizeCompact .sapUiCalMonthPicker.sapUiCalMonthSecType,
+.sapUiSizeCompact .sapUiCalYearPicker.sapUiCalMonthSecType {
+	.sapUiCalItem {
+		line-height: 1rem;
+		&:focus {
+			line-height: 0.875rem;
+			.sapUiCalItemSecText {
+				line-height: 0.875rem;
+			}
+		}
+	}
 }
 
 /* Day, Month and YearPicker on popup */
@@ -657,12 +692,20 @@ html.sapUiMedia-Std-Phone .sapUiCalHeadB0{
 }
 
 .sapUiCalMonthSecType .sapUiCalItem > .sapUiCalItemSecText{
-	font-size: 0.625rem;
+	font-size: @sapMFontSmallSize;
 	height: 1rem;
-	line-height: 1rem;
+	line-height: 0.625rem;
 	padding-right: 0.313rem;
 	padding-bottom: 0.313rem;
 	box-sizing: border-box;
+}
+
+.sapUiCalMonthSecType .sapUiCalItem:focus > .sapUiCalItemSecText{
+	line-height: 0.75rem;
+}
+
+.sapUiSizeCompact .sapUiCalMonthSecType .sapUiCalItem.sapUiCalItemNow.sapUiCalItemSel > .sapUiCalItemText {
+	line-height: 1.25rem;
 }
 
 .sapUiCalMonthSecType .sapUiCalItem.sapUiCalItemSel:not(.sapUiCalItemSelBetween) > .sapUiCalItemSecText{

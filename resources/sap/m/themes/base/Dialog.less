@@ -15,8 +15,8 @@
 @_sap_m_Dialog_SuccessHeaderShadow: inset 0 -0.125rem @sapUiSuccessBorder;
 @_sap_m_Dialog_ErrorHeaderShadow: inset 0 -0.125rem @sapUiErrorBorder;
 @_sap_m_Dialog_WarningHeaderShadow: inset 0 -0.125rem @sapUiWarningBorder;
-@_sap_m_Dialog_InformationHeaderShadow: inset 0 -0.125rem @sapHighlightColor;
-@_sap_m_Dialog_BorderRadius: 0px;
+@_sap_m_Dialog_InformationHeaderShadow: inset 0 -0.125rem @sapUiInformationBorder;
+@_sap_m_Dialog_HeaderFocusBorderRadius: 0px;
 @_sap_m_Dialog_HeaderFocusBorderBottomOffset: 3px;
 @_sap_m_Dialog_HeaderFocusBorderTopOffset: 2px;
 @_sap_m_Dialog_HeaderFocusBorderLeftOffset: 2px;
@@ -83,8 +83,6 @@ html.sap-phone .sapMDialog {
 	overflow: hidden;
 
 	& > footer .sapMFooter-CTX {
-		display: -webkit-box; /* OLD - iOS 6-, Safari 3.1-6 */
-		display: -webkit-flex; /* NEW - Chrome */
 		display: flex;
 		padding: 0 0.25rem;
 
@@ -123,6 +121,7 @@ html.sap-desktop .sapMDialog {
 	html[data-sap-ui-browser^="sf"] & .sapMDialogSection {
 		/* For Safari - allow the vertical scroll bar to overlap the right padding which we use to compensate for its width. This happens by default for other browsers. */
 		overflow-y: overlay !important;
+		padding-right: 0px !important;
 	}
 }
 
@@ -207,7 +206,6 @@ html.sap-desktop .sapMDialog {
 
 .sapMDialog > header.sapMDialogTitle .sapMTitle {
 	color: @sapUiPageHeaderTextColor;
-	margin: 0;
 	vertical-align: middle;
 }
 
@@ -220,7 +218,6 @@ html.sap-desktop .sapMDialog {
 
 .sapMDialog > header.sapMDialogTitle .sapMDialogIcon.sapUiIcon {
 	font-size: 1.25rem;
-	margin-right: 0.5rem;
 	vertical-align: middle;
 }
 
@@ -348,6 +345,12 @@ html.sap-desktop .sapMDialog {
 	padding-bottom: @_sap_m_Dialog_BarHeight;
 	padding-top: @_sap_m_Dialog_BarHeight;
 
+	footer {
+		.sapMTB.sapMFooter-CTX {
+			border-bottom: none;
+		}
+	}
+
 	&.sapMDialog-NoFooter {
 		padding-bottom: 0;
 	}
@@ -384,7 +387,7 @@ html.sap-desktop .sapMDialog {
 		top: 0;
 	}
 
-	& > .sapMDialogTitle:focus {
+	& > .sapMDialogTitle .sapMDialogTitleGroup:focus {
 		outline: none;
 
 		&::after {
@@ -395,7 +398,7 @@ html.sap-desktop .sapMDialog {
 			right: @_sap_m_Dialog_HeaderFocusBorderRightOffset;
 			top: @_sap_m_Dialog_HeaderFocusBorderTopOffset;
 			border: @sapUiContentFocusWidth @sapUiContentFocusStyle @sapUiContentFocusColor;
-			border-radius: @_sap_m_Dialog_BorderRadius @_sap_m_Dialog_BorderRadius 0 0;
+			border-radius: @_sap_m_Dialog_HeaderFocusBorderRadius @_sap_m_Dialog_HeaderFocusBorderRadius 0 0;
 			pointer-events: none;
 		}
 	}
@@ -475,7 +478,7 @@ html[data-sap-ui-animation='off'] .sapMDialog {
 .sapMDialogInformation > header {
 
 	&.sapMDialogTitle .sapMDialogIcon.sapUiIcon {
-		color: @sapHighlightColor;
+		color: @sapUiInformativeElement;
 	}
 
 	&:last-of-type .sapMIBar {

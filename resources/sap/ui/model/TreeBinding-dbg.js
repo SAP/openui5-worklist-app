@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -116,6 +116,24 @@ sap.ui.define(['./Binding', './Filter', './Sorter'],
 			return this.getRootContexts().length;
 		}
 		return this.getNodeContexts(oContext).length;
+	};
+
+	/**
+	 * Returns the count of entries in the tree, or <code>undefined</code> if it is unknown. If the
+	 * tree is filtered, the count of all entries matching the filter conditions is returned. The
+	 * entries required only for the tree structure are not counted.
+	 *
+	 * <b>Note:</b> The default implementation returns <code>undefined</code> and has to be
+	 * overwritten by subclasses.
+	 *
+	 * @returns {number|undefined} The count of entries in the tree, or <code>undefined</code> if it
+	 *   is unknown, for example because the binding is not resolved or because this feature is not
+	 *   supported.
+	 * @public
+	 * @since 1.108.0
+	 */
+	TreeBinding.prototype.getCount = function () {
+		return undefined;
 	};
 
 	/**

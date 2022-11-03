@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -135,6 +135,8 @@ sap.ui.define([
 				}
 				logWarning(sValue, sName);
 			}
+
+			return undefined;
 		}
 
 		function validateBoolean(vValue, sName) {
@@ -144,6 +146,8 @@ sap.ui.define([
 			if (vValue !== undefined && vValue !== false && vValue !== "false") {
 				logWarning(vValue, sName);
 			}
+
+			return undefined;
 		}
 
 		function setConstraint(sName, vValue, vDefault) {
@@ -197,7 +201,7 @@ sap.ui.define([
 	 * @extends sap.ui.model.odata.type.ODataType
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @alias sap.ui.model.odata.type.Decimal
 	 * @param {object} [oFormatOptions]

@@ -1,12 +1,13 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides control sap.m.Label
 sap.ui.define([
 	'./library',
+	"sap/ui/core/Core",
 	'sap/ui/core/Control',
 	'sap/ui/core/LabelEnablement',
 	'sap/m/HyphenationSupport',
@@ -15,6 +16,7 @@ sap.ui.define([
 ],
 function(
 	library,
+	Core,
 	Control,
 	LabelEnablement,
 	HyphenationSupport,
@@ -73,102 +75,125 @@ function(
 	 * <li> It is not recommended to use labels in Bold.</li>
 	 * </ul>
 	 * @extends sap.ui.core.Control
-	 * @implements sap.ui.core.Label, sap.ui.core.IShrinkable
+	 * @implements sap.ui.core.Label, sap.ui.core.IShrinkable, sap.ui.core.IAccessKeySupport
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @alias sap.m.Label
 	 * @see {@link fiori:https://experience.sap.com/fiori-design-web/label/ Label}
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var Label = Control.extend("sap.m.Label", /** @lends sap.m.Label.prototype */ { metadata : {
+	var Label = Control.extend("sap.m.Label", /** @lends sap.m.Label.prototype */ {
+		metadata : {
 
-		interfaces : [
-			"sap.ui.core.Label",
-			"sap.ui.core.IShrinkable",
-			"sap.m.IOverflowToolbarContent",
-			"sap.m.IHyphenation"
-		],
-		library : "sap.m",
-		properties : {
+			interfaces : [
+				"sap.ui.core.Label",
+				"sap.ui.core.IShrinkable",
+				"sap.m.IOverflowToolbarContent",
+				"sap.m.IHyphenation",
+				"sap.ui.core.IAccessKeySupport"
+			],
+			library : "sap.m",
+			properties : {
 
-			/**
-			 * Sets the design of a Label to either Standard or Bold.
-			 */
-			design : {type : "sap.m.LabelDesign", group : "Appearance", defaultValue : LabelDesign.Standard},
+				/**
+				 * Sets the design of a Label to either Standard or Bold.
+				 */
+				design : {type : "sap.m.LabelDesign", group : "Appearance", defaultValue : LabelDesign.Standard},
 
-			/**
-			 * Determines the Label text to be displayed.
-			 */
-			text : {type : "string", group : "Misc", defaultValue : null},
+				/**
+				 * Determines the Label text to be displayed.
+				 */
+				text : {type : "string", group : "Misc", defaultValue : null},
 
-			/**
-			 * Available alignment settings are "Begin", "Center", "End", "Left", and "Right".
-			 */
-			textAlign : {type : "sap.ui.core.TextAlign", group : "Appearance", defaultValue : TextAlign.Begin},
+				/**
+				 * Available alignment settings are "Begin", "Center", "End", "Left", and "Right".
+				 */
+				textAlign : {type : "sap.ui.core.TextAlign", group : "Appearance", defaultValue : TextAlign.Begin},
 
-			/**
-			 * Options for the text direction are RTL and LTR. Alternatively, the control can inherit the text direction from its parent container.
-			 */
-			textDirection : {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
+				/**
+				 * Options for the text direction are RTL and LTR. Alternatively, the control can inherit the text direction from its parent container.
+				 */
+				textDirection : {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
 
-			/**
-			 * Determines the width of the label.
-			 */
-			width : {type : "sap.ui.core.CSSSize", group : "Dimension", defaultValue : ''},
+				/**
+				 * Determines the width of the label.
+				 */
+				width : {type : "sap.ui.core.CSSSize", group : "Dimension", defaultValue : ''},
 
-			/**
-			 * Indicates that user input is required for input control labeled by the sap.m.Label.
-			 * When the property is set to true and associated input field is empty an asterisk character is added to the label text.
-			 */
-			required : {type : "boolean", group : "Misc", defaultValue : false},
+				/**
+				 * Indicates that user input is required for input control labeled by the sap.m.Label.
+				 * When the property is set to true and associated input field is empty an asterisk character is added to the label text.
+				 */
+				required : {type : "boolean", group : "Misc", defaultValue : false},
 
-			/**
-			 * Determines if the label is in displayOnly mode.
-			 *
-			 * <b>Note:</b> This property should be used only in Form controls in preview mode.
-			 *
-			 * @since 1.50.0
-			 */
-			displayOnly : {type : "boolean", group : "Appearance", defaultValue : false},
+				/**
+				 * Determines if the label is in displayOnly mode.
+				 *
+				 * <b>Note:</b> This property should be used only in Form controls in preview mode.
+				 *
+				 * @since 1.50.0
+				 */
+				displayOnly : {type : "boolean", group : "Appearance", defaultValue : false},
 
-			/**
-			 * Determines the wrapping of the text within the <code>Label</code>.
-			 * If set to true the <code>Label</code> will wrap, when set to false the <code>Label</code> will be truncated and replaced with ellipsis which is the default behavior.
-			 *
-			 * @since 1.50
-			 */
-			wrapping: {type : "boolean", group : "Appearance", defaultValue : false},
+				/**
+				 * Determines the wrapping of the text within the <code>Label</code>.
+				 * If set to true the <code>Label</code> will wrap, when set to false the <code>Label</code> will be truncated and replaced with ellipsis which is the default behavior.
+				 *
+				 * @since 1.50
+				 */
+				wrapping: {type : "boolean", group : "Appearance", defaultValue : false},
 
-			/**
-			 * Defines the type of text wrapping to be used (hyphenated or normal).
-			 *
-			 * <b>Note:</b> This property takes effect only when the <code>wrapping</code>
-			 * property is set to <code>true</code>.
-			 *
-			 * @since 1.60
-			 */
-			wrappingType : {type: "sap.m.WrappingType", group : "Appearance", defaultValue : WrappingType.Normal},
+				/**
+				 * Defines the type of text wrapping to be used (hyphenated or normal).
+				 *
+				 * <b>Note:</b> This property takes effect only when the <code>wrapping</code>
+				 * property is set to <code>true</code>.
+				 *
+				 * @since 1.60
+				 */
+				wrappingType : {type: "sap.m.WrappingType", group : "Appearance", defaultValue : WrappingType.Normal},
 
-			/**
-			 * Specifies the vertical alignment of the <code>Label</code> related to the tallest and lowest element on the line.
-			 * @since 1.54
-			 */
-			vAlign : {type : "sap.ui.core.VerticalAlign", group : "Appearance", defaultValue : VerticalAlign.Inherit}
+				/**
+				 * Specifies the vertical alignment of the <code>Label</code> related to the tallest and lowest element on the line.
+				 * @since 1.54
+				 */
+				vAlign : {type : "sap.ui.core.VerticalAlign", group : "Appearance", defaultValue : VerticalAlign.Inherit},
+
+				/**
+				 * Defines whether a colon (:) character is added to the label.
+				 *
+				 * <b>Note:</b> By default when the <code>Label</code> is in
+				 * the <code>sap.ui.layout.form.Form</code> and <code>sap.ui.layout.form.SimpleForm</code>
+				 * controls the colon (:) character is displayed automatically
+				 * regardless of the value of the <code>showColon</code> property.
+				 * @since 1.98
+				 */
+				showColon : {type : "boolean", group : "Appearance", defaultValue : false},
+
+				/**
+				 * Indicates whether the access keys ref of the control should be highlighted.
+				 * NOTE: this property is used only when access keys feature is turned on.
+				 *
+				 * @private
+				 */
+				highlightAccKeysRef: { type: "boolean", defaultValue: false, visibility: "hidden" }
+			},
+			associations : {
+
+				/**
+				 * Association to the labelled control.
+				 * By default, the label sets the for attribute to the ID of the labelled control. This can be changed by implementing the function getIdForLabel on the labelled control.
+				 */
+				labelFor : {type : "sap.ui.core.Control", multiple : false}
+			},
+			designtime: "sap/m/designtime/Label.designtime"
 		},
-		associations : {
 
-			/**
-			 * Association to the labeled control.
-			 * By default the label set the for attribute to the ID of the labeled control. This can be changed by implementing the function getIdForLabel on the labelled control.
-			 */
-			labelFor : {type : "sap.ui.core.Control", multiple : false}
-		},
-		designtime: "sap/m/designtime/Label.designtime"
-	}});
+		renderer: LabelRenderer
+	});
 
 	/**
 	 * Provides the current accessibility state of the control.
@@ -179,7 +204,31 @@ function(
 	 * @returns {object} AccessibilityInfo of the <code>sap.m.Label</code>
 	 */
 	Label.prototype.getAccessibilityInfo = function() {
-		return {description: this.getText()};
+		var sDescription = this.getText();
+
+		return {
+			description: sDescription,
+			required: this.isRequired()
+		};
+	};
+
+	Label.prototype.onBeforeRendering = function () {
+		this._handleAccessKeysHighlighting();
+	};
+
+	Label.prototype._handleAccessKeysHighlighting = function () {
+		var sLabelForId = this.getLabelFor();
+		var sText = this.getText();
+
+		if (!sLabelForId || !sText) {
+			return;
+		}
+
+		var oLabeledControl = Core.byId(sLabelForId);
+
+		if (oLabeledControl && oLabeledControl.isA("sap.m.Input") && oLabeledControl.getProperty("highlightAccKeysRef")) {
+			Core.byId(sLabelForId).setProperty("accesskey", (sText[0].toLowerCase()), true);
+		}
 	};
 
 	/**
@@ -260,6 +309,16 @@ function(
 		return {
 			"main": this.$("bdi")[0]
 		};
+	};
+
+	/**
+	 * Marks the Label to be in a column header context.
+	 *
+	 * @private
+	 * @ui5-restricted sap.m.Table, sap.ui.table.Table
+	 */
+	 Label.prototype.setIsInColumnHeaderContext = function (bIsInColumnHeaderContext) {
+		this._isInColumnHeaderContext = !!bIsInColumnHeaderContext;
 	};
 
 	// enrich Label functionality

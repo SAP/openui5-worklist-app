@@ -1,7 +1,7 @@
 //@ui5-bundle sap/m/library-preload.support.js
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -100,7 +100,7 @@ sap.ui.predefine("sap/m/library.support", [
 }, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -142,7 +142,7 @@ sap.ui.predefine("sap/m/rules/Breadcrumbs.support", ["sap/ui/support/library"],
 					var sElementId = oElement.getId(),
 						sElementName = oElement.getMetadata().getElementName();
 
-					if (oElement.getParent() instanceof sap.m.OverflowToolbar) {
+					if (oElement.getParent() && oElement.getParent().isA("sap.m.OverflowToolbar")) {
 						oIssueManager.addIssue({
 							severity: Severity.Medium,
 							details: "Breadcrumbs '" + sElementName + "' (" + sElementId + ") is placed inside an OverflowToolbar.",
@@ -160,7 +160,7 @@ sap.ui.predefine("sap/m/rules/Breadcrumbs.support", ["sap/ui/support/library"],
 }, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -258,7 +258,7 @@ sap.ui.predefine("sap/m/rules/Button.support", ["sap/ui/support/library"],
 }, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -290,7 +290,7 @@ sap.ui.predefine("sap/m/rules/CheckBox.support", ["sap/ui/support/library"],
 			resolution: "Either set enabled to true ot set editable to false",
 			resolutionurls: [{
 				text: "API Reference: sap.m.CheckBox",
-				href: "https://sapui5.hana.ondemand.com/#/api/sap.m.CheckBox"
+				href: "https://sdk.openui5.org/api/sap.m.CheckBox"
 			}],
 			check: function (oIssueManager, oCoreFacade, oScope) {
 				oScope.getElementsByClassName("sap.m.CheckBox")
@@ -319,7 +319,7 @@ sap.ui.predefine("sap/m/rules/CheckBox.support", ["sap/ui/support/library"],
 	}, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -393,7 +393,8 @@ sap.ui.predefine("sap/m/rules/DatePicker.support", ["sap/ui/support/library"], f
 			oScope.getElementsByClassName("sap.m.DatePicker")
 				.forEach(function(oElement) {
 					var oValueBinding = oElement.getBinding("value");
-					if (oValueBinding && oValueBinding.getType() instanceof sap.ui.model.odata.type.DateTime
+					if (oValueBinding && oValueBinding.getType()
+						&& oValueBinding.getType().isA("sap.ui.model.odata.type.DateTime")
 						&& (!oValueBinding.getType().oConstraints || !oValueBinding.getType().oConstraints.isDateOnly)) {
 						var sElementId = oElement.getId(),
 							sElementName = oElement.getMetadata().getElementName();
@@ -433,8 +434,8 @@ sap.ui.predefine("sap/m/rules/DatePicker.support", ["sap/ui/support/library"], f
 				.forEach(function(oElement) {
 					var oValueBinding = oElement.getBinding("value");
 					if (oValueBinding
-						&& oElement.getModel() instanceof sap.ui.model.json.JSONModel
-						&& oValueBinding.getType() instanceof sap.ui.model.odata.type.Date) {
+						&& oElement.getModel() && oElement.getModel().isA("sap.ui.model.json.JSONModel")
+						&& oValueBinding.getType() && oValueBinding.getType().isA("sap.ui.model.odata.type.Date")) {
 						var sElementId = oElement.getId(),
 							sElementName = oElement.getMetadata().getElementName();
 
@@ -500,7 +501,7 @@ sap.ui.predefine("sap/m/rules/DatePicker.support", ["sap/ui/support/library"], f
 }, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -596,7 +597,7 @@ sap.ui.predefine("sap/m/rules/DateRangeSelection.support", ["sap/ui/support/libr
 }, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -652,7 +653,7 @@ sap.ui.predefine("sap/m/rules/Dialog.support", ["sap/ui/support/library"],
 }, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -716,7 +717,7 @@ sap.ui.predefine("sap/m/rules/FacetFilter.support", ["sap/ui/support/library", "
 }, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -866,7 +867,7 @@ sap.ui.predefine("sap/m/rules/IconTabBar.support", ["sap/ui/support/library", "s
 }, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -957,7 +958,7 @@ sap.ui.predefine("sap/m/rules/Image.support", ["sap/ui/support/library"],
 		resolution: "Enable the \"densityAware\" property of this image control",
 		resolutionurls: [{
 			text: "API Refrence for sap.m.Image",
-			href: "https://sapui5.hana.ondemand.com/#/api/sap.m.Image"
+			href: "https://sdk.openui5.org/api/sap.m.Image"
 		}],
 		check: function (oIssueManager, oCoreFacade, oScope, fnResolve) {
 
@@ -1016,7 +1017,7 @@ sap.ui.predefine("sap/m/rules/Image.support", ["sap/ui/support/library"],
 }, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -1086,7 +1087,7 @@ sap.ui.predefine("sap/m/rules/Input.support", ["sap/ui/support/library"],
 }, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -1119,7 +1120,7 @@ sap.ui.predefine("sap/m/rules/Link.support", ["sap/ui/support/library"],
 		resolution: "Remove the href property of the link",
 		resolutionurls: [{
 			text: "API Reference: sap.m.Link",
-			href: "https://sapui5.hana.ondemand.com/#/api/sap.m.Link"
+			href: "https://sdk.openui5.org/api/sap.m.Link"
 		}],
 		check: function (oIssueManager, oCoreFacade, oScope) {
 			oScope.getElementsByClassName("sap.m.Link")
@@ -1147,7 +1148,7 @@ sap.ui.predefine("sap/m/rules/Link.support", ["sap/ui/support/library"],
 }, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -1210,7 +1211,7 @@ sap.ui.predefine("sap/m/rules/MaskInput.support", ["sap/ui/support/library"], fu
 }, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -1232,7 +1233,7 @@ function(SupportLib) {
 	/**
 	 * Determines <code>Control</code> computed height.
 	 * @param {sap.ui.core.Control} oControl
-	 * @returns {Number}
+	 * @returns {number}
 	 */
 	var getControlHeight = function(oControl) {
 		return oControl.getDomRef().getBoundingClientRect().height;
@@ -1252,7 +1253,7 @@ function(SupportLib) {
 		resolution: "Use Message Page in a container with set height, such as sap.m.App",
 		resolutionurls: [{
 			text: "sap.m.MessagePage API Reference",
-			href: "https://openui5.hana.ondemand.com/#/api/sap.m.MessagePage"
+			href: "https://sdk.openui5.org/api/sap.m.MessagePage"
 		}],
 		check: function (oIssueManager, oCoreFacade, oScope) {
 			oScope.getElementsByClassName("sap.m.MessagePage").forEach(function(oMPage) {
@@ -1314,7 +1315,7 @@ function(SupportLib) {
 }, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -1347,7 +1348,7 @@ sap.ui.predefine("sap/m/rules/ObjectHeader.support", ["sap/ui/support/library"],
 			resolution: "Use markers aggregation",
 			resolutionurls: [{
 				text: "API Reference: sap.m.ObjectHeader",
-				href: "https://sapui5.hana.ondemand.com/#/api/sap.m.ObjectHeader"
+				href: "https://sdk.openui5.org/api/sap.m.ObjectHeader"
 			}],
 			check: function (oIssueManager, oCoreFacade, oScope) {
 				oScope.getElementsByClassName("sap.m.ObjectHeader")
@@ -1384,7 +1385,7 @@ sap.ui.predefine("sap/m/rules/ObjectHeader.support", ["sap/ui/support/library"],
 			resolution: "Use statuses aggregation",
 			resolutionurls: [{
 				text: "API Reference: sap.m.ObjectHeader",
-				href: "https://sapui5.hana.ondemand.com/#/api/sap.m.ObjectHeader"
+				href: "https://sdk.openui5.org/api/sap.m.ObjectHeader"
 			}],
 			check: function (oIssueManager, oCoreFacade, oScope) {
 				oScope.getElementsByClassName("sap.m.ObjectHeader")
@@ -1420,7 +1421,7 @@ sap.ui.predefine("sap/m/rules/ObjectHeader.support", ["sap/ui/support/library"],
 			resolution: "Change the responsive property to false",
 			resolutionurls: [{
 				text: "API Reference: sap.m.ObjectHeader",
-				href: "https://sapui5.hana.ondemand.com/#/api/sap.m.ObjectHeader"
+				href: "https://sdk.openui5.org/api/sap.m.ObjectHeader"
 			}],
 			check: function (oIssueManager, oCoreFacade, oScope) {
 				oScope.getElementsByClassName("sap.m.ObjectHeader")
@@ -1456,7 +1457,7 @@ sap.ui.predefine("sap/m/rules/ObjectHeader.support", ["sap/ui/support/library"],
 			resolution: "Change the responsive property to true",
 			resolutionurls: [{
 				text: "API Reference: sap.m.ObjectHeader",
-				href: "https://sapui5.hana.ondemand.com/#/api/sap.m.ObjectHeader"
+				href: "https://sdk.openui5.org/api/sap.m.ObjectHeader"
 			}],
 			check: function (oIssueManager, oCoreFacade, oScope) {
 				oScope.getElementsByClassName("sap.m.ObjectHeader")
@@ -1492,7 +1493,7 @@ sap.ui.predefine("sap/m/rules/ObjectHeader.support", ["sap/ui/support/library"],
 			resolution: "Change the responsive property to false",
 			resolutionurls: [{
 				text: "API Reference: sap.m.ObjectHeader",
-				href: "https://sapui5.hana.ondemand.com/#/api/sap.m.ObjectHeader"
+				href: "https://sdk.openui5.org/api/sap.m.ObjectHeader"
 			}],
 			check: function (oIssueManager, oCoreFacade, oScope) {
 				oScope.getElementsByClassName("sap.m.ObjectHeader")
@@ -1528,7 +1529,7 @@ sap.ui.predefine("sap/m/rules/ObjectHeader.support", ["sap/ui/support/library"],
 			resolution: "Change the responsive property to true",
 			resolutionurls: [{
 				text: "API Reference: sap.m.ObjectHeader",
-				href: "https://sapui5.hana.ondemand.com/#/api/sap.m.ObjectHeader"
+				href: "https://sdk.openui5.org/api/sap.m.ObjectHeader"
 			}],
 			check: function (oIssueManager, oCoreFacade, oScope) {
 				oScope.getElementsByClassName("sap.m.ObjectHeader")
@@ -1563,7 +1564,7 @@ sap.ui.predefine("sap/m/rules/ObjectHeader.support", ["sap/ui/support/library"],
 	}, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -1596,7 +1597,7 @@ sap.ui.predefine("sap/m/rules/ObjectListItem.support", ["sap/ui/support/library"
 			resolution: "Use markers aggregation",
 			resolutionurls: [{
 				text: "API Reference: sap.m.ObjectListItem",
-				href: "https://sapui5.hana.ondemand.com/#/api/sap.m.ObjectListItem"
+				href: "https://sdk.openui5.org/api/sap.m.ObjectListItem"
 			}],
 			check: function (oIssueManager, oCoreFacade, oScope) {
 				oScope.getElementsByClassName("sap.m.ObjectListItem")
@@ -1626,7 +1627,7 @@ sap.ui.predefine("sap/m/rules/ObjectListItem.support", ["sap/ui/support/library"
 	}, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -1659,7 +1660,7 @@ sap.ui.predefine("sap/m/rules/ObjectMarker.support", ["sap/ui/support/library"],
 			resolution: "Set type of the ObjectMarker",
 			resolutionurls: [{
 				text: "API Reference: sap.m.ObjectMarker",
-				href: "https://sapui5.hana.ondemand.com/#/api/sap.m.ObjectMarker"
+				href: "https://sdk.openui5.org/api/sap.m.ObjectMarker"
 			}],
 			check: function (oIssueManager, oCoreFacade, oScope) {
 				oScope.getElementsByClassName("sap.m.ObjectMarker")
@@ -1688,7 +1689,7 @@ sap.ui.predefine("sap/m/rules/ObjectMarker.support", ["sap/ui/support/library"],
 	}, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -1721,7 +1722,7 @@ sap.ui.predefine("sap/m/rules/ObjectStatus.support", ["sap/ui/support/library"],
 			resolution: "Set text or icon when active property is true",
 			resolutionurls: [{
 				text: "API Reference: sap.m.ObjectStatus",
-				href: "https://sapui5.hana.ondemand.com/#/api/sap.m.ObjectStatus"
+				href: "https://sdk.openui5.org/api/sap.m.ObjectStatus"
 			}],
 			check: function (oIssueManager, oCoreFacade, oScope) {
 				oScope.getElementsByClassName("sap.m.ObjectStatus")
@@ -1751,7 +1752,7 @@ sap.ui.predefine("sap/m/rules/ObjectStatus.support", ["sap/ui/support/library"],
 /* eslint-disable linebreak-style */
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -1788,7 +1789,7 @@ sap.ui.predefine("sap/m/rules/Panel.support", [
 				text: "SAP Fiori Design Guidelines: Panel",
 				href: "https://experience.sap.com/fiori-design-web/panel/#components",
 				text2: "Explored Sample",
-				href2: "https://openui5beta.hana.ondemand.com/#/sample/sap.m.sample.Panel/preview"
+				href2: "https://sdk.openui5.org/entity/sap.m.Panel/sample/sap.m.sample.Panel"
 			}],
 			check: function (oIssueManager, oCoreFacade, oScope) {
 				oScope.getElementsByClassName("sap.m.Panel")
@@ -1816,7 +1817,7 @@ sap.ui.predefine("sap/m/rules/Panel.support", [
 	}, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -1852,7 +1853,7 @@ sap.ui.predefine("sap/m/rules/Select.support", ["sap/ui/support/library", "sap/u
 		resolution: "Use the sap.ui.model.Model.prototype.setSizeLimit to adjust the size limit of the 'items' model if you expect more than 100 items",
 		resolutionurls: [{
 			text: "API Reference for sap.ui.model.Model",
-			href: "https://sapui5.hana.ondemand.com/#/api/sap.ui.model.Model"
+			href: "https://sdk.openui5.org/api/sap.ui.model.Model"
 		}],
 		check: function (oIssueManager, oCoreFacade, oScope) {
 			oScope.getElementsByClassName("sap.m.Select")
@@ -1961,7 +1962,7 @@ sap.ui.predefine("sap/m/rules/Select.support", ["sap/ui/support/library", "sap/u
 }, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -2034,7 +2035,7 @@ sap.ui.predefine("sap/m/rules/SelectDialog.support", ["sap/ui/support/library", 
 	}, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -2131,7 +2132,7 @@ sap.ui.predefine("sap/m/rules/StepInput.support", ["sap/ui/support/library"], fu
 }, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -2165,7 +2166,7 @@ sap.ui.predefine("sap/m/rules/Table.support", ["sap/ui/support/library", "sap/m/
 			resolution: "Configure at least 1 column with width=auto or use fixedLayout=Strict",
 			resolutionurls: [{
 				text: "Documentation: Defining Column Widths",
-				href: "https://sapui5.hana.ondemand.com/#/topic/6f778a805bc3453dbb66e246d8271839"
+				href: "https://sdk.openui5.org/topic/6f778a805bc3453dbb66e246d8271839"
 			}],
 			check: function (oIssueManager, oCoreFacade, oScope) {
 				oScope.getElementsByClassName("sap.m.Table").filter(function(oTable) {
@@ -2207,10 +2208,10 @@ sap.ui.predefine("sap/m/rules/Table.support", ["sap/ui/support/library", "sap/m/
 			resolution: "Use the 'highlightText' property of the item to define the semantics of the 'highlight'.",
 			resolutionurls: [{
 				text: "API Reference: sap.m.ListItemBase#getHighlight",
-				href: "https://sapui5.hana.ondemand.com/#/api/sap.m.ListItemBase/methods/getHighlight"
+				href: "https://sdk.openui5.org/api/sap.m.ListItemBase/methods/getHighlight"
 			}, {
 				text: "API Reference: sap.m.ListItemBase#getHighlightText",
-				href: "https://sapui5.hana.ondemand.com/#/api/sap.m.ListItemBase/methods/getHighlightText"
+				href: "https://sdk.openui5.org/api/sap.m.ListItemBase/methods/getHighlightText"
 			}],
 			check: function(oIssueManager, oCoreFacade, oScope) {
 				function checkItemHighlight(oListItemBase) {
@@ -2240,7 +2241,7 @@ sap.ui.predefine("sap/m/rules/Table.support", ["sap/ui/support/library", "sap/m/
 	}, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -2304,7 +2305,7 @@ sap.ui.predefine("sap/m/rules/Title.support", ["sap/ui/support/library", "sap/ui
 }, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -2333,9 +2334,11 @@ function(SupportLib) {
 					bParent, oParent;
 				oTokenizers.forEach(function (oTokenizer) {
 					oParent = oTokenizer.getParent();
-					bParent = oParent && oParent instanceof sap.m.MultiInput || oParent instanceof sap.m.MultiComboBox ||
+					bParent = oParent && (
+								oParent.isA(["sap.m.MultiInput", "sap.m.MultiComboBox"]) ||
 								// Value Help Dialog uses the tokenizer in a horizontal layout with special style class
-								oParent.hasStyleClass("compVHTokenizerHLayout");
+								oParent.hasStyleClass("compVHTokenizerHLayout")
+							  );
 					if (!bParent) {
 						oIssueManager.addIssue({
 							severity: Severity.High,
@@ -2353,7 +2356,7 @@ function(SupportLib) {
 }, true);
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**

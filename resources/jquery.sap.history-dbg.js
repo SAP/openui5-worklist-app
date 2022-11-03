@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -217,7 +217,7 @@ sap.ui.define([
 		 * @param {function} fn The function that will be called when the identifier is matched with the hash.
 		 * @param {object} [oThis] If oThis is provided, the fn function's this keyword will be bound to this object.
 		 *
-		 * @returns {object} It returns the this object to enable chaining.
+		 * @returns {this} It returns the this object to enable chaining.
 		 *
 		 * @function
 		 * @public

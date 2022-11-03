@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -29,9 +29,11 @@ function(SupportLib) {
 					bParent, oParent;
 				oTokenizers.forEach(function (oTokenizer) {
 					oParent = oTokenizer.getParent();
-					bParent = oParent && oParent instanceof sap.m.MultiInput || oParent instanceof sap.m.MultiComboBox ||
+					bParent = oParent && (
+								oParent.isA(["sap.m.MultiInput", "sap.m.MultiComboBox"]) ||
 								// Value Help Dialog uses the tokenizer in a horizontal layout with special style class
-								oParent.hasStyleClass("compVHTokenizerHLayout");
+								oParent.hasStyleClass("compVHTokenizerHLayout")
+							  );
 					if (!bParent) {
 						oIssueManager.addIssue({
 							severity: Severity.High,

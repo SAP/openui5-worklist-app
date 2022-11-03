@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -146,7 +146,7 @@ sap.ui.define([
 	 * If you now ask for the direction of the hash "foo" you get Unknown because it might be backwards or forwards.
 	 * For hash replacements, the history stack will be replaced at this position for the history.
 	 * @param {string} [sNewHash] optional, if this parameter is not passed the last hashChange is taken.
-	 * @returns {sap.ui.core.routing.HistoryDirection} or undefined, if no navigation has taken place yet.
+	 * @returns {sap.ui.core.routing.HistoryDirection|undefined} Direction for the given hash or <code>undefined</code>, if no navigation has taken place yet.
 	 * @public
 	 */
 	History.prototype.getDirection = function(sNewHash) {
@@ -163,8 +163,10 @@ sap.ui.define([
 	};
 
 	/**
-	 * gets the previous hash in the history - if the last direction was Unknown or there was no navigation yet, undefined will be returned
-	 * @returns {string} or undefined
+	 * Gets the previous hash in the history.
+	 *
+	 * If the last direction was Unknown or there was no navigation yet, <code>undefined</code> will be returned.
+	 * @returns {string|undefined} Previous hash in the history or <code>undefined</code>
 	 * @public
 	 */
 	History.prototype.getPreviousHash = function() {

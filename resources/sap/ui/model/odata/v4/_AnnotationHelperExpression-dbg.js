@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -14,7 +14,7 @@ sap.ui.define([
 	"sap/ui/base/SyncPromise",
 	"sap/ui/performance/Measurement"
 ], function (Basics, Log, BindingParser, ManagedObject, SyncPromise, Measurement) {
-	'use strict';
+	"use strict";
 
 	// see http://docs.oasis-open.org/odata/odata/v4.0/errata02/os/complete/abnf/odata-abnf-construction-rules.txt
 	var sAnnotationHelper = "sap.ui.model.odata.v4.AnnotationHelper",
@@ -57,7 +57,7 @@ sap.ui.define([
 			Bool : "Edm.Boolean",
 			Float : "Edm.Double",
 			Date : "Edm.Date",
-			DateTimeOffset :"Edm.DateTimeOffset",
+			DateTimeOffset : "Edm.DateTimeOffset",
 			Decimal : "Edm.Decimal",
 			Guid : "Edm.Guid",
 			Int : "Edm.Int64",
@@ -66,13 +66,13 @@ sap.ui.define([
 			TimeOfDay : "Edm.TimeOfDay"
 		},
 		mTypeCategoryNeedsCompare = {
-			"boolean" : false,
-			"Date" : false,
-			"DateTimeOffset" : true,
-			"Decimal" : true,
-			"number" : false,
-			"string" : false,
-			"TimeOfDay" : false
+			boolean : false,
+			Date : false,
+			DateTimeOffset : true,
+			Decimal : true,
+			number : false,
+			string : false,
+			TimeOfDay : false
 		},
 		/**
 		 * This object contains helper functions to process an expression in OData V4 annotations.
@@ -105,9 +105,11 @@ sap.ui.define([
 		 *       <li> when "constant": {any} the constant value (not escaped if string)
 		 *       <li> when "expression": {string} the expression unwrapped (no "{=" and "}")
 		 *     </ul>
-		 *   <li> <code>type</code>:  the EDM data type (like "Edm.String") if it could be
+		 *   <li> <code>type</code>: the EDM data type (like "Edm.String") if it could be
 		 *      determined
 		 *   <li> <code>constraints</code>: {object} type constraints if result is "binding"
+		 *   <li> <code>formatOptions</code>: {object} format options if result is "binding"
+		 *   <li> <code>parameters</code>: {object} binding parameters if result is "binding"
 		 * </ul>
 		 *
 		 * @private
@@ -248,7 +250,7 @@ sap.ui.define([
 				// convert the results to strings after we know whether the result is expression
 				aParts = aParameters.filter(function (oParameter) {
 					// ignore null (otherwise the string 'null' would appear in expressions)
-					return oParameter.type !== 'edm:Null';
+					return oParameter.type !== "edm:Null";
 				}).map(function (oParameter) {
 					if (bExpression) {
 						// the expression might have a lower operator precedence than '+'
@@ -405,7 +407,8 @@ sap.ui.define([
 					return Expression.path(oPathValue);
 				}
 
-				["$And", "$Apply", "$Date", "$DateTimeOffset", "$Decimal", "$Float", "$Eq",
+				[
+					"$And", "$Apply", "$Date", "$DateTimeOffset", "$Decimal", "$Float", "$Eq",
 					"$Ge", "$Gt", "$Guid", "$If", "$Int", "$Le", "$Lt", "$Name", "$Ne", "$Not",
 					"$Null", "$Or", "$Path", "$PropertyPath", "$TimeOfDay", "$LabeledElement"
 				].forEach(function (sProperty) {
@@ -488,7 +491,7 @@ sap.ui.define([
 		 *   the type of the property referenced by <code>oPathValue.path</code>
 		 * @param {object} mConstraints
 		 *   the type constraints for the property referenced by <code>oPathValue.path</code>
-		 * @returns {sap.ui.base.SyncPromise}
+		 * @returns {sap.ui.base.SyncPromise|undefined}
 		 *   a sync promise which resolves with a result object for the currency or unit, or is
 		 *   rejected with an error; <code>undefined</code> if there are no unit and currency
 		 *   annotations for the property referenced by <code>oPathValue.path</code>
@@ -516,8 +519,8 @@ sap.ui.define([
 				return undefined;
 			}
 			return oModel.fetchObject(sPath + "/$").then(function (oTarget) {
-				var sCompositeConstraints =
-						oModel.getObject(oPathValue.path
+				var sCompositeConstraints
+						= oModel.getObject(oPathValue.path
 							+ "@com.sap.vocabularies.UI.v1.DoNotCheckScaleOfMeasureQuantity")
 						? ",constraints:{'skipDecimalsValidation':true}"
 						: "";
@@ -535,6 +538,52 @@ sap.ui.define([
 							sTargetPath)
 						+ ",{mode:'OneTime',path:'/##" + sComputedAnnotation + "',targetType:'any'}"
 						+ "],type:'" + sCompositeType + "'" + sCompositeConstraints + "}"
+				};
+			});
+		},
+
+		/**
+		 * Fetch the result object for a date/time with timezone.
+		 * If <code>oPathValue.path</code> references a property which has a
+		 * <code>com.sap.vocabularies.Common.v1.Timezone</code> annotation, a composite result
+		 * object for a <code>sap.ui.model.odata.type.DateTimeWithTimezone</code> type with the
+		 * date/time and the timezone as parts is returned.
+		 *
+		 * @param {object} oPathValue
+		 *   model, path (and value) information pointing to the path (see Expression object)
+		 * @param {string} sValue
+		 *   use this value instead of <code>oPathValue.value</code>!
+		 * @param {object} mConstraints
+		 *   the type constraints for the property referenced by <code>oPathValue.path</code>
+		 * @returns {sap.ui.base.SyncPromise|undefined}
+		 *   a sync promise which resolves with a result object for the date/time with timezone, or
+		 *   is rejected with an error; <code>undefined</code> if there is no timezone annotation
+		 *   for the property referenced by <code>oPathValue.path</code>
+		 */
+		fetchDateTimeWithTimezone : function (oPathValue, sValue, mConstraints) {
+			var oModel = oPathValue.model,
+				sPath = oPathValue.path + "@com.sap.vocabularies.Common.v1.Timezone/$Path",
+				sTargetPath = oModel.getObject(sPath);
+
+			function formatPart(mConstraints0, sType, sPath0) {
+				return Basics.resultToString(
+					Expression.pathResult(oPathValue, sType, sPath0, mConstraints0),
+					false, true);
+			}
+
+			if (!sTargetPath) {
+				return undefined;
+			}
+			return oModel.fetchObject(sPath + "/$").then(function (oTarget) {
+				return {
+					result : "composite",
+					type : "sap.ui.model.odata.type.DateTimeWithTimezone",
+					value : "{mode:'TwoWay',parts:["
+						+ formatPart(mConstraints, "Edm.DateTimeOffset", sValue)
+						+ ","
+						+ formatPart(oModel.getConstraints(oTarget, sPath), oTarget.$Type,
+							sTargetPath)
+						+ "],type:'sap.ui.model.odata.type.DateTimeWithTimezone'}"
 				};
 			});
 		},
@@ -568,9 +617,9 @@ sap.ui.define([
 					aParts = [],
 					sPrefix = "";
 
-				aParts.push('odata.fillUriTemplate(',
+				aParts.push("odata.fillUriTemplate(",
 					Basics.resultToString(aResults[0], true, false, true),
-					',{');
+					",{");
 				for (i = 1; i < oPathValue.value.length; i += 1) {
 					sName = Basics.property(aParameters[i], "$Name", "string");
 					aParts.push(sPrefix, Basics.toJSON(sName), ":",
@@ -618,7 +667,7 @@ sap.ui.define([
 		 *
 		 * @param {object} oPathValue
 		 *   path and value information pointing to the expression (see Expression object)
-		 * @returns {Promise|string}
+		 * @returns {Promise|string|undefined}
 		 *   the expression value or "Unsupported: oRawValue" in case of an error or
 		 *   <code>undefined</code> in case the raw value is undefined; may instead return a
 		 *   <code>Promise</code> resolving with that result.
@@ -771,6 +820,11 @@ sap.ui.define([
 		 * <code>Org.OData.Measures.V1.Unit</code> annotation, a composite result object for a
 		 * <code>sap.ui.model.odata.type.Unit</code> type with the measures, the unit and the unit
 		 * customizing as parts is returned.
+		 * If <code>oPathValue.path</code> references a property with type
+		 * <code>Edm.DateTimeOffset</code> and a
+		 * <code>com.sap.vocabularies.Common.v1.Timezone</code> annotation, a composite result
+		 * object for a <code>sap.ui.model.odata.type.DateTimeWithTimezone</code> type with the
+		 * date/time and the timezone as parts is returned.
 		 *
 		 * @param {object} oPathValue
 		 *   model, path and value information pointing to the path (see Expression object)
@@ -795,16 +849,17 @@ sap.ui.define([
 			}
 
 			return oPromise.then(function (oProperty) {
-				var mConstraints,
-					oCurrencyOrUnitPromise,
+				var oAnnotationBasedPromise,
+					mConstraints,
 					sType = oProperty && oProperty.$Type;
 
 				if (oProperty && oPathValue.complexBinding) {
 					mConstraints = oModel.getConstraints(oProperty, oPathValue.path);
-					oCurrencyOrUnitPromise
-						= Expression.fetchCurrencyOrUnit(oPathValue, sValue, sType, mConstraints);
+					oAnnotationBasedPromise = sType === "Edm.DateTimeOffset"
+						? Expression.fetchDateTimeWithTimezone(oPathValue, sValue, mConstraints)
+						: Expression.fetchCurrencyOrUnit(oPathValue, sValue, sType, mConstraints);
 				}
-				return oCurrencyOrUnitPromise
+				return oAnnotationBasedPromise
 					|| Expression.pathResult(oPathValue, sType, sValue, mConstraints);
 			});
 		},
@@ -851,10 +906,10 @@ sap.ui.define([
 					type : "Edm.String",
 					value : oResult.type === "Edm.String"
 						// Note: odata.uriEncode() is V2, but safe for Edm.String!
-						? 'odata.uriEncode(' + Basics.resultToString(oResult, true, false, true)
+						? "odata.uriEncode(" + Basics.resultToString(oResult, true, false, true)
 							+ "," + Basics.toJSON(oResult.type) + ")"
 						// Note: see _Helper.formatLiteral()
-						: 'String(' + Basics.resultToString(oResult, true, false, true) + ")"
+						: "String(" + Basics.resultToString(oResult, true, false, true) + ")"
 				};
 			});
 		},
@@ -878,5 +933,4 @@ sap.ui.define([
 	};
 
 	return Expression;
-
 }, /* bExport= */ false);

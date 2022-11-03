@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -24,7 +24,7 @@ sap.ui.define(["sap/ui/base/Object", "sap/base/Log"],
  * @extends sap.ui.base.Object
  *
  * @author SAP SE
- * @version 1.96.2
+ * @version 1.108.0
  * @public
  * @abstract
  * @alias sap.ui.core.message.MessageParser
@@ -56,7 +56,7 @@ MessageParser.prototype.setProcessor = function(oProcessor) {
 /**
  * Returns the registered processor on which the events for message handling can be fired
  *
- * @return {sap.ui.core.message.MessageProcessor} The currently set MessageProcessor or null if none is set
+ * @returns {sap.ui.core.message.MessageProcessor|null} The currently set MessageProcessor or <code>null</code> if none is set
  * @protected
  */
 MessageParser.prototype.getProcessor = function() {

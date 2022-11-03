@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -9,9 +9,10 @@ sap.ui.define([
 	'sap/ui/core/Control',
 	'sap/ui/Device',
 	'sap/ui/core/theming/Parameters',
-	"sap/ui/thirdparty/jquery"
+	"sap/ui/thirdparty/jquery",
+	"sap/ui/core/Configuration"
 ],
-	function(library, Control, Device, Parameters, jQuery) {
+	function(library, Control, Device, Parameters, jQuery, Configuration) {
 	"use strict";
 
 
@@ -37,7 +38,7 @@ sap.ui.define([
 				rm.write("<div");
 				rm.writeControlData(oHeader);
 				rm.writeAttribute("class", "sapUiUfdShellHeader");
-				if (sap.ui.getCore().getConfiguration().getAccessibility()) {
+				if (Configuration.getAccessibility()) {
 					rm.writeAttribute("role", "toolbar");
 				}
 				rm.write(">");
@@ -60,7 +61,7 @@ sap.ui.define([
 			renderSearch: function(rm, oHeader) {
 				var oSearch = oHeader.getSearch();
 				rm.write("<div id='", oHeader.getId(), "-hdr-search'");
-				if (sap.ui.getCore().getConfiguration().getAccessibility()) {
+				if (Configuration.getAccessibility()) {
 					rm.writeAttribute("role", "search");
 				}
 				rm.writeAttribute("class", "sapUiUfdShellSearch" + (oHeader.getSearchVisible() ? "" : " sapUiUfdShellHidden"));
@@ -100,7 +101,7 @@ sap.ui.define([
 					if (tooltip) {
 						rm.writeAttributeEscaped("title", tooltip);
 					}
-					if (sap.ui.getCore().getConfiguration().getAccessibility()) {
+					if (Configuration.getAccessibility()) {
 						rm.writeAccessibilityState(aItems[i], {
 							role: "button",
 							selected: null,
@@ -123,7 +124,7 @@ sap.ui.define([
 					if (tooltip) {
 						rm.writeAttributeEscaped("title", tooltip);
 					}
-					if (sap.ui.getCore().getConfiguration().getAccessibility()) {
+					if (Configuration.getAccessibility()) {
 						rm.writeAccessibilityState(oUser, {
 							role: "button"
 						});
@@ -175,7 +176,7 @@ sap.ui.define([
 	ShellHeader.prototype.init = function(){
 		var that = this;
 
-		this._rtl = sap.ui.getCore().getConfiguration().getRTL();
+		this._rtl = Configuration.getRTL();
 
 		this._handleMediaChange = function(mParams){
 			if (!that.getDomRef()) {

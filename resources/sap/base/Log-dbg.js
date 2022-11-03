@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(["sap/base/util/now"], function(now) {
@@ -578,7 +578,7 @@ sap.ui.define(["sap/base/util/now"], function(now) {
 	 * </ul>
 	 *
 	 * @param {string} sComponent Name of the component which should be logged
-	 * @param {module:sap/base/Log.Level} [iLogLevel] The default log level
+	 * @param {module:sap/base/Log.Level} [iDefaultLogLevel] The default log level
 	 * @return {object} A logger with a specified component
 	 * @public
 	 * @static

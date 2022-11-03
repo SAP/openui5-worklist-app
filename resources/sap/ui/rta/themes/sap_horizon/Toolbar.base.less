@@ -1,23 +1,14 @@
-/* ======================================== */
-/* CSS for control sap.ui.rta/Toolbar.base  */
-/* Horizon theme                            */
-/* ======================================== */
-
-@_sap_ui_rta_Toolbar_Base_SegBBtnHoverBG: lighten(saturate(@sapPrimary2, 40%), 42%); //#CAE4FB
-@_sap_ui_rta_Toolbar_Base_TextColor: @sapUiWhite; //#fff
-@_sap_ui_rta_Toolbar_Base_BaseColor: @sapPrimary1; //#3f5161;
-@_sap_ui_rta_Toolbar_Base_BtnHover: fade(lighten(@sapPrimary1, 18%), 50%); //rgba(99, 127, 153, 0.5)
+/******************************************************************
+	Style of the RTA Toolbar (all types) - Horizon Theme
+*******************************************************************/
+@_sap_ui_rta_Toolbar_Base_BaseBG: @sapUiToolbarBackground; //#fff
+@_sap_ui_rta_Toolbar_Base_OutlineColor: @sapUiButtonEmphasizedBorderColor; //#0070f2
 
 .sapUiRtaMode {
 	.sapUiRtaToolbar {
-		.sapMBtn {
-			&.sapMBtnDisabled .sapMBtnInner {
-				opacity: 1.0;
-			}
-		}
+		outline: 0.125rem dashed @_sap_ui_rta_Toolbar_Base_OutlineColor;
+		outline-offset: -0.125rem;
+		border: none;
+		border-image: none;
 	}
-}
-
-.sapUiSizeCozy .sapUiRtaToolbar .sapMSegB .sapMSegBBtn .sapMSegBBtnInner {
-	line-height: 2rem; //32px
 }

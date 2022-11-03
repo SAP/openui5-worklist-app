@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -42,36 +42,39 @@ sap.ui.define([
 	 * @extends sap.m.ListItemBase
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.12
 	 * @alias sap.m.ColumnListItem
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var ColumnListItem = ListItemBase.extend("sap.m.ColumnListItem", /** @lends sap.m.ColumnListItem.prototype */ { metadata : {
+	var ColumnListItem = ListItemBase.extend("sap.m.ColumnListItem", /** @lends sap.m.ColumnListItem.prototype */ {
+		metadata : {
 
-		library : "sap.m",
-		properties : {
+			library : "sap.m",
+			properties : {
 
-			/**
-			 * Sets the vertical alignment of all the cells within the table row (including selection and navigation).
-			 * <b>Note:</b> <code>vAlign</code> property of <code>sap.m.Column</code> overrides the property for cell vertical alignment if both are set.
-			 * @since 1.20
-			 */
-			vAlign : {type : "sap.ui.core.VerticalAlign", group : "Appearance", defaultValue : VerticalAlign.Inherit}
+				/**
+				 * Sets the vertical alignment of all the cells within the table row (including selection and navigation).
+				 * <b>Note:</b> <code>vAlign</code> property of <code>sap.m.Column</code> overrides the property for cell vertical alignment if both are set.
+				 * @since 1.20
+				 */
+				vAlign : {type : "sap.ui.core.VerticalAlign", group : "Appearance", defaultValue : VerticalAlign.Inherit}
+			},
+			defaultAggregation : "cells",
+			aggregations : {
+
+				/**
+				 * Every <code>control</code> inside the <code>cells</code> aggregation defines one cell of the row.
+				 * <b>Note:</b> The order of the <code>cells</code> aggregation must match the order of the <code>columns</code> aggregation of <code>sap.m.Table</code>.
+				 */
+				cells : {type : "sap.ui.core.Control", multiple : true, singularName : "cell", bindable : "bindable"}
+			}
 		},
-		defaultAggregation : "cells",
-		aggregations : {
 
-			/**
-			 * Every <code>control</code> inside the <code>cells</code> aggregation defines one cell of the row.
-			 * <b>Note:</b> The order of the <code>cells</code> aggregation must match the order of the <code>columns</code> aggregation of <code>sap.m.Table</code>.
-			 */
-			cells : {type : "sap.ui.core.Control", multiple : true, singularName : "cell", bindable : "bindable"}
-		}
-	}});
+		renderer: ColumnListItemRenderer
+	});
 
 	/**
 	 * TablePopin element that handles own events.
@@ -87,36 +90,11 @@ sap.ui.define([
 			if (oEvent.srcControl === this || !jQuery(oEvent.target).is(":sapFocusable")) {
 				this.getParent().focus();
 			}
-		},
-
-		_onMouseEnter: function() {
-			var $this = jQuery(this),
-				$parent = $this.prev();
-
-			if (!$parent.length || !$parent.hasClass("sapMLIBHoverable") || $parent.hasClass("sapMPopinHovered")) {
-				return;
-			}
-
-			$parent.addClass("sapMPopinHovered");
-		},
-
-		_onMouseLeave: function() {
-			var $this = jQuery(this),
-				$parent = $this.prev();
-
-			if (!$parent.length || !$parent.hasClass("sapMLIBHoverable") || !$parent.hasClass("sapMPopinHovered")) {
-				return;
-			}
-
-			$parent.removeClass("sapMPopinHovered");
 		}
 	});
 
 	// defines tag name
 	ColumnListItem.prototype.TagName = "tr";
-
-	// enable the ACC announcement for "not selected"
-	ColumnListItem.prototype._bAnnounceNotSelected = true;
 
 	ColumnListItem.prototype.init = function() {
 		ListItemBase.prototype.init.call(this);
@@ -124,14 +102,22 @@ sap.ui.define([
 		this._aClonedHeaders = [];
 	};
 
+	ColumnListItem.prototype.onBeforeRendering = function() {
+		ListItemBase.prototype.onBeforeRendering.call(this);
+		if (this._oPopin && this._oDomRef) {
+			this.$Popin().off();
+		}
+	};
+
 	ColumnListItem.prototype.onAfterRendering = function() {
+		if (this._oPopin && this.isActionable(true)) {
+			this.$Popin().on("mouseenter mouseleave", function(oEvent) {
+				this.previousSibling.classList.toggle("sapMPopinHovered", oEvent.type == "mouseenter");
+			});
+		}
+
 		ListItemBase.prototype.onAfterRendering.call(this);
 		this._checkTypeColumn();
-
-		var oPopin = this.hasPopin();
-		if (oPopin) {
-			this.$Popin().on("mouseenter", oPopin._onMouseEnter).on("mouseleave", oPopin._onMouseLeave);
-		}
 	};
 
 	ColumnListItem.prototype.exit = function() {

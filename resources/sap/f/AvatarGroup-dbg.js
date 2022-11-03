@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -46,7 +46,8 @@ sap.ui.define([
 		S: 0.125,
 		M: 0.125,
 		L: 0.125,
-		XL: 0.25
+		XL: 0.25,
+		Custom: 0.125
 	};
 
 	/**
@@ -97,14 +98,13 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @experimental Since 1.73. This class is experimental and provides only limited functionality. Also the API might be changed in future.
 	 * @since 1.73
 	 * @alias sap.f.AvatarGroup
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var AvatarGroup = Control.extend("sap.f.AvatarGroup", {
 		metadata: {
@@ -117,7 +117,34 @@ sap.ui.define([
 				/**
 				 * Defines the display size of each avatar.
 				 */
-				avatarDisplaySize: { type: "sap.m.AvatarSize", group: "Appearance", defaultValue: AvatarSize.S }
+				avatarDisplaySize: { type: "sap.m.AvatarSize", group: "Appearance", defaultValue: AvatarSize.S },
+				/**
+				 * Specifies a custom display size for each avatar.
+				 *
+				 * <b>Notes:</b>
+				 * <ul>
+				 * <li>Supports only <code>px</code> and code>rem</code> values.</li>
+				 * <li>It takes effect only if the <code>avatarDisplaySize</code> property
+				 * is set to <code>Custom</code>.</li>
+				 * </ul>
+				 *
+				 * @since 1.103
+				 */
+				avatarCustomDisplaySize: {type: "sap.ui.core.AbsoluteCSSSize", group: "Appearance", defaultValue: "3rem"},
+				/**
+				 * Specifies a custom font size for each avatar.
+				 *
+				 * <b>Note:</b> It takes effect only if the <code>avatarDisplaySize</code>
+				 * property is set to <code>Custom</code>.
+				 *
+				 * @since 1.103
+				 */
+				avatarCustomFontSize: {type: "sap.ui.core.AbsoluteCSSSize", group: "Appearance", defaultValue: "1.125rem"},
+				/**
+				 * Defines if keyboard or mouse interactions on this control are allowed.
+				 * @private
+				 */
+				_interactive: { type: "boolean", group: "Behavior", defaultValue: true, visibility: "hidden" }
 			},
 			defaultAggregation : "items",
 			aggregations : {
@@ -149,12 +176,15 @@ sap.ui.define([
 					}
 				}
 			}
-		}
+		},
+
+		renderer: AvatarGroupRenderer
 	});
 
 	AvatarGroup.prototype.init = function () {
-		this._oShowMoreButton = new Button({});
+		this._oShowMoreButton = new Button();
 		this._oShowMoreButton.addStyleClass("sapFAvatarGroupMoreButton");
+		this._oShowMoreButton.addStyleClass("sapFAvatarGroupMoreButton" + this.getAvatarDisplaySize());
 		this._bFirstRendering = true;
 		this._onResizeRef = this._onResize.bind(this);
 		this._iCurrentAvatarColorNumber = 1;
@@ -163,15 +193,17 @@ sap.ui.define([
 
 	AvatarGroup.prototype.exit = function () {
 		this._detachResizeHandlers();
+		this._destroyItemNavigation();
+		this._oShowMoreButton.destroy();
+		this._oShowMoreButton = null;
+	};
 
+	AvatarGroup.prototype._destroyItemNavigation = function () {
 		if (this._oItemNavigation) {
 			this.removeEventDelegate(this._oItemNavigation);
 			this._oItemNavigation.destroy();
 			this._oItemNavigation = null;
 		}
-
-		this._oShowMoreButton.destroy();
-		this._oShowMoreButton = null;
 	};
 
 	AvatarGroup.prototype.onBeforeRendering = function () {
@@ -182,10 +214,12 @@ sap.ui.define([
 	};
 
 	AvatarGroup.prototype.onAfterRendering = function() {
-		var oDomRef,
+		var bInteractive = this.getProperty("_interactive"),
+			oDomRef,
 			aDomRefs = [];
 
-		if (!this._oItemNavigation) {
+		if (!this._oItemNavigation && bInteractive) {
+
 			this._oItemNavigation = new ItemNavigation(null, null);
 			this._oItemNavigation.setDisabledModifiers({
 				// Alt + arrow keys are reserved for browser navigation
@@ -201,11 +235,13 @@ sap.ui.define([
 			this.addEventDelegate(this._oItemNavigation);
 		}
 
-		oDomRef = this.getDomRef();
-		// set the root dom node that surrounds the items
-		this._oItemNavigation.setRootDomRef(oDomRef);
+		if (bInteractive) {
+			oDomRef = this.getDomRef();
+			// set the root dom node that surrounds the items
+			this._oItemNavigation.setRootDomRef(oDomRef);
+		}
 
-		if (this.getGroupType() === AvatarGroupType.Individual) {
+		if (bInteractive && this.getGroupType() === AvatarGroupType.Individual) {
 			this.getItems().forEach(function(oItem) {
 				aDomRefs.push(oItem.getDomRef());
 			});
@@ -288,8 +324,13 @@ sap.ui.define([
 
 	AvatarGroup.prototype.addItem = function (oItem) {
 		oItem._setDisplaySize(this.getAvatarDisplaySize());
+		oItem._setCustomDisplaySize(this.getAvatarCustomDisplaySize());
+		oItem._setCustomFontSize(this.getAvatarCustomFontSize());
 		oItem._setAvatarColor(AvatarColor["Accent" + this._iCurrentAvatarColorNumber]);
 		oItem._setGroupType(this.getGroupType());
+		oItem._setInteractive(this.getProperty("_interactive"));
+
+		this.addAggregation("items", oItem);
 
 		this._iAvatarsToShow = this.getItems().length;
 
@@ -298,7 +339,7 @@ sap.ui.define([
 			this._iCurrentAvatarColorNumber = 1;
 		}
 
-		return 	this.addAggregation("items", oItem);
+		return this;
 	};
 
 	AvatarGroup.prototype.setAvatarDisplaySize = function (sValue) {
@@ -318,6 +359,38 @@ sap.ui.define([
 		return this.setProperty("avatarDisplaySize", sValue);
 	};
 
+	AvatarGroup.prototype.setAvatarCustomDisplaySize = function (sValue) {
+		var sOldAvatarCustomDisplaySize = this.getAvatarCustomDisplaySize();
+
+		if (sOldAvatarCustomDisplaySize === sValue) {
+			return this;
+		}
+
+		this.setProperty("avatarCustomDisplaySize", sValue);
+
+		this.getItems().forEach(function (oItem) {
+			oItem._setCustomDisplaySize(sValue);
+		});
+
+		return this;
+	};
+
+	AvatarGroup.prototype.setAvatarCustomFontSize = function (sValue) {
+		var sOldAvatarCustomFontSize = this.getAvatarCustomFontSize();
+
+		if (sOldAvatarCustomFontSize === sValue) {
+			return this;
+		}
+
+		this.setProperty("avatarCustomFontSize", sValue);
+
+		this.getItems().forEach(function (oItem) {
+			oItem._setCustomFontSize(sValue);
+		});
+
+		return this;
+	};
+
 	/**
 	 * Called when the <code>AvatarGroup</code> is clicked/tapped.
 	 *
@@ -325,6 +398,10 @@ sap.ui.define([
 	 * @private
 	 */
 	AvatarGroup.prototype.ontap = function (oEvent) {
+		if (!this.getProperty("_interactive")) {
+			return;
+		}
+
 		var oEventSource = oEvent.srcControl;
 
 		this.firePress({
@@ -376,9 +453,12 @@ sap.ui.define([
 	 */
 	AvatarGroup.prototype._getAvatarMargin = function (sAvatarDisplaySize) {
 		var sGroupType = this.getGroupType(),
+			sDisplaySize = this.getAvatarDisplaySize(),
 			iMargin;
 
-		if (sGroupType === AvatarGroupType.Group) {
+		if (sDisplaySize === AvatarSize.Custom && sGroupType === AvatarGroupType.Group) {
+			iMargin = this._getAvatarWidth(AvatarSize.Custom) * 0.4;
+		} else if (sGroupType === AvatarGroupType.Group) {
 			iMargin = AVATAR_MARGIN_GROUP[sAvatarDisplaySize];
 		} else {
 			iMargin = AVATAR_MARGIN_INDIVIDUAL[sAvatarDisplaySize];
@@ -388,10 +468,31 @@ sap.ui.define([
 	};
 
 	/**
+	 * Returns the width of each <code>Avatar</code>
+	 *
+	 * @param {string} sAvatarDisplaySize - a value from the <code>sap.m.AvatarSize</code> enum
+	 * @returns {int} The width of each <code>Avatar</code>
+	 * @private
+	 */
+	AvatarGroup.prototype._getAvatarWidth = function (sAvatarDisplaySize) {
+		var iWidth,
+			sCustomDisplaySize = this.getAvatarCustomDisplaySize(),
+			bInPx = /.*[pP][xX]/.test(sCustomDisplaySize);
+
+		if (sAvatarDisplaySize !== AvatarSize.Custom) {
+			iWidth = AVATAR_WIDTH[sAvatarDisplaySize];
+		} else {
+			iWidth = parseFloat(bInPx ? Rem.fromPx(sCustomDisplaySize) : sCustomDisplaySize);
+		}
+
+		return iWidth;
+	};
+
+	/**
 	 * Returns the net width of each <code>Avatar</code>
 	 *
-	 * @param {int} iAvatarWidth - the width of the <code>sap.f.Avatar</code>
-	 * @param {int} iAvatarMargin - the margin of the <code>sap.f.Avatar</code>
+	 * @param {int} iAvatarWidth - the width of the <code>sap.m.Avatar</code>
+	 * @param {int} iAvatarMargin - the margin of the <code>sap.m.Avatar</code>
 	 * @returns {int} The net width of each <code>Avatar</code>
 	 * @private
 	 */
@@ -409,8 +510,8 @@ sap.ui.define([
 	 * Returns the number of <code>Avatars</code> to be shown
 	 *
 	 * @param {int} iWidth - the width of the <code>sap.f.AvatarGroup</code>
-	 * @param {int} iAvatarWidth - the width full of the <code>sap.f.Avatar</code>
-	 * @param {int} iAvatarNetWidth - the net width of the <code>sap.f.Avatar</code>
+	 * @param {int} iAvatarWidth - the width full of the <code>sap.m.Avatar</code>
+	 * @param {int} iAvatarNetWidth - the net width of the <code>sap.m.Avatar</code>
 	 * @returns {int} The <code>Avatars</code> to be shown
 	 * @private
 	 */
@@ -457,12 +558,20 @@ sap.ui.define([
 			aItems = this.getItems(),
 			iAvatarGroupItems = aItems.length,
 			sAvatarDisplaySize = this.getAvatarDisplaySize(),
-			iAvatarWidth = AVATAR_WIDTH[sAvatarDisplaySize],
+			iAvatarWidth = this._getAvatarWidth(sAvatarDisplaySize),
 			iAvatarMargin = this._getAvatarMargin(sAvatarDisplaySize),
 			iAvatarNetWidth = this._getAvatarNetWidth(iAvatarWidth, iAvatarMargin),
 			iRenderedAvatars = this.$().children(".sapFAvatarGroupItem").length;
 
+		if (iWidth === 0) {
+			return;
+		}
+
 		this._iAvatarsToShow = this._getAvatarsToShow(iWidth, iAvatarWidth, iAvatarNetWidth);
+
+		if (sAvatarDisplaySize === AvatarSize.Custom) {
+			this.getDomRef().style.setProperty("--sapUiAvatarGroupCustomMarginRight", (iAvatarWidth * -0.4) + "rem");
+		}
 
 		if (iAvatarGroupItems > this._iAvatarsToShow && iAvatarGroupItems > 0) {
 			this._bShowMoreButton = true;
@@ -482,6 +591,24 @@ sap.ui.define([
 				this.invalidate();
 			}
 		}
+	};
+
+	/**
+	 * Defines if keyboard or mouse interactions on this control are allowed.
+	 *
+	 * @param {boolean} bInteractive
+	 * @private
+	 */
+	AvatarGroup.prototype._setInteractive = function (bInteractive) {
+		if (!bInteractive) {
+			this._destroyItemNavigation();
+		}
+
+		this.getItems().forEach(function (oAvatar) {
+			oAvatar._setInteractive(bInteractive);
+		});
+
+		return this.setProperty("_interactive", bInteractive);
 	};
 
 	/**

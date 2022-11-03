@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -94,12 +94,11 @@ sap.ui.define([
 	 * @implements sap.m.IconTab
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @alias sap.m.IconTabFilter
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var IconTabFilter = Item.extend("sap.m.IconTabFilter", /** @lends sap.m.IconTabFilter.prototype */ { metadata : {
 
@@ -176,7 +175,6 @@ sap.ui.define([
 			/**
 			 * The sub items of this filter (optional).
 			 * @since 1.77
-			 * @experimental As of 1.77
 			 */
 			items : {type : "sap.m.IconTab", multiple : true, singularName : "item"},
 
@@ -306,14 +304,14 @@ sap.ui.define([
 
 		oIconTabBar = oIconTabHeader.getParent();
 
-		if (!(oIconTabBar instanceof sap.m.IconTabBar)) {
+		if (!(oIconTabBar && oIconTabBar.isA("sap.m.IconTabBar"))) {
 			oIconTabHeader.invalidate();
 			return;
 		}
 
 		oObjectHeader = oIconTabBar.getParent();
 
-		if (oObjectHeader instanceof sap.m.ObjectHeader) {
+		if (oObjectHeader && oObjectHeader.isA("sap.m.ObjectHeader")) {
 			// invalidate the object header to re-render IconTabBar content and header
 			oObjectHeader.invalidate();
 		} else {
@@ -339,7 +337,7 @@ sap.ui.define([
 				Item.prototype.setProperty.call(this, sPropertyName, oValue, true);
 				if (!bSuppressInvalidate) {
 					var oIconTabHeader = this.getParent();
-					if (oIconTabHeader instanceof sap.m.IconTabHeader) {
+					if (oIconTabHeader && oIconTabHeader.isA("sap.m.IconTabHeader")) {
 						oIconTabHeader.invalidate();
 					}
 				}
@@ -441,6 +439,10 @@ sap.ui.define([
 			bShowAll = this.getShowAll(),
 			sTextDir = this.getTextDirection();
 
+		if (this._isOverflow()){
+			mAriaParams.role = "button";
+		}
+
 		if (bHasIconTabBar) {
 			mAriaParams.controls = oIconTabBar.getId() + "-content";
 		}
@@ -515,7 +517,9 @@ sap.ui.define([
 				.attr("aria-disabled", true);
 		}
 
-		oRM.attr("aria-selected", false);
+		if (!this._isOverflow()) {
+			oRM.attr("aria-selected", false);
+		}
 
 		var sTooltip = this.getTooltip_AsString();
 		if (sTooltip) {
@@ -663,14 +667,14 @@ sap.ui.define([
 			return;
 		}
 
-		var bTextOnly = true,
-			bIconOnly = oSelectList._bIconOnly,
+		var bIconOnly = oSelectList._bIconOnly,
+			bTextOnlyItemsInSelectList = true,
 			oIconTabHeader = oSelectList._oIconTabHeader,
 			sIconColor = this.getIconColor(),
 			bEnabled = this.getEnabled();
 
 		if (oIconTabHeader) {
-			bTextOnly = oIconTabHeader._bTextOnly;
+			bTextOnlyItemsInSelectList = oSelectList._checkTextOnly();
 		}
 
 		oRM.openStart("li", this)
@@ -720,7 +724,7 @@ sap.ui.define([
 			aLabelledByIds.push(sItemId + "-text");
 		}
 
-		if (!bTextOnly && this.getIcon()) {
+		if (!bTextOnlyItemsInSelectList && this.getIcon()) {
 			aLabelledByIds.push(sItemId + "-icon");
 		}
 
@@ -735,7 +739,7 @@ sap.ui.define([
 			this._renderIconColorDescription(oRM);
 		}
 
-		if (!bTextOnly) {
+		if (!bTextOnlyItemsInSelectList) {
 			this._renderIcon(oRM, bIconOnly);
 		}
 
@@ -865,7 +869,7 @@ sap.ui.define([
 		}
 
 		var iTabFilters = this._getIconTabHeader()
-			._getItemsForOverflow(this._bIsStartOverflow)
+			._getItemsForOverflow(this._bIsStartOverflow, true)
 			.filter(function (oItem) { return oItem.isA("sap.m.IconTabFilter"); })
 			.length;
 

@@ -1,45 +1,75 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides class sap.ui.core.UIArea
 sap.ui.define([
 	'sap/ui/base/ManagedObject',
+	'sap/ui/base/ManagedObjectRegistry',
+	'./Configuration',
 	'./Element',
 	'./RenderManager',
+	'./FocusHandler',
 	'sap/ui/performance/trace/Interaction',
-	"sap/ui/dom/containsOrEquals",
 	"sap/ui/util/ActivityDetection",
 	"sap/ui/events/KeyCodes",
 	"sap/base/Log",
 	"sap/base/assert",
 	"sap/ui/performance/Measurement",
+	"sap/base/util/uid",
+	"sap/base/util/isEmptyObject",
+	"sap/ui/core/Rendering",
 	'sap/ui/events/jquery/EventExtension',
 	"sap/ui/events/ControlEvents",
 	"sap/ui/events/F6Navigation",
-	"sap/ui/thirdparty/jquery",
-	"sap/ui/dom/jquery/control" // jQuery Plugin "control"
+	"sap/ui/dom/_ready",
+	"sap/ui/thirdparty/jquery"
 ],
 	function(
 		ManagedObject,
+		ManagedObjectRegistry,
+		Configuration,
 		Element,
 		RenderManager,
+		FocusHandler,
 		Interaction,
-		containsOrEquals,
 		ActivityDetection,
 		KeyCodes,
 		Log,
 		assert,
 		Measurement,
+		uid,
+		isEmptyObject,
+		Rendering,
 		EventExtension,
 		ControlEvents,
 		F6Navigation,
+		_ready,
 		jQuery
 	) {
 	"use strict";
 
+	// Id of the static UIArea
+	var STATIC_UIAREA_ID = "sap-ui-static";
+
+	var oRenderLog = Rendering.getLogger();
+
+	// create the RenderManager so it can be used already
+	var oRenderManager = new RenderManager();
+
+	var oCore;
+
+	/**
+	 * Whether the DOM is ready (document.ready)
+	 * @private
+	 */
+	var bDomReady = false;
+
+	_ready().then(function() {
+		bDomReady = true;
+	});
 
 	EventExtension.apply();
 
@@ -48,30 +78,11 @@ sap.ui.define([
 		F6Navigation.handleF6GroupNavigation(oEvent, null);
 	});
 
-	/**
-	 * A private logger instance used for 'debugRendering' logging.
-	 *
-	 * It can be activated by setting the URL parameter sap-ui-xx-debugRerendering to true.
-	 * If activated, stack traces of invalidate() calls will be recorded and if new
-	 * invalidations occur during rendering, they will be logged to the console together
-	 * with the causing stack traces.
-	 *
-	 * @private
-	 * @todo Add more log output where helpful
-	 */
-	var oRenderLog = Log.getLogger("sap.ui.Rendering",
-			(
-				// Note that the sap-ui-config option still is expected in camel case.
-				// Lower case is only accepted here because of the config normalization which will be removed in future
-				(window["sap-ui-config"] && (window["sap-ui-config"]["xx-debugRendering"] || window["sap-ui-config"]["xx-debugrendering"]) )
-				|| /sap-ui-xx-debug(R|-r)endering=(true|x|X)/.test(document.location.search)
-			) ? Log.Level.DEBUG : Math.min(Log.Level.INFO, Log.getLevel())
-		),
-		fnDbgWrap = function(oControl) {
-			return oControl;
-		},
-		fnDbgReport = function() {},
-		fnDbgAnalyzeDelta = function() {};
+	var fnDbgWrap = function(oControl) {
+		return oControl;
+	},
+	fnDbgReport = function() {},
+	fnDbgAnalyzeDelta = function() {};
 
 	if ( oRenderLog.isLoggable() ) {
 
@@ -102,13 +113,12 @@ sap.ui.define([
 		 * @private
 		 */
 		fnDbgReport = function(that, mControls) {
-			var oCore = sap.ui.getCore(),
-				mReport = {},
+			var mReport = {},
 				n, oControl;
 
 			for (n in mControls) {
 				// resolve oControl anew as it might have changed
-				oControl = oCore.byId(n);
+				oControl = Element.registry.get(n);
 				/*eslint-disable no-nested-ternary */
 				mReport[n] = {
 					type: oControl ? oControl.getMetadata().getName() : (mControls[n].obj === that ? "UIArea" : "(no such control)"),
@@ -140,9 +150,7 @@ sap.ui.define([
 					mAfter[n].reason = "invalidated during rendering";
 				}
 			}
-
 		};
-
 	}
 
 	/**
@@ -175,8 +183,7 @@ sap.ui.define([
 	 *
 	 * @extends sap.ui.base.ManagedObject
 	 * @author SAP SE
-	 * @version 1.96.2
-	 * @param {sap.ui.core.Core} oCore internal API of the <core>Core</code> that manages this UIArea
+	 * @version 1.108.0
 	 * @param {object} [oRootNode] reference to the DOM element that should be 'hosting' the UI Area.
 	 * @public
 	 * @alias sap.ui.core.UIArea
@@ -184,24 +191,21 @@ sap.ui.define([
 	 */
 	var UIArea = ManagedObject.extend("sap.ui.core.UIArea", {
 
-		constructor: function(oCore, oRootNode) {
+		constructor: function(oRootNode) {
 			if (arguments.length === 0) {
 				return;
 			}
-
 			// Note: UIArea has a modifiable Id. This doesn't perfectly match the default behavior of ManagedObject
 			// But UIArea overrides getId().
 			ManagedObject.apply(this);
 
-			//TODO we could get rid of oCore here, if we wanted to...
-			this.oCore = oCore;
 			this.bLocked = false;
 			this.bInitial = true;
 			this.aContentToRemove = [];
 
 			this.bNeedsRerendering = false;
 			if (oRootNode != null) {
-				this.setRootNode(oRootNode);
+				this._setRootNode(oRootNode);
 				// Figure out whether UI Area is pre-rendered (server-side JS rendering)!
 				this.bNeedsRerendering = this.bNeedsRerendering && !document.getElementById(oRootNode.id + "-Init");
 			}
@@ -210,8 +214,8 @@ sap.ui.define([
 			if (!this.bNeedsRerendering) {
 				this.bRenderSelf = false;
 			} else {
-				// Core needs to be notified about an invalid UIArea
-				this.oCore.addInvalidatedUIArea(this);
+				// Rendering needs to be notified about an invalid UIArea
+				Rendering.invalidateUIArea(this);
 			}
 
 		},
@@ -287,11 +291,25 @@ sap.ui.define([
 	 *
 	 * The node must have an ID that will be used as ID for this instance of <code>UIArea</code>.
 	 *
-	 * @param {object} oRootNode
+	 * @param {Element} oRootNode
 	 *            the hosting DOM node for this instance of <code>UIArea</code>.
 	 * @public
+	 * @deprecated as of version 1.107.0
 	 */
 	UIArea.prototype.setRootNode = function(oRootNode) {
+		this._setRootNode(oRootNode);
+	};
+
+	/**
+	 * Allows setting the root node hosting this instance of <code>UIArea</code>.
+	 *
+	 * The node must have an ID that will be used as ID for this instance of <code>UIArea</code>.
+	 *
+	 * @param {Element} oRootNode
+	 *            the hosting DOM node for this instance of <code>UIArea</code>.
+	 * @private
+	 */
+	UIArea.prototype._setRootNode = function(oRootNode) {
 		if (this.oRootNode === oRootNode) {
 			return;
 		}
@@ -304,7 +322,10 @@ sap.ui.define([
 			this._ondetach();
 		}
 
+		// UIArea gets its id from the rootNode, so we must update the registry
+		this.deregister();
 		this.oRootNode = oRootNode;
+		this.register();
 		if ( this.getContent().length > 0 ) {
 		  this.invalidate();
 		}
@@ -457,8 +478,8 @@ sap.ui.define([
 	UIArea.prototype.unlock = function() {
 		if ( this.bLocked && this.bNeedsRerendering ) {
 			// While being locked, we might have ignored a call to rerender()
-			// Therefore notify the Core (again)
-			this.oCore.addInvalidatedUIArea(this);
+			// Therefore notify the Rendering (again)
+			Rendering.invalidateUIArea(this);
 		}
 		this.bLocked = false;
 	};
@@ -491,7 +512,7 @@ sap.ui.define([
 	 * @protected
 	 */
 	UIArea.prototype.getEventingParent = function() {
-		return this.oCore._getEventProvider();
+		return oCore._getEventProvider();
 	};
 
 	// ###########################################################################
@@ -538,9 +559,9 @@ sap.ui.define([
 			return;
 		}
 
-		// inform the Core, if we are getting invalid now
+		// inform the Rendering, if we are getting invalid now
 		if ( !this.bNeedsRerendering ) {
-			this.oCore.addInvalidatedUIArea(this);
+			Rendering.invalidateUIArea(this);
 		}
 
 		var sId = oControl.getId();
@@ -568,11 +589,11 @@ sap.ui.define([
 	 *
 	 * Either renders the whole <code>UIArea</code> or a set of descendant controls that have been invalidated.
 	 *
-	 * @param {boolean} force Whether a re-rendering of the <code>UIArea</code> should be enforced
+	 * @param {boolean} bForce Whether a re-rendering of the <code>UIArea</code> should be enforced
 	 * @return {boolean} Whether a redraw was necessary or not
 	 * @private
 	 */
-	UIArea.prototype.rerender = function(force){
+	 UIArea.prototype.rerender = function(bForce) {
 		var that = this;
 
 		function clearRenderingInfo() {
@@ -582,7 +603,7 @@ sap.ui.define([
 			that.bNeedsRerendering = false;
 		}
 
-		if (force) {
+		if (bForce) {
 			this.bNeedsRerendering = true;
 		}
 		if ( this.bLocked || !this.bNeedsRerendering ) {
@@ -628,7 +649,7 @@ sap.ui.define([
 				};
 
 				var oFocusRef_Initial = document.activeElement;
-				var oStoredFocusInfo = this.oCore.oFocusHandler.getControlFocusInfo();
+				var oStoredFocusInfo = FocusHandler.getControlFocusInfo();
 
 				//First remove the old Dom nodes and then render the controls again
 				cleanUpDom(aContentToRemove);
@@ -640,7 +661,7 @@ sap.ui.define([
 
 				for (var i = 0; i < len; i++) {
 					if (aContent[i] && aContent[i].getParent() === this) {
-						this.oCore.oRenderManager.render(aContent[i], this.oRootNode, true);
+						oRenderManager.render(aContent[i], this.oRootNode, true);
 					}
 				}
 				bUpdated = true;
@@ -648,17 +669,15 @@ sap.ui.define([
 				/* Try restoring focus when focus ref is changed due to cleanup operations and not changed anymore by the rendering logic */
 				if (oFocusRef_Initial && oFocusRef_Initial != oFocusRef_AfterCleanup && oFocusRef_AfterCleanup === document.activeElement) {
 					try {
-						this.oCore.oFocusHandler.restoreFocus(oStoredFocusInfo);
+						FocusHandler.restoreFocus(oStoredFocusInfo);
 					} catch (e) {
 						Log.warning("Problems while restoring the focus after full UIArea rendering: " + e, null, this);
 					}
 				}
 
 			} else {
-
 				// cannot re-render now; wait!
 				oRenderLog.debug("Full Rendering of UIArea '" + this.getId() + "' postponed, no root node");
-
 			}
 
 		} else { // only partial update (invalidated controls)
@@ -690,20 +709,17 @@ sap.ui.define([
 					if ( mInvalidatedControls.hasOwnProperty(oCandidate.getId()) ) {
 						return true;
 					}
-
 				}
-
 			};
 
 			for (var n in mInvalidatedControls) {
-				var oControl = this.oCore.byId(n);
+				var oControl = Element.registry.get(n);
 				// CSN 0000834961 2011: control may have been destroyed since invalidation happened -> check whether it still exists
 				if ( oControl && !isRenderedTogetherWithAncestor(oControl) ) {
 					oControl.rerender();
 					bUpdated = true;
 				}
 			}
-
 		}
 
 		// enrich the bookkeeping
@@ -718,9 +734,7 @@ sap.ui.define([
 		Measurement.resume("renderPendingUIUpdates");
 
 		return bUpdated;
-
-	};
-
+	 };
 	/**
 	 * Receives a notification from the RenderManager immediately after a control has been rendered.
 	 *
@@ -737,7 +751,6 @@ sap.ui.define([
 			delete this.mInvalidatedControls[sId];
 		}
 	};
-
 	/**
 	 * Rerenders the given control
 	 * @see sap.ui.core.Control.rerender()
@@ -756,18 +769,18 @@ sap.ui.define([
 
 		var oParentDomRef = oDomRef && oDomRef.parentNode; // remember parent here as preserveContent() might move the node!
 		if (oParentDomRef) {
-			var uiArea = oControl.getUIArea();
-			var rm = uiArea ? uiArea.oCore.oRenderManager : sap.ui.getCore().createRenderManager();
-			oRenderLog.debug("Rerender Control '" + oControl.getId() + "'" + (uiArea ? "" : " (using a temp. RenderManager)"));
+			var oUIArea = oControl.getUIArea();
+			// Why this is really needed?
+			var oRM = oUIArea ? oRenderManager : new RenderManager();
+			oRenderLog.debug("Rerender Control '" + oControl.getId() + "'" + (oUIArea ? "" : " (using a temp. RenderManager)"));
 			RenderManager.preserveContent(oDomRef, /* bPreserveRoot */ true, /* bPreserveNodesWithId */ false, oControl /* oControlBeforeRerender */);
-			rm.render(oControl, oParentDomRef);
+			oRM.render(oControl, oParentDomRef);
 		} else {
-			var uiArea = oControl.getUIArea();
-			uiArea && uiArea._onControlRendered(oControl);
+			var oUIArea = oControl.getUIArea();
+			oUIArea && oUIArea._onControlRendered(oControl);
 			oRenderLog.warning("Couldn't rerender '" + oControl.getId() + "', as its DOM location couldn't be determined");
 		}
 	};
-
 	var rEvents = /^(mousedown|mouseup|click|keydown|keyup|keypress|touchstart|touchend|tap)$/;
 	var aPreprocessors = [], aPostprocessors = [];
 	var mVerboseEvents = {mousemove: 1, mouseover: 1, mouseout: 1, scroll: 1, dragover: 1, dragenter: 1, dragleave: 1};
@@ -829,8 +842,8 @@ sap.ui.define([
 	 *   });
 	 * });
 	 *
-	 * @param {object} [mEventTypes] Map of logging flags keyed by event types
-	 * @returns {object} A copy of the resulting event logging configuration (not normalized)
+	 * @param {Object<string, boolean>} [mEventTypes] Map of logging flags keyed by event types
+	 * @returns {Object<string, boolean>} A copy of the resulting event logging configuration (not normalized)
 	 * @public
 	 * @since 1.62
 	 */
@@ -844,6 +857,7 @@ sap.ui.define([
 	 * registered event handlers.
 	 * @param {jQuery.Event} oEvent the jQuery event object
 	 * @private
+	 * @ui5-restricted sap.ui.core.dnd.DragAndDrop, sap.ui.core.FocusHandler
 	 */
 	UIArea.prototype._handleEvent = function(/**event*/oEvent) {
 		// execute the registered event handlers
@@ -853,7 +867,7 @@ sap.ui.define([
 
 		// TODO: this should be the 'lowest' SAPUI5 Control of this very
 		// UIArea instance's scope -> nesting scenario
-		oTargetElement = oElement = jQuery(oEvent.target).control(0);
+		oTargetElement = oElement = Element.closestTo(oEvent.target);
 
 		ActivityDetection.refresh();
 
@@ -897,12 +911,12 @@ sap.ui.define([
 		// forward the control event:
 		// if the control propagation has been stopped or the default should be
 		// prevented then do not forward the control event.
-		this.oCore._handleControlEvent(oEvent, sId);
+		oCore._handleControlEvent(oEvent, sId);
 
 		// if the UIArea or the Core is locked then we do not dispatch
 		// any event to the control => but they will still be dispatched
 		// as control event afterwards!
-		if (this.bLocked || this.oCore.isLocked()) {
+		if (this.bLocked || oCore.isLocked()) {
 			return;
 		}
 
@@ -935,7 +949,7 @@ sap.ui.define([
 			// event is dispatched to the element only when the element's root DOM contains or equals the scope check
 			// DOM, so that the simulated 'touchmove' and 'touchend' event is only dispatched to the element when the
 			// 'touchstart' also occurred on the same element
-			if (!oScopeCheckDOM || containsOrEquals(oDomRef, oScopeCheckDOM)) {
+			if (!oScopeCheckDOM || (oDomRef && oDomRef.contains(oScopeCheckDOM))) {
 				// for each event type call the callback method
 				// if the execution should be stopped immediately
 				// then no further callback method will be executed
@@ -978,14 +992,14 @@ sap.ui.define([
 
 			// Only process the touchend event which is emulated from mouseout event when the current domRef
 			// doesn't equal or contain the relatedTarget
-			if (oEvent.isMarked("fromMouseout") && containsOrEquals(oDomRef, oEvent.relatedTarget)) {
+			if (oEvent.isMarked("fromMouseout") && (oDomRef && oDomRef.contains(oEvent.relatedTarget))) {
 				break;
 			}
 
 			// ensure we do not bubble the control tree higher than our rootNode
 			while (oDomRef && oDomRef !== this.getRootNode()) {
 				if (oDomRef.id) {
-					oElement = jQuery(oDomRef).control(0);
+					oElement = Element.closestTo(oDomRef);
 					if (oElement) {
 						break;
 					}
@@ -1032,50 +1046,49 @@ sap.ui.define([
 	* @private
 	*/
 	UIArea.prototype._onattach = function() {
-
-	// TODO optimizations for 'matching event list' could be done here.
-	//	// create the events string (space separated list of event names):
-	//	// the first time a control is attached - it will determine the required
-	//	// events and store this information in the controls metadata which is
-	//	// shared across the control instances.
-	//	if (!this.getMetadata().sEvents) {
-	//
-	//		// shorten the access to the array of events and pseudo events
-	//		var aEv = jQuery.sap.ControlEvents;
-	//		var oPsEv = jQuery.sap.PseudoEvents;
-	//
-	//		// create the data structures for the event handler registration
-	//		this.sEvents = "";
-	//		var aEvents = [];
-	//
-	//		// check for pseudo events and register them for their relevant types
-	//		for (var evt in oPsEv) {
-	//				for (j = 0, js = oPsEv[evt].aTypes.length; j < js; j++) {
-	//					var type = oPsEv[evt].aTypes[j];
-	//					if (aEvents.indexOf(type) === -1) {
-	//						aEvents.push(type);
-	//					}
-	//				}
-	//		}
-	//
-	//		// check for events and register them
-	//		for (var i = 0, is = aEv.length; i < is; i++) {
-	//			var type = aEv[i];
-	//				if (aEvents.indexOf(type) === -1) {
-	//					aEvents.push(type);
-	//				}
-	//		}
-	//
-	//		// keep the list of events for the jQuery bind/unbind method
-	//		this.sEvents = aEvents.join(" ");
-	//
-	//		// cache the event handlers registry map
-	//		this.getMetadata().sEvents = this.sEvents;
-	//
-	//	} else {
-	//		// use the cached map of event handlers
-	//		this.sEvents = this.getMetadata().sEvents;
-	//	}
+		// TODO optimizations for 'matching event list' could be done here.
+		//	// create the events string (space separated list of event names):
+		//	// the first time a control is attached - it will determine the required
+		//	// events and store this information in the controls metadata which is
+		//	// shared across the control instances.
+		//	if (!this.getMetadata().sEvents) {
+		//
+		//		// shorten the access to the array of events and pseudo events
+		//		var aEv = ControlEvents.events;
+		//		var oPsEv = PseudoEvents.events; // required from sap/ui/events/PseudoEvents
+		//
+		//		// create the data structures for the event handler registration
+		//		this.sEvents = "";
+		//		var aEvents = [];
+		//
+		//		// check for pseudo events and register them for their relevant types
+		//		for (var evt in oPsEv) {
+		//				for (j = 0, js = oPsEv[evt].aTypes.length; j < js; j++) {
+		//					var type = oPsEv[evt].aTypes[j];
+		//					if (aEvents.indexOf(type) === -1) {
+		//						aEvents.push(type);
+		//					}
+		//				}
+		//		}
+		//
+		//		// check for events and register them
+		//		for (var i = 0, is = aEv.length; i < is; i++) {
+		//			var type = aEv[i];
+		//				if (aEvents.indexOf(type) === -1) {
+		//					aEvents.push(type);
+		//				}
+		//		}
+		//
+		//		// keep the list of events for the jQuery bind/unbind method
+		//		this.sEvents = aEvents.join(" ");
+		//
+		//		// cache the event handlers registry map
+		//		this.getMetadata().sEvents = this.sEvents;
+		//
+		//	} else {
+		//		// use the cached map of event handlers
+		//		this.sEvents = this.getMetadata().sEvents;
+		//	}
 
 		// check for existing root node
 		var oDomRef = this.getRootNode();
@@ -1105,15 +1118,13 @@ sap.ui.define([
 
 		// TODO: when optimizing the events => take care to unbind only the
 		//       required. additionally consider not to remove other event handlers.
-	//	var ojQRef = jQuery(oDomRef);
-	//	if (this.sEvents) {
-	//		ojQRef.off(this.sEvents, this._handleEvent);
-	//	}
-	//
-	//	var oFH = this.oCore.oFocusHandler;
-	//	ojQRef.off("focus",oFH.onfocusin);
-	//	ojQRef.off("blur", oFH.onfocusout);
-
+		//	var ojQRef = jQuery(oDomRef);
+		//	if (this.sEvents) {
+		//		ojQRef.off(this.sEvents, this._handleEvent);
+		//	}
+		//
+		//	ojQRef.off("focus",FocusHandler.onfocusin);
+		//	ojQRef.off("blur", FocusHandler.onfocusout);
 	};
 
 	/**
@@ -1139,7 +1150,7 @@ sap.ui.define([
 		var oKey = UIArea._oFieldGroupValidationKey;
 		if (oEvent.type === "focusin" || oEvent.type === "focusout") {
 			if (oEvent.type === "focusout") {
-				oElement = jQuery(document.activeElement).control(0);
+				oElement = Element.closestTo(document.activeElement);
 			}
 			// delay the check for a field group change to allow focus forwarding and resetting focus after selection
 			if (UIArea._iFieldGroupDelayTimer) {
@@ -1187,7 +1198,7 @@ sap.ui.define([
 		}
 
 		var oCurrentControl = this.getFieldGroupControl();
-		if ( oControl != oCurrentControl ) {
+		if ( oControl != oCurrentControl && document.activeElement && (document.activeElement.id !== "sap-ui-static-firstfe")) {
 			var aCurrentGroupIds = (oCurrentControl ? oCurrentControl._getFieldGroupIds() : []),
 				aNewGroupIds = (oControl ? oControl._getFieldGroupIds() : []),
 				aTargetFieldGroupIds = aCurrentGroupIds.filter(function(sCurrentGroupId) {
@@ -1203,9 +1214,10 @@ sap.ui.define([
 
 	/**
 	 * Returns the current valid field group control.
+	 *
 	 * There is only one field group control for all UI areas.
 	 *
-	 * @return {sap.ui.core.Control} the current valid field group control or null.
+	 * @returns {sap.ui.core.Control|null} the current valid field group control or <code>null</code>.
 	 *
 	 * @private
 	 */
@@ -1215,6 +1227,15 @@ sap.ui.define([
 		}
 		return null;
 	};
+
+	// apply the registry mixin
+	ManagedObjectRegistry.apply(UIArea, {
+		onDuplicate: function(sId, oldUIArea, newUIArea) {
+			var sMsg = "adding UIArea with duplicate id '" + sId + "'";
+			Log.error(sMsg);
+			throw new Error("Error: " + sMsg);
+		}
+	});
 
 	// field group static members
 
@@ -1244,6 +1265,255 @@ sap.ui.define([
 	// share the render log with Core
 	UIArea._oRenderLog = oRenderLog;
 
-	return UIArea;
+	/**
+	 * Creates a new {@link sap.ui.core.UIArea UIArea}.
+	 * Must only be used by sap.ui.core.Core or sap.ui.core.Control.
+	 *
+	 * @param {Element|string} oDomRef a DOM Element or ID string of the UIArea
+	 * @return {sap.ui.core.UIArea} a new UIArea
+	 * @private
+	 * @ui5-restricted sap.ui.core
+	 */
+	UIArea.create = function(oDomRef) {
+		assert(typeof oDomRef === "string" || typeof oDomRef === "object", "oDomRef must be a string or object");
 
+		if (!oDomRef) {
+			throw new Error("oDomRef must not be null");
+		}
+
+		// oDomRef might be (and actually IS in most cases!) a string (the ID of a DOM element)
+		if (typeof (oDomRef) === "string") {
+			var id = oDomRef;
+
+			if (id == STATIC_UIAREA_ID) {
+				oDomRef = UIArea.getStaticAreaRef();
+			} else {
+				oDomRef = document.getElementById(oDomRef);
+				if (!oDomRef) {
+					throw new Error("DOM element with ID '" + id + "' not found in page, but application tries to insert content.");
+				}
+			}
+		}
+
+		// if the domref does not have an ID or empty ID => generate one
+		if (!oDomRef.id || oDomRef.id.length == 0) {
+			oDomRef.id = uid();
+		}
+
+		// create a new or fetch an existing UIArea
+		var sId = oDomRef.id;
+		var oUIArea = UIArea.registry.get(sId);
+		if (!oUIArea) {
+			oUIArea = new UIArea(oDomRef);
+			if (!isEmptyObject(oCore.oModels)) {
+				var oProperties = {
+					oModels: Object.assign({}, oCore.oModels),
+					oBindingContexts: {},
+					aPropagationListeners: []
+				};
+				oUIArea._propagateProperties(true, oUIArea, oProperties, true);
+			}
+		} else {
+			// this should solve the issue of 'recreation' of a UIArea
+			// e.g. via setRoot with a new domRef
+			oUIArea._setRootNode(oDomRef);
+		}
+		return oUIArea;
+	};
+
+	/**
+	 * Returns the static, hidden area DOM element belonging to this core instance.
+	 *
+	 * It can be used e.g. for hiding elements like Popups, Shadow, Blocklayer etc.
+	 *
+	 * If it is not yet available, a DIV is created and appended to the body.
+	 *
+	 * @returns {Element} the static, hidden area DOM element belonging to this core instance.
+	 * @throws {Error} an Error if the document is not yet ready
+	 * @private
+	 * @ui5-restricted sap.ui.core
+	 */
+	UIArea.getStaticAreaRef = function() {
+		if (!bDomReady) {
+			throw new Error("DOM is not ready yet. Static UIArea cannot be created.");
+		}
+
+		var oStaticArea = document.getElementById(STATIC_UIAREA_ID),  oFirstFocusElement;
+
+		if (!oStaticArea) {
+
+			oStaticArea = document.createElement("div");
+			oFirstFocusElement = document.createElement("span");
+
+			oStaticArea.setAttribute("id", STATIC_UIAREA_ID);
+
+			Object.assign(oStaticArea.style, {
+				"height": "0",
+				"width": "0",
+				"overflow": "hidden",
+				"float":  Configuration.getRTL() ? "right" : "left"
+			});
+
+			oFirstFocusElement.setAttribute("id", STATIC_UIAREA_ID + "-firstfe");
+			oFirstFocusElement.setAttribute("tabindex", -1);
+			oFirstFocusElement.style.fontSize = 0;
+
+			oStaticArea.appendChild(oFirstFocusElement);
+
+			document.body.insertBefore(oStaticArea, document.body.firstChild);
+
+			UIArea.create(oStaticArea).bInitial = false;
+		}
+		return oStaticArea;
+	};
+
+	/**
+	 * Checks whether the given DOM element is the root of the static area.
+	 *
+	 * @param {Element} oDomRef DOM element to check
+	 * @returns {boolean} Whether the given DOM element is the root of the static area
+	 * @private
+	 */
+	UIArea.isStaticAreaRef = function(oDomRef) {
+		return !!(oDomRef && (oDomRef.id === STATIC_UIAREA_ID));
+	};
+
+	/**
+	 * Sets the Core instance in Core onInit
+	 * @param {sap.ui.core.Core} oCoreInstance the Core instance
+	 * @private
+	 */
+	UIArea.setCore = function(oCoreInstance) {
+		oCore = oCoreInstance;
+
+		var aUiAreas = Configuration.getValue("areas");
+		// create any pre-configured UIAreas
+		if ( aUiAreas ) {
+			for (var i = 0, l = aUiAreas.length; i < l; i++) {
+				UIArea.create(aUiAreas[i]);
+			}
+		}
+	};
+
+	/**
+	 * Registry of all <code>sap.ui.core.Element</code>s that currently exist.
+	 *
+	 * @namespace sap.ui.core.UIArea.registry
+	 * @public
+	 * @since 1.107
+	 */
+
+	/**
+	 * Number of existing UIAreas.
+	 *
+	 * @type {int}
+	 * @readonly
+	 * @name sap.ui.core.UIArea.registry.size
+	 * @public
+	 */
+
+	/**
+	 * Return an object with all instances of <code>sap.ui.core.UIArea</code>,
+	 * keyed by their ID.
+	 *
+	 * Each call creates a new snapshot object. Depending on the size of the UI,
+	 * this operation therefore might be expensive. Consider to use the <code>forEach</code>
+	 * or <code>filter</code> method instead of executing similar operations on the returned
+	 * object.
+	 *
+	 * <b>Note</b>: The returned object is created by a call to <code>Object.create(null)</code>,
+	 * and therefore lacks all methods of <code>Object.prototype</code>, e.g. <code>toString</code> etc.
+	 *
+	 * @returns {Object<sap.ui.core.ID,sap.ui.core.UIArea>} Object with all UIAreas, keyed by their ID
+	 * @name sap.ui.core.UIArea.registry.all
+	 * @function
+	 * @public
+	 */
+
+	/**
+	 * Retrieves an UIArea by its ID.
+	 *
+	 * When the ID is <code>null</code> or <code>undefined</code> or when there's no UIArea with
+	 * the given ID, then <code>undefined</code> is returned.
+	 *
+	 * @param {sap.ui.core.ID} id ID of the UIArea to retrieve
+	 * @returns {sap.ui.core.UIArea|undefined} UIArea with the given ID or <code>undefined</code>
+	 * @name sap.ui.core.UIArea.registry.get
+	 * @function
+	 * @public
+	 */
+
+	/**
+	 * Calls the given <code>callback</code> for each UIArea.
+	 *
+	 * The expected signature of the callback is
+	 * <pre>
+	 *    function callback(oUIArea, sID)
+	 * </pre>
+	 * where <code>oUIArea</code> is the currently visited UIArea instance and <code>sID</code>
+	 * is the ID of that instance.
+	 *
+	 * The order in which the callback is called for UIAreas is not specified and might change between
+	 * calls (over time and across different versions of UI5).
+	 *
+	 * If UIAreas are created or destroyed within the <code>callback</code>, then the behavior is
+	 * not specified. Newly added objects might or might not be visited. When an UIArea is destroyed or
+	 * the root node is changed during the filtering and was not visited yet, it might or might not be
+	 * visited. As the behavior for such concurrent modifications is not specified, it may change in
+	 * newer releases.
+	 *
+	 * If a <code>thisArg</code> is given, it will be provided as <code>this</code> context when calling
+	 * <code>callback</code>. The <code>this</code> value that the implementation of <code>callback</code>
+	 * sees, depends on the usual resolution mechanism. E.g. when <code>callback</code> was bound to some
+	 * context object, that object wins over the given <code>thisArg</code>.
+	 *
+	 * @param {function(sap.ui.core.UIArea,sap.ui.core.ID)} callback
+	 *        Function to call for each UIArea
+	 * @param {Object} [thisArg=undefined]
+	 *        Context object to provide as <code>this</code> in each call of <code>callback</code>
+	 * @throws {TypeError} If <code>callback</code> is not a function
+	 * @name sap.ui.core.UIArea.registry.forEach
+	 * @function
+	 * @public
+	 */
+
+	/**
+	 * Returns an array with UIAreas for which the given <code>callback</code> returns a value that coerces
+	 * to <code>true</code>.
+	 *
+	 * The expected signature of the callback is
+	 * <pre>
+	 *    function callback(oUIArea, sID)
+	 * </pre>
+	 * where <code>oUIArea</code> is the currently visited UIArea instance and <code>sID</code>
+	 * is the ID of that instance.
+	 *
+	 * If UIAreas are created or destroyed within the <code>callback</code>, then the behavior is
+	 * not specified. Newly added objects might or might not be visited. When an UIArea is destroyed or
+	 * the root node is changed during the filtering and was not visited yet, it might or might not be
+	 * visited. As the behavior for such concurrent modifications is not specified, it may change in
+	 * newer releases.
+	 *
+	 * If a <code>thisArg</code> is given, it will be provided as <code>this</code> context when calling
+	 * <code>callback</code>. The <code>this</code> value that the implementation of <code>callback</code>
+	 * sees, depends on the usual resolution mechanism. E.g. when <code>callback</code> was bound to some
+	 * context object, that object wins over the given <code>thisArg</code>.
+	 *
+	 * This function returns an array with all UIAreas matching the given predicate. The order of the
+	 * UIAreas in the array is not specified and might change between calls (over time and across different
+	 * versions of UI5).
+	 *
+	 * @param {function(sap.ui.core.UIArea,sap.ui.core.ID):boolean} callback
+	 *        predicate against which each UIArea is tested
+	 * @param {Object} [thisArg=undefined]
+	 *        context object to provide as <code>this</code> in each call of <code>callback</code>
+	 * @returns {sap.ui.core.UIArea[]}
+	 *        Array of UIAreas matching the predicate; order is undefined and might change in newer versions of UI5
+	 * @throws {TypeError} If <code>callback</code> is not a function
+	 * @name sap.ui.core.UIArea.registry.filter
+	 * @function
+	 * @public
+	 */
+
+	return UIArea;
 });

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -21,7 +21,7 @@ sap.ui.define([
 	 * Applies a sap.ui.layout.cssgrid.GridSettings to a provided DOM element or Control.
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @extends sap.ui.layout.cssgrid.GridLayoutBase
 	 *
@@ -29,7 +29,6 @@ sap.ui.define([
 	 * @constructor
 	 * @public
 	 * @alias sap.ui.layout.cssgrid.GridBasicLayout
-	 * @ui5-metamodel This simple type will also be described in the UI5 (legacy) designtime metamodel
 	 */
 	var GridBasicLayout = GridLayoutBase.extend("sap.ui.layout.cssgrid.GridBasicLayout", {
 		metadata: {

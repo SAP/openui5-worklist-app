@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -39,7 +39,7 @@ sap.ui.define(['sap/base/util/LoaderExtensions'], function(LoaderExtensions) {
 	 * @param {string} sKey Key to return the value for
 	 * @param {string} [sDefaultValue=null] Optional, a default value that will be returned
 	 *    if the requested key is not in the collection
-	 * @returns {string} Value for the given key or the default value or <code>null</code>
+	 * @returns {string|null} Value for the given key or the default value or <code>null</code>
 	 *    if no default value or a falsy default value was given
 	 * @public
 	 */

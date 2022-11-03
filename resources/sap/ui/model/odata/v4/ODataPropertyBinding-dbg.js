@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -29,7 +29,38 @@ sap.ui.define([
 			dataRequested : true,
 			DataStateChange : true
 		},
-		sVirtualPath = "/" + Context.VIRTUAL; // a snippet indicating a virtual path
+		sVirtualPath = "/" + Context.VIRTUAL, // a snippet indicating a virtual path
+		/**
+		 * @alias sap.ui.model.odata.v4.ODataPropertyBinding
+		 * @author SAP SE
+		 * @class Property binding for an OData V4 model.
+		 *   An event handler can only be attached to this binding for the following events:
+		 *   'AggregatedDataStateChange', 'change', 'dataReceived', 'dataRequested' and
+		 *   'DataStateChange'. For unsupported events, an error is thrown.
+		 * @extends sap.ui.model.PropertyBinding
+		 * @hideconstructor
+		 * @mixes sap.ui.model.odata.v4.ODataBinding
+		 * @public
+		 * @since 1.37.0
+		 * @version 1.108.0
+		 * @borrows sap.ui.model.odata.v4.ODataBinding#getGroupId as #getGroupId
+		 * @borrows sap.ui.model.odata.v4.ODataBinding#getRootBinding as #getRootBinding
+		 * @borrows sap.ui.model.odata.v4.ODataBinding#getUpdateGroupId as #getUpdateGroupId
+		 * @borrows sap.ui.model.odata.v4.ODataBinding#hasPendingChanges as #hasPendingChanges
+		 * @borrows sap.ui.model.odata.v4.ODataBinding#isInitial as #isInitial
+		 * @borrows sap.ui.model.odata.v4.ODataBinding#refresh as #refresh
+		 * @borrows sap.ui.model.odata.v4.ODataBinding#requestRefresh as #requestRefresh
+		 * @borrows sap.ui.model.odata.v4.ODataBinding#resetChanges as #resetChanges
+		 * @borrows sap.ui.model.odata.v4.ODataBinding#toString as #toString
+		 */
+		ODataPropertyBinding
+			= PropertyBinding.extend("sap.ui.model.odata.v4.ODataPropertyBinding", {
+				constructor : constructor
+			});
+
+	//*********************************************************************************************
+	// ODataPropertyBinding
+	//*********************************************************************************************
 
 	/**
 	 * Do <strong>NOT</strong> call this private constructor, but rather use
@@ -45,66 +76,37 @@ sap.ui.define([
 	 *   Map of binding parameters
 	 * @throws {Error}
 	 *   If disallowed binding parameters are provided
-	 *
-	 * @alias sap.ui.model.odata.v4.ODataPropertyBinding
-	 * @author SAP SE
-	 * @class Property binding for an OData V4 model.
-	 *   An event handler can only be attached to this binding for the following events:
-	 *   'AggregatedDataStateChange', 'change', 'dataReceived', 'dataRequested' and
-	 *   'DataStateChange'. For unsupported events, an error is thrown.
-	 * @extends sap.ui.model.PropertyBinding
-	 * @hideconstructor
-	 * @mixes sap.ui.model.odata.v4.ODataBinding
-	 * @public
-	 * @since 1.37.0
-	 * @version 1.96.2
-	 * @borrows sap.ui.model.odata.v4.ODataBinding#getGroupId as #getGroupId
-	 * @borrows sap.ui.model.odata.v4.ODataBinding#getRootBinding as #getRootBinding
-	 * @borrows sap.ui.model.odata.v4.ODataBinding#getUpdateGroupId as #getUpdateGroupId
-	 * @borrows sap.ui.model.odata.v4.ODataBinding#hasPendingChanges as #hasPendingChanges
-	 * @borrows sap.ui.model.odata.v4.ODataBinding#isInitial as #isInitial
-	 * @borrows sap.ui.model.odata.v4.ODataBinding#refresh as #refresh
-	 * @borrows sap.ui.model.odata.v4.ODataBinding#requestRefresh as #requestRefresh
-	 * @borrows sap.ui.model.odata.v4.ODataBinding#resetChanges as #resetChanges
-	 * @borrows sap.ui.model.odata.v4.ODataBinding#toString as #toString
 	 */
-	var ODataPropertyBinding
-		= PropertyBinding.extend("sap.ui.model.odata.v4.ODataPropertyBinding", {
-			constructor : function (oModel, sPath, oContext, mParameters) {
+	function constructor(oModel, sPath, oContext, mParameters) {
+		PropertyBinding.call(this, oModel, sPath);
+		// initialize mixin members
+		asODataBinding.call(this);
 
-				PropertyBinding.call(this, oModel, sPath);
-				// initialize mixin members
-				asODataBinding.call(this);
-
-				if (sPath.endsWith("/")) {
-					throw new Error("Invalid path: " + sPath);
-				}
-				if (mParameters) {
-					this.checkBindingParameters(mParameters,
-						["$$groupId", "$$ignoreMessages", "$$noPatch"]);
-					this.sGroupId = mParameters.$$groupId;
-					this.bNoPatch = mParameters.$$noPatch;
-					this.setIgnoreMessages(mParameters.$$ignoreMessages);
-				} else {
-					this.sGroupId = undefined;
-					this.bNoPatch = false;
-				}
-				this.oCheckUpdateCallToken = undefined;
-				this.oContext = oContext;
-				this.bHasDeclaredType = undefined; // whether the binding info declares a type
-				this.bInitial = true;
-				// Note: system query options supported at property binding only for ".../$count"
-				this.mQueryOptions = this.oModel.buildQueryOptions(_Helper.clone(mParameters),
-					/*bSystemQueryOptionsAllowed*/sPath.endsWith("$count"));
-				this.vValue = undefined;
-				// BEWARE: #doFetchQueryOptions uses #isRoot which relies on this.oContext!
-				this.fetchCache(oContext);
-				oModel.bindingCreated(this);
-			},
-			metadata : {
-				publicMethods : []
-			}
-		});
+		if (sPath.endsWith("/")) {
+			throw new Error("Invalid path: " + sPath);
+		}
+		if (mParameters) {
+			this.checkBindingParameters(mParameters,
+				["$$groupId", "$$ignoreMessages", "$$noPatch"]);
+			this.sGroupId = mParameters.$$groupId;
+			this.bNoPatch = mParameters.$$noPatch;
+			this.setIgnoreMessages(mParameters.$$ignoreMessages);
+		} else {
+			this.sGroupId = undefined;
+			this.bNoPatch = false;
+		}
+		this.oCheckUpdateCallToken = undefined;
+		this.oContext = oContext;
+		this.bHasDeclaredType = undefined; // whether the binding info declares a type
+		this.bInitial = true;
+		// Note: system query options supported at property binding only for ".../$count"
+		this.mQueryOptions = this.oModel.buildQueryOptions(_Helper.clone(mParameters),
+			/*bSystemQueryOptionsAllowed*/sPath.endsWith("$count"));
+		this.vValue = undefined;
+		// BEWARE: #doFetchQueryOptions uses #isRoot which relies on this.oContext!
+		this.fetchCache(oContext);
+		oModel.bindingCreated(this);
+	}
 
 	asODataBinding(ODataPropertyBinding.prototype);
 
@@ -226,20 +228,23 @@ sap.ui.define([
 	 *   The change reason for the change event
 	 * @param {string} [sGroupId=getGroupId()]
 	 *   The group ID to be used for the read.
+	 * @param {boolean} [bPreventBubbling]
+	 *   Whether the dataRequested and dataReceived events related to the refresh must not be
+	 *   bubbled up to the model
 	 * @param {any} [vValue]
 	 *   The new value obtained from the cache, see {@link #onChange}
 	 * @returns {sap.ui.base.SyncPromise}
 	 *   A promise resolving without a defined result when the check is finished, or rejecting in
-	 *   case of an error (e.g. thrown by the change event handler of a control). If the cache is no
-	 *   longer the active cache when the response arrives, that response is silently ignored and
-	 *   the value remains unchanged.
+	 *   case of an error. If the cache is no longer the active cache when the response arrives,
+	 *   that response is ignored almost silently (that is, with a canceled error) and the value
+	 *   remains unchanged.
 	 *
 	 * @private
 	 * @see sap.ui.model.PropertyBinding#checkDataState
 	 */
 	// @override sap.ui.model.odata.v4.ODataBinding#checkUpdateInternal
 	ODataPropertyBinding.prototype.checkUpdateInternal = function (bForceUpdate, sChangeReason,
-			sGroupId, vValue) {
+			sGroupId, bPreventBubbling, vValue) {
 		var bDataRequested = false,
 			iHashHash = this.sPath.indexOf("##"),
 			bIsMeta = iHashHash >= 0,
@@ -267,7 +272,8 @@ sap.ui.define([
 				&& !bIsMeta) {
 			vType = oMetaModel.fetchUI5Type(sResolvedPath);
 		}
-		if (arguments.length < 4) {
+		if (vValue === undefined) {
+			// if called via #onChange, we need to fetch implicit values
 			vValue = this.oCachePromise.then(function (oCache) {
 				var sDataPath, sMetaPath;
 
@@ -275,7 +281,7 @@ sap.ui.define([
 					return oCache.fetchValue(that.lockGroup(sGroupId || that.getGroupId()),
 							/*sPath*/undefined, function () {
 								bDataRequested = true;
-								that.fireDataRequested();
+								that.fireDataRequested(bPreventBubbling);
 							}, that)
 						.then(function (vResult) {
 							that.assertSameCache(oCache);
@@ -310,20 +316,19 @@ sap.ui.define([
 						|| (that.sPath[that.sPath.lastIndexOf("/") + 1] === "#" && !bIsMeta))) {
 					if (bIsMeta) {
 						return vValue;
-					} else if (that.bRelative){
+					} else if (that.bRelative) {
 						return _Helper.publicClone(vValue);
 					}
 				}
 				Log.error("Accessed value is not primitive", sResolvedPath, sClassName);
 			}, function (oError) {
-				// do not rethrow, ManagedObject doesn't react on this either
-				// throwing an error would cause "Uncaught (in promise)" in Chrome
 				that.oModel.reportError("Failed to read path " + sResolvedPath, sClassName, oError);
 				if (oError.canceled) { // canceled -> value remains unchanged
 					oCallToken.forceUpdate = false;
 					return that.vValue;
 				}
 				mParametersForDataReceived = {error : oError};
+				// oError is re-thrown below
 			});
 			if (bForceUpdate && vValue.isFulfilled()) {
 				if (vType && vType.isFulfilled && vType.isFulfilled()) {
@@ -350,7 +355,10 @@ sap.ui.define([
 				that.checkDataState();
 			}
 			if (bDataRequested) {
-				that.fireDataReceived(mParametersForDataReceived);
+				that.fireDataReceived(mParametersForDataReceived, bPreventBubbling);
+			}
+			if (mParametersForDataReceived.error) {
+				throw mParametersForDataReceived.error;
 			}
 		});
 	};
@@ -360,14 +368,13 @@ sap.ui.define([
 	 *
 	 * @private
 	 */
-	ODataPropertyBinding.prototype.deregisterChange = function () {
+	ODataPropertyBinding.prototype.deregisterChangeListener = function () {
 		var that = this;
 
 		this.withCache(function (_oCache, sPath, oBinding) {
-			oBinding.doDeregisterChangeListener(sPath, that);
-		}).catch(function (oError) {
-			that.oModel.reportError("Error in deregisterChange", sClassName, oError);
-		}, /*sPath*/"", /*bSync*/false, /*bWithOrWithoutCache*/true);
+				oBinding.doDeregisterChangeListener(sPath, that);
+			}, /*sPath*/"", /*bSync*/false, /*bWithOrWithoutCache*/true)
+			.catch(this.oModel.getReporter());
 	};
 
 	/**
@@ -379,7 +386,7 @@ sap.ui.define([
 	 */
 	// @override sap.ui.model.Binding#destroy
 	ODataPropertyBinding.prototype.destroy = function () {
-		this.deregisterChange();
+		this.deregisterChangeListener();
 		this.oModel.bindingDestroyed(this);
 		this.oCheckUpdateCallToken = undefined;
 		this.mQueryOptions = undefined;
@@ -489,11 +496,22 @@ sap.ui.define([
 	 *
 	 * @param {any} vValue
 	 *   The new value
+	 * @param {boolean} [bForceUpdate]
+	 *   Update the bound control even if no data have been changed.
 	 *
 	 * @private
 	 */
-	ODataPropertyBinding.prototype.onChange = function (vValue) {
-		this.checkUpdateInternal(undefined, undefined, undefined, vValue);
+	ODataPropertyBinding.prototype.onChange = function (vValue, bForceUpdate) {
+		this.checkUpdateInternal(bForceUpdate, undefined, undefined, false, vValue)
+			.catch(this.oModel.getReporter());
+	};
+
+	/**
+	 * @override
+	 * @see sap.ui.model.odata.v4.ODataBinding#onDelete
+	 */
+	ODataPropertyBinding.prototype.onDelete = function () {
+		// nothing to do
 	};
 
 	/**
@@ -501,18 +519,23 @@ sap.ui.define([
 	 * @see sap.ui.model.odata.v4.ODataBinding#refreshInternal
 	 */
 	ODataPropertyBinding.prototype.refreshInternal = function (_sResourcePathPrefix, sGroupId,
-			bCheckUpdate, _bKeepCacheOnError) {
+			bCheckUpdate, bKeepCacheOnError) {
 		var that = this;
 
 		if (this.isRootBindingSuspended()) {
-			this.sResumeChangeReason = ChangeReason.Refresh;
+			this.refreshSuspended(sGroupId);
 			return SyncPromise.resolve();
 		}
 		return this.oCachePromise.then(function () {
-			that.fetchCache(that.oContext, false, /*bKeepQueryOptions*/true);
+			if (that.oCache && that.oCache.reset) {
+				that.oCache.reset();
+			} else {
+				that.fetchCache(that.oContext, false, /*bKeepQueryOptions*/true, bKeepCacheOnError);
+			}
 
 			if (bCheckUpdate) {
-				return that.checkUpdateInternal(undefined, ChangeReason.Refresh, sGroupId);
+				return that.checkUpdateInternal(undefined, ChangeReason.Refresh, sGroupId,
+					/*bPreventBubbling*/bKeepCacheOnError);
 			}
 		});
 	};
@@ -520,9 +543,9 @@ sap.ui.define([
 	/**
 	 * Requests the value of the property binding.
 	 *
-	 * @returns {Promise}
+	 * @returns {Promise<any|undefined>}
 	 *   A promise resolving with the resulting value or <code>undefined</code> if it could not be
-	 *   determined
+	 *   determined, or rejecting in case of an error
 	 *
 	 * @public
 	 * @since 1.69
@@ -633,7 +656,8 @@ sap.ui.define([
 
 		this.fetchCache(this.oContext);
 		if (bCheckUpdate) {
-			this.checkUpdateInternal(bParentHasChanges ? undefined : false, sResumeChangeReason);
+			this.checkUpdateInternal(bParentHasChanges ? undefined : false, sResumeChangeReason)
+				.catch(this.oModel.getReporter());
 		}
 	};
 
@@ -654,13 +678,14 @@ sap.ui.define([
 		if (this.oContext !== oContext) {
 			if (this.bRelative) {
 				this.checkSuspended(true);
-				this.deregisterChange();
+				this.deregisterChangeListener();
 			}
 			this.oContext = oContext;
 			this.sResumeChangeReason = undefined;
 			if (this.bRelative) {
 				this.fetchCache(this.oContext);
-				this.checkUpdateInternal(this.bInitial || undefined, ChangeReason.Context);
+				this.checkUpdateInternal(this.bInitial || undefined, ChangeReason.Context)
+					.catch(this.oModel.getReporter());
 			}
 		}
 	};
@@ -705,15 +730,14 @@ sap.ui.define([
 	 *   this binding (or its relevant parent binding) is used, see {@link #getUpdateGroupId}.
 	 *   Valid values are <code>undefined</code>, '$auto', '$auto.*', '$direct' or application group
 	 *   IDs as specified in {@link sap.ui.model.odata.v4.ODataModel}.
-	 * @throws {Error}
-	 *   If one of the following situations occurs:
+	 * @throws {Error} If
 	 *   <ul>
-	 *     <li> The binding's root binding is suspended.
-	 *     <li> The new value is not primitive.
-	 *     <li> No value has been read before and the binding does not have the parameter
+	 *     <li> the binding's root binding is suspended.
+	 *     <li> the new value is not primitive.
+	 *     <li> no value has been read before and the binding does not have the parameter
 	 *       <code>$$noPatch</code>.
-	 *     <li> The binding is not relative to a {@link sap.ui.model.odata.v4.Context}.
-	 *     <li> The binding has the parameter <code>$$noPatch</code> and a group ID has been given.
+	 *     <li> the binding is not relative to a {@link sap.ui.model.odata.v4.Context}.
+	 *     <li> the binding has the parameter <code>$$noPatch</code> and a group ID has been given.
 	 *   </ul>
 	 *
 	 * @public
@@ -722,11 +746,11 @@ sap.ui.define([
 	 */
 	ODataPropertyBinding.prototype.setValue = function (vValue, sGroupId) {
 		var oGroupLock,
+			sResolvedPath = this.getResolvedPath(),
 			that = this;
 
 		function reportError(oError) {
-			that.oModel.reportError("Failed to update path " + that.getResolvedPath(), sClassName,
-				oError);
+			that.oModel.reportError("Failed to update path " + sResolvedPath, sClassName, oError);
 
 			return oError;
 		}
@@ -736,7 +760,7 @@ sap.ui.define([
 			throw reportError(new Error("Must not specify a group ID (" + sGroupId
 				+ ") with $$noPatch"));
 		}
-		this.oModel.checkGroupId(sGroupId);
+		_Helper.checkGroupId(sGroupId);
 		if (typeof vValue === "function" || (vValue && typeof vValue === "object")) {
 			throw reportError(new Error("Not a primitive value"));
 		}

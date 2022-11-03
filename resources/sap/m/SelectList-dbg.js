@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -37,13 +37,12 @@ sap.ui.define([
 		 * @extends sap.ui.core.Control
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
 		 * @since 1.26.0
 		 * @alias sap.m.SelectList
-		 * @ui5-metamodel This control will also be described in the UI5 (legacy) design time meta model.
 		 */
 		var SelectList = Control.extend("sap.m.SelectList", /** @lends sap.m.SelectList.prototype */ {
 			metadata: {
@@ -225,7 +224,9 @@ sap.ui.define([
 						}
 					}
 				}
-			}
+			},
+
+			renderer: SelectListRenderer
 		});
 
 		/* =========================================================== */
@@ -325,8 +326,7 @@ sap.ui.define([
 		/**
 		 * Retrieves the enabled items DOM references.
 		 *
-		 * @param {object} [oDomRef] The selectList DOM reference.
-		 * @returns {array} The enabled items DOM references.
+		 * @returns {Element[]} The enabled items DOM references.
 		 * @private
 		 */
 		SelectList.prototype._queryEnabledItemsDomRefs = function() {
@@ -591,6 +591,8 @@ sap.ui.define([
 		/*
 		 * Synchronize selected item and key.
 		 *
+		 * @param {object} [mOptions] Options
+		 * @param {boolean} [mOptions.forceSelection] Whether to force a selection
 		 * @protected
 		 */
 		SelectList.prototype.synchronizeSelection = function(mOptions) {
@@ -784,7 +786,7 @@ sap.ui.define([
 		 *
 		 * @param {string} sProperty An item property.
 		 * @param {string} sValue An item value that specifies the item to retrieve.
-		 * @returns {sap.ui.core.Item | null} The matched item or null.
+		 * @returns {sap.ui.core.Item | null} The matched item or <code>null</code>.
 		 * @protected
 		 */
 		SelectList.prototype.findItem = function(sProperty, sValue) {
@@ -805,7 +807,7 @@ sap.ui.define([
 		 * <code>Note: </code> If duplicate values exist, the first item matching the value is returned.
 		 *
 		 * @param {string} sText An item value that specifies the item to retrieve.
-		 * @returns {sap.ui.core.Item | null} The matched item or null.
+		 * @returns {sap.ui.core.Item | null} The matched item or <code>null</code>.
 		 * @protected
 		 */
 		SelectList.prototype.getItemByText = function(sText) {
@@ -1000,7 +1002,7 @@ sap.ui.define([
 		 * Gets the item from the aggregation named <code>items</code> at the given 0-based index.
 		 *
 		 * @param {int} iIndex Index of the item to return.
-		 * @returns {sap.ui.core.Item | null} Item at the given index, or null if none.
+		 * @returns {sap.ui.core.Item | null} Item at the given index, or <code>null</code> if none.
 		 * @public
 		 */
 		SelectList.prototype.getItemAt = function(iIndex) {
@@ -1010,7 +1012,7 @@ sap.ui.define([
 		/**
 		 * Gets the first item from the aggregation named <code>items</code>.
 		 *
-		 * @returns {sap.ui.core.Item | null} The first item, or null if there are no items.
+		 * @returns {sap.ui.core.Item | null} The first item, or <code>null</code> if there are no items.
 		 * @public
 		 */
 		SelectList.prototype.getFirstItem = function() {
@@ -1020,7 +1022,7 @@ sap.ui.define([
 		/**
 		 * Gets the enabled items from the aggregation named <code>items</code>.
 		 *
-		 * @returns {sap.ui.core.Item | null} The last item, or null if there are no items.
+		 * @returns {sap.ui.core.Item | null} The last item, or <code>null</code> if there are no items.
 		 * @public
 		 */
 		SelectList.prototype.getLastItem = function() {
@@ -1048,7 +1050,7 @@ sap.ui.define([
 		 * <b>Note: </b> If duplicate keys exists, the first item matching the key is returned.
 		 *
 		 * @param {string} sKey An item key that specifies the item to retrieve.
-		 * @returns {sap.ui.core.Item | null} The matched item or null
+		 * @returns {sap.ui.core.Item | null} The matched item or <code>null</code>
 		 * @public
 		 */
 		SelectList.prototype.getItemByKey = function(sKey) {
@@ -1059,7 +1061,7 @@ sap.ui.define([
 		 * Removes an item from the aggregation named <code>items</code>.
 		 *
 		 * @param {int | string | sap.ui.core.Item} vItem The item to remove or its index or id.
-		 * @returns {sap.ui.core.Item} The removed item or null.
+		 * @returns {sap.ui.core.Item|null} The removed item or <code>null</code>.
 		 * @public
 		 */
 		SelectList.prototype.removeItem = function(vItem) {

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -49,7 +49,7 @@ sap.ui.define([
 	/**
 	 * Factory class which is used to create internal controls used by the ShellBar control and care for their
 	 * lifecycle.
-	 * @alias sap/f/shellBar/Factory
+	 * @alias module:sap/f/shellBar/Factory
 	 * @since 1.63
 	 * @private
 	 */

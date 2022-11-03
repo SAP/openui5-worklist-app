@@ -1,16 +1,15 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides class sap.ui.unified.calendar.CalendarDate
 sap.ui.define([
 	'sap/ui/base/Object',
-	'sap/ui/core/date/UniversalDate',
-	"sap/ui/thirdparty/jquery"
+	'sap/ui/core/date/UniversalDate'
 ],
-	function(BaseObject, UniversalDate, jQuery) {
+	function(BaseObject, UniversalDate) {
 		"use strict";
 
 		/*
@@ -314,6 +313,16 @@ sap.ui.define([
 				throw new Error("Date parameter must be a JavaScript Date object: [" + oJSDate + "].");
 			}
 			return new CalendarDate(oJSDate.getFullYear(), oJSDate.getMonth(), oJSDate.getDate(), sCalendarType);
+		};
+
+		/* The UTC components of a JavaScript date are used to create a CalendarDate */
+		CalendarDate.fromUTCDate = function (oJSDate, sCalendarType) {
+			// Cross frame check for a date should be performed here otherwise setDateValue would fail in OPA tests
+			// because Date object in the test is different than the Date object in the application (due to the iframe).
+			if (!oJSDate || Object.prototype.toString.call(oJSDate) !== "[object Date]" || isNaN(oJSDate)) {
+				throw new Error("Date parameter must be a JavaScript Date object: [" + oJSDate + "].");
+			}
+			return new CalendarDate(oJSDate.getUTCFullYear(), oJSDate.getUTCMonth(), oJSDate.getUTCDate(), sCalendarType);
 		};
 
 		/**

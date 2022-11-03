@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(['sap/ui/Device', 'sap/ui/core/InvisibleText'],
@@ -21,15 +21,17 @@ sap.ui.define(['sap/ui/Device', 'sap/ui/core/InvisibleText'],
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oControl an object representation of the control that should be rendered
+	 * @param {sap.m.Tokenizer} oControl an object representation of the control that should be rendered
 	 */
 	TokenizerRenderer.render = function(oRm, oControl){
 		//write the HTML into the render manager
-		if (oControl.getParent() && (oControl.getParent() instanceof sap.m.MultiInput || oControl.getParent() instanceof sap.m.MultiComboBox)) {
+		if (oControl.getParent() && oControl.getParent().isA(["sap.m.MultiInput", "sap.m.MultiComboBox"])) {
 			oRm.openStart("div", oControl);
 		} else {
-			oRm.openStart("div", oControl).attr("tabindex", "0");
+			oRm.openStart("div", oControl);
+			this._renderTabIndex(oRm, oControl);
 		}
+
 
 		oRm.class("sapMTokenizer");
 
@@ -94,10 +96,10 @@ sap.ui.define(['sap/ui/Device', 'sap/ui/core/InvisibleText'],
 
 		oRm.openEnd();
 
-		TokenizerRenderer._renderTokens(oRm, oControl);
+		this._renderTokens(oRm, oControl);
 
 		oRm.close("div");
-		TokenizerRenderer._renderIndicator(oRm, oControl);
+		this._renderIndicator(oRm, oControl);
 		oRm.close("div");
 	};
 
@@ -105,7 +107,7 @@ sap.ui.define(['sap/ui/Device', 'sap/ui/core/InvisibleText'],
 	 * renders the tokens
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oControl an object representation of the control that should be rendered
+	 * @param {sap.m.Tokenizer} oControl an object representation of the control that should be rendered
 	 */
 	TokenizerRenderer._renderTokens = function(oRm, oControl){
 		var i = 0,
@@ -121,15 +123,47 @@ sap.ui.define(['sap/ui/Device', 'sap/ui/core/InvisibleText'],
 	 * Renders the N-more indicator
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oControl an object representation of the control that should be rendered
+	 * @param {sap.m.Tokenizer} oControl an object representation of the control that should be rendered
 	 */
 	TokenizerRenderer._renderIndicator = function(oRm, oControl){
 		oRm.openStart("span");
 		oRm.class("sapMTokenizerIndicator");
+
+		this._renderIndicatorTabIndex(oRm, oControl);
+
 		if (oControl.getHiddenTokensCount() === 0) {
 			oRm.class("sapUiHidden");
 		}
 		oRm.openEnd().close("span");
+	};
+
+	/**
+	 * Callback for specific rendering of Tokenizer tabindex attribute.
+	 *
+	 * @param {sap.ui.core.RenderManager}
+	 *            oRm the RenderManager currently rendering this control
+	 * @param {sap.m.Tokenizer}
+	 *            oControl the Tokenizer that should be rendered
+	 * @private
+	 *
+	 * @ui5-restricted sap.ui.mdc.field.TokenizerDisplayRenderer
+	 */
+	TokenizerRenderer._renderTabIndex = function(oRm, oControl) {
+		oRm.attr("tabindex", "0");
+	};
+
+	/**
+	 * Callback for specific rendering of Tokenizer N-more indicator tabindex attribute.
+	 *
+	 * @param {sap.ui.core.RenderManager}
+	 *            oRm the RenderManager currently rendering this control
+	 * @param {sap.m.Tokenizer}
+	 *            oControl the Tokenizer that should be rendered
+	 * @private
+	 *
+	 * @ui5-restricted sap.ui.mdc.field.TokenizerDisplayRenderer
+	 */
+	TokenizerRenderer._renderIndicatorTabIndex = function(oRm, oControl) {
 	};
 
 	return TokenizerRenderer;

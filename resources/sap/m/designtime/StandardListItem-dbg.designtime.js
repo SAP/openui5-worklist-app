@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -17,7 +17,11 @@ sap.ui.define([],
 						return oControl.$().find(".sapMLIBContent > .sapMSLIDiv > .sapMSLITitleOnly")[0] || oControl.$().find(".sapMLIBContent > .sapMSLIDiv > .sapMSLITitle")[0];
 					}
 				}
+			},
+			aggregations: {
+				avatar: {
+					ignore: true
+				}
 			}
 		};
-
 	});

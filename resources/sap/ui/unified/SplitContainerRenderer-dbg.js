@@ -1,12 +1,12 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides default renderer for control sap.ui.unified.SplitContainer
-sap.ui.define(["sap/ui/core/library"],
-	function(coreLibrary) {
+sap.ui.define(["sap/ui/core/library", "sap/ui/core/Configuration"],
+	function(coreLibrary, Configuration) {
 	"use strict";
 
 
@@ -24,7 +24,7 @@ sap.ui.define(["sap/ui/core/library"],
 	/**
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 * @param {sap.ui.core.RenderManager} rm the RenderManager that can be used for writing to the Render-Output-Buffer
-	 * @param {sap.ui.core.Control} oShell an object representation of the control that should be rendered
+	 * @param {sap.ui.unified.SplitContainer} oControl an object representation of the control that should be rendered
 	 */
 	SplitContainerRenderer.render = function(rm, oControl){
 		var sId = oControl.getId();
@@ -35,7 +35,7 @@ sap.ui.define(["sap/ui/core/library"],
 		rm.writeControlData(oControl);
 		rm.addClass("sapUiUfdSpltCont");
 		rm.addClass("sapUiUfdSpltCont" + (bVertical ? "V" : "H"));
-		if (sap.ui.getCore().getConfiguration().getAnimation()) {
+		if (Configuration.getAnimation()) {
 			rm.addClass("sapUiUfdSpltContAnim");
 		}
 

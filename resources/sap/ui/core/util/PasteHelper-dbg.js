@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 //Provides class sap.ui.core.util.PasteHelper - a utility for converting and validating data pasted from clipboard.
@@ -13,7 +13,7 @@ sap.ui.define([ "sap/ui/core/Core", "sap/ui/model/ParseException", "sap/ui/model
 	 *
 	 * @class Parses and validates data on the <code>paste</code> event of an SAPUI5 table.
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @private
 	 * @ui5-restricted sap.ui.table.Table, sap.m.Table, sap.m.plugins.PasteProvider
 	 * @alias sap.ui.core.util.PasteHelper
@@ -24,8 +24,8 @@ sap.ui.define([ "sap/ui/core/Core", "sap/ui/model/ParseException", "sap/ui/model
 	/**
 	 * Returns the clipboard text from the provided parameter.
 	 *
-	 * @param {ClipboardEvent|String} vEventOrText The paste event of the browser or the textual content of the clipboard returned from the navigator.clipboard.readText() API
-	 * @return {String} The textual content of the clipboard extracted from the parameter
+	 * @param {ClipboardEvent|string} vEventOrText The paste event of the browser or the textual content of the clipboard returned from the navigator.clipboard.readText() API
+	 * @return {string} The textual content of the clipboard extracted from the parameter
 	 */
 	PasteHelper.getClipboardText = function(vEventOrText) {
 		return (typeof vEventOrText == "string") ? vEventOrText : vEventOrText.clipboardData.getData("text");
@@ -35,7 +35,7 @@ sap.ui.define([ "sap/ui/core/Core", "sap/ui/model/ParseException", "sap/ui/model
 	 * Parses the clipboard data from the <code>paste</code> event or <code>Clipboard.readText</code> API and converts the data into a
 	 * two-dimensional array that can be used further in SAPUI5 controls, for example, for importing data from spreadsheets to SAPUI5 tables.
 	 *
-	 * @param {ClipboardEvent|String} vEventOrText The paste event of the browser or the textual content of the clipboard returned from the navigator.clipboard.readText() API
+	 * @param {ClipboardEvent|string} vEventOrText The paste event of the browser or the textual content of the clipboard returned from the navigator.clipboard.readText() API
 	 *         This contains the clipboard data in the following export format: <br>
 	 *         Cells are separated by tabs, lines by new line characters (\n, \r, and \r\n are supported). The cells containing
 	 *         more than one line separated by new line characters are enclosed by double quotes (if there are already some
@@ -313,7 +313,7 @@ sap.ui.define([ "sap/ui/core/Core", "sap/ui/model/ParseException", "sap/ui/model
 	 *
 	 * @param {int} i Index of the column
 	 * @param {string} sCellData Value of the cell to be parsed and validated
-	 * @param {array} aColumnInfo Provides information about the corresponding property name and its required type
+	 * @param {object} oColumnInfo Provides information about the corresponding property name and its required type
 	 * @param {int} iRowIndex Index of the row
 	 * @param {function} fnParse Parse function parsing the value of the cell
 	 * @param {function} fnValidate validate function validating the value of the cell

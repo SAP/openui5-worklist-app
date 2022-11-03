@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -11,7 +11,7 @@ sap.ui.define([
 ], function (_Helper, escapeRegExp) {
 	"use strict";
 
-	var mAllowedChangeSetMethods = {"POST" : true, "PUT" : true, "PATCH" : true, "DELETE" : true},
+	var mAllowedChangeSetMethods = {POST : true, PUT : true, PATCH : true, DELETE : true},
 		rContentIdReference = /^\$\d+/,
 		rHeaderParameter = /(\S*?)=(?:"(.+)"|(\S+))/;
 
@@ -34,7 +34,7 @@ sap.ui.define([
 
 		// escape RegExp-related characters
 		sBatchBoundary = escapeRegExp(sBatchBoundary);
-		return new RegExp('--' + sBatchBoundary + '(?:[ \t]*\r\n|--)');
+		return new RegExp("--" + sBatchBoundary + "(?:[ \t]*\r\n|--)");
 	}
 
 	/**
@@ -45,7 +45,8 @@ sap.ui.define([
 	 *   HTTP header value e.g. "application/json;charset=utf-8"
 	 * @param {string} sParameterName
 	 *   Name of HTTP header parameter e.g. "charset"
-	 * @returns {string} The HTTP header parameter value
+	 * @returns {string|undefined} The HTTP header parameter value or <code>undefined</code> if the
+	 *   parameter is not found
 	 */
 	function getHeaderParameterValue(sHeaderValue, sParameterName) {
 		var iParamIndex,
@@ -69,11 +70,12 @@ sap.ui.define([
 	 *
 	 * @param {string} sMimeTypeHeaders
 	 *   Section of MIME part representing HTTP headers
-	 * @returns {string} Content-Type header value e.g.
-	 *   "multipart/mixed; boundary=batch_id-0123456789012-345" or undefined
+	 * @returns {string|undefined} Content-Type header value e.g.
+	 *   "multipart/mixed; boundary=batch_id-0123456789012-345" or <code>undefined</code>
 	 */
 	function getChangeSetContentType(sMimeTypeHeaders) {
 		var sContentType = getHeaderValue(sMimeTypeHeaders, "content-type");
+
 		return sContentType.startsWith("multipart/mixed;") ? sContentType : undefined;
 	}
 
@@ -112,7 +114,7 @@ sap.ui.define([
 	 *   Section of MIME part representing HTTP headers
 	 * @param {string} sHeaderName
 	 *   Name of HTTP header in lower case
-	 * @returns {string} The HTTP header value
+	 * @returns {string|undefined} The HTTP header value or <code>undefined</code>
 	 */
 	function getHeaderValue(sHeaders, sHeaderName) {
 		var aHeaderParts,
@@ -179,14 +181,14 @@ sap.ui.define([
 			aHttpStatusInfos = aHttpHeaders[0].split(" ");
 
 			oResponse.status = parseInt(aHttpStatusInfos[1]);
-			oResponse.statusText = aHttpStatusInfos.slice(2).join(' ');
+			oResponse.statusText = aHttpStatusInfos.slice(2).join(" ");
 			oResponse.headers = {};
 
 			// start with index 1 to skip status line
 			for (i = 1; i < aHttpHeaders.length; i += 1) {
 				// e.g. Content-Type: application/json;odata.metadata=minimal
 				sHeader = aHttpHeaders[i];
-				iColonIndex = sHeader.indexOf(':');
+				iColonIndex = sHeader.indexOf(":");
 				sHeaderName = sHeader.slice(0, iColonIndex).trim();
 				sHeaderValue = sHeader.slice(iColonIndex + 1).trim();
 				oResponse.headers[sHeaderName] = sHeaderValue;
@@ -276,14 +278,14 @@ sap.ui.define([
 			aRequestBody.push("--", sBatchBoundary, "\r\n");
 			if (Array.isArray(oRequest)) {
 				if (bIsChangeSet) {
-					throw new Error('Change set must not contain a nested change set.');
+					throw new Error("Change set must not contain a nested change set.");
 				}
 				aRequestBody = aRequestBody.concat(
 					_serializeBatchRequest(oRequest, iRequestIndex).body);
 			} else {
 				if (bIsChangeSet && !mAllowedChangeSetMethods[oRequest.method]) {
-					throw new Error("Invalid HTTP request method: " + oRequest.method +
-						". Change set must contain only POST, PUT, PATCH, or DELETE requests.");
+					throw new Error("Invalid HTTP request method: " + oRequest.method
+						+ ". Change set must contain only POST, PUT, PATCH, or DELETE requests.");
 				}
 
 				if (iChangeSetIndex !== undefined && sUrl[0] === "$") {
@@ -304,7 +306,6 @@ sap.ui.define([
 			}
 		});
 		aRequestBody.push("--", sBatchBoundary, "--\r\n", sEpilogue);
-
 
 		return {body : aRequestBody, batchBoundary : sBatchBoundary};
 	}
@@ -331,14 +332,14 @@ sap.ui.define([
 		 *   </ul>
 		 *   If the specified <code>sResponseBody</code> contains responses for change sets, then
 		 *   the corresponding response objects will be returned in a nested array.
-		 * @throws {Error}
+		 * @throws {Error} If
 		 *   <ul>
-		 *     <li> If the <code>sContentType</code> parameter does not represent a
-		 *       "multipart/mixed" media type with "boundary" parameter
-		 *     <li> If the "charset" parameter of the "Content-Type" header of a nested response has
-		 *       a value other than "UTF-8"
-		 *     <li> If there is no "Content-ID" header for a change set response or its value is not
-		 *       a number
+		 *     <li> the <code>sContentType</code> parameter does not represent a "multipart/mixed"
+		 *       media type with "boundary" parameter
+		 *     <li> the "charset" parameter of the "Content-Type" header of a nested response has a
+		 *       value other than "UTF-8"
+		 *     <li> there is no "Content-ID" header for a change set response or its value is not a
+		 *       number
 		 *   </ul>
 		 */
 		deserializeBatchResponse : function (sContentType, sResponseBody) {

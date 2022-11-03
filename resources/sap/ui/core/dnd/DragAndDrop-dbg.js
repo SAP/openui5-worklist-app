@@ -1,17 +1,20 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
+	"../library",
 	"sap/ui/Device",
+	"sap/ui/core/Element",
 	"../UIArea",
 	"sap/ui/thirdparty/jquery",
-	// jQuery Plugin "control"
-	"sap/ui/dom/jquery/control"
+	"sap/ui/core/Configuration"
 ],
-function(Device, UIArea, jQuery) {
+function(lib, Device, Element, UIArea, jQuery, Configuration) {
 	"use strict";
+
+	var RelativeDropPosition = lib.dnd.RelativeDropPosition;
 
 	/**
 	 * Contains classes and helpers related to drag & drop functionality.
@@ -62,7 +65,7 @@ function(Device, UIArea, jQuery) {
 	}
 
 	function dispatchEvent(oEvent, sEventName) {
-		var oControl = jQuery(oEvent.target).control(0, true);
+		var oControl = Element.closestTo(oEvent.target, true);
 		if (!oControl) {
 			return;
 		}
@@ -188,7 +191,7 @@ function(Device, UIArea, jQuery) {
 			 * Returns the data that has been set via <code>setComplexData</code> method.
 			 *
 			 * @param {string} sKey The key of the data
-			 * @returns {any} The previously set data or undefined
+			 * @returns {any|undefined} The previously set data or undefined
 			 * @public
 			 */
 			getComplexData: function(sKey) {
@@ -267,7 +270,7 @@ function(Device, UIArea, jQuery) {
 			/**
 			 * Returns the calculated position of the drop action relative to the valid dropped control.
 			 *
-			 * @returns {string}
+			 * @returns {sap.ui.core.dnd.RelativeDropPosition}
 			 * @protected
 			 */
 			getDropPosition: function() {
@@ -323,7 +326,7 @@ function(Device, UIArea, jQuery) {
 			};
 
 		if (!sDropPosition || sDropPosition == "On") {
-			sRelativePosition = "On";
+			sRelativePosition = RelativeDropPosition.On;
 			sDropLayout = "";
 		} else if (sDropLayout == "Horizontal") {
 			var iCursorX = oEvent.pageX - mDropRect.left;
@@ -333,27 +336,27 @@ function(Device, UIArea, jQuery) {
 			if (sDropPosition == "Between") {
 				mStyle.width = "";
 				if (iCursorX < mDropRect.width * 0.5) {
-					sRelativePosition = "Before";
+					sRelativePosition = RelativeDropPosition.Before;
 					mStyle.left = mDropRect.left;
 				} else {
-					sRelativePosition = "After";
+					sRelativePosition = RelativeDropPosition.After;
 					mStyle.left = mDropRect.right;
 				}
 			} else if (sDropPosition == "OnOrBetween") {
 				if (iCursorX < mDropRect.width * 0.25) {
-					sRelativePosition = "Before";
+					sRelativePosition = RelativeDropPosition.Before;
 					mStyle.left = mDropRect.left;
 					mStyle.width = "";
 				} else if (iCursorX > mDropRect.width * 0.75) {
-					sRelativePosition = "After";
+					sRelativePosition = RelativeDropPosition.After;
 					mStyle.left = mDropRect.right;
 					mStyle.width = "";
 				} else {
-					sRelativePosition = "On";
+					sRelativePosition = RelativeDropPosition.On;
 				}
 			}
-			if (sRelativePosition != "On" && sap.ui.getCore().getConfiguration().getRTL()) {
-				sRelativePosition = (sRelativePosition == "After") ? "Before" : "After";
+			if (sRelativePosition != RelativeDropPosition.On && Configuration.getRTL()) {
+				sRelativePosition = (sRelativePosition == RelativeDropPosition.After) ? RelativeDropPosition.Before : RelativeDropPosition.After;
 			}
 		} else {
 			var iCursorY = oEvent.pageY - mDropRect.top;
@@ -363,23 +366,23 @@ function(Device, UIArea, jQuery) {
 			if (sDropPosition == "Between") {
 				mStyle.height = "";
 				if (iCursorY < mDropRect.height * 0.5) {
-					sRelativePosition = "Before";
+					sRelativePosition = RelativeDropPosition.Before;
 					mStyle.top = mDropRect.top;
 				} else {
-					sRelativePosition = "After";
+					sRelativePosition = RelativeDropPosition.After;
 					mStyle.top = mDropRect.bottom;
 				}
 			} else if (sDropPosition == "OnOrBetween") {
 				if (iCursorY < mDropRect.height * 0.25) {
-					sRelativePosition = "Before";
+					sRelativePosition = RelativeDropPosition.Before;
 					mStyle.top = mDropRect.top;
 					mStyle.height = "";
 				} else if (iCursorY > mDropRect.height * 0.75) {
-					sRelativePosition = "After";
+					sRelativePosition = RelativeDropPosition.After;
 					mStyle.top = mDropRect.bottom;
 					mStyle.height = "";
 				} else {
-					sRelativePosition = "On";
+					sRelativePosition = RelativeDropPosition.On;
 				}
 			}
 		}
@@ -388,7 +391,7 @@ function(Device, UIArea, jQuery) {
 			return sRelativePosition;
 		}
 
-		if (sRelativePosition == "On") {
+		if (sRelativePosition == RelativeDropPosition.On) {
 			mStyle.top = mDropRect.top;
 			mStyle.left = mDropRect.left;
 			mStyle.width = mDropRect.width;
@@ -456,9 +459,11 @@ function(Device, UIArea, jQuery) {
 		// allow dropping
 		oEvent.preventDefault();
 
-		// set visual drop indicator from drop info
-		var sDropEffect = oDropInfo.getDropEffect().toLowerCase();
-		oEvent.originalEvent.dataTransfer.dropEffect = sDropEffect;
+		// set visual drop indicator from the drop info in case of the dragged source is a control
+		if (oDragControl) {
+			var sDropEffect = oDropInfo.getDropEffect().toLowerCase();
+			oEvent.originalEvent.dataTransfer.dropEffect = sDropEffect;
+		}
 	}
 
 	function showDropPosition(oEvent, oDropInfo, oValidDropControl) {
@@ -531,7 +536,7 @@ function(Device, UIArea, jQuery) {
 		}
 
 		// identify the control being dragged
-		oDragControl = jQuery(oEvent.target).control(0, true);
+		oDragControl = Element.closestTo(oEvent.target, true);
 		if (!oDragControl) {
 			return;
 		}
@@ -542,9 +547,9 @@ function(Device, UIArea, jQuery) {
 			return;
 		}
 
-		// firefox needs data set to allow dragging
-		if (Device.browser.firefox && oEvent.originalEvent.dataTransfer.types.length === 0) {
-			oEvent.originalEvent.dataTransfer.setData("ui5/dummyDataForFirefox", "data");
+		// mobile devices needs text data with a value set on the dataTransfer object to allow dragging
+		if (!Device.system.desktop && !oEvent.originalEvent.dataTransfer.getData("text")) {
+			oEvent.originalEvent.dataTransfer.setData("text", " ");
 		}
 
 		// create the drag session object and attach to the event
@@ -584,7 +589,7 @@ function(Device, UIArea, jQuery) {
 
 	DnD.onbeforedragenter = function(oEvent) {
 		// check whether we remain within the same control
-		var oControl = jQuery(oEvent.target).control(0, true);
+		var oControl = Element.closestTo(oEvent.target, true);
 		if (oControl && oDropControl === oControl) {
 			oEvent.setMark("DragWithin", "SameControl");
 		} else {
@@ -592,15 +597,20 @@ function(Device, UIArea, jQuery) {
 			oDropControl = oControl;
 		}
 
-		var aDropInfos = [];
+		var aDropInfos = [], oParentDomRef;
 		oValidDropControl = oControl;
 
-		// find the first valid drop control and corresponding valid DropInfos at the control hierarchy
-		for (var i = 0; i < 20 && oValidDropControl; i++, oValidDropControl = oValidDropControl.getParent()) {
+		// find the first valid drop control and corresponding valid DropInfos from the dom-control hierarchy
+		for (var i = 0; i < 20 && oValidDropControl; i++) {
 			aDropInfos = getValidDropInfos(oValidDropControl, aValidDragInfos, oEvent);
 			if (aDropInfos.length) {
 				break;
 			}
+
+			oParentDomRef = oValidDropControl.getDomRef();
+			oParentDomRef = oParentDomRef && oParentDomRef.parentElement;
+
+			oValidDropControl = Element.closestTo(oParentDomRef, true);
 		}
 
 		// if we are not dragging within the same control we can update valid drop infos

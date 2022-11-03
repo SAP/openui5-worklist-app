@@ -1,11 +1,11 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define([],
-	function () {
+sap.ui.define(["sap/base/Log"],
+	function (Log) {
 		"use strict";
 
 		/**
@@ -20,6 +20,9 @@ sap.ui.define([],
 		 */
 		var CacheManagerNOP = {
 			name: "CacheManagerNOP",
+			logResolved: function(sFnName) {
+				Log.debug("Cache Manager is not supported on this environment.");
+			},
 			set: function () {
 				return Promise.resolve();
 			},
@@ -30,6 +33,9 @@ sap.ui.define([],
 				return Promise.resolve(false);
 			},
 			del: function () {
+				return Promise.resolve();
+			},
+			delWithFilters: function() {
 				return Promise.resolve();
 			},
 			reset: function () {

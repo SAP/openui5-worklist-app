@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -34,7 +34,7 @@ sap.ui.define(["sap/ui/support/library", "sap/m/ListBase", "sap/ui/core/library"
 			resolution: "Configure at least 1 column with width=auto or use fixedLayout=Strict",
 			resolutionurls: [{
 				text: "Documentation: Defining Column Widths",
-				href: "https://sapui5.hana.ondemand.com/#/topic/6f778a805bc3453dbb66e246d8271839"
+				href: "https://sdk.openui5.org/topic/6f778a805bc3453dbb66e246d8271839"
 			}],
 			check: function (oIssueManager, oCoreFacade, oScope) {
 				oScope.getElementsByClassName("sap.m.Table").filter(function(oTable) {
@@ -76,10 +76,10 @@ sap.ui.define(["sap/ui/support/library", "sap/m/ListBase", "sap/ui/core/library"
 			resolution: "Use the 'highlightText' property of the item to define the semantics of the 'highlight'.",
 			resolutionurls: [{
 				text: "API Reference: sap.m.ListItemBase#getHighlight",
-				href: "https://sapui5.hana.ondemand.com/#/api/sap.m.ListItemBase/methods/getHighlight"
+				href: "https://sdk.openui5.org/api/sap.m.ListItemBase/methods/getHighlight"
 			}, {
 				text: "API Reference: sap.m.ListItemBase#getHighlightText",
-				href: "https://sapui5.hana.ondemand.com/#/api/sap.m.ListItemBase/methods/getHighlightText"
+				href: "https://sdk.openui5.org/api/sap.m.ListItemBase/methods/getHighlightText"
 			}],
 			check: function(oIssueManager, oCoreFacade, oScope) {
 				function checkItemHighlight(oListItemBase) {

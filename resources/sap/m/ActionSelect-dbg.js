@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -20,25 +20,28 @@ sap.ui.define(['./Select', 'sap/ui/core/InvisibleText', 'sap/ui/Device', 'sap/ui
 		 * @extends sap.m.Select
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
 		 * @since 1.16
 		 * @alias sap.m.ActionSelect
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
-		var ActionSelect = Select.extend("sap.m.ActionSelect", /** @lends sap.m.ActionSelect.prototype */ { metadata : {
+		var ActionSelect = Select.extend("sap.m.ActionSelect", /** @lends sap.m.ActionSelect.prototype */ {
+			metadata : {
 
-			library : "sap.m",
-			associations : {
+				library : "sap.m",
+				associations : {
 
-				/**
-				 * Buttons to be added to the ActionSelect content.
-				 */
-				buttons : {type : "sap.m.Button", multiple : true, singularName : "button"}
-			}
-		}});
+					/**
+					 * Buttons to be added to the ActionSelect content.
+					 */
+					buttons : {type : "sap.m.Button", multiple : true, singularName : "button"}
+				}
+			},
+
+			renderer: ActionSelectRenderer
+		});
 
 		ActionSelect.prototype.init = function() {
 			Select.prototype.init.call(this);
@@ -112,10 +115,10 @@ sap.ui.define(['./Select', 'sap/ui/core/InvisibleText', 'sap/ui/Device', 'sap/ui
 		/* ----------------------------------------------------------- */
 
 		/**
-		 * Button to be removed from the ActionSelect content.
+		 * Removes the given button from the <code>ActionSelect</code> content.
 		 *
-		 * @param {int | string | sap.m.Button} vButton The button to remove or its index or id.
-		 * @returns {string} The id of the removed button or null.
+		 * @param {int | string | sap.m.Button} vButton The button to remove or its index or ID.
+		 * @returns {string|null} The ID of the removed button or <code>null</code>.
 		 * @public
 		 */
 		ActionSelect.prototype.removeButton = function(vButton) {

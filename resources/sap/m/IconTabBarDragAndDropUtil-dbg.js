@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -11,9 +11,10 @@ sap.ui.define([
 	'sap/ui/core/dnd/DragInfo',
 	'sap/ui/core/dnd/DropInfo',
 	"sap/ui/events/KeyCodes",
-	'sap/ui/core/library'
+	'sap/ui/core/library',
+	'sap/ui/core/Configuration'
 ],
-	function(DragInfo, DropInfo, KeyCodes, coreLibrary) {
+	function(DragInfo, DropInfo, KeyCodes, coreLibrary, Configuration) {
 		"use strict";
 
 		// shortcut for sap.ui.core.dnd.DropPosition
@@ -32,9 +33,10 @@ sap.ui.define([
 
 			/**
 			 * Inserts control at correct place in the DOM.
-			 * @param {String} sInsertAfterBeforePosition comes from drop event, it can be "Before" or "After"
-			 * @param {object} $DraggedControl control that is being dragged
-			 * @param {object} $DroppedControl control that the dragged control will be dropped on
+			 * @param {string} sInsertAfterBeforePosition comes from drop event, it can be "Before" or "After"
+			 * @param {object} oDraggedControl control that is being dragged
+			 * @param {object} oDroppedControl control that the dragged control will be dropped on
+			 * @param {boolean} bIsOverflow
 			 */
 			_insertControl: function(sInsertAfterBeforePosition, oDraggedControl, oDroppedControl, bIsOverflow) {
 				var $DraggedControl = oDraggedControl.$(),
@@ -82,7 +84,7 @@ sap.ui.define([
 			/**
 			 * Handles drop event.
 			 * @param {object} oContext from which context function is called (sap.m.IconTabHeader or sap.m.IconTabSelectList)
-			 * @param {String} sDropPosition comes from drop event, it can be "Before", "After", or "On"
+			 * @param {string} sDropPosition comes from drop event, it can be "Before", "After", or "On"
 			 * @param {object} oDraggedControl control that is being dragged
 			 * @param {object} oDroppedControl control that the dragged control will be dropped on
 			 * @param {boolean} bIgnoreRTL should RTL configuration be ignored for drag and drop logic
@@ -92,7 +94,7 @@ sap.ui.define([
 				var iBeginDragIndex = oContext.indexOfItem(oDraggedControl),
 					iDropIndex = oContext.indexOfItem(oDroppedControl),
 					iAggregationDropIndex = 0,
-					bRtl = sap.ui.getCore().getConfiguration().getRTL(),
+					bRtl = Configuration.getRTL(),
 					bIsDropPositionBefore = sDropPosition === INSERT_POSITION_BEFORE,
 					//_getNestedLevel returns 1 there is no nesting
 					currentNestedLevel = oDroppedControl._getNestedLevel() - 1;
@@ -262,7 +264,7 @@ sap.ui.define([
 			moveItem: function (oDraggedControl, iKeyCode, iMaxIndex) {
 				var aItems = this.getItems(),
 					iBeginDragIndex = this.indexOfItem(oDraggedControl),
-					bRtl = sap.ui.getCore().getConfiguration().getRTL(),
+					bRtl = Configuration.getRTL(),
 					iNewDropIndex,
 					bPrevent;
 

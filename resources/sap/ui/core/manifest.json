@@ -5,7 +5,7 @@
     "type": "library",
     "embeds": [],
     "applicationVersion": {
-      "version": "1.96.2"
+      "version": "1.108.0"
     },
     "title": "The SAPUI5 Core Runtime.",
     "description": "The SAPUI5 Core Runtime.\n\n  Contains the UI5 jQuery plugins (jQuery.sap.*), the Core and all its components,\n  base classes for Controls, Components and the Model View Controller classes.",
@@ -47,6 +47,11 @@
         "name": "qunit-2",
         "packagedWithMySelf": true,
         "version": "2.3.2"
+      },
+      {
+        "name": "qunit-2.18",
+        "packagedWithMySelf": true,
+        "version": "2.18.0"
       },
       {
         "name": "jquery-migrate",
@@ -144,6 +149,11 @@
         "version": "4.4.6"
       },
       {
+        "name": "sinonjs14",
+        "packagedWithMySelf": true,
+        "version": "14.0.0"
+      },
+      {
         "name": "sinon-qunit",
         "packagedWithMySelf": true,
         "version": "2.0.0"
@@ -151,7 +161,7 @@
       {
         "name": "urijs",
         "packagedWithMySelf": true,
-        "version": "1.19.7"
+        "version": "1.19.11"
       },
       {
         "name": "punycodejs",
@@ -242,6 +252,11 @@
         "name": "node-lru-cache",
         "packagedWithMySelf": true,
         "version": "2.7.3"
+      },
+      {
+        "name": "tzdata",
+        "packagedWithMySelf": true,
+        "version": "2022a"
       }
     ]
   },
@@ -254,7 +269,7 @@
   },
   "sap.ui5": {
     "dependencies": {
-      "minUI5Version": "1.96",
+      "minUI5Version": "1.108",
       "libs": {}
     },
     "library": {
@@ -414,7 +429,8 @@
           "sap.ui.core.IDScope",
           "sap.ui.core.ITitleContent",
           "sap.ui.core.IAsyncContentCreation",
-          "sap.ui.core.IPlaceholderSupport"
+          "sap.ui.core.IPlaceholderSupport",
+          "sap.ui.core.IColumnHeaderMenu"
         ]
       }
     }

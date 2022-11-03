@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -17,7 +17,8 @@ sap.ui.define([
 	"sap/base/assert",
 	"sap/ui/thirdparty/jquery",
 	"sap/ui/events/F6Navigation",
-	"./RenderManager"
+	"./RenderManager",
+	"sap/ui/core/Configuration"
 ],
 	function(
 		DataType,
@@ -31,7 +32,8 @@ sap.ui.define([
 		assert,
 		jQuery,
 		F6Navigation,
-		RenderManager
+		RenderManager,
+		Configuration
 	) {
 	"use strict";
 
@@ -126,10 +128,9 @@ sap.ui.define([
 	 *
 	 * @extends sap.ui.base.ManagedObject
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @public
 	 * @alias sap.ui.core.Element
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var Element = ManagedObject.extend("sap.ui.core.Element", {
 
@@ -213,7 +214,7 @@ sap.ui.define([
 			} else {
 				var sMsg = "adding element with duplicate id '" + sId + "'";
 				// duplicate ID detected => fail or at least log a warning
-				if (sap.ui.getCore().getConfiguration().getNoDuplicateIds()) {
+				if (Configuration.getNoDuplicateIds()) {
 					Log.error(sMsg);
 					throw new Error("Error: " + sMsg);
 				} else {
@@ -437,7 +438,7 @@ sap.ui.define([
 	 * This matches the UI5 naming convention for named inner DOM nodes of a control.
 	 *
 	 * @param {string} [sSuffix] ID suffix to get the DOMRef for
-	 * @return {Element} The Element's DOM Element sub DOM Element or null
+	 * @returns {Element|null} The Element's DOM Element, sub DOM Element or <code>null</code>
 	 * @protected
 	 */
 	Element.prototype.getDomRef = function(sSuffix) {
@@ -519,11 +520,6 @@ sap.ui.define([
 		return this; // explicitly return 'this' to fix controls that override destroyAggregation wrongly
 	};
 
-
-	/// cyclic dependency
-	//jQuery.sap.require("sap.ui.core.TooltipBase"); /// cyclic dependency
-
-
 	/**
 	 * This triggers immediate rerendering of its parent and thus of itself and its children.
 	 *
@@ -541,7 +537,7 @@ sap.ui.define([
 	/**
 	 * Returns the UI area of this element, if any.
 	 *
-	 * @return {sap.ui.core.UIArea} The UI area of this element or null
+	 * @return {sap.ui.core.UIArea|null} The UI area of this element or <code>null</code>
 	 * @private
 	 */
 	Element.prototype.getUIArea = function() {
@@ -794,11 +790,11 @@ sap.ui.define([
 	};
 
 	/**
-	 * Returns the DOM Element that should get the focus.
+	 * Returns the DOM Element that should get the focus or <code>null</code> if there's no such element currently.
 	 *
 	 * To be overwritten by the specific control method.
 	 *
-	 * @return {Element} Returns the DOM Element that should get the focus
+	 * @returns {Element|null} Returns the DOM Element that should get the focus or <code>null</code>
 	 * @protected
 	 */
 	Element.prototype.getFocusDomRef = function () {
@@ -842,6 +838,7 @@ sap.ui.define([
 	 * @param {object} [oFocusInfo={}] Options for setting the focus
 	 * @param {boolean} [oFocusInfo.preventScroll=false] @since 1.60 if it's set to true, the focused
 	 *   element won't be shifted into the viewport if it's not completely visible before the focus is set
+ 	 * @param {any} [oFocusInfo.targetInfo] Further control-specific setting of the focus target within the control @since 1.98
 	 * @public
 	 */
 	Element.prototype.focus = function (oFocusInfo) {
@@ -950,7 +947,7 @@ sap.ui.define([
 	 * matter where it comes from (be it a string tooltip or the text from a TooltipBase
 	 * instance) then they could call {@link #getTooltip_Text} instead.
 	 *
-	 * @return {string|sap.ui.core.TooltipBase} The tooltip for this Element.
+	 * @returns {string|sap.ui.core.TooltipBase|null} The tooltip for this Element or <code>null</code>.
 	 * @public
 	 */
 	Element.prototype.getTooltip = function() {
@@ -961,9 +958,9 @@ sap.ui.define([
 
 	/**
 	 * Returns the tooltip for this element but only if it is a simple string.
-	 * Otherwise an undefined value is returned.
+	 * Otherwise, <code>undefined</code> is returned.
 	 *
-	 * @return {string} string tooltip or undefined
+	 * @returns {string|undefined} string tooltip or <code>undefined</code>
 	 * @public
 	 */
 	Element.prototype.getTooltip_AsString = function() {
@@ -975,12 +972,13 @@ sap.ui.define([
 	};
 
 	/**
-	 * Returns the main text for the current tooltip or undefined if there is no such text.
-	 * If the tooltip is an object derived from sap.ui.core.Tooltip, then the text property
-	 * of that object is returned. Otherwise the object itself is returned (either a string
-	 * or undefined or null).
+	 * Returns the main text for the current tooltip or <code>undefined</code> if there is no such text.
 	 *
-	 * @return {string} text of the current tooltip or undefined
+	 * If the tooltip is an object derived from <code>sap.ui.core.TooltipBase</code>, then the text property
+	 * of that object is returned. Otherwise the object itself is returned (either a string
+	 * or <code>undefined</code> or <code>null</code>).
+	 *
+	 * @returns {string|undefined|null} Text of the current tooltip or <code>undefined</code> or <code>null</code>
 	 * @public
 	 */
 	Element.prototype.getTooltip_Text = function() {
@@ -1023,7 +1021,6 @@ sap.ui.define([
 	 * Contains a single key/value pair of custom data attached to an <code>Element</code>.
 	 * @public
 	 * @alias sap.ui.core.CustomData
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 * @synthetic
 	 */
 	var CustomData = Element.extend("sap.ui.core.CustomData", /** @lends sap.ui.core.CustomData.prototype */ { metadata : {
@@ -1423,12 +1420,9 @@ sap.ui.define([
 	 *
 	 * There's no difference between <code>bindElement</code> and {@link sap.ui.base.ManagedObject#bindObject}.
 	 *
-	 * @param {string|object} vPath the binding path or an object with more detailed binding options
-	 * @param {string} vPath.path the binding path
-	 * @param {object} [vPath.parameters] map of additional parameters for this binding
-	 * @param {string} [vPath.model] name of the model
-	 * @param {object} [vPath.events] map of event listeners for the binding events
-	 * @param {object} [mParameters] map of additional parameters for this binding (only taken into account when vPath is a string in that case it corresponds to vPath.parameters).
+	 * @param {string|sap.ui.base.ManagedObject.ObjectBindingInfo} vPath the binding path or an object with more detailed binding options
+	 * @param {object} [mParameters] map of additional parameters for this binding.
+	 * Only taken into account when <code>vPath</code> is a string. In that case it corresponds to <code>mParameters</code> of {@link sap.ui.base.ManagedObject.ObjectBindingInfo}.
 	 * The supported parameters are listed in the corresponding model-specific implementation of <code>sap.ui.model.ContextBinding</code>.
 	 *
 	 * @returns {this} reference to the instance itself
@@ -1462,7 +1456,7 @@ sap.ui.define([
 	 * refers to the default model.
 	 *
 	 * @param {string} [sModelName=undefined] Name of the model or <code>undefined</code>
-	 * @return {sap.ui.model.ContextBinding} Context binding for the given model name or <code>undefined</code>
+	 * @return {sap.ui.model.ContextBinding|undefined} Context binding for the given model name or <code>undefined</code>
 	 * @public
 	 * @function
 	 */
@@ -1669,11 +1663,76 @@ sap.ui.define([
 		}
 	};
 
+	var FocusHandler;
+	Element._updateFocusInfo = function(oElement) {
+		FocusHandler = FocusHandler || sap.ui.require("sap/ui/core/FocusHandler");
+		if (FocusHandler) {
+			FocusHandler.updateControlFocusInfo(oElement);
+		}
+	};
+
+	/**
+	 * Returns the nearest [UI5 Element]{@link sap.ui.core.Element} that wraps the given DOM element.
+	 *
+	 * A DOM element or a CSS selector is accepted as a given parameter. When a CSS selector is given as parameter, only
+	 * the first DOM element that matches the CSS selector is taken to find the nearest UI5 Element that wraps it. When
+	 * no UI5 Element can be found, <code>undefined</code> is returned.
+	 *
+	 * @param {HTMLElement|string} vParam A DOM Element or a CSS selector from which to start the search for the nearest
+	 *  UI5 Element by traversing up the DOM tree
+	 * @param {boolean} [bIncludeRelated=false] Whether the <code>data-sap-ui-related</code> attribute is also accepted
+	 *  as a selector for a UI5 Element, in addition to <code>data-sap-ui</code>
+	 * @returns {sap.ui.core.Element} The UI5 Element that wraps the given DOM element. <code>undefined</code> is
+	 *  returned when no UI5 Element can be found.
+	 * @public
+	 * @since 1.106
+	 * @throws {DOMException} when an invalid CSS selector is given
+	 *
+	 */
+	Element.closestTo = function(vParam, bIncludeRelated) {
+		var sSelector = "[data-sap-ui]",
+			oDomRef, sId;
+
+		if (vParam === undefined || vParam === null) {
+			return undefined;
+		}
+
+		if (typeof vParam === "string") {
+			oDomRef = document.querySelector(vParam);
+		} else if (vParam instanceof window.Element){
+			oDomRef = vParam;
+		} else if (vParam.jquery) {
+			oDomRef = vParam[0];
+			Log.error("[FUTURE] Do not call Element.closestTo() with jQuery object as parameter. \
+				The function should be called with either a DOM Element or a CSS selector. \
+				(future error, ignored for now)");
+		} else {
+			throw new TypeError("Element.closestTo accepts either a DOM element or a CSS selector string as parameter, but not '" + vParam + "'");
+		}
+
+		if (bIncludeRelated) {
+			sSelector += ",[data-sap-ui-related]";
+		}
+
+		oDomRef = oDomRef && oDomRef.closest(sSelector);
+
+		if (oDomRef) {
+			if (bIncludeRelated) {
+				sId = oDomRef.getAttribute("data-sap-ui-related");
+			}
+
+			sId = sId || oDomRef.getAttribute("id");
+		}
+
+		return Element.registry.get(sId);
+	};
+
 	/**
 	 * Registry of all <code>sap.ui.core.Element</code>s that currently exist.
 	 *
 	 * @namespace sap.ui.core.Element.registry
 	 * @public
+	 * @since 1.67
 	 */
 
 	/**

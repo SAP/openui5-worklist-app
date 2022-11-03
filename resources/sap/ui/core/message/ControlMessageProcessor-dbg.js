@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -29,7 +29,7 @@ sap.ui.define(['sap/ui/core/message/MessageProcessor'],
 	 * @extends sap.ui.core.message.MessageProcessor
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @alias sap.ui.core.message.ControlMessageProcessor
@@ -51,13 +51,13 @@ sap.ui.define(['sap/ui/core/message/MessageProcessor'],
 
 	/**
 	 * Set Messages to check
-	 * @param {Object<string,array>}
-	 *         vMessages map of messages: {'target': [array of messages],...}
+	 * @param {Object<string,sap.ui.core.message.Message[]>}
+	 *         mMessages map of messages: {'target': [sap.ui.core.message.Message],...}
 	 * @protected
 	 */
-	ControlMessageProcessor.prototype.setMessages = function(vMessages) {
+	ControlMessageProcessor.prototype.setMessages = function(mMessages) {
 		this.mOldMessages = this.mMessages === null ? {} : this.mMessages;
-		this.mMessages = vMessages || {};
+		this.mMessages = mMessages || {};
 		this.checkMessages();
 		delete this.mOldMessages;
 	};

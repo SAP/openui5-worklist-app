@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -9,7 +9,7 @@ sap.ui.define([
 	'sap/ui/layout/library',
 	'sap/ui/layout/form/Form',
 	'sap/ui/core/IconPool' // as RenderManager.icon needs it
-	], function(coreLibrary, library, Form, IconPool) {
+	], function(coreLibrary, library, Form) {
 	"use strict";
 
 	// shortcut for sap.ui.core.TitleLevel
@@ -30,7 +30,7 @@ sap.ui.define([
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} rm the RenderManager that can be used for writing to the Render-Output-Buffer
-	 * @param {sap.ui.core.Control} oLayout an object representation of the control that should be rendered
+	 * @param {sap.ui.layout.form.FormLayout} oLayout an object representation of the control that should be rendered
 	 */
 	FormLayoutRenderer.render = function(rm, oLayout){
 		var oForm = oLayout.getParent();
@@ -44,8 +44,8 @@ sap.ui.define([
 	 * Renders the HTML for the given form content, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} rm the RenderManager that can be used for writing to the Render-Output-Buffer
-	 * @param {sap.ui.core.Control} oLayout an object representation of the Layout control that should be rendered
-	 * @param {sap.ui.layout.form.Form} oForm, a form control to render its content
+	 * @param {sap.ui.layout.form.FormLayout} oLayout an object representation of the Layout control that should be rendered
+	 * @param {sap.ui.layout.form.Form} oForm a form control to render its content
 	 */
 	FormLayoutRenderer.renderForm = function(rm, oLayout, oForm){
 
@@ -265,7 +265,9 @@ sap.ui.define([
 	};
 
 	/*
-	 * Writes the accessibility attributes for FormContainers
+	 * Writes the accessibility attributes for FormContainers.
+	 * @param {sap.ui.core.RenderManager} rm
+	 * @param {sap.ui.layout.form.FormContainer} oContainer
 	 */
 	FormLayoutRenderer.writeAccessibilityStateContainer = function(rm, oContainer){
 

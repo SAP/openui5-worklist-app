@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -112,7 +112,7 @@ sap.ui.define([
 	 * The responsiveness of the <code>MessageView</code> is determined by the container in which it is embedded. For that reason the control could not be visualized if the
 	 * container’s sizes are not defined.
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @extends sap.ui.core.Control
 	 * @constructor
@@ -120,7 +120,6 @@ sap.ui.define([
 	 * @since 1.46
 	 * @alias sap.m.MessageView
 	 * @see {@link fiori:https://experience.sap.com/fiori-design-web/message-view/ Message View}
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var MessageView = Control.extend("sap.m.MessageView", /** @lends sap.m.MessageView.prototype */ {
 		metadata: {
@@ -135,19 +134,19 @@ sap.ui.define([
 				 * @param {function} config.promise.resolve Method to resolve promise
 				 * @param {function} config.promise.reject Method to reject promise
 				 */
-				asyncDescriptionHandler: {type: "any", group: "Behavior", defaultValue: null},
+				asyncDescriptionHandler: {type: "function", group: "Behavior", defaultValue: null},
 
 				/**
 				 * Callback function for resolving a promise after a link has been asynchronously validated inside this function.
 				 * @callback sap.m.MessageView~asyncURLHandler
 				 * @param {object} config A single parameter object
 				 * @param {string} config.url URL to validate
-				 * @param {string|Int} config.id ID of the validation job
+				 * @param {string|int} config.id ID of the validation job
 				 * @param {object} config.promise Object grouping a promise's reject and resolve methods
 				 * @param {function} config.promise.resolve Method to resolve promise
 				 * @param {function} config.promise.reject Method to reject promise
 				 */
-				asyncURLHandler: {type: "any", group: "Behavior", defaultValue: null},
+				asyncURLHandler: {type: "function", group: "Behavior", defaultValue: null},
 
 				/**
 				 * Defines whether the MessageItems are grouped or not.
@@ -240,7 +239,9 @@ sap.ui.define([
 					}
 				}
 			}
-		}
+		},
+
+		renderer: MessageViewRenderer
 	});
 
 	var CSS_CLASS = "sapMMsgView";
@@ -394,6 +395,7 @@ sap.ui.define([
 
 	MessageView.prototype.onBeforeRendering = function () {
 		var oGroupedItems,
+			aListItems,
 			aItems = this.getItems();
 
 		this._clearLists();
@@ -418,9 +420,13 @@ sap.ui.define([
 		this._fillSegmentedButton();
 		this._fnFilterList(this._getCurrentMessageTypeFilter() || "all");
 
-		if (aItems.length === 1 && this._oLists.all.getItems()[0].getType()  === ListType.Navigation) {
+		aListItems = this._oLists.all.getItems().filter(function (oItem) {
+			return oItem.isA("sap.m.MessageListItem");
+		});
 
-			this._fnHandleForwardNavigation(this._oLists.all.getItems()[0], "show");
+		if (aListItems.length === 1 && aListItems[0].getType()  === ListType.Navigation) {
+
+			this._fnHandleForwardNavigation(aListItems[0], "show");
 
 			// TODO: adopt this to NavContainer's public API once a parameter for back navigation transition name is available
 			this._navContainer._pageStack[this._navContainer._pageStack.length - 1].transition = "slide";
@@ -1170,7 +1176,7 @@ sap.ui.define([
 	 * Handles click on a list item
 	 *
 	 * @param {sap.m.MessageListItem} oListItem ListItem that is pressed
-	 * @param {String} sTransiotionName name of transition could be slide, show, flip or fade
+	 * @param {string} sTransiotionName name of transition could be slide, show, flip or fade
 	 * @private
 	 */
 	MessageView.prototype._fnHandleForwardNavigation = function (oListItem, sTransiotionName) {

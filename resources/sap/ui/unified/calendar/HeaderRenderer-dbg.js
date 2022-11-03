@@ -1,11 +1,11 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define(["sap/base/security/encodeXML"],
-	function(encodeXML) {
+sap.ui.define(["sap/ui/core/Configuration"],
+	function(Configuration) {
 	"use strict";
 
 
@@ -26,7 +26,7 @@ sap.ui.define(["sap/base/security/encodeXML"],
 	 * @param {sap.ui.unified.calendar.Header} oHead an object representation of the control that should be rendered
 	 */
 	HeaderRenderer.render = function(oRm, oHead){
-		var sLanguage = sap.ui.getCore().getConfiguration().getLocale().getLanguage();
+		var sLanguage = Configuration.getLocale().getLanguage();
 		var sTooltip = oHead.getTooltip_AsString();
 		var sId = oHead.getId();
 		var oRB = sap.ui.getCore().getLibraryResourceBundle("sap.ui.unified");
@@ -133,8 +133,8 @@ sap.ui.define(["sap/base/security/encodeXML"],
 			oRm.attr("title", sLabelToday);
 			oRm.accessibilityState(null, { label: sLabelToday});
 
+			oRm.class("sapUiCalHeadB");
 			oRm.class("sapUiCalHeadToday");
-			oRm.attr('tabindex', "-1");
 			oRm.openEnd(); // button element
 			oRm.icon("sap-icon://appointment", null, { title: null });
 			oRm.close("button");
@@ -157,7 +157,9 @@ sap.ui.define(["sap/base/security/encodeXML"],
 			if (iLast === i) {
 				oRm.class("sapUiCalHeadBLast");
 			}
-			oRm.attr('tabindex', "-1");
+			if (i === 3 || i == 4) {
+				oRm.attr('tabindex', "-1");
+			}
 			if (this.getAriaLabelButton(oHead, i)) {
 				mAccProps["label"] = this.getAriaLabelButton(oHead, i);
 			}

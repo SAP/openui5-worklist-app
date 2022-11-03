@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(['sap/ui/core/routing/Router', './TargetHandler', './Targets'],
@@ -13,7 +13,7 @@ sap.ui.define(['sap/ui/core/routing/Router', './TargetHandler', './Targets'],
 		 *
 		 * @class
 		 * SAPUI5 mobile <code>Router</code>.
-		 * The difference to the {@link sap.ui.core.routing.Router} are the <code>viewLevel</code>,
+		 * The difference to the {@link sap.ui.core.routing.Router} are the <code>level</code>,
 		 * <code>transition</code>, and <code>transitionParameters</code> properties that you can
 		 * specify in every Route or Target created by this router.
 		 *
@@ -156,7 +156,8 @@ sap.ui.define(['sap/ui/core/routing/Router', './TargetHandler', './Targets'],
 		 *     {
 		 *          //same name as in the config.bypassed.target
 		 *          notFound: {
-		 *              viewName: "notFound",
+		 *              type: "View"
+		 *              name: "notFound",
 		 *              ...
 		 *              // more properties to place the view in the correct container
 		 *          }
@@ -187,7 +188,7 @@ sap.ui.define(['sap/ui/core/routing/Router', './TargetHandler', './Targets'],
 		 *     ],
 		 *     // Default values shared by routes and Targets
 		 *     {
-		 *         viewNamespace: "my.application.namespace",
+		 *         path: "my.application.namespace",
 		 *         viewType: "XML"
 		 *     },
 		 *     // You should only use this constructor when you are not using a router with a component.
@@ -199,7 +200,8 @@ sap.ui.define(['sap/ui/core/routing/Router', './TargetHandler', './Targets'],
 		 *          //same name as in the route called 'startRoute'
 		 *          welcome: {
 		 *              // All properties for creating and placing a view go here or in the config
-		 *              viewName: "Welcome",
+		 *              type: "View",
+		 *              name: "Welcome",
 		 *              controlId: "app",
 		 *              controlAggregation: "pages"
 		 *          }
@@ -271,17 +273,17 @@ sap.ui.define(['sap/ui/core/routing/Router', './TargetHandler', './Targets'],
 			fireRoutePatternMatched : function (mArguments) {
 				var sRouteName = mArguments.name,
 					oRoute = this.getRoute(sRouteName),
-					iViewLevel;
+					iLevel;
 
 				// only if a route has a private target and does not use the targets instance of the router we need to inform the targethandler
 				if (oRoute._oTarget) {
 					if (this._oTargets && this._oTargets._oLastDisplayedTarget) {
-						iViewLevel = this._oTargets._getViewLevel(this._oTargets._oLastDisplayedTarget);
+						iLevel = this._oTargets._getLevel(this._oTargets._oLastDisplayedTarget);
 					}
 
 					this._oTargetHandler.navigate({
 						navigationIdentifier: sRouteName,
-						viewLevel: iViewLevel,
+						level: iLevel,
 						askHistory: true
 					});
 				}

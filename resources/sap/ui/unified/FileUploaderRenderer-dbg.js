@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -13,8 +13,7 @@ sap.ui.define(['sap/ui/unified/library', "sap/ui/thirdparty/jquery"],
 	/**
 	 * @namespace
 	 */
-	var FileUploaderRenderer = function() {
-	};
+	var FileUploaderRenderer = {};
 
 	FileUploaderRenderer.apiVersion = 2;
 
@@ -23,11 +22,10 @@ sap.ui.define(['sap/ui/unified/library', "sap/ui/thirdparty/jquery"],
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oFileUploader An object representation of the control that should be rendered.
+	 * @param {sap.ui.unified.FileUploader} oFileUploader An object representation of the control that should be rendered.
 	 */
 	FileUploaderRenderer.render = function(oRm, oFileUploader) {
-		var bEnabled = oFileUploader.getEnabled(),
-			sTooltip = oFileUploader.getTooltip_AsString();
+		var bEnabled = oFileUploader.getEnabled();
 
 		oRm.openStart("div", oFileUploader);
 		oRm.class("sapUiFup");
@@ -98,9 +96,6 @@ sap.ui.define(['sap/ui/unified/library', "sap/ui/thirdparty/jquery"],
 		var sName = oFileUploader.getName() || oFileUploader.getId();
 		oRm.openStart("div");
 		oRm.class("sapUiFupInputMask");
-		if (sTooltip && sTooltip.length) {
-			oRm.attr('title', sTooltip);
-		}
 		oRm.openEnd();
 		oRm.voidStart("input");
 		oRm.attr("type", "hidden");

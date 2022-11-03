@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -12,8 +12,10 @@ sap.ui.define([
 	'./List',
 	'./SearchField',
 	'./library',
+	"sap/ui/core/library",
 	'./SelectDialogBase',
 	'sap/ui/core/InvisibleText',
+	"sap/ui/core/InvisibleMessage",
 	'sap/ui/Device',
 	'sap/m/Toolbar',
 	'sap/m/Text',
@@ -29,8 +31,10 @@ function(
 	List,
 	SearchField,
 	library,
+	CoreLibrary,
 	SelectDialogBase,
 	InvisibleText,
+	InvisibleMessage,
 	Device,
 	Toolbar,
 	Text,
@@ -49,6 +53,9 @@ function(
 
 	// shortcut for sap.m.TitleAlignment
 	var TitleAlignment = library.TitleAlignment;
+
+	// shortcut for sap.ui.core.InvisibleMessageMode
+	var InvisibleMessageMode = CoreLibrary.InvisibleMessageMode;
 
 	/**
 	 * Constructor for a new SelectDialog.
@@ -108,17 +115,16 @@ function(
 	 * <li> On phones, the select dialog takes up the whole screen. </li>
 	 * <li> On desktop and tablet devices, the select dialog appears as a popover. </li>
 	 * </ul>
-	 * When using the <code>sap.m.SelectDialog</code> in SAP Quartz themes, the breakpoints and layout paddings could be determined by the dialog's width. To enable this concept and add responsive paddings to an element of the control, you have to add the following classes depending on your use case: <code>sapUiResponsivePadding--header</code>, <code>sapUiResponsivePadding--subHeader</code>, <code>sapUiResponsivePadding--content</code>, <code>sapUiResponsivePadding--footer</code>.
+	 * When using the <code>sap.m.SelectDialog</code> in SAP Quartz and Horizon themes, the breakpoints and layout paddings could be determined by the dialog's width. To enable this concept and add responsive paddings to an element of the control, you have to add the following classes depending on your use case: <code>sapUiResponsivePadding--header</code>, <code>sapUiResponsivePadding--subHeader</code>, <code>sapUiResponsivePadding--content</code>, <code>sapUiResponsivePadding--footer</code>.
 	 * @extends sap.m.SelectDialogBase
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @alias sap.m.SelectDialog
 	 * @see {@link fiori:https://experience.sap.com/fiori-design-web/select-dialog/ Select Dialog}
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var SelectDialog = SelectDialogBase.extend("sap.m.SelectDialog", /** @lends sap.m.SelectDialog.prototype */ { metadata : {
 
@@ -165,7 +171,7 @@ function(
 			/**
 			 * This flag controls whether the dialog clears the selection after the confirm event has been fired. If the dialog needs to be opened multiple times in the same context to allow for corrections of previous user inputs, set this flag to <code>true</code>.
 			 *
-			 * <b>Note:</b> The sap.m.SelectDialog uses {@link sap.m.ListBase#rememberSelections this} property of the ListBase and therefore its limitations also apply here.
+			 * <b>Note:</b> The sap.m.SelectDialog uses {@link sap.m.ListBase#rememberSelections this} property of the ListBase and therefore its behavior and restrictions also apply here.
 			 * @since 1.18
 			 */
 			rememberSelections : {type : "boolean", group : "Behavior", defaultValue : false},
@@ -345,12 +351,6 @@ function(
 			selectionChange: this._selectionChange.bind(this),
 			updateStarted: this._updateStarted.bind(this),
 			updateFinished: this._updateFinished.bind(this)
-		});
-
-		this._oList.getInfoToolbar().addEventDelegate({
-			onAfterRendering: function () {
-				that._oList.getInfoToolbar().$().attr('aria-live', 'polite');
-			}
 		});
 
 		this._list = this._oList; // for downward compatibility
@@ -598,7 +598,6 @@ function(
 	 * @param {string} sSearchValue  A value for the search can be passed to match with the filter applied to the list binding.
 	 * @returns {this} <code>this</code> pointer for chaining
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	SelectDialog.prototype.open = function (sSearchValue) {
 		// CSN #80686/2014: only invalidate inner dialog if call does not come from inside
@@ -847,7 +846,7 @@ function(
 	 * Forward method to the inner dialog: getDomRef
 	 * @public
 	 * @override
-	 * @return {Element} The Element's DOM Element sub DOM Element or null
+	 * @returns {Element|null} The Element's DOM Element, sub DOM Element or <code>null</code>
 	 */
 	SelectDialog.prototype.getDomRef = function () {
 		if (this._oDialog) {
@@ -1006,7 +1005,7 @@ function(
 	SelectDialog.prototype._updateStarted = function (oEvent) {
 		this.fireUpdateStarted(oEvent.getParameters());
 
-		if (this.getModel() && this.getModel() instanceof sap.ui.model.odata.ODataModel) {
+		if (this.getModel() && this.getModel().isA("sap.ui.model.odata.ODataModel")) {
 			if (this._oDialog.isOpen() && this._iListUpdateRequested) {
 				// only set busy mode when we have an OData model
 				this._setBusy(true);
@@ -1027,7 +1026,7 @@ function(
 
 		// only reset busy mode when we have an OData model
 		this._updateSelectionIndicator();
-		if (this.getModel() && this.getModel() instanceof sap.ui.model.odata.ODataModel) {
+		if (this.getModel() && this.getModel().isA("sap.ui.model.odata.ODataModel")) {
 			this._setBusy(false);
 			this._bInitBusy = false;
 		}
@@ -1051,25 +1050,33 @@ function(
 			fnOKAfterClose = null;
 
 		fnOKAfterClose = function () {
-			// reset internal selection value
-			that._sSearchFieldValue = null;
-
 			//after searching we need all the items
 			var oBindings = that._oList.getBinding("items");
-			if (oBindings && oBindings.aFilters && oBindings.aFilters.length) {
-
-				// When reset the filter, the selected items might go outside
-				// the currently visible items (outside the current growing number).
-				// Set the growing to false to prevent this.
+			if (oBindings && ((oBindings.getAllCurrentContexts().length > that._oList.getItems().length) || that._sSearchFieldValue)) {
+				// There are 2 cases where the model items are more that the currently visible items
+				//  - search
+				//  - not all items are currently loaded (growing=true)
+				// In that cases we need to reset the filter (filter([])) and load all the items (growing=false),
+				// so we'll have all the selected items.
+				that._oList.destroyItems(); // fixes creating list items with duplicate ids
 				that._oList.setGrowing(false);
 				oBindings.filter([]);
 				that._oList.setGrowing(that.getGrowing());
-			}
-			that._oSelectedItem = that._oList.getSelectedItem();
-			that._aSelectedItems = that._oList.getSelectedItems();
+				that._oList.attachEventOnce("updateFinished", function () {
+					that._oSelectedItem = that._oList.getSelectedItem();
+					that._aSelectedItems = that._oList.getSelectedItems();
 
-			that._oDialog.detachAfterClose(fnOKAfterClose);
-			that._fireConfirmAndUpdateSelection();
+					that._fireConfirmAndUpdateSelection();
+				});
+			} else {
+				that._oSelectedItem = that._oList.getSelectedItem();
+				that._aSelectedItems = that._oList.getSelectedItems();
+
+				that._fireConfirmAndUpdateSelection();
+			}
+
+			// reset internal selection value
+			that._sSearchFieldValue = null;
 		};
 
 		if (!this._oOkButton) {
@@ -1078,7 +1085,7 @@ function(
 				text: this.getConfirmButtonText() || this._oRb.getText("SELECT_CONFIRM_BUTTON"),
 				press: function () {
 					// attach the reset function to afterClose to hide the dialog changes from the end user
-					that._oDialog.attachAfterClose(fnOKAfterClose);
+					that._oDialog.attachEventOnce("afterClose", fnOKAfterClose);
 					that._oDialog.close();
 				}
 			});
@@ -1164,22 +1171,17 @@ function(
 		if (this.getShowClearButton() && this._oClearButton) {
 			this._oClearButton.setEnabled(iSelectedContexts > 0);
 		}
+
 		// update the selection label
 		if (oInfoBar.getVisible() !== bVisible) {
 			oInfoBar.setVisible(bVisible);
-
-			if (bVisible) {
-				this._oDialog.addAriaLabelledBy(oInfoBar);
-
-				// force immediate rerendering, so JAWS can read the text inside,
-				// when it become visible
-				oInfoBar.rerender();
-			} else {
-				this._oDialog.removeAriaLabelledBy(oInfoBar);
-			}
 		}
 
 		oInfoBar.getContent()[0].setText(this._oRb.getText("TABLESELECTDIALOG_SELECTEDITEMS", [iSelectedContexts]));
+
+		if (this._oDialog.isOpen()) {
+			InvisibleMessage.getInstance().announce(iSelectedContexts > 0 ? this._oRb.getText("TABLESELECTDIALOG_SELECTEDITEMS_SR", [iSelectedContexts]) : "", InvisibleMessageMode.Polite);
+		}
 	};
 
 	/**

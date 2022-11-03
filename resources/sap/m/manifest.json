@@ -5,13 +5,20 @@
     "type": "library",
     "embeds": [],
     "applicationVersion": {
-      "version": "1.96.2"
+      "version": "1.108.0"
     },
     "title": "The main UI5 control library, with responsive controls that can be used in touch devices as well as desktop browsers.",
     "description": "The main UI5 control library, with responsive controls that can be used in touch devices as well as desktop browsers.",
     "ach": "CA-UI5-CTR",
     "resources": "resources.json",
-    "offline": true
+    "offline": true,
+    "openSourceComponents": [
+      {
+        "name": "DOMPurify",
+        "packagedWithMySelf": true,
+        "version": "2.3.8"
+      }
+    ]
   },
   "sap.ui": {
     "technology": "UI5",
@@ -22,17 +29,17 @@
   },
   "sap.ui5": {
     "dependencies": {
-      "minUI5Version": "1.96",
+      "minUI5Version": "1.108",
       "libs": {
         "sap.ui.core": {
-          "minVersion": "1.96.2"
+          "minVersion": "1.108.0"
         },
         "sap.ui.layout": {
-          "minVersion": "1.96.2",
+          "minVersion": "1.108.0",
           "lazy": true
         },
         "sap.ui.unified": {
-          "minVersion": "1.96.2",
+          "minVersion": "1.108.0",
           "lazy": true
         }
       }
@@ -97,6 +104,8 @@
           "sap.m.ActionListItem",
           "sap.m.ActionSelect",
           "sap.m.ActionSheet",
+          "sap.m.ActionTile",
+          "sap.m.ActionTileContent",
           "sap.m.App",
           "sap.m.Avatar",
           "sap.m.Bar",
@@ -113,6 +122,7 @@
           "sap.m.ComboBox",
           "sap.m.ComboBoxTextField",
           "sap.m.ComboBoxBase",
+          "sap.m.CustomAttribute",
           "sap.m.CustomListItem",
           "sap.m.CustomTile",
           "sap.m.CustomTreeItem",
@@ -126,6 +136,7 @@
           "sap.m.DraftIndicator",
           "sap.m.DynamicDateRange",
           "sap.m.ExpandableText",
+          "sap.m.AdditionalTextButton",
           "sap.m.FacetFilter",
           "sap.m.FacetFilterItem",
           "sap.m.FacetFilterList",
@@ -144,6 +155,7 @@
           "sap.m.IconTabBarSelectList",
           "sap.m.IconTabFilterExpandButtonBadge",
           "sap.m.IconTabHeader",
+          "sap.m.IllustratedMessage",
           "sap.m.Image",
           "sap.m.ImageContent",
           "sap.m.Input",
@@ -261,6 +273,8 @@
           "sap.m.UploadCollection",
           "sap.m.UploadCollectionToolbarPlaceholder",
           "sap.m.upload.UploadSet",
+          "sap.m.upload.UploadSetToolbarPlaceholder",
+          "sap.m.VariantManagement",
           "sap.m.VBox",
           "sap.m.ViewSettingsDialog",
           "sap.m.WheelSlider",
@@ -278,7 +292,9 @@
           "sap.m.p13n.GroupPanel",
           "sap.m.p13n.QueryPanel",
           "sap.m.p13n.SelectionPanel",
-          "sap.m.p13n.SortPanel"
+          "sap.m.p13n.SortPanel",
+          "sap.m.p13n.Popup",
+          "sap.m.table.columnmenu.Menu"
         ],
         "elements": [
           "sap.m.BadgeCustomData",
@@ -329,10 +345,12 @@
           "sap.m.UploadCollectionParameter",
           "sap.m.upload.Uploader",
           "sap.m.upload.UploadSetItem",
+          "sap.m.VariantItem",
           "sap.m.ViewSettingsCustomItem",
           "sap.m.ViewSettingsCustomTab",
           "sap.m.ViewSettingsFilterItem",
           "sap.m.ViewSettingsItem",
+          "sap.m.plugins.CellSelector",
           "sap.m.plugins.ColumnResizer",
           "sap.m.plugins.DataStateIndicator",
           "sap.m.plugins.PasteProvider",
@@ -366,7 +384,12 @@
           "sap.m.semantic.SendMessageAction",
           "sap.m.semantic.ShareInJamAction",
           "sap.m.semantic.SortAction",
-          "sap.m.semantic.SortSelect"
+          "sap.m.semantic.SortSelect",
+          "sap.m.table.columnmenu.Entry",
+          "sap.m.table.columnmenu.Item",
+          "sap.m.table.columnmenu.ItemBase",
+          "sap.m.table.columnmenu.QuickAction",
+          "sap.m.table.columnmenu.QuickActionBase"
         ],
         "types": [
           "sap.m.AvatarImageFitType",
@@ -399,18 +422,22 @@
           "sap.m.GenericTagDesign",
           "sap.m.GenericTagValueState",
           "sap.m.GenericTileMode",
+          "sap.m.Priority",
           "sap.m.GenericTileScope",
           "sap.m.HeaderLevel",
           "sap.m.IBarHTMLTag",
           "sap.m.IconTabDensityMode",
           "sap.m.IconTabFilterDesign",
           "sap.m.IconTabHeaderMode",
+          "sap.m.IllustratedMessageSize",
+          "sap.m.IllustratedMessageType",
           "sap.m.ImageMode",
           "sap.m.InputTextFormatMode",
           "sap.m.InputType",
           "sap.m.LabelDesign",
           "sap.m.LightBoxLoadingStates",
           "sap.m.LinkConversion",
+          "sap.m.LinkAccessibleRole",
           "sap.m.ListGrowingDirection",
           "sap.m.ListHeaderDesign",
           "sap.m.ListKeyboardMode",
@@ -465,12 +492,14 @@
           "sap.m.WrappingType",
           "sap.m.WizardRenderMode",
           "sap.m.semantic.SemanticRuleSetType",
+          "sap.m.table.columnmenu.Category",
           "sap.m.upload.UploaderHttpRequestMethod"
         ],
         "interfaces": [
           "sap.m.IBar",
           "sap.m.IBadge",
           "sap.m.IBreadcrumbs",
+          "sap.m.p13n.IContent",
           "sap.m.IconTab",
           "sap.m.IScale",
           "sap.m.semantic.IGroup",

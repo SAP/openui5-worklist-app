@@ -1,6 +1,6 @@
 /*!
 * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
 */
 
@@ -25,7 +25,9 @@ sap.ui.define([
 		'sap/ui/dom/includeStylesheet',
 		'sap/ui/thirdparty/jquery',
 		'sap/ui/test/_OpaUriParameterParser',
-		"sap/ui/test/_ValidationParameters"
+		'sap/ui/test/_ValidationParameters',
+		'sap/base/util/extend',
+		'sap/base/util/isPlainObject'
 ],
 	function (Opa,
 			OpaPlugin,
@@ -47,7 +49,9 @@ sap.ui.define([
 			includeStylesheet,
 			$,
 			_OpaUriParameterParser,
-			_ValidationParameters) {
+			_ValidationParameters,
+			extend,
+			isPlainObject) {
 		"use strict";
 
 		var oLogger = _OpaLogger.getLogger("sap.ui.test.Opa5"),
@@ -159,7 +163,6 @@ sap.ui.define([
 		 */
 		Opa5.prototype.iStartMyUIComponent = function iStartMyUIComponent(oOptions) {
 			var that = this;
-			var bComponentLoaded = false;
 			oOptions = oOptions || {};
 
 			// apply the appParams to this frame URL so the application under test uses appParams
@@ -181,22 +184,17 @@ sap.ui.define([
 
 				HashChanger.getInstance().setHash(oOptions.hash || "");
 
-				componentLauncher.start(oOptions.componentConfig).then(function () {
-					bComponentLoaded = true;
-				});
+				// wait till component is started
+				var oComponentStartedOptions = createWaitForObjectWithoutDefaults();
+				oComponentStartedOptions.errorMessage = "Unable to load the component with the name: " + oOptions.componentConfig.name;
+				if (oOptions.timeout) {
+					oComponentStartedOptions.timeout = oOptions.timeout;
+				}
+				Opa.prototype._schedulePromiseOnFlow.call(that,
+					componentLauncher.start(oOptions.componentConfig),
+					oComponentStartedOptions);
 			};
 			this.waitFor(oStartComponentOptions);
-
-			// wait till component is started
-			var oComponentStartedOptions = createWaitForObjectWithoutDefaults();
-			oComponentStartedOptions.errorMessage = "Unable to load the component with the name: " + oOptions.name;
-			oComponentStartedOptions.check = function () {
-				return bComponentLoaded;
-			};
-			if (oOptions.timeout) {
-				oComponentStartedOptions.timeout = oOptions.timeout;
-			}
-			that.waitFor(oComponentStartedOptions);
 
 			// load extensions
 			var oLoadExtensionOptions = createWaitForObjectWithoutDefaults();
@@ -856,7 +854,7 @@ sap.ui.define([
 		/**
 		 * Returns the QUnit utils object in the current context. If an iframe is launched, it will return the iframe's QUnit utils.
 		 * @public
-		 * @returns {sap.ui.test.qunit} The QUnit utils
+		 * @returns {object} The QUnit utils
 		 */
 		Opa5.getUtils = function () {
 			return iFrameLauncher.getUtils() || QUnitUtils;
@@ -1115,7 +1113,7 @@ sap.ui.define([
 		/**
 		 * Settings for a new page object, consisting of actions and assertions.
 		 *
-		 * @typedef {Object} sap.ui.test.PageObjectDefinition
+		 * @typedef {object} sap.ui.test.PageObjectDefinition
 		 *
 		 * @property {string} [viewName]
 		 *   When a <code>viewName</code> is given, all <code>waitFor</code> calls inside of the page object
@@ -1390,9 +1388,9 @@ sap.ui.define([
 		function _getPathToExpansion(options) {
 			var aPath;
 			["ancestor", "descendant", "sibling"].forEach(function (sMatcher) {
-				if (options[sMatcher] && jQuery.isPlainObject(options[sMatcher])) {
+				if (options[sMatcher] && isPlainObject(options[sMatcher])) {
 					aPath = [sMatcher];
-				} else if (options.matchers && options.matchers[sMatcher] && jQuery.isPlainObject(options.matchers[sMatcher])) {
+				} else if (options.matchers && options.matchers[sMatcher] && isPlainObject(options.matchers[sMatcher])) {
 					aPath = ["matchers", sMatcher];
 				}
 			});
@@ -1416,7 +1414,7 @@ sap.ui.define([
 		// return a new object ("options" remains unchanged)
 		function _substituteExpansion(options, aPath, oControl) {
 			if (aPath) {
-				var oResult = jQuery.extend({}, options);
+				var oResult = extend({}, options);
 				var oPath = oResult;
 				var i = 0;
 				while (i < aPath.length - 1) {

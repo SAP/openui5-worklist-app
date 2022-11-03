@@ -1,11 +1,11 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define(["sap/ui/core/library", "sap/ui/core/Core", "sap/ui/core/Renderer", "sap/ui/core/IconPool", "sap/ui/Device", "./library", "./ListItemBaseRenderer"],
-	function(coreLibrary, Core, Renderer, IconPool, Device, library, ListItemBaseRenderer ) {
+sap.ui.define(["sap/ui/core/library", "sap/ui/core/Core", "sap/ui/core/Renderer", "sap/ui/core/IconPool", "./library", "./ListItemBaseRenderer"],
+	function(coreLibrary, Core, Renderer, IconPool, library, ListItemBaseRenderer ) {
 	"use strict";
 
 
@@ -25,7 +25,7 @@ sap.ui.define(["sap/ui/core/library", "sap/ui/core/Core", "sap/ui/core/Renderer"
 	 * {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} rm The <code>RenderManager</code> that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oLI An object representation of the control that is rendered
+	 * @param {sap.m.StandardListItem} oLI An object representation of the control that is rendered
 	 */
 	StandardListItemRenderer.renderLIAttributes = function(rm, oLI) {
 		var sIconURI = oLI.getIcon(),
@@ -57,7 +57,7 @@ sap.ui.define(["sap/ui/core/library", "sap/ui/core/Core", "sap/ui/core/Renderer"
 	/**
 	 * Renders the list item content element.
 	 * @param {sap.ui.core.RenderManager} rm The <code>RenderManager</code> that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oLI An object representation of the control that is rendered
+	 * @param {sap.m.StandardListItem} oLI An object representation of the control that is rendered
 	 * @protected
 	 */
 	StandardListItemRenderer.renderLIContent = function(rm, oLI) {
@@ -67,8 +67,10 @@ sap.ui.define(["sap/ui/core/library", "sap/ui/core/Core", "sap/ui/core/Renderer"
 			bAdaptTitleSize = oLI.getAdaptTitleSize(),
 			bShouldRenderInfoWithoutTitle = !sTitle && sInfo;
 
-		// render image
-		if (oLI.getIcon()) {
+		// render image or avatar control
+		if (oLI.getAvatar()) {
+			rm.renderControl(oLI._getAvatar());
+		} else if (oLI.getIcon()) {
 			rm.renderControl(oLI._getImage());
 		}
 
@@ -97,7 +99,7 @@ sap.ui.define(["sap/ui/core/library", "sap/ui/core/Core", "sap/ui/core/Renderer"
 	/**
 	 * Renders the title wrapper.
 	 * @param {sap.ui.core.RenderManager} rm The <code>RenderManager</code> that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oLI An object representation of the control that is rendered
+	 * @param {sap.m.StandardListItem} oLI An object representation of the control that is rendered
 	 * @protected
 	 */
 	StandardListItemRenderer.renderTitleWrapper = function(rm, oLI) {
@@ -141,7 +143,7 @@ sap.ui.define(["sap/ui/core/library", "sap/ui/core/Core", "sap/ui/core/Renderer"
 	/**
 	 * Renders the title text.
 	 * @param {sap.ui.core.RenderManager} rm The <code>RenderManager</code> that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oLI An object representation of the control that is rendered
+	 * @param {sap.m.StandardListItem} oLI An object representation of the control that is rendered
 	 * @protected
 	 */
 	StandardListItemRenderer.renderTitle = function(rm, oLI) {
@@ -151,7 +153,7 @@ sap.ui.define(["sap/ui/core/library", "sap/ui/core/Core", "sap/ui/core/Renderer"
 	/**
 	 * Renders the description text.
 	 * @param {sap.ui.core.RenderManager} rm The <code>RenderManager</code> that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oLI An object representation of the control that is rendered
+	 * @param {sap.m.StandardListItem} oLI An object representation of the control that is rendered
 	 * @protected
 	 */
 	StandardListItemRenderer.renderDescription = function (rm, oLI) {
@@ -195,7 +197,7 @@ sap.ui.define(["sap/ui/core/library", "sap/ui/core/Core", "sap/ui/core/Renderer"
 	/**
 	 * Renders the info text.
 	 * @param {sap.ui.core.RenderManager} rm The <code>RenderManager</code> that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oLI An object representation of the control that is rendered
+	 * @param {sap.m.StandardListItem} oLI An object representation of the control that is rendered
 	 * @protected
 	 */
 	StandardListItemRenderer.renderInfo = function (rm, oLI) {
@@ -229,7 +231,7 @@ sap.ui.define(["sap/ui/core/library", "sap/ui/core/Core", "sap/ui/core/Renderer"
 	/**
 	 * Renders the expand/collapse text.
 	 * @param {sap.ui.core.RenderManager} rm The <code>RenderManager</code> that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oLI An object representation of the control that is rendered
+	 * @param {sap.m.StandardListItem} oLI An object representation of the control that is rendered
 	 * @param {string} sWrapArea Defines the wrapping text area
 	 * @protected
 	 */
@@ -246,14 +248,14 @@ sap.ui.define(["sap/ui/core/library", "sap/ui/core/Core", "sap/ui/core/Renderer"
 		rm.openStart("span", bTitle ? sId + "-titleButton" : sId + "-descriptionButton").class("sapMSLIExpandCollapse");
 		rm.attr("tabindex", "0").attr("role", "button").attr("aria-live", "polite");
 		rm.openEnd();
-		rm.text(oRb.getText(bTextExpanded ? "TEXT_SHOW_LESS" : "TEXT_SHOW_MORE"));
+		rm.text(oRb.getText(bTextExpanded ? "EXPANDABLE_TEXT_SHOW_LESS" : "EXPANDABLE_TEXT_SHOW_MORE"));
 		rm.close("span");
 	};
 
 	/**
 	 * Renders the wrapping behavior of the text.
 	 * @param {sap.ui.core.RenderManager} rm The <code>RenderManager</code> that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oLI An object representation of the control that is rendered
+	 * @param {sap.m.StandardListItem} oLI An object representation of the control that is rendered
 	 * @param {string} sWrapArea Defines the wrapping text area
 	 * @protected
 	 */

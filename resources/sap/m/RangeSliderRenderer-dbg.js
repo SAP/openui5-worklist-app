@@ -1,10 +1,10 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define(["sap/ui/core/Renderer", "./SliderRenderer", "sap/ui/core/InvisibleText"], function (Renderer, SliderRenderer, InvisibleText) {
+sap.ui.define(["sap/ui/core/Renderer", "./SliderRenderer", "sap/ui/core/InvisibleText", "sap/ui/core/Configuration"], function (Renderer, SliderRenderer, InvisibleText, Configuration) {
 	"use strict";
 
 	/**
@@ -18,12 +18,14 @@ sap.ui.define(["sap/ui/core/Renderer", "./SliderRenderer", "sap/ui/core/Invisibl
 		this.renderHandle(oRM, oControl, {
 			id: oControl.getId() + "-handle1",
 			position: "start",
-			forwardedLabels: sRangeSliderLabels
+			forwardedLabels: sRangeSliderLabels,
+			pressed: oControl.getProperty("startHandlePressed")
 		});
 		this.renderHandle(oRM, oControl, {
 			id: oControl.getId() + "-handle2",
 			position: "end",
-			forwardedLabels: sRangeSliderLabels
+			forwardedLabels: sRangeSliderLabels,
+			pressed: oControl.getProperty("endHandlePressed")
 		});
 
 		// Render ARIA labels
@@ -36,14 +38,14 @@ sap.ui.define(["sap/ui/core/Renderer", "./SliderRenderer", "sap/ui/core/Invisibl
 	 * Used to render each of the handles of the RangeSlider.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRM The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the slider that should be rendered.
+	 * @param {sap.m.RangeSlider} oControl An object representation of the slider that should be rendered.
 	 * @param {object} mOptions Options used for specificity of the handles
 	 */
 	RangeSliderRenderer.renderHandle = function (oRM, oControl, mOptions) {
 		var fValue,
 			aRange = oControl.getRange(),
 			bEnabled = oControl.getEnabled(),
-			bRTL = sap.ui.getCore().getConfiguration().getRTL();
+			bRTL = Configuration.getRTL();
 
 		oRM.openStart("span", mOptions && mOptions.id);
 		if (mOptions && (mOptions.position !== undefined)) {
@@ -62,6 +64,11 @@ sap.ui.define(["sap/ui/core/Renderer", "./SliderRenderer", "sap/ui/core/Invisibl
 		}
 
 		oRM.class(SliderRenderer.CSS_CLASS + "Handle");
+		oRM.attr("data-ui5-handle-position", mOptions.position);
+
+		if (mOptions.pressed) {
+			oRM.class(SliderRenderer.CSS_CLASS + "HandlePressed");
+		}
 
 		if (mOptions && (mOptions.id !== undefined) && mOptions.id === (oControl.getId() + "-handle1")) {
 			oRM.style(bRTL ? "right" : "left", aRange[0]);
@@ -83,7 +90,7 @@ sap.ui.define(["sap/ui/core/Renderer", "./SliderRenderer", "sap/ui/core/Invisibl
 	 * To be overwritten by subclasses.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oSlider An object representation of the control that should be rendered.
+	 * @param {sap.m.RangeSlider} oSlider An object representation of the control that should be rendered.
 	 * @param {string} fValue The current value for the accessibility state
 	 */
 	RangeSliderRenderer.writeAccessibilityState = function(oRm, oSlider, fValue) {
@@ -116,7 +123,7 @@ sap.ui.define(["sap/ui/core/Renderer", "./SliderRenderer", "sap/ui/core/Invisibl
 	 * Renders the lower range label under the left part of the RangeSlider control.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRM The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the slider that should be rendered.
+	 * @param {sap.m.RangeSlider} oControl An object representation of the slider that should be rendered.
 	 */
 	RangeSliderRenderer.renderStartLabel = function (oRM, oControl) {
 		oRM.openStart("div")
@@ -130,7 +137,7 @@ sap.ui.define(["sap/ui/core/Renderer", "./SliderRenderer", "sap/ui/core/Invisibl
 	 * Renders the higher range label under the right part of the RangeSlider control.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRM The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the slider that should be rendered.
+	 * @param {sap.m.RangeSlider} oControl An object representation of the slider that should be rendered.
 	 */
 	RangeSliderRenderer.renderEndLabel = function (oRM, oControl) {
 		oRM.openStart("div")
@@ -145,7 +152,7 @@ sap.ui.define(["sap/ui/core/Renderer", "./SliderRenderer", "sap/ui/core/Invisibl
 	 * Renders the label under the RangeSlider control.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRM The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oControl An object representation of the slider that should be rendered.
+	 * @param {sap.m.RangeSlider} oControl An object representation of the slider that should be rendered.
 	 */
 	RangeSliderRenderer.renderLabels = function (oRM, oControl) {
 		if (!oControl.getEnableTickmarks()) {
@@ -162,6 +169,7 @@ sap.ui.define(["sap/ui/core/Renderer", "./SliderRenderer", "sap/ui/core/Invisibl
 
 	RangeSliderRenderer.renderProgressIndicator = function(oRm, oSlider, sForwardedLabels) {
 		var aRange = oSlider.getRange();
+		var oProggressBarSize = oSlider.getProperty("progressBarSize");
 
 		aRange[0] = oSlider.toFixed(aRange[0], oSlider._iDecimalPrecision);
 		aRange[1] = oSlider.toFixed(aRange[1], oSlider._iDecimalPrecision);
@@ -174,6 +182,11 @@ sap.ui.define(["sap/ui/core/Renderer", "./SliderRenderer", "sap/ui/core/Invisibl
 		}
 		this.addProgressIndicatorClass(oRm, oSlider);
 		oRm.style("width", oSlider._sProgressValue);
+
+		if (oProggressBarSize) {
+			oRm.style("left", oProggressBarSize.left);
+			oRm.style("right", oProggressBarSize.right);
+		}
 
 		oRm.accessibilityState(oSlider, {
 			role: "slider",
@@ -189,6 +202,25 @@ sap.ui.define(["sap/ui/core/Renderer", "./SliderRenderer", "sap/ui/core/Invisibl
 	RangeSliderRenderer.addClass = function(oRm, oSlider) {
 		SliderRenderer.addClass(oRm, oSlider);
 		oRm.class("sapMRangeSlider");
+	};
+
+	RangeSliderRenderer.applyTickmarkStyles = function(oRM, oSlider, iTickmarkIndex, iTickmarksToRender) {
+		var aRange = oSlider.getRange();
+
+		aRange[0] = parseInt(oSlider.toFixed(aRange[0], oSlider._iDecimalPrecision));
+		aRange[1] = parseInt(oSlider.toFixed(aRange[1], oSlider._iDecimalPrecision));
+
+		var bRender = (iTickmarkIndex >= aRange[0] && iTickmarkIndex <= aRange[1]) || (iTickmarkIndex <= aRange[0] && iTickmarkIndex >= aRange[1]);
+
+		oRM.attr("data-ui5-active-tickmark", bRender);
+	};
+
+	RangeSliderRenderer.shouldRenderFirstActiveTickmark = function (oSlider) {
+		return oSlider.getValue() === oSlider.getMin();
+	};
+
+	RangeSliderRenderer.shouldRenderLastActiveTickmark = function (oSlider) {
+		return oSlider.getValue2() === oSlider.getMax();
 	};
 
 	return RangeSliderRenderer;

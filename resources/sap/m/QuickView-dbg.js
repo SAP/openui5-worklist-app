@@ -1,6 +1,6 @@
-/*
- * ! OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+/*!
+ * OpenUI5
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -59,14 +59,13 @@ sap.ui.define([
 	 * @extends sap.m.QuickViewBase
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.28.11
 	 * @alias sap.m.QuickView
 	 * @see {@link fiori:https://experience.sap.com/fiori-design-web/quickview/ Quick View}
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var QuickView = QuickViewBase.extend("sap.m.QuickView", /** @lends sap.m.QuickView.prototype */	{
 		metadata: {
@@ -369,7 +368,7 @@ sap.ui.define([
 	/**
 	 * Returns the button, which closes the QuickView.
 	 * On desktop or tablet, this method returns undefined.
-	 * @returns {sap.ui.core.Control} The close button of the QuickView on phone or undefined on desktop and tablet.
+	 * @returns {sap.ui.core.Control|undefined} The close button of the QuickView on phone or undefined on desktop and tablet.
 	 * @private
 	 */
 	QuickView.prototype.getCloseButton = function() {

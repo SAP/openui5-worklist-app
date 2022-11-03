@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -10,6 +10,7 @@ sap.ui.define([
 	"sap/ui/events/KeyCodes",
 	"sap/ui/model/BindingMode",
 	"sap/ui/Device",
+	"sap/ui/core/Core",
 	"sap/ui/core/library",
 	"sap/ui/core/Control",
 	"sap/ui/core/IconPool",
@@ -31,6 +32,7 @@ function(
 	KeyCodes,
 	BindingMode,
 	Device,
+	Core,
 	coreLibrary,
 	Control,
 	IconPool,
@@ -76,118 +78,122 @@ function(
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @alias sap.m.ListItemBase
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var ListItemBase = Control.extend("sap.m.ListItemBase", /** @lends sap.m.ListItemBase.prototype */ { metadata : {
+	var ListItemBase = Control.extend("sap.m.ListItemBase", /** @lends sap.m.ListItemBase.prototype */ {
+		metadata : {
 
-		library : "sap.m",
-		properties : {
+			library : "sap.m",
+			properties : {
 
-			/**
-			 * Defines the visual indication and behavior of the list items, e.g. <code>Active</code>, <code>Navigation</code>, <code>Detail</code>.
-			 */
-			type : {type : "sap.m.ListType", group : "Misc", defaultValue : ListItemType.Inactive},
+				/**
+				 * Defines the visual indication and behavior of the list items, e.g. <code>Active</code>, <code>Navigation</code>, <code>Detail</code>.
+				 */
+				type : {type : "sap.m.ListType", group : "Misc", defaultValue : ListItemType.Inactive},
 
-			/**
-			 * Whether the control should be visible on the screen. If set to false, a placeholder is rendered instead of the real control.
-			 */
-			visible : {type : "boolean", group : "Appearance", defaultValue : true},
+				/**
+				 * Whether the control should be visible on the screen. If set to false, a placeholder is rendered instead of the real control.
+				 */
+				visible : {type : "boolean", group : "Appearance", defaultValue : true},
 
-			/**
-			 * Activates the unread indicator for the list item, if set to <code>true</code>.
-			 * <b>Note:</b> This flag is ignored when the <code>showUnread</code> property of the parent is set to <code>false</code>.
-			 */
-			unread : {type : "boolean", group : "Misc", defaultValue : false},
+				/**
+				 * Activates the unread indicator for the list item, if set to <code>true</code>.
+				 * <b>Note:</b> This flag is ignored when the <code>showUnread</code> property of the parent is set to <code>false</code>.
+				 */
+				unread : {type : "boolean", group : "Misc", defaultValue : false},
 
-			/**
-			 * Defines the selected state of the list items.
-			 * <b>Note:</b> Binding the <code>selected</code> property in single selection modes may cause unwanted results if you have more than one selected items in your binding.
-			 */
-			selected : {type : "boolean", defaultValue : false},
+				/**
+				 * Defines the selected state of the list items.
+				 * <b>Note:</b> Binding the <code>selected</code> property in single selection modes may cause unwanted results if you have more than one selected items in your binding.
+				 */
+				selected : {type : "boolean", defaultValue : false},
 
-			/**
-			 * Defines the counter value of the list items.
-			 */
-			counter : {type : "int", group : "Misc", defaultValue : null},
+				/**
+				 * Defines the counter value of the list items.
+				 */
+				counter : {type : "int", group : "Misc", defaultValue : null},
 
-			/**
-			 * Defines the highlight state of the list items.
-			 *
-			 * Valid values for the <code>highlight</code> property are values of the enumerations {@link sap.ui.core.MessageType} or
-			 * {@link sap.ui.core.IndicationColor}.
-			 *
-			 * Accessibility support is provided through the associated {@link sap.m.ListItemBase#setHighlightText highlightText} property.
-			 * If the <code>highlight</code> property is set to a value of {@link sap.ui.core.MessageType}, the <code>highlightText</code>
-			 * property does not need to be set because a default text is used. However, the default text can be overridden by setting the
-			 * <code>highlightText</code> property.
-			 * In all other cases the <code>highlightText</code> property must be set.
-			 *
-			 * @since 1.44.0
-			 */
-			highlight : {type : "string", group : "Appearance", defaultValue : "None"},
+				/**
+				 * Defines the highlight state of the list items.
+				 *
+				 * Valid values for the <code>highlight</code> property are values of the enumerations {@link sap.ui.core.MessageType} or
+				 * {@link sap.ui.core.IndicationColor}.
+				 *
+				 * Accessibility support is provided through the associated {@link sap.m.ListItemBase#setHighlightText highlightText} property.
+				 * If the <code>highlight</code> property is set to a value of {@link sap.ui.core.MessageType}, the <code>highlightText</code>
+				 * property does not need to be set because a default text is used. However, the default text can be overridden by setting the
+				 * <code>highlightText</code> property.
+				 * In all other cases the <code>highlightText</code> property must be set.
+				 *
+				 * @since 1.44.0
+				 */
+				highlight : {type : "string", group : "Appearance", defaultValue : "None"},
 
-			/**
-			 * Defines the semantics of the {@link sap.m.ListItemBase#setHighlight highlight} property for accessibility purposes.
-			 *
-			 * @since 1.62
-			 */
-			highlightText : {type : "string", group : "Misc", defaultValue : ""},
+				/**
+				 * Defines the semantics of the {@link sap.m.ListItemBase#setHighlight highlight} property for accessibility purposes.
+				 *
+				 * @since 1.62
+				 */
+				highlightText : {type : "string", group : "Misc", defaultValue : ""},
 
-			/**
-			 * The navigated state of the list item.
-			 *
-			 * If set to <code>true</code>, a navigation indicator is displayed at the end of the list item.
-			 * <b>Note:</b> This property must be set for <b>one</b> list item only.
-			 *
-			 * @since 1.72
-			 */
-			navigated : {type : "boolean", group : "Appearance", defaultValue : false}
+				/**
+				 * The navigated state of the list item.
+				 *
+				 * If set to <code>true</code>, a navigation indicator is displayed at the end of the list item.
+				 * <b>Note:</b> This property must be set for <b>one</b> list item only.
+				 *
+				 * @since 1.72
+				 */
+				navigated : {type : "boolean", group : "Appearance", defaultValue : false}
+			},
+			associations: {
+
+				/**
+				 * Association to controls / ids which label this control (see WAI-ARIA attribute aria-labelledby).
+				 * @since 1.28.0
+				 */
+				ariaLabelledBy: { type: "sap.ui.core.Control", multiple: true, singularName: "ariaLabelledBy" }
+			},
+			events : {
+
+				/**
+				 * Fires when the user taps on the control.
+				 * @deprecated Since version 1.20.0. Instead, use <code>press</code> event.
+				 */
+				tap : {deprecated: true},
+
+				/**
+				 * Fires when the user taps on the detail button of the control.
+				 * @deprecated Since version 1.20.0. Instead, use <code>detailPress</code> event.
+				 */
+				detailTap : {deprecated: true},
+
+				/**
+				 * Fires when the user clicks on the control.
+				 * <b>Note:</b> This event is not fired when the parent <code>mode</code> is <code>SingleSelectMaster</code> or when the <code>includeItemInSelection</code> property is set to <code>true</code>.
+				 * If there is an interactive element that handles its own <code>press</code> event then the list item's <code>press</code> event is not fired.
+				 * Also see {@link sap.m.ListBase#attachItemPress}.
+				 */
+				press : {},
+
+				/**
+				 * Fires when the user clicks on the detail button of the control.
+				 */
+				detailPress : {}
+			},
+			designtime: "sap/m/designtime/ListItemBase.designtime",
+			dnd: true
 		},
-		associations: {
 
-			/**
-			 * Association to controls / ids which label this control (see WAI-ARIA attribute aria-labelledby).
-			 * @since 1.28.0
-			 */
-			ariaLabelledBy: { type: "sap.ui.core.Control", multiple: true, singularName: "ariaLabelledBy" }
-		},
-		events : {
+		renderer: ListItemBaseRenderer
+	});
 
-			/**
-			 * Fires when the user taps on the control.
-			 * @deprecated Since version 1.20.0. Instead, use <code>press</code> event.
-			 */
-			tap : {deprecated: true},
-
-			/**
-			 * Fires when the user taps on the detail button of the control.
-			 * @deprecated Since version 1.20.0. Instead, use <code>detailPress</code> event.
-			 */
-			detailTap : {deprecated: true},
-
-			/**
-			 * Fires when the user clicks on the control.
-			 * <b>Note:</b> This event is not fired when the parent <code>mode</code> is <code>SingleSelectMaster</code> or when the <code>includeItemInSelection</code> property is set to <code>true</code>.
-			 * If there is an interactive element that handles its own <code>press</code> event then the list item's <code>press</code> event is not fired.
-			 * Also see {@link sap.m.ListBase#attachItemPress}.
-			 */
-			press : {},
-
-			/**
-			 * Fires when the user clicks on the detail button of the control.
-			 */
-			detailPress : {}
-		},
-		designtime: "sap/m/designtime/ListItemBase.designtime"
-	}});
-
-	ListItemBase.getAccessibilityText = function(oControl, bDetectEmpty) {
-		var oBundle = sap.ui.getCore().getLibraryResourceBundle("sap.m");
+	ListItemBase.getAccessibilityText = function(oControl, bDetectEmpty, bHeaderAnnouncement) {
+		var oBundle = Core.getLibraryResourceBundle("sap.m");
 
 		if (!oControl || !oControl.getVisible || !oControl.getVisible()) {
 			return bDetectEmpty ? oBundle.getText("CONTROL_EMPTY") : "";
@@ -210,6 +216,9 @@ function(
 		var sText = oAccInfo.type + " " + oAccInfo.description + " ",
 			sTooltip = oControl.getTooltip_AsString();
 
+		if (oAccInfo.required === true) {
+			sText += oBundle.getText(bHeaderAnnouncement ? "CONTROL_IN_COLUMN_REQUIRED" : "ELEMENT_REQUIRED") + " ";
+		}
 		if (oAccInfo.enabled === false) {
 			sText += oBundle.getText("CONTROL_DISABLED") + " ";
 		}
@@ -264,6 +273,9 @@ function(
 	// defines the root tag name for rendering purposes
 	ListItemBase.prototype.TagName = "li";
 
+	// enable the ACC announcement for "not selected"
+	ListItemBase.prototype._bAnnounceNotSelected = true;
+
 	// internal active state of the listitem
 	ListItemBase.prototype.init = function() {
 		this._active = false;
@@ -272,8 +284,15 @@ function(
 		this._bNeedsNavigated = false;
 	};
 
+	ListItemBase.prototype.onBeforeRendering = function() {
+		this._oDomRef = this.getDomRef();
+	};
+
 	ListItemBase.prototype.onAfterRendering = function() {
-		this.informList("DOMUpdate", true);
+		if (!this._oDomRef || this._oDomRef !== this.getDomRef()) {
+			this.informList("DOMUpdate", true);
+		}
+		this._oDomRef = undefined;
 		this._checkHighlight();
 		this._checkNavigated();
 	};
@@ -443,7 +462,7 @@ function(
 	};
 
 	ListItemBase.prototype.getAccessibilityInfo = function() {
-		var oBundle = sap.ui.getCore().getLibraryResourceBundle("sap.m");
+		var oBundle = Core.getLibraryResourceBundle("sap.m");
 		return {
 			type: this.getAccessibilityType(oBundle),
 			description: this.getAccessibilityDescription(oBundle),
@@ -514,7 +533,7 @@ function(
 			id: this.getId() + "-imgDel",
 			icon: this.DeleteIconURI,
 			type: ButtonType.Transparent,
-			tooltip: sap.ui.getCore().getLibraryResourceBundle("sap.m").getText("LIST_ITEM_DELETE")
+			tooltip: Core.getLibraryResourceBundle("sap.m").getText("LIST_ITEM_DELETE")
 		}).addStyleClass("sapMLIBIconDel sapMLIBSelectD").setParent(this, null, true).attachPress(function(oEvent) {
 			this.informList("Delete");
 		}, this);
@@ -551,7 +570,7 @@ function(
 			id: this.getId() + "-imgDet",
 			icon: this.DetailIconURI,
 			type: ButtonType.Transparent,
-			tooltip: sap.ui.getCore().getLibraryResourceBundle("sap.m").getText("LIST_ITEM_EDIT")
+			tooltip: Core.getLibraryResourceBundle("sap.m").getText("LIST_ITEM_EDIT")
 		}).addStyleClass("sapMLIBType sapMLIBIconDet").setParent(this, null, true).attachPress(function() {
 			this.fireDetailTap();
 			this.fireDetailPress();
@@ -697,7 +716,7 @@ function(
 	/**
 	 * Destroys generated mode/type controls
 	 *
-	 * @param {String[]} aControls array of control names
+	 * @param {string[]} aControls array of control names
 	 * @private
 	 */
 	ListItemBase.prototype.destroyControls = function(aControls) {
@@ -714,7 +733,11 @@ function(
 	 * Determines whether item has any action or not.
 	 * @private
 	 */
-	ListItemBase.prototype.isActionable = function() {
+	ListItemBase.prototype.isActionable = function(bCheckDevice) {
+		if (bCheckDevice && !Device.system.desktop) {
+			return false;
+		}
+
 		return this.isIncludedIntoSelection() || (
 			this.getType() != ListItemType.Inactive &&
 			this.getType() != ListItemType.Detail
@@ -722,6 +745,7 @@ function(
 	};
 
 	ListItemBase.prototype.exit = function() {
+		this._oDomRef = null;
 		this._oLastFocused = null;
 		this._checkHighlight(false);
 		this._checkNavigated(false);
@@ -772,7 +796,6 @@ function(
 	 * @returns {boolean}
 	 * @deprecated Since version 1.10.2.
 	 * API Change makes this method unnecessary. Use the {@link #getSelected} method instead.
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 * @function
 	 */
 	ListItemBase.prototype.isSelected = ListItemBase.prototype.getSelected;
@@ -807,16 +830,18 @@ function(
 	// Updates the selected state of the DOM
 	ListItemBase.prototype.updateSelectedDOM = function(bSelected, $This) {
 		$This.toggleClass("sapMLIBSelected", bSelected);
-		$This.attr("aria-selected", bSelected);
+
+		if ($This.attr("role") !== "listitem") {
+			$This.attr("aria-selected", bSelected);
+		}
 	};
 
 	ListItemBase.prototype.setParent = function(oParent) {
-		Control.prototype.setParent.apply(this, arguments);
 		if (!oParent) {
-			this._bGroupHeader = false;
-			return;
+			this.informList("Removed");
 		}
 
+		Control.prototype.setParent.apply(this, arguments);
 		this.informList("Inserted", this.bSelectedDelayed);
 		return this;
 	};
@@ -834,6 +859,20 @@ function(
 	 */
 	ListItemBase.prototype.isGroupHeader = function() {
 		return this._bGroupHeader;
+	};
+
+	/**
+	 * This gets called from the ListBase for the GroupHeader items to inform the connected sub items
+	 *
+	 * @param {sap.m.ListItemBase} oLI The list item
+	 */
+	ListItemBase.prototype.setGroupedItem = function(oLI) {
+		this._aGroupedItems = this._aGroupedItems || [];
+		this._aGroupedItems.push(oLI.getId());
+	};
+
+	ListItemBase.prototype.getGroupedItems = function() {
+		return this._aGroupedItems;
 	};
 
 	/**
@@ -921,7 +960,7 @@ function(
 	/**
 	 * Detect text selection.
 	 *
-	 * @param {object} oDomRef DOM element of the control
+	 * @param {HTMLElement} oDomRef DOM element of the control
 	 * @returns {boolean} true if text selection is done within the control else false
 	 * @private
 	 */
@@ -1050,7 +1089,7 @@ function(
 	ListItemBase.prototype._activeHandling = function($This) {
 		$This.toggleClass("sapMLIBActive", this._active);
 
-		if (Device.system.desktop && this.isActionable()) {
+		if (this.isActionable(true)) {
 			$This.toggleClass("sapMLIBHoverable", !this._active);
 		}
 	};
@@ -1209,7 +1248,7 @@ function(
 	};
 
 	ListItemBase.prototype.onsapupmodifiers = function(oEvent) {
-		if (oEvent.isMarked() || oEvent.srcControl !== this) {
+		if (oEvent.isMarked()) {
 			return;
 		}
 
@@ -1217,7 +1256,7 @@ function(
 	};
 
 	ListItemBase.prototype.onsapdownmodifiers = function(oEvent) {
-		if (oEvent.isMarked() || oEvent.srcControl !== this) {
+		if (oEvent.isMarked()) {
 			return;
 		}
 
@@ -1294,7 +1333,8 @@ function(
 	ListItemBase.prototype.onsapup = function(oEvent) {
 		if (oEvent.isMarked() ||
 			oEvent.srcControl === this ||
-			this.getListProperty("keyboardMode") === ListKeyboardMode.Navigation) {
+			oEvent.target instanceof HTMLInputElement ||
+			oEvent.target instanceof HTMLTextAreaElement) {
 			return;
 		}
 

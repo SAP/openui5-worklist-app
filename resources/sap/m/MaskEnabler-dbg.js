@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -14,9 +14,9 @@ sap.ui.define([
 	"sap/base/Log",
 	"sap/ui/thirdparty/jquery",
 	"sap/m/MaskInputRule",
-	// jQuery Plugin "cursorPos"
-	"sap/ui/dom/jquery/cursorPos"
-], function(Control, InputBase, Device, coreLibrary, IconPool, KeyCodes, Log, jQuery, MaskInputRule) {
+	"sap/ui/core/Configuration",
+	"sap/ui/dom/jquery/cursorPos" // jQuery Plugin "cursorPos"
+], function(Control, InputBase, Device, coreLibrary, IconPool, KeyCodes, Log, jQuery, MaskInputRule, Configuration) {
 	"use strict";
 
 	// shortcut for sap.ui.core.TextDirection
@@ -26,7 +26,7 @@ sap.ui.define([
 	 * Applies mask support for input controls.
 	 * It should should be applied to the prototype of a <code>sap.m.InputBase</code>.
 	 *
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @private
 	 * @mixin
 	 * @alias sap.m.MaskEnabler
@@ -164,6 +164,12 @@ sap.ui.define([
 				this._applyMask();
 				this._positionCaret(false);
 			}
+
+			var sValue = this.getDOMValue();
+			if (!this._isMaskEnabled() && sValue !== this._sPreviousValue) {
+				this._fireLiveChange(sValue, this._sPreviousValue);
+				this._sPreviousValue = sValue;
+			}
 		};
 
 		/**
@@ -231,6 +237,7 @@ sap.ui.define([
 			if (this._oTempValue._aContent.join("") !== this._oTempValue._aInitial.join("")) {
 				InputBase.prototype.onsapescape.call(this, oEvent);
 			}
+			this._bCheckForLiveChange = true;
 		};
 
 		/**
@@ -384,7 +391,7 @@ sap.ui.define([
 
 		/**
 		 * Overrides the method in order to validate the placeholder symbol.
-		 * @param {String} sSymbol The placeholder symbol
+		 * @param {string} sSymbol The placeholder symbol
 		 * @override
 		 * @returns {sap.ui.base.MaskInput} <code>this</code> pointer for chaining
 		 */
@@ -415,7 +422,7 @@ sap.ui.define([
 		/**
 		 * Sets the mask for this instance.
 		 * The mask is mandatory.
-		 * @param {String} sMask The mask
+		 * @param {string} sMask The mask
 		 * @returns {sap.m.MaskInput} <code>this</code> pointer for chaining
 		 * @throws {Error} Throws an error if the input is invalid
 		 */
@@ -432,7 +439,7 @@ sap.ui.define([
 
 		/**
 		 * Verifies whether a character at a given position is allowed according to its mask rule.
-		 * @param {String} sChar The character
+		 * @param {string} sChar The character
 		 * @param {int} iIndex The position of the character
 		 * @returns {boolean} Whether a character at a given position is allowed
 		 * @protected
@@ -446,10 +453,10 @@ sap.ui.define([
 		 * Subclasses may override this method in order to get some additional behavior. For instance, switching current input
 		 * character with other for time input purposes. As an example, if the user enters "2" (in 12-hour format), the consumer may use
 		 * this method to replace the input from "2" to "02".
-		 * @param {String} sChar The current character from the input
+		 * @param {string} sChar The current character from the input
 		 * @param {int} iPlacePosition The position the character should occupy
 		 * @param {string} sCurrentInputValue The value currently inside the input field (may differ from the property value)
-		 * @returns {String} A string that replaces the character
+		 * @returns {string} A string that replaces the character
 		 * @protected
 		 */
 		this._feedReplaceChar = function (sChar, iPlacePosition, sCurrentInputValue) {
@@ -507,7 +514,7 @@ sap.ui.define([
 
 		/**
 		 * Converts the char array to a string representation.
-		 * @returns {String} The char array converted to a string
+		 * @returns {string} The char array converted to a string
 		 * @private
 		 */
 		CharArray.prototype.toString = function () {
@@ -602,13 +609,35 @@ sap.ui.define([
 
 		/**
 		 * Applies a rule to a character.
-		 * @param {String} sChar The character to which the rule will be applied
+		 * @param {string} sChar The character to which the rule will be applied
 		 * @param {int} iIndex The index of the rule
 		 * @returns {boolean} True if the character passes the validation rule, false otherwise.
 		 * @private
 		 */
 		TestRules.prototype.applyCharAt = function (sChar, iIndex) {
 			return this._aRules[iIndex].test(sChar);
+		};
+
+		this.updateDomValue = function(sValue) {
+			InputBase.prototype.updateDomValue.call(this, sValue);
+
+			if (this._bCheckForLiveChange && sValue !== this._sPreviousValue) {
+				this._fireLiveChange(sValue, this._sPreviousValue);
+				this._sPreviousValue = sValue;
+			}
+
+			this._bCheckForLiveChange = false;
+		};
+
+		/**
+		 * Fires liveChange event.
+		 * @private
+		 */
+		 this._fireLiveChange = function(sNewValue, sPreviousValue) {
+			this.fireLiveChange && this.fireLiveChange({
+				value: sNewValue,
+				previousValue: sPreviousValue
+			});
 		};
 
 		/**
@@ -855,10 +884,17 @@ sap.ui.define([
 
 		/**
 		 * Applies rules and updates the DOM input value.
-		 * @param {String} sMaskInputValue The input string to which the rules will be applied
+		 * @param {string} sMaskInputValue The input string to which the rules will be applied
 		 * @private
 		 */
 		this._applyAndUpdate = function (sMaskInputValue) {
+			if (this._oTempValue && (this._sPreviousValue === undefined || this._sPreviousValue === "")) {
+				this._sPreviousValue = this._oTempValue.toString();
+				this._bCheckForLiveChange = false;
+			} else if (!this._bCutInProgress) {
+				this._bCheckForLiveChange = true;
+			}
+
 			this._applyRules(sMaskInputValue);
 			this.updateDomValue(this._oTempValue.toString());
 		};
@@ -984,6 +1020,8 @@ sap.ui.define([
 			iEnd = iEnd - 1;
 			this._resetTempValue(iBegin, iEnd);
 
+			this._bCutInProgress = true;
+
 			//oncut happens before the input event fires (before oninput)
 			//we want to use the values from this point of time
 			//but set them after the input event is handled (after oninput)
@@ -994,6 +1032,8 @@ sap.ui.define([
 				//update the temp value back
 				//because oninput breaks it
 				this._oTempValue._aContent = aOldTempValueContent;
+				this._bCheckForLiveChange = true;
+				this._bCutInProgress = false;
 				this.updateDomValue(sValue);
 
 				//we want that shortly after updateDomValue
@@ -1006,6 +1046,14 @@ sap.ui.define([
 				Math.max(this._iUserInputStartPosition, iBegin),
 				this._oTempValue._aContent.slice(0)
 			), iMinBrowserDelay);
+		};
+
+		/**
+		 * Handle paste event.
+		 * @private
+		 */
+		 this.onpaste = function() {
+			this._bCheckForLiveChange = true;
 		};
 
 		/**
@@ -1028,7 +1076,6 @@ sap.ui.define([
 			if (!oKey.bShift && (oKey.bArrowRight || oKey.bArrowLeft)) {
 				iCursorPos = this._getCursorPosition();
 				oSelection = this._getTextSelection();
-
 
 				// Determine the correct direction based on RTL mode, input characters and selection state
 				sDirection = this._determineArrowKeyDirection(oKey, oSelection);
@@ -1095,6 +1142,7 @@ sap.ui.define([
 			}
 
 			this._resetTempValue(iBegin, iEnd);
+			this._bCheckForLiveChange = true;
 			this.updateDomValue(this._oTempValue.toString());
 			this._setCursorPosition(Math.max(this._iUserInputStartPosition, iBegin));
 		};
@@ -1120,6 +1168,7 @@ sap.ui.define([
 
 			if (bAtLeastOneSuccessfulCharPlacement) {
 				iNextPos = iPos; //because the cycle above already found the next pos
+				this._bCheckForLiveChange = true;
 				this.updateDomValue(this._oTempValue.toString());
 				this._setCursorPosition(iNextPos);
 			}
@@ -1163,7 +1212,7 @@ sap.ui.define([
 
 		/**
 		 * @param {Array} aMask The mask from which the mask value array will be built
-		 * @param {String} sPlaceholderSymbol The symbol marker of the mask
+		 * @param {string} sPlaceholderSymbol The symbol marker of the mask
 		 * @param {Array} aRules The rules from which the mask value array is built
 		 * @param {Array} aSkipIndexes @since 1.38 List of indexes to skip
 		 * @private
@@ -1313,7 +1362,7 @@ sap.ui.define([
 		/**
 		 * Checks if a given character belongs to an RTL language
 		 * @private
-		 * @param {String} sString The checked character
+		 * @param {string} sString The checked character
 		 * @returns {boolean} Whether a given character belongs to an RTL language
 		 */
 		this._isRtlChar = function (sString) {
@@ -1378,7 +1427,7 @@ sap.ui.define([
 		 * @returns {boolean} Whether the current control is in RTL mode
 		 */
 		this._isRtlMode = function () {
-			return sap.ui.getCore().getConfiguration().getRTL() || (this.getTextDirection() === TextDirection.RTL);
+			return Configuration.getRTL() || (this.getTextDirection() === TextDirection.RTL);
 		};
 
 		/**
@@ -1514,6 +1563,7 @@ sap.ui.define([
 			 */
 			// Should be called from within the input handler(not in a delayed call), otherwise a flickering between
 			// the old and new value will be observed
+
 			this.updateDomValue(this._oKeyDownStateAndroid.sValue);
 
 			setTimeout(function(oInputEvent, oKeyDownState, oKey) {

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(['sap/ui/core/Renderer', './InputBaseRenderer', 'sap/ui/core/library'],
@@ -43,17 +43,12 @@ sap.ui.define(['sap/ui/core/Renderer', './InputBaseRenderer', 'sap/ui/core/libra
 		}
 	};
 
-	DatePickerRenderer.getAriaRole = function(oDP) {
-		return "combobox";
-	};
-
 	DatePickerRenderer.getAccessibilityState = function(oDP) {
 		var mAccessibilityState = InputBaseRenderer.getAccessibilityState.apply(this, arguments);
 
 		mAccessibilityState["roledescription"] = sap.ui.getCore().getLibraryResourceBundle("sap.m").getText("ACC_CTR_TYPE_DATEINPUT");
 		mAccessibilityState["autocomplete"] = "none";
 		mAccessibilityState["haspopup"] = coreLibrary.aria.HasPopup.Grid.toLowerCase();
-		mAccessibilityState["expanded"] = false;
 		// aria-disabled is not necessary if we already have a native 'disabled' attribute
 		mAccessibilityState["disabled"] = null;
 
@@ -63,6 +58,19 @@ sap.ui.define(['sap/ui/core/Renderer', './InputBaseRenderer', 'sap/ui/core/libra
 		}
 
 		return mAccessibilityState;
+	};
+
+	/**
+	 * Adds specific class to hide the <code>DatePicker</code> input field when the <code>hideInput</code> property is set to <code>true</code>.
+	 * @protected
+	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
+	 * @param {sap.m.DatePicker} oControl An object representation of the control that should be rendered.
+	 */
+	 DatePickerRenderer.addOuterClasses = function(oRm, oControl) {
+		if (oControl.getHideInput()) {
+			oRm.class("sapMDatePickerHiddenInput");
+		}
+		InputBaseRenderer.addOuterClasses.apply(this, arguments);
 	};
 
 	return DatePickerRenderer;

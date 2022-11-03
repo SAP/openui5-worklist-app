@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -11,9 +11,10 @@ sap.ui.define([
 	'sap/ui/core/Renderer',
 	'sap/ui/core/library',
 	'sap/ui/Device',
-	"sap/ui/thirdparty/jquery"
+	"sap/ui/thirdparty/jquery",
+	"sap/ui/core/InvisibleText"
 ],
-	function(library, Element, Renderer, coreLibrary, Device, jQuery) {
+	function(library, Element, Renderer, coreLibrary, Device, jQuery, InvisibleText) {
 	"use strict";
 
 
@@ -46,13 +47,12 @@ sap.ui.define([
 	 * @extends sap.ui.core.Element
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.12
 	 * @alias sap.m.Column
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var Column = Element.extend("sap.m.Column", /** @lends sap.m.Column.prototype */ { metadata : {
 
@@ -197,6 +197,15 @@ sap.ui.define([
 			 */
 			footer : {type : "sap.ui.core.Control", multiple : false}
 		},
+		associations: {
+			/**
+			 * Provides a menu that is used by the column.
+			 * The given menu has to follow the same pattern as the <code>sap.ui.core.IColumnHeaderMenu</code> interface.
+			 *
+			 * @since 1.98.0
+			 */
+			headerMenu: {type: "sap.ui.core.IColumnHeaderMenu", multiple: false, visibility: "hidden"}
+		},
 		designtime: "sap/m/designtime/Column.designtime"
 	}});
 
@@ -215,6 +224,15 @@ sap.ui.define([
 
 	Column.prototype.exit = function() {
 		this._clearMedia();
+	};
+
+	Column.prototype.setParent = function(oParent) {
+		Element.prototype.setParent.apply(this, arguments);
+		if (!oParent) {
+			delete this._initialOrder;
+		}
+
+		return this;
 	};
 
 	Column.prototype.getTable = function() {
@@ -681,7 +699,7 @@ sap.ui.define([
 	// hence overwriting the getFocusDomRef to restore the focus on the active column header
 	Column.prototype.getFocusDomRef = function() {
 		var oParent = this.getParent();
-		if (oParent && (oParent.bActiveHeaders || oParent.bFocusableHeaders)) {
+		if (oParent && (oParent.bActiveHeaders || oParent.bFocusableHeaders || this.getAssociation("headerMenu"))) {
 			var oColumnDomRef = this.getDomRef();
 			if (oColumnDomRef) {
 				return oColumnDomRef.firstChild;
@@ -703,6 +721,44 @@ sap.ui.define([
 
 		this._bForcedColumn = bForcedColumn;
 		this._setMinScreenWidth(bForcedColumn ? "" : this.getMinScreenWidth());
+	};
+
+	/**
+	 * Returns the column header menu instance that this column is associated with via the <code>headerMenu</code> association.
+	 *
+	 * @returns {sap.ui.core.IColumnHeaderMenu | undefined} The column header menu instance
+	 * @private
+	 */
+	Column.prototype._getHeaderMenuInstance = function () {
+		return sap.ui.getCore().byId(this.getAssociation("headerMenu"));
+	};
+
+	Column.prototype.setHeader = function (oControl) {
+		var oOldHeader = this.getHeader();
+		if (oOldHeader && oOldHeader.isA("sap.m.Label")) {
+			oOldHeader.detachEvent("_change", this._onLabelPropertyChange, this);
+			oOldHeader.setIsInColumnHeaderContext(false);
+		}
+
+		this.setAggregation("header", oControl);
+
+		var oNewHeader = this.getHeader();
+		if (oNewHeader && oNewHeader.isA("sap.m.Label")) {
+			oNewHeader.attachEvent("_change", this._onLabelPropertyChange, this);
+			oNewHeader.setIsInColumnHeaderContext(true);
+		}
+
+		return this;
+	};
+
+	Column.prototype._onLabelPropertyChange = function (oEvent) {
+		if (oEvent.getParameter("name") != "required") {
+			return;
+		}
+
+		if (this.getTable().bActiveHeaders || this._getHeaderMenuInstance()) {
+			this.$("ah")[oEvent.getSource().getRequired() ? "addAriaDescribedBy" : "removeAriaDescribedBy"](InvisibleText.getStaticId("sap.m", "CONTROL_IN_COLUMN_REQUIRED"));
+		}
 	};
 
 	return Column;

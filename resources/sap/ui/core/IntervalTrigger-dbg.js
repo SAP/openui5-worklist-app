@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(['../base/Object', './EventBus', "sap/base/assert"],
@@ -23,7 +23,7 @@ sap.ui.define(['../base/Object', './EventBus', "sap/base/assert"],
 		 *
 		 * @extends sap.ui.base.Object
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 * @public
 		 * @since 1.11.0
 		 * @alias sap.ui.core.IntervalTrigger

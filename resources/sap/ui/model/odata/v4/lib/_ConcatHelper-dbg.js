@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -19,9 +19,8 @@ sap.ui.define([
 		 * @param {sap.ui.model.odata.v4.lib._CollectionCache} oCache
 		 *   The cache to be enhanced
 		 * @param {object} oAggregation
-		 *   An object holding the information needed for data aggregation; see also
-		 *   <a href="http://docs.oasis-open.org/odata/odata-data-aggregation-ext/v4.0/">OData
-		 *   Extension for Data Aggregation Version 4.0</a>; must already be normalized by
+		 *   An object holding the information needed for data aggregation; see also "OData
+		 *   Extension for Data Aggregation Version 4.0"; must already be normalized by
 		 *   {@link _AggregationHelper.buildApply}
 		 * @param {function[]} [aAdditionalRowHandlers]
 		 *   Handlers for the additional response rows (which are automatically scanned for
@@ -66,19 +65,10 @@ sap.ui.define([
 			};
 
 			/**
-			 * Handles a GET response wich contains additional rows.
-			 *
-			 * @param {number} iStart
-			 *   The index of the first element to request ($skip)
-			 * @param {number} iEnd
-			 *   The index after the last element to request ($skip + $top)
-			 * @param {object} oResult
-			 *   The result of the GET request
-			 * @param {object} mTypeForMetaPath
-			 *   A map from meta path to the entity type (as delivered by {@link #fetchTypes})
+			 * @override
+			 * @see sap.ui.model.odata.v4.lib._CollectionCache#handleResponse
 			 */
-			// @override sap.ui.model.odata.v4.lib._CollectionCache#handleResponse
-			oCache.handleResponse = function (iStart, iEnd, oResult, mTypeForMetaPath) {
+			oCache.handleResponse = function (oResult) {
 				aAdditionalRowHandlers.forEach(function (fnHandler) {
 					var oAdditionalRow;
 
@@ -93,7 +83,8 @@ sap.ui.define([
 
 				// revert to prototype and call it
 				delete this.handleResponse;
-				this.handleResponse(iStart, iEnd, oResult, mTypeForMetaPath);
+
+				return this.handleResponse.apply(this, arguments);
 			};
 		}
 	};

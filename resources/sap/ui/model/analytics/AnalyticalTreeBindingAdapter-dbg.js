@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -54,9 +54,7 @@ sap.ui.define([
 	 * Used by the AnalyticalTable to display the sum row.
 	 */
 	AnalyticalTreeBindingAdapter.prototype.getGrandTotalContext = function () {
-		if (this._oRootNode) {
-			return this._oRootNode.context;
-		}
+		return this._oRootNode && this._oRootNode.context;
 	};
 
 	/*
@@ -64,9 +62,7 @@ sap.ui.define([
 	 * Used by the AnalyticalTable to display the sum row.
 	 */
 	AnalyticalTreeBindingAdapter.prototype.getGrandTotalNode = function () {
-		if (this._oRootNode) {
-			return this._oRootNode;
-		}
+		return this._oRootNode;
 	};
 
 	/*
@@ -81,21 +77,10 @@ sap.ui.define([
 			return 0;
 		}
 
-		//in the autoExpand mode the length of the binding is defined by the watermark's position in the tree
-		if (this._oRootNode && this._oWatermark && this._isRunningInAutoExpand(TreeAutoExpandMode.Bundled)) {
-
-			//if the root length is not final -> we have to return the root node magnitude instead of the absolute index of the watermark
-			if (this._oWatermark.groupID === this._oRootNode.groupID) {
-				return this._oRootNode.magnitude + this._oRootNode.numberOfTotals;
-			}
-
-			// +1 because we have at least one node more after the watermark
-			// this is important for the table's scrollbar calculation
-			return this._oWatermark.absoluteNodeIndex + this._oRootNode.numberOfTotals + 1;
-		}
-
 		// The length is the sum of the trees magnitue + all sum rows (from expanded nodes)
-		return this._oRootNode.magnitude + this._oRootNode.numberOfTotals;
+		return this._oRootNode.magnitude + this._oRootNode.numberOfTotals
+			// with a watermark, there is missing data -> add 1 to be able to scroll into that area
+			+ (this._oWatermark ? 1 : 0);
 	};
 
 	AnalyticalTreeBindingAdapter.prototype.getContextByIndex = function (iIndex) {
@@ -109,7 +94,6 @@ sap.ui.define([
 
 		// if the node was not found in the current tree snapshot -> rebuild the tree, and if necessary request the node
 		if (!oNode || !oNode.context) {
-			//@TODO: Maybe preserve the Row Index Cache, before calling getContexts, and restore it afterwards
 			//Beware: getContexts might return nothing, if the context was not yet loaded!
 			oNode = {context: this.getContexts(iIndex, 1, 0)[0]};
 		}
@@ -148,7 +132,7 @@ sap.ui.define([
 	 *
 	 * @param {boolean} bReturnNodes
 	 *   Whether to return node objects or contexts
-	 * @param {number} iStartIndex
+	 * @param {number} [iStartIndex=0]
 	 *   The index of the first requested node or context
 	 * @param {number} [iLength]
 	 *   The maximum number of returned nodes or contexts; if not given the model's size limit is
@@ -162,15 +146,18 @@ sap.ui.define([
 	 */
 	AnalyticalTreeBindingAdapter.prototype._getContextsOrNodes = function (bReturnNodes,
 			iStartIndex, iLength, iThreshold) {
+		var i, mMissingSections, oNode, oParentNode,
+			aContexts = [],
+			aNodes = [],
+			that = this;
+
 		if (!this.isResolved()) {
-			return [];
+			return aNodes;
 		}
-		if (!iLength) {
-			iLength = this.oModel.iSizeLimit;
-		}
-		if (!iThreshold) {
-			iThreshold = 0;
-		}
+
+		iStartIndex = iStartIndex || 0;
+		iLength = iLength || this.oModel.iSizeLimit;
+		iThreshold = iThreshold || 0;
 
 		this._iPageSize = iLength;
 		this._iThreshold = Math.max(this._iThreshold, iThreshold);
@@ -181,7 +168,6 @@ sap.ui.define([
 		this._buildTree(iStartIndex, iLength);
 
 		// retrieve the requested/visible section of nodes from the tree
-		var aNodes = [];
 		if (this._oRootNode) {
 			aNodes = this._retrieveNodeSection(this._oRootNode, iStartIndex, iLength);
 		}
@@ -189,25 +175,29 @@ sap.ui.define([
 		// keep a map between Table.RowIndex and tree nodes
 		this._updateRowIndexMap(aNodes, iStartIndex);
 
-		var aContexts = [];
-		//find missing spots in our visible section
-		var mMissingSections;
-		for (var i = 0; i < aNodes.length; i++) {
-			var oNode = aNodes[i];
-
-			//user scrolled into the water mark node, which is the last of the guaranteed loaded page (length + threshold)
-			if (this._isRunningInAutoExpand(TreeAutoExpandMode.Bundled) && this._oWatermark) {
-				if (oNode.groupID === this._oWatermark.groupID ||
-						(this._oWatermark.groupID === this._oRootNode.groupID && (iStartIndex + i + 1) == this.getLength() - 1)) {
-					this._autoExpandPaging();
+		if (this._oWatermark) {
+			// check whether the user scrolled into the area of the watermark node, which is the
+			// last guaranteed node of the loaded page; remove nodes that are not under the
+			// watermark (that means their group IDs don't start with the watermark's group ID),
+			// because there are missing nodes in between -> avoids jumping rows
+			for (i = aNodes.length - 1; i >= 0; i -= 1) {
+				if (aNodes[i].groupID.startsWith(this._oWatermark.groupID)) {
+					aNodes.length = i + 1;
+					break;
 				}
 			}
-
+			if (aNodes.length < iLength) {
+				this._autoExpandPaging();
+			}
+		}
+		//find missing spots in our visible section
+		for (i = 0; i < aNodes.length; i++) {
+			oNode = aNodes[i];
 			// we found a gap because the node is empty (context is undefined)
 			if (!oNode.context) {
 				mMissingSections = mMissingSections || {};
 				// check if we already build a missing section
-				var oParentNode = oNode.parent;
+				oParentNode = oNode.parent;
 
 				mMissingSections[oParentNode.groupID] = oParentNode;
 
@@ -219,8 +209,6 @@ sap.ui.define([
 
 		// trigger load for nodes with missing sections
 		if (mMissingSections) {
-			var that = this;
-
 			//if we have a missing section inside a subtree, we need to reload this subtree
 			each(mMissingSections, function (sGroupID, oNode) {
 				// reset the root of the subtree
@@ -232,8 +220,8 @@ sap.ui.define([
 
 			// try to fill gaps in our return array if we already have new data (thanks to thresholding)
 			aContexts = [];
-			for (var j = 0; j < aNodes.length; j++) {
-				var oNode = aNodes[j];
+			for (i = 0; i < aNodes.length; i += 1) {
+				oNode = aNodes[i];
 				aContexts.push(oNode.context);
 			}
 		}
@@ -281,6 +269,8 @@ sap.ui.define([
 				aResults.push(oNode.sumNode);
 			}
 		}
+
+		return undefined;
 	};
 
 	/*
@@ -589,17 +579,15 @@ sap.ui.define([
 		// in case we have no grouping at all, the "groupID" for each node is based on its position as the roots child
 		if (!this.isGrouped() && oNode && oNode.positionInParent) {
 			sGroupID = "/" + oNode.positionInParent + "/";
-		} else {
+		} else if (oNode.level > iMaxLevel) {
 			// if the level of the node exceeds the maximum level (in the analytical case, this is the aggregation level),
 			// the group id is also appended with the relative parent position
-			if (oNode.level > iMaxLevel) {
-				sGroupID = this._getGroupIdFromContext(oNode.context, iMaxLevel);
-				assert(oNode.positionInParent != undefined, "If the node level is greater than the number of grouped columns, the position of the node to its parent must be defined!");
-				sGroupID +=  oNode.positionInParent + "/";
-			} else {
-				//this is the best case, the node sits on a higher level than the aggregation level
-				sGroupID = this._getGroupIdFromContext(oNode.context, oNode.level);
-			}
+			sGroupID = this._getGroupIdFromContext(oNode.context, iMaxLevel);
+			assert(oNode.positionInParent != undefined, "If the node level is greater than the number of grouped columns, the position of the node to its parent must be defined!");
+			sGroupID +=  oNode.positionInParent + "/";
+		} else {
+			//this is the best case, the node sits on a higher level than the aggregation level
+			sGroupID = this._getGroupIdFromContext(oNode.context, oNode.level);
 		}
 		return sGroupID;
 	};
@@ -779,6 +767,8 @@ sap.ui.define([
 				bHasMeasures = true;
 				return false;
 			}
+
+			return true;
 		});
 		return bHasMeasures;
 	};

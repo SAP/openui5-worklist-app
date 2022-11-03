@@ -1,6 +1,6 @@
-/*
- * ! OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+/*!
+ * OpenUI5
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -27,13 +27,12 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.28.11
 	 * @alias sap.m.QuickViewBase
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var QuickViewBase = Control.extend("sap.m.QuickViewBase", /** @lends sap.m.QuickViewBase.prototype */ {
 		metadata: {

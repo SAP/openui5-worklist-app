@@ -1,10 +1,10 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define(["sap/ui/Device"], function(Device) {
+sap.ui.define([], function() {
 	"use strict";
 
 	/**
@@ -19,7 +19,7 @@ sap.ui.define(["sap/ui/Device"], function(Device) {
 	 * Renders the HTML for the given {@link sap.m.TimePickerInputs} control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRM The RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered
+	 * @param {sap.m.TimePickerInputs} oControl An object representation of the control that should be rendered
 	 */
 	TimePickerInputsRenderer.render = function(oRm, oControl) {
 		var aControls = oControl.getAggregation("_inputs"),
@@ -53,6 +53,8 @@ sap.ui.define(["sap/ui/Device"], function(Device) {
 					oRm.close("span");
 				}
 			}
+
+			oRm.renderControl(oControl._getCurrentTimeButton());
 
 			oRm.close("div"); // outer wrapper
 		}

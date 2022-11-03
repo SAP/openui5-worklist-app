@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -32,13 +32,12 @@ sap.ui.define([
 	 * This control serves for picking an item from a grid with items which are relative periods in Plannig Calendar.
 	 * This is used inside the sap.m.PlanningCalendar relative views. Not for stand alone usage.
 	 * @extends sap.ui.core.Control
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @private
 	 * @since 1.93.0
 	 * @alias sap.ui.unified.calendar.IndexPicker
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var IndexPicker = Control.extend("sap.ui.unified.calendar.IndexPicker", {
 		metadata: {
@@ -86,7 +85,8 @@ sap.ui.define([
 				 */
 				focus: {}
 			}
-		}
+		},
+		renderer: IndexPickerRenderer
 	});
 
 	IndexPicker.prototype.init = function(){
@@ -246,11 +246,11 @@ sap.ui.define([
 		var aDomRefs = this._oItemNavigation.getItemDomRefs();
 
 		// find out what index was focused
-		var $DomRef = jQuery(aDomRefs[iIndex]);
+		var oDomRef = aDomRefs[iIndex];
 
 		this.iCurrentIndex = oFocusedIndex;
 
-		oFocusedIndex = $DomRef.attr("data-sap-ui-index");
+		oFocusedIndex = oDomRef.getAttribute("data-sap-ui-index");
 
 		this.fireFocus({index: oFocusedIndex});
 	}

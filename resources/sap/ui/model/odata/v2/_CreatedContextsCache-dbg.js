@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -33,10 +33,14 @@ sap.ui.define([
 	 *   The resolved binding path
 	 * @param {string} sListID
 	 *   The identifier for the list showing the data
+	 * @param {boolean} bAtEnd
+	 *   Whether the context is added at the end; if set to <code>false</code>, the context is added
+	 *   at the beginning. The first call determines the overall position of the contexts.
 	 *
 	 * @private
 	 */
-	_CreatedContextsCache.prototype.addContext = function (oCreatedContext, sPath, sListID) {
+	_CreatedContextsCache.prototype.addContext = function (oCreatedContext, sPath, sListID,
+			bAtEnd) {
 		var aContexts, mListIDToContexts;
 
 		mListIDToContexts = this.mCache[sPath];
@@ -46,9 +50,14 @@ sap.ui.define([
 		aContexts = mListIDToContexts[sListID];
 		if (!aContexts) {
 			aContexts = mListIDToContexts[sListID] = [];
+			// store bAtEnd initially because it will determine the overall position of the contexts
+			aContexts.bAtEnd = bAtEnd;
 		}
-		// currently we support only bAtEnd === false in ODataListBinding#create
-		aContexts.unshift(oCreatedContext);
+		if (bAtEnd) {
+			aContexts.push(oCreatedContext);
+		} else {
+			aContexts.unshift(oCreatedContext);
+		}
 	};
 
 	/**
@@ -60,7 +69,57 @@ sap.ui.define([
 	 * @private
 	 */
 	_CreatedContextsCache.prototype.findAndRemoveContext = function (oCreatedContext) {
-		var that = this;
+		var oResult = this.getCacheInfo(oCreatedContext);
+
+		if (oResult) {
+			this.removeContext(oCreatedContext, oResult.cachePath, oResult.listID);
+		}
+	};
+
+	/**
+	 * Finds the context in the cache whose path is prefix to or equals the given path.
+	 *
+	 * @param {string} sPath
+	 *   The absolute path
+	 * @returns {sap.ui.model.odata.v2.Context|undefined}
+	 *   The matching context or <code>undefined</code> if no context matches
+	 *
+	 * @private
+	 */
+	_CreatedContextsCache.prototype.findCreatedContext = function (sPath) {
+		var oContext;
+
+		Object.values(this.mCache).some(function (mListIDToContexts) {
+			return Object.values(mListIDToContexts).some(function (aContextsByListID) {
+				return aContextsByListID.some(function (oContext0) {
+					if (sPath.startsWith(oContext0.getPath())) {
+						oContext = oContext0;
+
+						return true;
+					}
+
+					return false;
+				});
+			});
+		});
+
+		return oContext;
+	};
+
+	/**
+	 * Checks whether a given context is contained in the the list of contexts for created entities
+	 * and returns the path and list ID.
+	 *
+	 * @param {sap.ui.model.odata.v2.Context} oCreatedContext
+	 *   The context to be searched in the cache
+	 * @returns {{cachePath : string, listID : string}|undefined}
+	 *   An object containing the cache path and the list ID if the given context is contained in
+	 *   the cache, <code>undefined</code> otherwise
+	 *
+	 * @private
+	 */
+	 _CreatedContextsCache.prototype.getCacheInfo = function (oCreatedContext) {
+		var oResult, that = this;
 
 		Object.keys(this.mCache).some(function (sCachePath) {
 			var mListIDToContexts = that.mCache[sCachePath];
@@ -69,7 +128,7 @@ sap.ui.define([
 				var aContexts = that.mCache[sCachePath][sListID];
 
 				if (aContexts.includes(oCreatedContext)) {
-					that.removeContext(oCreatedContext, sCachePath, sListID);
+					oResult = {cachePath : sCachePath, listID : sListID};
 
 					return true;
 				}
@@ -77,12 +136,14 @@ sap.ui.define([
 				return false;
 			});
 		});
+
+		return oResult;
 	};
 
 	/**
 	 * Gets the contexts for created entities for the given path and list ID.
 	 *
-	 * @param {string} [sPath]
+	 * @param {string} sPath
 	 *   The resolved binding path
 	 * @param {string} sListID
 	 *   The identifier for the list showing the data
@@ -97,6 +158,27 @@ sap.ui.define([
 			aContexts = mListIDToContexts && mListIDToContexts[sListID];
 
 		return aContexts ? aContexts.slice() : [];
+	};
+
+	/**
+	 * Returns whether the contexts for created entities for the given path and list ID are added
+	 * at the end.
+	 *
+	 * @param {string} sPath
+	 *   The resolved binding path
+	 * @param {string} sListID
+	 *   The identifier for the list showing the data
+	 * @returns {boolean|undefined}
+	 *   Whether the contexts are added at the end; <code>undefined</code> if there are no contexts
+	 *   for the given path and list ID
+	 *
+	 * @private
+	 */
+	_CreatedContextsCache.prototype.isAtEnd = function (sPath, sListID) {
+		var mListIDToContexts = this.mCache[sPath],
+			aContexts = mListIDToContexts && mListIDToContexts[sListID];
+
+		return aContexts && aContexts.bAtEnd;
 	};
 
 	/**
@@ -125,5 +207,33 @@ sap.ui.define([
 		}
 	};
 
+	/**
+	 * Removes all persisted contexts from the list of contexts for created entities for the given
+	 * path and list ID.
+	 *
+	 * @param {sPath} sPath
+	 *   The resolved binding path
+	 * @param {string} sListID
+	 *   The identifier for the list showing the data
+	 * @returns {sap.ui.model.odata.v2.Context[]}
+	 *   An array of persisted contexts that have been removed from the cache
+	 *
+	 * @private
+	 */
+	_CreatedContextsCache.prototype.removePersistedContexts = function (sPath, sListID) {
+		var aCreatedPersistedContexts = this.getContexts(sPath, sListID)
+				.filter(function (oContext) {
+					return oContext.isTransient() === false;
+				}),
+			that = this;
+
+		aCreatedPersistedContexts.forEach(function (oContext) {
+			oContext.resetCreatedPromise();
+			that.removeContext(oContext, sPath, sListID);
+		});
+
+		return aCreatedPersistedContexts;
+	};
+
 	return _CreatedContextsCache;
-}, /* bExport= */ false);
+});

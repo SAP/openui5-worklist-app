@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -30,40 +30,43 @@ sap.ui.define([
 	 * @extends sap.m.ListItemBase
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @alias sap.m.InputListItem
 	 * @see {@link fiori:/input-list-item/ Input List Item}
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var InputListItem = ListItemBase.extend("sap.m.InputListItem", /** @lends sap.m.InputListItem.prototype */ { metadata : {
+	var InputListItem = ListItemBase.extend("sap.m.InputListItem", /** @lends sap.m.InputListItem.prototype */ {
+		metadata : {
 
-		library : "sap.m",
-		properties : {
+			library : "sap.m",
+			properties : {
 
-			/**
-			 * Label of the list item
-			 */
-			label : {type : "string", group : "Misc", defaultValue : null},
+				/**
+				 * Label of the list item
+				 */
+				label : {type : "string", group : "Misc", defaultValue : null},
 
-			/**
-			 * This property specifies the label text directionality with enumerated options. By default, the label inherits text direction from the DOM.
-			 * @since 1.30.0
-			 */
-			labelTextDirection : {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit}
+				/**
+				 * This property specifies the label text directionality with enumerated options. By default, the label inherits text direction from the DOM.
+				 * @since 1.30.0
+				 */
+				labelTextDirection : {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit}
+			},
+			defaultAggregation : "content",
+			aggregations : {
+
+				/**
+				 * Content controls can be added
+				 */
+				content : {type : "sap.ui.core.Control", multiple : true, singularName : "content", bindable : "bindable"}
+			},
+			designtime: "sap/m/designtime/InputListItem.designtime"
 		},
-		defaultAggregation : "content",
-		aggregations : {
 
-			/**
-			 * Content controls can be added
-			 */
-			content : {type : "sap.ui.core.Control", multiple : true, singularName : "content", bindable : "bindable"}
-		},
-		designtime: "sap/m/designtime/InputListItem.designtime"
-	}});
+		renderer: InputListItemRenderer
+	});
 
 	InputListItem.prototype.getContentAnnouncement = function() {
 		var sAnnouncement = this.getLabel() + " . ";

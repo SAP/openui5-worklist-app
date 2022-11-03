@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -11,7 +11,6 @@ sap.ui.define([
 	'sap/ui/core/library',
 	'sap/ui/core/Icon',
 	'./TokenRenderer',
-	'sap/ui/core/InvisibleText',
 	'sap/ui/events/KeyCodes',
 	'sap/ui/core/Core'
 ],
@@ -21,7 +20,6 @@ sap.ui.define([
 		coreLibrary,
 		Icon,
 		TokenRenderer,
-		InvisibleText,
 		KeyCodes,
 		Core
 	) {
@@ -52,111 +50,114 @@ sap.ui.define([
 	 *
 	 * @extends sap.ui.core.Control
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @alias sap.m.Token
 	 * @see {@link fiori:https://experience.sap.com/fiori-design-web/token/ Token}
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var Token = Control.extend("sap.m.Token", /** @lends sap.m.Token.prototype */ { metadata : {
+	var Token = Control.extend("sap.m.Token", /** @lends sap.m.Token.prototype */ {
+		metadata : {
 
-		library : "sap.m",
-		properties : {
+			library : "sap.m",
+			properties : {
 
-			/**
-			 * Indicates the current selection status of the token.
-			 */
-			selected : {type : "boolean", group : "Misc", defaultValue : false},
+				/**
+				 * Indicates the current selection status of the token.
+				 */
+				selected : {type : "boolean", group : "Misc", defaultValue : false},
 
-			/**
-			 * Key of the token.
-			 */
-			key : {type : "string", group : "Misc", defaultValue : ""},
+				/**
+				 * Key of the token.
+				 */
+				key : {type : "string", group : "Misc", defaultValue : ""},
 
-			/**
-			 * Displayed text of the token.
-			 */
-			text : {type : "string", group : "Misc", defaultValue : ""},
+				/**
+				 * Displayed text of the token.
+				 */
+				text : {type : "string", group : "Misc", defaultValue : ""},
 
-			/**
-			 * Indicates the editable status of the token. If it is set to <code>true</code>, token displays a delete icon.
-			 */
-			editable : {type : "boolean", group : "Misc", defaultValue : true},
+				/**
+				 * Indicates the editable status of the token. If it is set to <code>true</code>, token displays a delete icon.
+				 */
+				editable : {type : "boolean", group : "Misc", defaultValue : true},
 
-			/**
-			 * This property specifies the text directionality with enumerated options. By default, the control inherits text direction from the DOM.
-			 * @since 1.28.0
-			 */
-			textDirection : {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
+				/**
+				 * This property specifies the text directionality with enumerated options. By default, the control inherits text direction from the DOM.
+				 * @since 1.28.0
+				 */
+				textDirection : {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit},
 
-			/**
-			 * Indicates the editable status of the token's parent (Tokenizer). If it is set to <code>true</code>, the ARIA attributes of the token are updated accordingly.
-			 */
-			editableParent : {type : "boolean", group : "Behavior", defaultValue : true, visibility: "hidden"},
+				/**
+				 * Indicates the editable status of the token's parent (Tokenizer). If it is set to <code>true</code>, the ARIA attributes of the token are updated accordingly.
+				 */
+				editableParent : {type : "boolean", group : "Behavior", defaultValue : true, visibility: "hidden"},
 
-			/**
-			 * Indicates if the token's text should be truncated.
-			 */
-			truncated : {type : "boolean", group : "Appearance", defaultValue : false, visibility: "hidden"},
+				/**
+				 * Indicates if the token's text should be truncated.
+				 */
+				truncated : {type : "boolean", group : "Appearance", defaultValue : false, visibility: "hidden"},
 
-			/**
-			 * Indicates the position of a token. Used for aria attributes.
-			 * @private
-			 */
-			posinset : { type: "int", visibility: "hidden" },
+				/**
+				 * Indicates the position of a token. Used for aria attributes.
+				 * @private
+				 */
+				posinset : { type: "int", visibility: "hidden" },
 
-			/**
-			 * Indicates the count of the token. Used for aria attributes.
-			 * @private
-			 */
-			setsize : { type: "int", visibility: "hidden" }
-		},
-		aggregations : {
-
-			/**
-			 * The delete icon.
-			 */
-			deleteIcon : {type : "sap.ui.core.Icon", multiple : false, visibility : "hidden"}
-		},
-		associations : {
-
-			/**
-			 * Association to controls / IDs which describe this control (see WAI-ARIA attribute aria-describedby).
-			 */
-			ariaDescribedBy: {type: "sap.ui.core.Control", multiple: true, singularName: "ariaDescribedBy"},
-
-			/**
-			 * Association to controls / IDs which label this control (see WAI-ARIA attribute aria-labelledby).
-			 */
-			ariaLabelledBy: {type: "sap.ui.core.Control", multiple: true, singularName: "ariaLabelledBy"}
-		},
-		events : {
-
-			/**
-			 * This event is fired if the user clicks the token's delete icon.
-			 */
-			"delete" : {
-				enableEventBubbling: true
+				/**
+				 * Indicates the count of the token. Used for aria attributes.
+				 * @private
+				 */
+				setsize : { type: "int", visibility: "hidden" }
 			},
+			aggregations : {
 
-			/**
-			 * This event is fired when the user clicks on the token.
-			 */
-			press : {},
+				/**
+				 * The delete icon.
+				 */
+				deleteIcon : {type : "sap.ui.core.Icon", multiple : false, visibility : "hidden"}
+			},
+			associations : {
 
-			/**
-			 * This event is fired when the token gets selected.
-			 */
-			select : {},
+				/**
+				 * Association to controls / IDs which describe this control (see WAI-ARIA attribute aria-describedby).
+				 */
+				ariaDescribedBy: {type: "sap.ui.core.Control", multiple: true, singularName: "ariaDescribedBy"},
 
-			/**
-			 * This event is fired when the token gets deselected.
-			 */
-			deselect : {}
-		}
-	}});
+				/**
+				 * Association to controls / IDs which label this control (see WAI-ARIA attribute aria-labelledby).
+				 */
+				ariaLabelledBy: {type: "sap.ui.core.Control", multiple: true, singularName: "ariaLabelledBy"}
+			},
+			events : {
+
+				/**
+				 * This event is fired if the user clicks the token's delete icon.
+				 */
+				"delete" : {
+					enableEventBubbling: true
+				},
+
+				/**
+				 * This event is fired when the user clicks on the token.
+				 */
+				press : {},
+
+				/**
+				 * This event is fired when the token gets selected.
+				 */
+				select : {},
+
+				/**
+				 * This event is fired when the token gets deselected.
+				 */
+				deselect : {}
+			}
+		},
+
+		renderer: TokenRenderer
+	});
 
 	Token.prototype.init = function() {
 		var oDeleteIcon = new Icon({
@@ -309,7 +310,6 @@ sap.ui.define([
 	 * Sets the Token's <code>truncated</code> property.
 	 *
 	 * @param {boolean} bValue The new property value.
-	 * @param {boolean} bSkipInvalidation true if control invalidation should not happen.
 	 * @returns {this} this reference for method chaining.
 	 * @private
 	 * @ui5-restricted sap.m.Tokenizer

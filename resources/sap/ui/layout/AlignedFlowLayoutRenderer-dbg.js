@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -28,7 +28,7 @@ sap.ui.define(['./library'],
 		 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer
-		 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered
+		 * @param {sap.ui.layout.AlignedFlowLayout} oControl An object representation of the control that should be rendered
 		 */
 		AlignedFlowLayoutRenderer.render = function (oRm, oControl) {
 			var aContent = oControl.getContent();
@@ -53,7 +53,7 @@ sap.ui.define(['./library'],
 		 * Can be overwritten by subclasses.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer
-		 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered
+		 * @param {sap.ui.layout.AlignedFlowLayout} oControl An object representation of the control that should be rendered
 		 * @param {sap.ui.core.Control[]} [aContent=oControl.getContent()] The content to be rendered
 		 */
 		AlignedFlowLayoutRenderer.renderItems = function(oRm, oControl, aContent) {
@@ -69,7 +69,7 @@ sap.ui.define(['./library'],
 		 * Can be overwritten by subclasses.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer
-		 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered
+		 * @param {sap.ui.layout.AlignedFlowLayout} oControl An object representation of the control that should be rendered
 		 * @param {sap.ui.core.Control} oContent The content to be rendered inside the item
 		 */
 		AlignedFlowLayoutRenderer.renderItem = function(oRm, oControl, oContent) {
@@ -87,7 +87,7 @@ sap.ui.define(['./library'],
 		 * Can be overwritten by subclasses.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer
-		 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered
+		 * @param {sap.ui.layout.AlignedFlowLayout} oControl An object representation of the control that should be rendered
 		 * @param {sap.ui.core.Control[]} [aEndContent=oControl.getEndContent()] The content to be rendered inside the last item
 		 */
 		AlignedFlowLayoutRenderer.renderEndItem = function(oRm, oControl, aEndContent) {
@@ -117,7 +117,7 @@ sap.ui.define(['./library'],
 		 * Can be overwritten by subclasses.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer
-		 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered
+		 * @param {sap.ui.layout.AlignedFlowLayout} oControl An object representation of the control that should be rendered
 		 * @param {sap.ui.core.Control} oContent The content to be rendered inside the last item
 		 */
 		AlignedFlowLayoutRenderer.renderEndContent = function(oRm, oControl, oContent) {
@@ -135,7 +135,7 @@ sap.ui.define(['./library'],
 		 * first row has then one element less than there are children
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer
-		 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered
+		 * @param {sap.ui.layout.AlignedFlowLayout} oControl An object representation of the control that should be rendered
 		 */
 		AlignedFlowLayoutRenderer.renderSpacers = function(oRm, oControl) {
 			var iSpacers = oControl.computeNumberOfSpacers(),

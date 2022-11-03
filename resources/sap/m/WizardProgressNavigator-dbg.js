@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -43,63 +43,66 @@ function(
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @private
 	 * @since 1.30
 	 * @alias sap.m.WizardProgressNavigator
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var WizardProgressNavigator = Control.extend("sap.m.WizardProgressNavigator", { /** @lends sap.m.WizardProgressNavigator.prototype */ metadata: {
-		properties: {
+	var WizardProgressNavigator = Control.extend("sap.m.WizardProgressNavigator", /** @lends sap.m.WizardProgressNavigator.prototype */ {
+		metadata: {
+			properties: {
 
-			/**
-			 * Sets the total number of steps.
-			 * Minimum number of steps is 3.
-			 * Maximum number of steps is 8.
-			 */
-			stepCount: {type: "int", group: "Data", defaultValue: 3},
+				/**
+				 * Sets the total number of steps.
+				 * Minimum number of steps is 3.
+				 * Maximum number of steps is 8.
+				 */
+				stepCount: {type: "int", group: "Data", defaultValue: 3},
 
-			/**
-			 * Sets a title to be displayed for each step.
-			 * The title for each step is visible on hover.
-			 * <b>Note:</b> The number of titles should equal the number of steps,
-			 * otherwise no titles will be rendered.
-			 * @since 1.32
-			 */
-			stepTitles: {type: "string[]", group: "Appearance", defaultValue: []},
+				/**
+				 * Sets a title to be displayed for each step.
+				 * The title for each step is visible on hover.
+				 * <b>Note:</b> The number of titles should equal the number of steps,
+				 * otherwise no titles will be rendered.
+				 * @since 1.32
+				 */
+				stepTitles: {type: "string[]", group: "Appearance", defaultValue: []},
 
-			/**
-			 * Sets an icon to be displayed for each step.
-			 * The icon for each step is directly visible in the WizardProgressNavigator.
-			 * <b>Note:</b> The number of icons should equal the number of steps,
-			 * otherwise no icons will be rendered.
-			 * @since 1.32
-			 */
-			stepIcons: {type: "sap.ui.core.URI[]", group: "Appearance", defaultValue: []},
+				/**
+				 * Sets an icon to be displayed for each step.
+				 * The icon for each step is directly visible in the WizardProgressNavigator.
+				 * <b>Note:</b> The number of icons should equal the number of steps,
+				 * otherwise no icons will be rendered.
+				 * @since 1.32
+				 */
+				stepIcons: {type: "sap.ui.core.URI[]", group: "Appearance", defaultValue: []},
 
-			/**
-			* Indicates that number of steps can vary.
-			* A dashed line is displayed after the last concrete step (set by the <code>stepCount</code> property).
-			*/
-			varyingStepCount: {type: "boolean", group: "Appearance", defaultValue: false}
-		},
-		events: {
+				/**
+				* Indicates that number of steps can vary.
+				* A dashed line is displayed after the last concrete step (set by the <code>stepCount</code> property).
+				*/
+				varyingStepCount: {type: "boolean", group: "Appearance", defaultValue: false}
+			},
+			events: {
 
-			/**
-			 * This event is fired when the current step changes.
-			 */
-			stepChanged: {
-				parameters: {
-					/**
-					* The number of the current step. One-based.
-					*/
-					current: {type: "int"}
+				/**
+				 * This event is fired when the current step changes.
+				 */
+				stepChanged: {
+					parameters: {
+						/**
+						* The number of the current step. One-based.
+						*/
+						current: {type: "int"}
+					}
 				}
 			}
-		}
-	}});
+		},
+
+		renderer: WizardProgressNavigatorRenderer
+	});
 
 	WizardProgressNavigator.CONSTANTS = {
 		MINIMUM_STEPS: 3,
@@ -301,8 +304,15 @@ function(
 		this._oStepNavigation = new ItemNavigation();
 		this._oStepNavigation.setCycling(false);
 		this._oStepNavigation.setDisabledModifiers({
-			sapnext: ["alt"],
-			sapprevious: ["alt"]
+			// Alt + arrow keys are reserved for browser navigation
+			sapnext: [
+				"alt", // Windows and Linux
+				"meta" // Apple (⌘)
+			],
+			sapprevious: [
+				"alt",
+				"meta"
+			]
 		});
 		this._oStepNavigation.attachEvent("AfterFocus", function (params) {
 			var oEvent = params.mParameters.oEvent;
@@ -659,7 +669,6 @@ function(
 			sTitle = sStepNumber + " " + sStepTextContent;
 
 			this._oActionSheet.addButton(new Button({
-				width: "200px",
 				text: sTitle,
 				icon: sIcon,
 				enabled: this._iActiveStep >= (i + 1),

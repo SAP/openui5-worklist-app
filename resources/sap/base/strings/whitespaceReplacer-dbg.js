@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([], function () {
@@ -33,7 +33,7 @@ sap.ui.define([], function () {
 	 * @param {string} sInput The input string
 	 * @returns {string | *} The transformed string or the original input in case the input is not a string
 	 * @private
-	 * @ui5-restricted UI5 Controls, Smart Controls
+	 * @ui5-restricted sap.m, sap.ui.comp, sap.fe
 	 */
 	var fnWhitespacesReplacer = function (sInput) {
 		var sWhitespace = " ",

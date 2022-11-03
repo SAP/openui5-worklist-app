@@ -40,7 +40,7 @@
 
 div.sapMSuggestionsPopover {
 	border: none;
-	box-shadow: @sapUiShadowLevel1;
+	box-shadow: @sapUiContentShadow1;
 }
 
 .sapMSuggestionsPopover.sapMPopover {
@@ -50,7 +50,8 @@ div.sapMSuggestionsPopover {
 }
 
 .sapUiSizeCompact {
-	.sapMSuggestionsPopover {
+	.sapMSuggestionsPopover,
+	&.sapMSuggestionsPopover {
 
 		.sapMListUl > .sapMLIB {
 			height: @_sap_m_SuggestionsPopover_ItemHeightCompact;

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -104,13 +104,12 @@ sap.ui.define([
 		 * To prevent this, apps using the <code>ColorPalette</code> should also load the <code>sap.ui.unified</code> library in advance.
 		 *
 		 * @extends sap.ui.core.Control
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
 		 * @since 1.54
 		 * @alias sap.m.ColorPalette
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		var ColorPalette = Control.extend("sap.m.ColorPalette", /** @lends sap.m.ColorPalette.prototype */ {
 			metadata: {
@@ -220,7 +219,9 @@ sap.ui.define([
 						}
 					}
 				}
-			}
+			},
+
+			renderer: ColorPaletteRenderer
 		});
 
 		ColorPalette.prototype.init = function () {
@@ -594,6 +595,12 @@ sap.ui.define([
 				this._oPaletteColorItemNavigation.setCycling(false);
 				this.addDelegate(this._oPaletteColorItemNavigation);
 				this._oPaletteColorItemNavigation.attachEvent(ItemNavigation.Events.BorderReached, this._onSwatchContainerBorderReached, this);
+				this._oPaletteColorItemNavigation.setDisabledModifiers({
+					sapnext: ["alt", "meta"],
+					sapprevious: ["alt", "meta"],
+					saphome : ["alt", "meta"],
+					sapend : ["meta"]
+				});
 			}
 
 			if (!this._oRecentColorItemNavigation) {
@@ -602,6 +609,12 @@ sap.ui.define([
 				this._oRecentColorItemNavigation.setCycling(false);
 				this.addDelegate(this._oRecentColorItemNavigation);
 				this._oRecentColorItemNavigation.attachEvent(ItemNavigation.Events.BorderReached, this._onSwatchContainerBorderReached, this);
+				this._oRecentColorItemNavigation.setDisabledModifiers({
+					sapnext: ["alt", "meta"],
+					sapprevious: ["alt", "meta"],
+					saphome : ["alt", "meta"],
+					sapend : ["meta"]
+				});
 			}
 
 			// all currently available swatches

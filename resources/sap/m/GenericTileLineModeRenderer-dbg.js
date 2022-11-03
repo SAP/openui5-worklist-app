@@ -1,11 +1,11 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS", "sap/ui/thirdparty/jquery"],
-	function(library, encodeCSS, jQuery) {
+sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS", "sap/ui/thirdparty/jquery", "sap/ui/core/Configuration"],
+	function(library, encodeCSS, jQuery, Configuration) {
 	"use strict";
 
 	// shortcut for sap.m.GenericTileScope
@@ -13,8 +13,6 @@ sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS", "sap/ui/thirdpart
 
 	// shortcut for sap.m.LoadState
 	var LoadState = library.LoadState;
-
-	var oRb = sap.ui.getCore().getLibraryResourceBundle("sap.m");
 
 	/**
 	 * GenericTileLineMode renderer.
@@ -45,7 +43,7 @@ sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS", "sap/ui/thirdpart
 		// Render a link when URL is provided, not in action scope and the state is enabled
 		var bRenderLink = oControl.getUrl() && !oControl._isInActionScope() && sState !== LoadState.Disabled;
 
-		this._bRTL = sap.ui.getCore().getConfiguration().getRTL();
+		this._bRTL = Configuration.getRTL();
 
 		if (sScope === GenericTileScope.Actions) {
 			// given class only needs to be added if the tile's state is not disabled
@@ -68,15 +66,12 @@ sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS", "sap/ui/thirdpart
 			oRm.openStart("a", oControl);
 			oRm.attr("href", oControl.getUrl());
 			oRm.attr("rel", "noopener noreferrer");
-			oRm.attr("draggable", "false"); // <a> elements are draggable per default, use UI5 DnD instead
 		} else {
 			oRm.openStart("span", oControl);
 		}
 		oRm.attr("aria-label", sAriaText);
 		if (sAriaRoleDescription) {
 			oRm.attr("aria-roledescription", sAriaRoleDescription );
-		} else {
-			oRm.attr("aria-roledescription", oRb.getText("GENERIC_TILE_ROLE_DESCRIPTION"));
 		}
 		if (sAriaRole) {
 			oRm.attr("role", sAriaRole);
@@ -88,9 +83,18 @@ sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS", "sap/ui/thirdpart
 		oRm.class("sapMGT");
 		oRm.class(sScopeClass);
 		if (sScope ===  GenericTileScope.ActionMore) {
-				oRm.style("padding-right", "2.25rem");
+				oRm.style("padding-right", "3.3rem");
+		}
+		if (sState !== LoadState.Disabled && sScope === GenericTileScope.ActionRemove) {
+			oRm.class("sapMGTAcionRemove");
 		}
 		oRm.class("sapMGTLineMode");
+		if (oControl.getSystemInfo() || oControl.getAppShortcut()) {
+			oRm.class("sapMGTInfoRendered");
+			if (!bIsScreenLarge){
+				oRm.class("sapMGTLineModeSmall");
+			}
+		}
 		this._writeDirection(oRm);
 		if (sTooltipText) {
 			oRm.attr("title", sTooltipText);
@@ -109,6 +113,10 @@ sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS", "sap/ui/thirdpart
 			oRm.class("sapMGTFailed");
 		}
 		oRm.openEnd();
+		if (sTooltipText) {
+			oControl.getAggregation("_invisibleText").setText(sTooltipText);
+			oRm.renderControl(oControl.getAggregation("_invisibleText"));
+		}
 		// focus div was only getting rendered when screen size was small
 		// which in turn was not rendering active state when screen size was large and thus default browser active state would suffice
 		// in the new line tile visualisation we need active state same as other generic tiles
@@ -123,11 +131,21 @@ sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS", "sap/ui/thirdpart
 			oRm.close("div");
 
 			this._renderFailedIcon(oRm, oControl);
+			oRm.openStart("span", oControl.getId() + "-lineWrapper");
+			oRm.class("sapMGTLineWrapper");
+			oRm.openEnd();
+			oRm.openStart("span", oControl.getId() + "-headerWrapper");
+			oRm.class("sapMGTHeaderWrapper");
+			oRm.openEnd();
 			this._renderHeader(oRm, oControl);
 			if (oControl.getSubheader()) {
 				this._renderSubheader(oRm, oControl);
 			}
-
+			oRm.close("span");
+			if (oControl.getSystemInfo() || oControl.getAppShortcut()) {
+				this._renderInfoContainer(oRm,oControl);
+			}
+			oRm.close("span");
 			oRm.openStart("div", oControl.getId() + "-endMarker");
 			oRm.class("sapMGTEndMarker");
 			oRm.openEnd();
@@ -144,6 +162,34 @@ sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS", "sap/ui/thirdpart
 			oRm.openEnd();
 			oRm.close("div");
 
+		} else if (oControl.getSystemInfo() || oControl.getAppShortcut()){
+			oRm.openStart("div", oControl.getId() + "-touchArea");
+			oRm.class("sapMGTTouchArea");
+			oRm.openEnd();
+			this._renderFailedIcon(oRm, oControl);
+
+			oRm.openStart("span",oControl.getId() + "-lineModeHelpContainer");
+			oRm.class("sapMGTLineModeHelpContainer");
+			oRm.openEnd();
+			oRm.openStart("span", oControl.getId() + "-headerWrapper");
+			oRm.class("sapMGTHeaderWrapper");
+			oRm.openEnd();
+			this._renderHeader(oRm, oControl);
+
+			if (oControl.getSubheader()) {
+				this._renderSubheader(oRm, oControl);
+			}
+			oRm.close("span");
+			if (oControl.getSystemInfo() || oControl.getAppShortcut()) {
+				this._renderInfoContainer(oRm,oControl);
+			}
+			oRm.close("span"); //.sapMGTLineModeHelpContainer
+
+			if (oControl._isInActionScope()) {
+				this._renderActionsScope(oRm, oControl, bIsSingleAction);
+			}
+
+			oRm.close("div"); //.sapMGTTouchArea
 		} else {
 			oRm.openStart("div", oControl.getId() + "-touchArea");
 			oRm.class("sapMGTTouchArea");
@@ -168,20 +214,52 @@ sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS", "sap/ui/thirdpart
 
 			oRm.close("div"); //.sapMGTTouchArea
 		}
-
+		if (oControl._isInActionScope() && oControl.getState() !== LoadState.Disabled) {
+			oRm.renderControl(oControl._oRemoveButton);
+		}
 		if (bRenderLink) {
 			oRm.close("a");
 		} else {
 			oRm.close("span"); //.sapMGT
 		}
 	};
-
+	GenericTileLineModeRenderer._renderInfoContainer = function(oRm,oControl){
+				oRm.openStart("span",oControl.getId() + "-sapMGTTInfoWrapper");
+				oRm.class("sapMGTTInfoWrapper").openEnd();
+				oRm.openStart("span",oControl.getId() + "-sapMGTTInfo");
+				oRm.class("sapMGTTInfo");
+				if (!(oControl.getSystemInfo() && oControl.getAppShortcut())){
+					oRm.class("sapMGTInfoNotContainsSeperator");
+				}
+				oRm.openEnd();
+				if (oControl.getAppShortcut()) {
+					oRm.openStart("span", oControl.getId() + "-appShortcut");
+					oRm.class("sapMGTAppShortcutText").openEnd();
+					oRm.renderControl(oControl._oAppShortcut);
+					oRm.close("span");
+				}
+				if (oControl.getSystemInfo()) {
+					this._renderSystemInfo(oRm,oControl);
+				}
+				oRm.close("span");
+				oRm.close("span");
+	};
 	GenericTileLineModeRenderer._writeDirection = function(oRm) {
 		if (this._bRTL) {
 			oRm.attr("dir", "rtl");
 		}
 	};
-
+	GenericTileLineModeRenderer._renderSystemInfo = function(oRm,oControl){
+		oRm.openStart("span",oControl.getId() + "-systemInfoText");
+		this._writeDirection(oRm);
+		oRm.class("sapMGTSystemInfoText");
+		if (oControl.getSystemInfo() && oControl.getAppShortcut()){
+			oRm.class("sapMGTSeperatorPresent");
+		}
+		oRm.openEnd();
+		oRm.text(oControl._oSystemInfo.getText());
+		oRm.close("span");
+	};
 	GenericTileLineModeRenderer._renderFailedIcon = function(oRm, oControl) {
 		if (oControl.getState() === LoadState.Failed) {
 			if (oControl._isCompact()) {
@@ -223,8 +301,6 @@ sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS", "sap/ui/thirdpart
 			oRm.openEnd();
 
 			oRm.renderControl(oControl._oMoreIcon);
-			oRm.renderControl(oControl._oRemoveButton);
-
 			oRm.close("span");
 		}
 	};
@@ -235,10 +311,7 @@ sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS", "sap/ui/thirdpart
 	 * @private
 	 */
 	GenericTileLineModeRenderer._updateHoverStyle = function() {
-		var $StyleHelper = this.$("styleHelper"),
-			oLine,
-			i = 0,
-			sHelpers = "";
+		var $StyleHelper = this.$("styleHelper");
 
 		//empty the style helper even if there is no style data available in order to guarantee a clean display without artifacts
 		$StyleHelper.empty();
@@ -253,9 +326,7 @@ sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS", "sap/ui/thirdpart
 			$StyleHelper.css("left", -this._oStyleData.positionLeft);
 		}
 
-		for (i; i < this._oStyleData.lines.length; i++) {
-			oLine = this._oStyleData.lines[i];
-
+		this._oStyleData.lines.forEach(function(oLine) {
 			var $Rect = jQuery("<div class='sapMGTLineStyleHelper'><div class='sapMGTLineStyleHelperInner'></div></div>");
 			if (this._oStyleData.rtl) {
 				$Rect.css("right", oLine.offset.x + "px");
@@ -266,11 +337,8 @@ sap.ui.define(["sap/m/library", "sap/base/security/encodeCSS", "sap/ui/thirdpart
 				top: oLine.offset.y + "px",
 				width: oLine.width + "px"
 			});
-
-			sHelpers += $Rect.get(0).outerHTML.trim();
-		}
-
-		$StyleHelper.html(sHelpers);
+			$StyleHelper.append($Rect);
+		}, this);
 	};
 
 	/**

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -66,13 +66,12 @@ sap.ui.define([
 		 * @extends sap.ui.core.Control
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
 		 * @since 1.34
 		 * @alias sap.m.TabContainer
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		var TabContainer = Control.extend("sap.m.TabContainer", /** @lends sap.m.TabContainer.prototype */ {
 			metadata : {
@@ -203,7 +202,9 @@ sap.ui.define([
 				}, this);
 
 				this.data("sap-ui-fastnavgroup", "true", true);
-			}
+			},
+
+			renderer: TabContainerRenderer
 		});
 
 		/* Contains mapping between TabContainerItem properties and TabStripItem properties,
@@ -266,6 +267,7 @@ sap.ui.define([
 
 		/**
 		 * Gets a reference to the instance of the TabStrip aggregation.
+		 * @returns {sap.m.TabStrip}
 		 */
 		TabContainer.prototype._getTabStrip = function () {
 			return this.getAggregation("_tabStrip");
@@ -399,7 +401,7 @@ sap.ui.define([
 		 * Removes an item from the aggregation named <code>items</code>.
 		 *
 		 * @param {int | string | sap.m.TabContainerItem} vItem The item to remove or its index or ID
-		 * @returns {sap.m.TabContainerItem} The removed item or null
+		 * @returns {sap.m.TabContainerItem|null} The removed item or <code>null</code>
 		 * @public
 		 */
 		TabContainer.prototype.removeItem = function(vItem) {

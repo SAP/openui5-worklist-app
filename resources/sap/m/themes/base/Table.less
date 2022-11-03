@@ -74,6 +74,13 @@ tr.sapMListTblHeaderNone > .sapMTableTH {
 	display: none;
 }
 
+.sapMListTblCell {
+	padding: .25rem .5rem;
+	font-size: @sapUiListTableTextSize;
+	overflow: hidden;
+	overflow: clip;
+}
+
 .sapMListTblSelCol,
 .sapMListTblCell,
 .sapMListTblNavCol {
@@ -98,9 +105,13 @@ tr.sapMListTblHeaderNone > .sapMTableTH {
 }
 
 .sapMListTblSubCntSpr,
-.sapMListTblSubCntHdr,
 .sapMListTblSubCntVal {
-	display: inline-flex;
+    display: inline;
+}
+
+// the header could have a FlexBox control which will occupy 100% width, thus corrupting the popin layout
+.sapMListTblSubCntHdr {
+    display: inline-flex;
 }
 
 .sapMListTblSubCntValBlock {
@@ -160,13 +171,6 @@ tr.sapMListTblHeaderNone > .sapMTableTH {
 
 .sapMListTbl .sapUiIcon:not(.sapMLIBImgNav):not(.sapMBtnIcon):not(.sapFAvatarTypeIcon) {
 	font-size: @sapUiListTableIconSize;
-}
-
-.sapMListTblCell {
-	padding: .875rem .5rem;
-	font-size: @sapUiListTableTextSize;
-	overflow: hidden;
-	overflow: clip;
 }
 
 /* Ensuring that the row height is not smaller that 3rem in Cozy mode */
@@ -276,6 +280,7 @@ tr.sapMListTblHeaderNone > .sapMTableTH {
 .sapMListTblDummyCell:last-child {
 	background-color: @sapBackgroundColor;
 	border-left: 1px solid @sapList_TableFooterBorder;
+	border-bottom: none;
 }
 
 :not(.sapMListHasGrowing):not(.sapMListShowSeparatorsInner):not(.sapMListShowSeparatorsNone) > .sapMTableTBody .sapMListTblRow:last-child > .sapMListTblDummyCell:last-child {
@@ -363,6 +368,11 @@ tr.sapMListTblHeaderNone > .sapMTableTH {
 	outline-color: @sapUiContentContrastFocusColor;
 }
 
+// Allows truncation of text within children of a flex item.
+.sapMColumnHeaderContent {
+	min-width: 0;
+}
+
 .sapMColumnHeaderActive:active > .sapMColumnHeaderContent {
 	color: @sapUiListActiveTextColor;
 }
@@ -384,7 +394,7 @@ tr.sapMListTblHeaderNone > .sapMTableTH {
 	font-weight: normal;
 	align-self: center;
 	padding-left: 0.5rem;
-	padding-right: 0.5rem;
+	box-sizing: border-box;
 }
 
 [aria-sort=ascending] > .sapMColumnHeader::after {
@@ -439,27 +449,31 @@ html[data-sap-ui-browser^='ff'] .sapMTableRowCustomFocus:focus > :not(.sapMListT
 	margin-right: 0; // firefox seems fine with rendering borders clearly without additional margin
 }
 
-/********** COMPACT DESIGN ************/
-
-/* overwite cell style */
-.sapUiSizeCompact .sapMListTblCell {
-	padding-top: 0.25rem;
-	padding-bottom: 0.25rem;
+.sapMTablePopinHeaders {
+	display: none;
 }
+
+/********** COMPACT DESIGN ************/
 
 .sapUiSizeCompact .sapMListTblCell.sapMListTblCellNoData {
 	font-size: @sapUiListTableTextSize;
 }
 
 /* overwrite text control styles */
-.sapUiSizeCompact .sapMListTblCell > .sapMLnk,
-.sapUiSizeCompact .sapMListTblCell > .sapMText,
-.sapUiSizeCompact .sapMListTblCell > .sapMLabel,
-.sapUiSizeCompact .sapMListTblCell > .sapMObjectNumber,
-.sapUiSizeCompact .sapMListTblCell > .sapMObjectIdentifier,
-.sapUiSizeCompact .sapMListTblCell > .sapMObjStatus {
-	vertical-align: middle;
-	line-height: 1.4;
+.sapUiSizeCompact .sapMListTblCell {
+	.sapMLnk,
+	.sapMText,
+	.sapMLabel,
+	.sapMObjectNumber,
+	.sapMObjectIdentifier,
+	.sapMObjStatus {
+		vertical-align: middle;
+		line-height: 1.4;
+
+		.sapMObjStatusText .sapMObjStatusTitle {
+			line-height: inherit;
+		}
+	}
 }
 
 /* special class name to add margin to multiline contents */

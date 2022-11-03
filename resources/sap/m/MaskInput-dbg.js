@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -19,16 +19,23 @@ sap.ui.define(['./InputBase', './MaskEnabler', './MaskInputRenderer'], function(
 	 * The <code>sap.m.MaskInput</code> control allows users to easily enter data in a certain format and in a fixed-width input
 	 * (for example: date, time, phone number, credit card number, currency, IP address, MAC address, and others).
 	 *
+	 * When focused, the masked input field is formatted and prefilled. The <code>placeholderSymbol</code> property value is reserved for a placeholder.
+	 * The value that has to be entered in this field is in the <code>mask</code> property value format where every symbol corresponds to a rule.
+	 * A rule is a set of characters that are allowed for their particular position.
+	 * Symbols that do not have a rule are immutable characters and are part of the value formatting.
+	 *
+	 * <b<Note:</b> Descriptive text as <code>placeholder</code> property value should be added,
+	 * in order guide users what input is expected based on the particular control configuration.
+	 *
 	 * @author SAP SE
 	 * @extends sap.m.InputBase
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.34.0
 	 * @alias sap.m.MaskInput
 	 * @see {@link fiori:https://experience.sap.com/fiori-design-web/generic-mask-input/ Mask Input}
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var MaskInput = InputBase.extend("sap.m.MaskInput", /** @lends sap.m.MaskInput.prototype */ {
 		metadata: {
@@ -74,8 +81,32 @@ sap.ui.define(['./InputBase', './MaskEnabler', './MaskInputRenderer'], function(
 				rules: { type: "sap.m.MaskInputRule", multiple: true, singularName: "rule" }
 
 			},
+			events : {
+
+				/**
+				 * Fired when the value of the <code>MaskInput</code> is changed by user interaction - each keystroke, delete, paste, etc.
+				 *
+				 * <b>Note:</b> Browsing autocomplete suggestions doesn't fire the event.
+				 * @since 1.104.0
+				 */
+				liveChange: {
+					parameters : {
+						/**
+						 * The current value of the input, after a live change event.
+						 */
+						value: {type : "string"},
+
+						/**
+						 * The previous value of the input, before the last user interaction.
+						 */
+						previousValue: {type : "string"}
+					}
+				}
+			},
 			dnd: { draggable: false, droppable: true }
-		}
+		},
+
+		renderer: MaskInputRenderer
 	});
 
 	MaskEnabler.call(MaskInput.prototype);

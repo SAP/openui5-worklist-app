@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -20,7 +20,7 @@ sap.ui.define([],
 		 * Renders the HTML for a {@link sap.m.TimePickerSlider}, using the provided {@link sap.ui.core.RenderManager}.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer
-		 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered
+		 * @param {sap.m.TimePickerSlider} oControl An object representation of the control that should be rendered
 		 */
 		TimePickerSliderRenderer.render = function(oRm, oControl) {
 			var iIndex,
@@ -131,7 +131,7 @@ sap.ui.define([],
 		 * Adds a class to the current element in the RenderManager's buffer based on the number of visible items in the slider.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer
-		 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered
+		 * @param {sap.m.TimePickerSlider} oControl An object representation of the control that should be rendered
 		 * @protected
 		 */
 		TimePickerSliderRenderer.addItemValuesCssClass = function(oRm, oControl) {

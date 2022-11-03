@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*global Promise, document */
@@ -54,7 +54,7 @@ sap.ui.define(["sap/base/assert"],
 				// matches the id of the new link the new link will be put
 				// before the old link into the document and the id attribute
 				// will be removed from the old link (to avoid FOUC)
-				// => sap/ui/core/ThemeCheck removes these old links again once
+				// => sap/ui/core/theming/ThemeManager removes these old links again once
 				//    the new theme has been fully loaded
 				if (oOld.getAttribute("data-sap-ui-foucmarker") === sId) {
 					oOld.removeAttribute("id");
@@ -65,7 +65,7 @@ sap.ui.define(["sap/base/assert"],
 			} else if (oOld.getAttribute("data-sap-ui-foucmarker") === sId) {
 				// in case of using without callbacks and applying the same URL
 				// the foucmarker has to be removed as the link will not be
-				// replaced with another link - otherwise the ThemeCheck would
+				// replaced with another link - otherwise the ThemeManager would
 				// remove this link
 				oOld.removeAttribute("data-sap-ui-foucmarker");
 			}
@@ -81,9 +81,14 @@ sap.ui.define(["sap/base/assert"],
 	}
 
 	/**
-	 * Includes the specified stylesheet via a &lt;link&gt;-tag in the head of the current document. If there is call to
-	 * <code>includeStylesheet</code> providing the sId of an already included stylesheet, the existing element will be
-	 * replaced.
+	 * Includes the specified stylesheet via a &lt;link&gt;-tag in the head of the current document.
+	 *
+	 * If <code>includeStylesheet</code> is called with an <code>sId</code> of an already included stylesheet and:
+	 * <ul>
+	 * <li>either <code>fnLoadCallback</code> or <code>fnErrorCallback</code> is given: the old stylesheet is deleted and a new one is inserted</li>
+	 * <li><code>vUrl</code> is different from the existing one's: the old stylesheet is deleted and a new one is inserted</li>
+	 * <li>otherwise: no action</li>
+	 * </ul>
 	 *
 	 * @param {string|object} vUrl the URL of the stylesheet to load or a configuration object
 	 * @param {string} vUrl.url the URL of the stylesheet to load

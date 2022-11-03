@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -187,7 +187,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/unified/calendar/CalendarDate', '
 			oDay.setDate(oDay.getDate() + 1);
 		}
 
-		var aMonthNames = oLocaleData.getMonthsStandAlone("wide");
+		var aMonthNames = oLocaleData.getMonthsStandAlone("wide", oDatesRow.getPrimaryCalendarType());
 		for (i = 0; i < aMonthDays.length; i++) {
 			var oMonthDays = aMonthDays[i];
 			sWidth = ( 100 / iDays * oMonthDays.iDays) + "%";
@@ -210,6 +210,7 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/unified/calendar/CalendarDate', '
 		var iDays = oDatesRow.getDays();
 		var sWidth = ( 100 / iDays ) + "%";
 		var bShowDayNamesLine = oDatesRow.getShowDayNamesLine();
+		var sCalendarType = oDatesRow.getPrimaryCalendarType();
 
 		if (!oDate) {
 			oDate = oDatesRow._getFocusedDate();
@@ -219,14 +220,13 @@ sap.ui.define(['sap/ui/core/Renderer', 'sap/ui/unified/calendar/CalendarDate', '
 
 		if (!bShowDayNamesLine) {
 			if (oDatesRow._bLongWeekDays || !oDatesRow._bNamesLengthChecked) {
-				oHelper.aWeekDays = oHelper.oLocaleData.getDaysStandAlone("abbreviated");
+				oHelper.aWeekDays = oHelper.oLocaleData.getDaysStandAlone("abbreviated", sCalendarType);
 			} else {
-				oHelper.aWeekDays = oHelper.oLocaleData.getDaysStandAlone("narrow");
+				oHelper.aWeekDays = oHelper.oLocaleData.getDaysStandAlone("narrow", sCalendarType);
 			}
-			oHelper.aWeekDaysWide = oHelper.oLocaleData.getDaysStandAlone("wide");
+			oHelper.aWeekDaysWide = oHelper.oLocaleData.getDaysStandAlone("wide", sCalendarType);
 		}
-
-		var oDay = new CalendarDate(oDate, oDatesRow.getPrimaryCalendarType());
+		var oDay = new CalendarDate(oDate, sCalendarType);
 
 		for (var i = 0; i < iDays; i++) {
 			this.renderDay(oRm, oDatesRow, oDay, oHelper, false, false, i, sWidth, !bShowDayNamesLine);

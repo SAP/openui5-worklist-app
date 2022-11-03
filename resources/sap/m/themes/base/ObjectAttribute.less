@@ -36,11 +36,12 @@
 
 .sapMObjectAttributeActive .sapMObjectAttributeText:active,
 .sapMObjectAttributeActive .sapMObjectAttributeText:hover,
-.sapMObjectAttributeActive:focus .sapMObjectAttributeText,
+.sapMObjectAttributeActive .sapMObjectAttributeText:focus,
 .sapMObjectAttributeActive .sapMText:active,
 .sapMObjectAttributeActive .sapMText:focus,
 .sapMObjectAttributeActive .sapMText:hover {
 	text-decoration: underline;
+	outline: none;
 }
 
 .sapMObjectAttributeActive {
@@ -75,7 +76,6 @@
 }
 
 .sapMObjectAttributeDiv{
-	outline: none;
 	font-size: @sapMFontMediumSize;
 }
 
@@ -84,16 +84,8 @@
 	color: @sapUiListActiveTextColor;
 }
 
-html.sap-desktop .sapMObjectAttributeActive:focus {
-	outline: none;
-}
-
 .sapMObjectAttributeActive > span:only-of-type {
 	max-width: 100%;
-}
-
-.sapUxAPObjectPageHeaderContentItem .sapMObjectAttributeText {
-	line-height: normal;
 }
 
 /*=========================================== */
@@ -131,20 +123,19 @@ html.sap-desktop .sapMObjectAttributeActive:focus {
 	font-weight: normal;
 	color: @sapUiContentLabelColor;
 	white-space: pre;
-	max-width: 0.5rem;
 	margin-left: -0.5rem;
 	overflow: auto;
 	vertical-align: top;
 }
 
 .sapMOHR .sapMObjectAttributeActive .sapMObjectAttributeText {
-	color: @sapUiLink;
+	color: @sapLinkColor;
 	cursor: pointer;
 }
 
 .sapMOHR .sapMObjectAttributeActive .sapMObjectAttributeText:active,
 .sapMOHR .sapMObjectAttributeActive .sapMObjectAttributeText:hover,
-.sapMOHR .sapMObjectAttributeActive:focus .sapMObjectAttributeText {
+.sapMOHR .sapMObjectAttributeActive .sapMObjectAttributeText:focus {
 	text-decoration: none;
 }
 
@@ -174,7 +165,7 @@ html.sap-desktop .sapMObjectAttributeActive:focus {
 }
 
 .sapMOH .sapMObjectAttributeActive .sapMObjectAttributeText {
-	color: @sapUiLink;
+	color: @sapLinkColor;
 	cursor: pointer;
 }
 
@@ -184,6 +175,6 @@ html.sap-desktop .sapMObjectAttributeActive:focus {
 
 .sapMOH .sapMObjectAttributeActive .sapMObjectAttributeText:active,
 .sapMOH .sapMObjectAttributeActive .sapMObjectAttributeText:hover,
-.sapMOH .sapMObjectAttributeActive:focus .sapMObjectAttributeText {
+.sapMOH .sapMObjectAttributeActive .sapMObjectAttributeText:focus {
 	text-decoration: none;
 }

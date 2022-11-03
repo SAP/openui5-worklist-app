@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -895,8 +895,10 @@ var AnnotationParser =  {
 			var oNode = xPath.nextNode(oNodeList, i);
 			var oValue = {};
 			var sText = xPath.getNodeText(oNode);
-			// TODO: Is nodeName correct or should we remove the namespace?
-			oValue[oNode.nodeName] = AnnotationParser._parserData.aliases ? AnnotationParser.replaceWithAlias(sText) : sText;
+
+			oValue[oNode.nodeName] = AnnotationParser._parserData.aliases
+				? AnnotationParser.replaceWithAlias(sText)
+				: sText;
 			aNodeValues.push(oValue);
 		}
 

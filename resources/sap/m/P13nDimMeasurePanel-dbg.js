@@ -1,6 +1,6 @@
-/*
- * ! OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+/*!
+ * OpenUI5
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -30,7 +30,8 @@ sap.ui.define([
 	'sap/ui/core/Item',
 	'sap/ui/core/InvisibleText',
 	'sap/ui/core/IconPool',
-	"sap/ui/thirdparty/jquery"
+	"sap/ui/thirdparty/jquery",
+	"sap/ui/core/Configuration"
 ], function(
 	library,
 	P13nPanel,
@@ -56,7 +57,8 @@ sap.ui.define([
 	Item,
 	InvisibleText,
 	IconPool,
-	jQuery
+	jQuery,
+	Configuration
 ) {
 	"use strict";
 
@@ -87,12 +89,11 @@ sap.ui.define([
 	 *        dimensions and measures for table personalization.
 	 * @extends sap.m.P13nPanel
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @constructor
 	 * @public
 	 * @since 1.34.0
 	 * @alias sap.m.P13nDimMeasurePanel
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var P13nDimMeasurePanel = P13nPanel.extend("sap.m.P13nDimMeasurePanel", /** @lends sap.m.P13nDimMeasurePanel.prototype */
 	{
@@ -887,7 +888,7 @@ sap.ui.define([
 	P13nDimMeasurePanel.prototype._sortModelItemsByPersistentIndex = function(aModelItems) {
         // BCP 0020751294 0000593415 2018
         var oCollator;
-        var sLanguage = sap.ui.getCore().getConfiguration().getLocale().toString();
+        var sLanguage = Configuration.getLocale().toString();
         try {
             if (typeof window.Intl !== 'undefined') {
                 oCollator = window.Intl.Collator(sLanguage, {

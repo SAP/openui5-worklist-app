@@ -1,15 +1,14 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
 	'sap/ui/core/Renderer',
-	'sap/ui/core/theming/Parameters',
 	'./FormLayoutRenderer',
 	"sap/base/Log"
-	], function(Renderer, themingParameters, FormLayoutRenderer, Log) {
+	], function(Renderer, FormLayoutRenderer, Log) {
 	"use strict";
 
 
@@ -25,7 +24,7 @@ sap.ui.define([
 	 * Renders the HTML for the given form content, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} rm the RenderManager that can be used for writing to the Render-Output-Buffer
-	 * @param {sap.ui.core.Control} oLayout an object representation of the Layout control that should be rendered
+	 * @param {sap.ui.layout.form.GridLayout} oLayout an object representation of the Layout control that should be rendered
 	 * @param {sap.ui.layout.form.Form} oForm, a form control to render its content
 	 */
 	GridLayoutRenderer.renderForm = function(rm, oLayout, oForm){

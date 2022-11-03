@@ -1,13 +1,13 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
 	"sap/m/ListItemBase",
 	"./GridListItemRenderer"
-], function (ListItemBase) {
+], function (ListItemBase, GridListItemRenderer) {
 	"use strict";
 
 	/**
@@ -24,26 +24,29 @@ sap.ui.define([
 	 * @extends sap.m.ListItemBase
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @since 1.70
 	 * @constructor
 	 * @public
 	 * @alias sap.f.GridListItem
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var GridListItem = ListItemBase.extend("sap.f.GridListItem", /** @lends sap.f.GridListItem.prototype */ { metadata : {
+	var GridListItem = ListItemBase.extend("sap.f.GridListItem", /** @lends sap.f.GridListItem.prototype */ {
+		metadata : {
 
-		library : "sap.f",
-		defaultAggregation : "content",
-		aggregations : {
+			library : "sap.f",
+			defaultAggregation : "content",
+			aggregations : {
 
-			/**
-			 * The content of this list item
-			 */
-			content : { type : "sap.ui.core.Control", multiple : true, singularName : "content", bindable : "bindable" }
-		}
-	}});
+				/**
+				 * The content of this list item
+				 */
+				content : { type : "sap.ui.core.Control", multiple : true, singularName : "content", bindable : "bindable" }
+			}
+		},
+
+		renderer: GridListItemRenderer
+	});
 
 	/**
 	 * Returns the accessibility announcement for the content.

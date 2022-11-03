@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -79,6 +79,9 @@ function(
 		// shortcut for sap.ui.core.TextAlign
 		var TextAlign = coreLibrary.TextAlign;
 
+		// shortcut for sap.ui.core.OpenState
+		var OpenState = coreLibrary.OpenState;
+
 		// shortcut for sap.m.SelectType
 		var SelectType = library.SelectType;
 
@@ -100,12 +103,11 @@ function(
 		 * @implements sap.ui.core.IFormContent, sap.ui.core.ISemanticFormContent
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
 		 * @alias sap.m.Select
-		 * @ui5-metamodel This control will also be described in the UI5 (legacy) design time meta model.
 		 */
 		var Select = Control.extend("sap.m.Select", /** @lends sap.m.Select.prototype */ {
 			metadata: {
@@ -197,6 +199,8 @@ function(
 					 * <li> Invalid or missing <code>selectedKey</code> leads to severe functional
 					 * issues in <code>sap.ui.table.Table</code>, when the <code>sap.m.Select</code> is used inside a
 					 * <code>sap.ui.table.Table</code> column.</li>
+					 * <li> If an item with the default key exists and we try to select it, it happens only if the
+					 * <code>forceSelection</code> property is set to <code>true</code>.</li>
 					 * </ul>
 					 *
 					 * @since 1.11
@@ -341,7 +345,6 @@ function(
 					 *
 					 * <b>Note:</b> This property takes effect only when the <code>showSecondaryValues</code> property is set to <code>true</code>.
 					 * @since 1.86
-					 * @experimental As of version 1.86
 					 */
 					columnRatio: {
 						type: "sap.m.SelectColumnRatio",
@@ -467,10 +470,36 @@ function(
 								type: "sap.ui.core.Item"
 							}
 						}
+					},
+
+					/**
+					 * Fires when the user navigates through the <code>Select</code> items.
+					 * It's also fired on revert of the currently selected item.
+					 *
+					 * <b>Note:</b> Revert occurs in some of the following actions:
+					 * <ul>
+					 * 	<li>The user clicks outside of the <code>Select</code></li>
+					 * 	<li>The <i>Escape</i> key is pressed</li>
+					 * </ul>
+					 *
+					 * @since 1.100
+					 */
+					liveChange: {
+						parameters: {
+
+							/**
+							 * The selected item.
+							 */
+							selectedItem: {
+								type: "sap.ui.core.Item"
+							}
+						}
 					}
 				},
 				designtime: "sap/m/designtime/Select.designtime"
-			}
+			},
+
+			renderer: SelectRenderer
 		});
 
 		IconPool.insertFontFaceStyle();
@@ -492,6 +521,9 @@ function(
 			}
 
 			if (oItem) {
+				if (this.getSelectedItemId() !== oItem.getId()) {
+					this.fireEvent("liveChange", {selectedItem: oItem});
+				}
 				this.setSelection(oItem);
 				this.setValue(oItem.getText());
 				this.scrollToItem(oItem);
@@ -539,7 +571,7 @@ function(
 			var	sValueStateText = this._getValueStateText();
 
 			if (this._oInvisibleMessage) {
-				this._oInvisibleMessage.announce(sValueStateText, InvisibleMessageMode.Assertive);
+				this._oInvisibleMessage.announce(sValueStateText, InvisibleMessageMode.Polite);
 			}
 		};
 
@@ -601,6 +633,7 @@ function(
 			var oItem = this.getSelectedItem();
 
 			if (this._oSelectionOnFocus !== oItem) {
+				this.fireEvent("liveChange", {selectedItem: this._oSelectionOnFocus});
 				this.setSelection(this._oSelectionOnFocus);
 				this.setValue(this._getSelectedItemText());
 			}
@@ -796,8 +829,13 @@ function(
 				oSelectedKey = this.getSelectedKey(),
 				sSelectedItemText = this._getSelectedItemText();
 
+			// the hidden INPUT is only used when the select is submitted
+			// with a form so update its value in all cases
 			oInput.attr("value", oSelectedKey || "");
-			oSelect.text(sSelectedItemText);
+
+			if (!this._isIconOnly()) {
+				oSelect.text(sSelectedItemText);
+			}
 		};
 
 		Select.prototype._getValueIcon = function() {
@@ -1519,7 +1557,7 @@ function(
 		};
 
 		/**
-		 * Handles the <code>selectionChange</code> event on the <code>SelectList</code>.
+		 * Handles the <code>liveChange</code> event on the <code>SelectList</code>.
 		 *
 		 * @param {sap.ui.base.Event} oControlEvent
 		 * @private
@@ -2050,9 +2088,8 @@ function(
 		/**
 		 * Synchronizes the <code>selectedItem</code> association and the <code>selectedItemId</code> property.
 		 *
-		 * @param {sap.ui.core.Item} vItem
-		 * @param {string} sKey
-		 * @param {array} [aItems]
+		 * @param {object} [mOptions] Options
+		 * @param {boolean} [mOptions.forceSelection] Whether to force a selection
 		 */
 		Select.prototype.synchronizeSelection = function() {
 			SelectList.prototype.synchronizeSelection.apply(this, arguments);
@@ -2115,17 +2152,29 @@ function(
 		 * @since 1.26.0
 		 */
 		Select.prototype.searchNextItemByText = function(sText) {
-			var aItems = this.getItems(),
-				iSelectedIndex = this.getSelectedIndex(),
-				aItemsAfterSelection = aItems.splice(iSelectedIndex + 1, aItems.length - iSelectedIndex),
-				aItemsBeforeSelection = aItems.splice(0, aItems.length - 1);
+			var oSelectedItem = this.getSelectedItem(), aItems, iSelectedIndex, aItemsAfterSelection, aItemsBeforeSelection;
+
+			// validation if sText is relevant string
+			if (!(typeof sText === "string" && sText !== "")) {
+				return null; // return null if sText is invalid
+			}
+			// if sText's length is 2 or more characters that means that the user is still typing.
+			// If the user is still typing and the string/word is the starting of the currently
+			// selected item we shouldn't move to the next one.
+			if (sText.length > 1 && oSelectedItem.getText().toLowerCase().startsWith(sText.toLowerCase())){
+				return oSelectedItem;
+			}
+
+			aItems = this.getItems();
+			iSelectedIndex = this.getSelectedIndex();
+			aItemsAfterSelection = aItems.splice(iSelectedIndex + 1, aItems.length - iSelectedIndex);
+			aItemsBeforeSelection = aItems.splice(0, aItems.length - 1);
 
 			aItems = aItemsAfterSelection.concat(aItemsBeforeSelection);
 
 			for (var i = 0, oItem; i < aItems.length; i++) {
 				oItem = aItems[i];
-				var bTextIsRelevantString = typeof sText === "string" && sText !== "";
-				if (oItem.getEnabled() && !(oItem instanceof sap.ui.core.SeparatorItem) && oItem.getText().toLowerCase().startsWith(sText.toLowerCase()) && bTextIsRelevantString) {
+				if (oItem.getEnabled() && !(oItem.isA("sap.ui.core.SeparatorItem")) && oItem.getText().toLowerCase().startsWith(sText.toLowerCase())) {
 					return oItem;
 				}
 			}
@@ -2156,6 +2205,9 @@ function(
 						this.close();
 					}
 				}
+			}, this)
+			.addEventDelegate({
+				onAfterRendering: this.onAfterRenderingList
 			}, this)
 			.attachSelectionChange(this.onSelectionChange, this);
 
@@ -2213,6 +2265,11 @@ function(
 			var fnOnAfterRenderingPickerType = this["_onAfterRendering" + this.getPickerType()];
 			fnOnAfterRenderingPickerType && fnOnAfterRenderingPickerType.call(this);
 		};
+
+		/**
+		 * This event handler is called after the SelectList is rendered.
+		 */
+		 Select.prototype.onAfterRenderingList = function(){};
 
 		/**
 		 * Open the control's picker popup.
@@ -2278,6 +2335,7 @@ function(
 		 * Retrieves the index of the selected item from the aggregation named <code>items</code>.
 		 *
 		 * @returns {int} An integer specifying the selected index, or -1 if no item is selected.
+		 * @private
 		 * @since 1.26.0
 		 */
 		Select.prototype.getSelectedIndex = function() {
@@ -2324,7 +2382,7 @@ function(
 		/**
 		 * Checks whether the provided element is the open area.
 		 *
-		 * @param {Element} oDomRef
+		 * @param {HTMLElement} oDomRef
 		 * @returns {boolean}
 		 * @since 1.22.0
 		 */
@@ -2793,7 +2851,8 @@ function(
 		 * an empty string <code>""</code> or <code>undefined</code>, the value of <code>sKey</code> is changed to match
 		 * the <code>key</code> of the first enabled item and the first enabled item is selected (if any items exist).
 		 *
-		 * In the case that an item has the default key value, it is selected instead.
+		 * If an item with the default key exists and we try to select it, it happens only if the
+		 * <code>forceSelection</code> property is set to <code>true</code>.
 		 * If duplicate keys exist, the first item matching the key is selected.
 		 *
 		 * @returns {this} <code>this</code> to allow method chaining.
@@ -2834,21 +2893,30 @@ function(
 		};
 
 		Select.prototype.setValueState = function(sValueState) {
-			var sOldValueState = this.getValueState();
+			var sOldValueState = this.getValueState(),
+				oDomRef,
+				oPicker;
 
 			if (sValueState === sOldValueState) {
 				return this;
 			}
+			oPicker = this.getPicker();
+
+			if (oPicker && oPicker.isA("sap.m.Popover") && oPicker.isOpen() && oPicker.oPopup.getOpenState() === OpenState.CLOSING) {
+				oPicker.attachEventOnce("afterClose", function(oEvent) {
+					this._updatePickerAriaLabelledBy(sValueState);
+				}, this);
+			} else {
+				this._updatePickerAriaLabelledBy(sValueState);
+			}
 
 			this.setProperty("valueState", sValueState);
-
-			this._updatePickerAriaLabelledBy(sValueState);
 
 			if (this._isFocused()) {
 				this._announceValueStateText();
 			}
 
-			var oDomRef = this.getDomRefForValueState();
+			oDomRef = this.getDomRefForValueState();
 
 			if (!oDomRef) {
 				return this;
@@ -2890,7 +2958,7 @@ function(
 		 * Gets the item from the aggregation named <code>items</code> at the given 0-based index.
 		 *
 		 * @param {int} iIndex Index of the item to return.
-		 * @returns {sap.ui.core.Item | null} Item at the given index, or null if none.
+		 * @returns {sap.ui.core.Item | null} Item at the given index, or <code>null</code> if none.
 		 * @public
 		 * @since 1.16
 		 */
@@ -2912,7 +2980,7 @@ function(
 		/**
 		 * Gets the first item from the aggregation named <code>items</code>.
 		 *
-		 * @returns {sap.ui.core.Item | null} The first item, or null if there are no items.
+		 * @returns {sap.ui.core.Item | null} The first item, or <code>null</code> if there are no items.
 		 * @public
 		 * @since 1.16
 		 */
@@ -2923,7 +2991,7 @@ function(
 		/**
 		 * Gets the last item from the aggregation named <code>items</code>.
 		 *
-		 * @returns {sap.ui.core.Item | null} The last item, or null if there are no items.
+		 * @returns {sap.ui.core.Item | null} The last item, or <code>null</code> if there are no items.
 		 * @public
 		 * @since 1.16
 		 */
@@ -2951,7 +3019,7 @@ function(
 		 * <b>Note: </b> If duplicate keys exist, the first item matching the key is returned.
 		 *
 		 * @param {string} sKey An item key that specifies the item to be retrieved.
-		 * @returns {sap.ui.core.Item} The <code>sap.ui.core.Item</code> instance or <code>null</code> if thre is no such item
+		 * @returns {sap.ui.core.Item|null} The <code>sap.ui.core.Item</code> instance or <code>null</code> if there is no such item
 		 * @public
 		 * @since 1.16
 		 */
@@ -2964,7 +3032,7 @@ function(
 		 * Removes an item from the aggregation named <code>items</code>.
 		 *
 		 * @param {int | string | sap.ui.core.Item} vItem The item to be removed or its index or ID.
-		 * @returns {sap.ui.core.Item} The removed item or null.
+		 * @returns {sap.ui.core.Item|null} The removed item or <code>null</code>.
 		 * @public
 		 */
 		Select.prototype.removeItem = function(vItem) {
@@ -3083,7 +3151,10 @@ function(
 		 * @returns {object} The <code>sap.m.Select</code> accessibility information
 		 */
 		Select.prototype.getAccessibilityInfo = function() {
-			var bIconOnly = this._isIconOnly(),
+			var aDescriptions = [],
+				sDescription = "",
+				oResourceBundle = Core.getLibraryResourceBundle("sap.m"),
+				bIconOnly = this._isIconOnly(),
 				oInfo = {
 					role: this.getRenderer().getAriaRole(this),
 					focusable: this.getEnabled(),
@@ -3098,13 +3169,21 @@ function(
 					sDesc = oIconInfo && oIconInfo.text ? oIconInfo.text : "";
 				}
 
-				oInfo.type = Core.getLibraryResourceBundle("sap.m").getText("ACC_CTR_TYPE_BUTTON");
-				oInfo.description = sDesc;
+				oInfo.type = oResourceBundle.getText("ACC_CTR_TYPE_BUTTON");
+				aDescriptions.push(sDesc);
 			} else if (this.getType() === "Default") {
-				oInfo.type = Core.getLibraryResourceBundle("sap.m").getText("SELECT_ROLE_DESCRIPTION");
-				oInfo.description = this._getSelectedItemText();
+				oInfo.type = oResourceBundle.getText("SELECT_ROLE_DESCRIPTION");
+				aDescriptions.push(this._getSelectedItemText());
 			}
 
+			if (this._isRequired()) {
+				aDescriptions.push(oResourceBundle.getText("SELECT_REQUIRED"));
+			}
+
+			sDescription = aDescriptions.join(" ").trim();
+			if (sDescription) {
+				oInfo.description = sDescription;
+			}
 			return oInfo;
 		};
 

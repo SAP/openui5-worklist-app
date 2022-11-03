@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*
@@ -18,13 +18,20 @@ sap.ui.define([], function () {
 		 * Creates a matrix (2D array) of dom refs representing the grid items ordered as rendered on the page
 		 * @param {HTMLElement} oGridDomRef The grid
 		 * @param {Array.<HTMLElement>} aItemsDomRefs The children
-		 * @param {object} oLayoutSizes The sizes of the grid
-		 * @param {Array.<string>} oLayoutSizes.rows Computed rows in pixels, i.e. : ["112px", "112px", "320px", "112px"]
-		 * @param {Array.<string>} oLayoutSizes.columns Computed columns in pixels, i.e. : ["112px", "112px", "320px", "112px"]
-		 * @param {number} oLayoutSizes.gap Gap in pixels
 		 * @returns {Array.<Array.<HTMLElement>>} The matrix
 		 */
-		create: function (oGridDomRef, aItemsDomRefs, oLayoutSizes) {
+		create: function (oGridDomRef, aItemsDomRefs) {
+			var mGridStyles = window.getComputedStyle(oGridDomRef);
+
+			var oLayoutSizes = {
+				columns: mGridStyles.gridTemplateColumns.split(/\s+/),
+				rows: mGridStyles.gridTemplateRows.split(/\s+/),
+				rowGap: parseFloat(mGridStyles.rowGap),
+				columnGap: parseFloat(mGridStyles.columnGap),
+				paddingTop: parseFloat(mGridStyles.paddingTop),
+				paddingLeft: parseFloat(mGridStyles.paddingLeft)
+			};
+
 			var aMatrix = Array.from(
 				new Array(oLayoutSizes.rows.length),
 				function () {
@@ -60,7 +67,7 @@ sap.ui.define([], function () {
 				iEndRow = 0,
 				fSumRows = 0,
 				i,
-				fTopOffsetInGrid = oItemRect.top - oGridRect.top,
+				fTopOffsetInGrid = oItemRect.top - oGridRect.top - oLayoutSizes.paddingTop,
 				fBottomOffsetInGrid = fTopOffsetInGrid + oItemRect.height;
 
 			for (i = 0; i < oLayoutSizes.rows.length; i++) {
@@ -70,7 +77,7 @@ sap.ui.define([], function () {
 					iStartRow = i;
 				}
 
-				fSumRows += oLayoutSizes.gap;
+				fSumRows += oLayoutSizes.rowGap;
 
 				if (fBottomOffsetInGrid < fSumRows) {
 					iEndRow = i + 1;
@@ -89,7 +96,7 @@ sap.ui.define([], function () {
 				iEndCol = 0,
 				fSumCols = 0,
 				i,
-				fLeftOffsetInGrid = oItemRect.left - oGridRect.left,
+				fLeftOffsetInGrid = oItemRect.left - oGridRect.left - oLayoutSizes.paddingLeft,
 				fRightOffsetInGrid = fLeftOffsetInGrid + oItemRect.width;
 
 			for (i = 0; i < oLayoutSizes.columns.length; i++) {
@@ -99,7 +106,7 @@ sap.ui.define([], function () {
 					iStartCol = i;
 				}
 
-				fSumCols += oLayoutSizes.gap;
+				fSumCols += oLayoutSizes.columnGap;
 
 				if (fRightOffsetInGrid <= fSumCols) {
 					iEndCol = i + 1;

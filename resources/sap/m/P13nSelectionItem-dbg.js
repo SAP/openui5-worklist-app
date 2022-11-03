@@ -1,6 +1,6 @@
-/*
- * ! OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+/*!
+ * OpenUI5
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -17,13 +17,12 @@ sap.ui.define([
 	 * @param {object} [mSettings] initial settings for the new control
 	 * @class Type for <code>selectionItems</code> aggregation in <code>P13nSelectionPanel</code> control.
 	 * @extends sap.ui.core.Item
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @constructor
 	 * @author SAP SE
 	 * @private
 	 * @since 1.46.0
 	 * @alias sap.m.P13nSelectionItem
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var P13nSelectionItem = Item.extend("sap.m.P13nSelectionItem", /** @lends sap.m.P13nSelectionItem.prototype */
 	{

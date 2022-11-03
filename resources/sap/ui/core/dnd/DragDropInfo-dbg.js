@@ -1,11 +1,11 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define(["./DragInfo", "./DropInfo", "sap/ui/Device", "sap/base/Log"],
-	function(DragInfo, DropInfo, Device, Log) {
+sap.ui.define(["./DragInfo", "./DropInfo", "sap/base/Log"],
+	function(DragInfo, DropInfo, Log) {
 	"use strict";
 
 	/**
@@ -22,12 +22,11 @@ sap.ui.define(["./DragInfo", "./DropInfo", "sap/ui/Device", "sap/base/Log"],
 	 * @extends sap.ui.core.dnd.DropInfo
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @since 1.52
 	 * @alias sap.ui.core.dnd.DragDropInfo
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var DragDropInfo = DropInfo.extend("sap.ui.core.dnd.DragDropInfo", /** @lends sap.ui.core.dnd.DragDropInfo.prototype */ { metadata: {
 

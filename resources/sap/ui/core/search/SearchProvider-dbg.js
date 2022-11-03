@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -23,11 +23,10 @@ sap.ui.define(['sap/ui/core/Element', "sap/base/Log", 'sap/ui/core/library'],
 	 *
 	 * Do not create instances of this class, but use a concrete subclass instead.
 	 * @extends sap.ui.core.Element
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @alias sap.ui.core.search.SearchProvider
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var SearchProvider = Element.extend("sap.ui.core.search.SearchProvider", /** @lends sap.ui.core.search.SearchProvider.prototype */ { metadata : {
 
@@ -49,9 +48,8 @@ sap.ui.define(['sap/ui/core/Element', "sap/base/Log", 'sap/ui/core/library'],
 	 * and an array of the suggestions (type '[string]', 2nd parameter).
 	 *
 	 * @param {string} sValue The value for which suggestions are requested.
-	 * @param {function} fnCallback The callback function which is called when the suggestions are available.
+	 * @param {function(string, string[])} fnCallback The callback function which is called when the suggestions are available.
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	SearchProvider.prototype.suggest = function(sValue, fnCallback) {
 		Log.warning("sap.ui.core.search.SearchProvider is the abstract base class for all SearchProviders. Do not create instances of this class, but use a concrete sub class instead.");

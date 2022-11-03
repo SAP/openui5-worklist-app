@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -9,7 +9,7 @@ sap.ui.define([
 	"./library",
 	"sap/ui/base/ManagedObject",
 	"sap/ui/core/Control",
-	"./Avatar",
+	"sap/m/Avatar",
 	"./AvatarGroupItemRenderer"
 ], function(library, ManagedObject, Control, Avatar, AvatarGroupItemRenderer) {
 	"use strict";
@@ -32,14 +32,13 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @experimental Since 1.73. This class is experimental and provides only limited functionality. Also the API might be changed in future.
 	 * @since 1.73
 	 * @alias sap.f.AvatarGroupItem
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var AvatarGroupItem = Control.extend("sap.f.AvatarGroupItem", {
 		metadata: {
@@ -65,7 +64,9 @@ sap.ui.define([
 				 */
 				fallbackIcon: {type: "string", group: "Data", defaultValue: null}
 			}
-		}
+		},
+
+		renderer: AvatarGroupItemRenderer
 	});
 
 	AvatarGroupItem.prototype.onBeforeRendering = function () {
@@ -137,6 +138,20 @@ sap.ui.define([
 		return this._sGroupType;
 	};
 
+	AvatarGroupItem.prototype._setInteractive = function (bInteractive) {
+		if (this._bInteractive === bInteractive) {
+			return;
+		}
+
+		this._bInteractive = bInteractive;
+
+		this.invalidate();
+	};
+
+	AvatarGroupItem.prototype._getInteractive = function () {
+		return this._bInteractive;
+	};
+
 	AvatarGroupItem.prototype._setAvatarColor = function (sValue) {
 		this._sAvatarColor = sValue;
 		this._getAvatar().setBackgroundColor(sValue);
@@ -151,10 +166,28 @@ sap.ui.define([
 		return this._sAvatarDisplaySize;
 	};
 
+	AvatarGroupItem.prototype._setCustomDisplaySize = function (sValue) {
+		this._sAvatarCustomDisplaySize = sValue;
+		this._getAvatar().setCustomDisplaySize(sValue);
+	};
+
+	AvatarGroupItem.prototype._getCustomDisplaySize = function () {
+		return this._sAvatarCustomDisplaySize;
+	};
+
+	AvatarGroupItem.prototype._setCustomFontSize = function (sValue) {
+		this._sAvatarCustomFontSize = sValue;
+		this._getAvatar().setCustomFontSize(sValue);
+	};
+
+	AvatarGroupItem.prototype._getCustomFontSize = function () {
+		return this._sAvatarCustomFontSize;
+	};
+
 	/**
 	 * Returns the <code>Avatar</code>
 	 *
-	 * @returns {sap.f.Avatar} The <code>Avatar</code> instance
+	 * @returns {sap.m.Avatar} The <code>Avatar</code> instance
 	 * @private
 	 */
 	AvatarGroupItem.prototype._getAvatar = function () {
@@ -165,7 +198,9 @@ sap.ui.define([
 				fallbackIcon: this.getFallbackIcon(),
 				backgroundColor: this.getAvatarColor(),
 				showBorder: true,
-				displaySize: this._getDisplaySize()
+				displaySize: this._getDisplaySize(),
+				customDisplaySize: this._getCustomDisplaySize(),
+				customFontSize: this._getCustomFontSize()
 			});
 		}
 

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -9,6 +9,7 @@ sap.ui.define([
 	"sap/base/Log",
 	"sap/base/util/extend",
 	"sap/base/util/isEmptyObject",
+	"sap/base/util/UriParameters",
 	"sap/ui/base/BindingParser",
 	"sap/ui/base/ManagedObject",
 	"sap/ui/base/SyncPromise",
@@ -22,11 +23,10 @@ sap.ui.define([
 	"sap/ui/model/json/JSONPropertyBinding",
 	"sap/ui/model/json/JSONTreeBinding",
 	"sap/ui/performance/Measurement"
-], function (Utils, Log, extend, isEmptyObject, BindingParser, ManagedObject, SyncPromise,
-		BindingMode, ClientContextBinding, Context, FilterProcessor, MetaModel, JSONListBinding,
-		JSONModel, JSONPropertyBinding, JSONTreeBinding, Measurement) {
+], function (Utils, Log, extend, isEmptyObject, UriParameters, BindingParser, ManagedObject,
+		SyncPromise, BindingMode, ClientContextBinding, Context, FilterProcessor, MetaModel,
+		JSONListBinding, JSONModel, JSONPropertyBinding, JSONTreeBinding, Measurement) {
 	"use strict";
-	/*global Map */
 
 	var // maps the metadata URL with query parameters concatenated with the code list collection
 		// path (e.g. /foo/bar/$metadata#SAP__Currencies) to a SyncPromise resolving with the code
@@ -208,7 +208,7 @@ sap.ui.define([
 	 * {@link #loaded loaded} has been resolved!
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @alias sap.ui.model.odata.ODataMetaModel
 	 * @extends sap.ui.model.MetaModel
 	 * @public
@@ -557,8 +557,8 @@ sap.ui.define([
 		var that = this;
 
 		return this.oLoadedPromiseSync.then(function () {
-			var sCacheKey, oCodeListModel, oCodeListModelCache, sCollectionPath, oMappingPromise,
-				sMetaDataUrl, oPromise, oReadPromise,
+			var sCacheKey, sCacheKeyWithModel, oCodeListModel, oCodeListModelCache, sCollectionPath,
+				oMappingPromise, sMetaDataUrl, oPromise, oReadPromise,
 				sCodeListAnnotation = "com.sap.vocabularies.CodeList.v1." + sTerm,
 				oCodeListAnnotation = that.getODataEntityContainer()[sCodeListAnnotation];
 
@@ -579,7 +579,14 @@ sap.ui.define([
 			sCollectionPath = oCodeListAnnotation.CollectionPath.String;
 			sMetaDataUrl = that.oDataModel.getMetadataUrl();
 			sCacheKey = sMetaDataUrl + "#" + sCollectionPath;
+			// check for global cache entry
 			oPromise = mCodeListUrl2Promise.get(sCacheKey);
+			if (oPromise) {
+				return oPromise;
+			}
+			// check for an ODataModel related cache entry
+			sCacheKeyWithModel = sCacheKey + "#" + that.getId();
+			oPromise = mCodeListUrl2Promise.get(sCacheKeyWithModel);
 			if (oPromise) {
 				return oPromise;
 			}
@@ -588,10 +595,21 @@ sap.ui.define([
 			oCodeListModel = oCodeListModelCache.oModel;
 
 			oReadPromise = new SyncPromise(function (fnResolve, fnReject) {
+				var oUriParams = UriParameters.fromURL(sMetaDataUrl),
+					sClient = oUriParams.get("sap-client"),
+					sLanguage = oUriParams.get("sap-language"),
+					mUrlParameters = {$skip : 0, $top : 5000}; // avoid server-driven paging
+
+				if (sClient) {
+					mUrlParameters["sap-client"] = sClient;
+				}
+				if (sLanguage) {
+					mUrlParameters["sap-language"] = sLanguage;
+				}
 				oCodeListModel.read("/" + sCollectionPath, {
 					error : fnReject,
 					success : fnResolve,
-					urlParameters : {$skip : 0, $top : 5000} // avoid server-driven paging
+					urlParameters : mUrlParameters
 				});
 			});
 			oMappingPromise = new SyncPromise(function (fnResolve, fnReject) {
@@ -607,6 +625,9 @@ sap.ui.define([
 			oPromise = SyncPromise.all([oReadPromise, oMappingPromise]).then(function (aResults) {
 				var aData = aResults[0].results,
 					mMapping = aResults[1];
+
+				mCodeListUrl2Promise.set(sCacheKey, oPromise);
+				mCodeListUrl2Promise.delete(sCacheKeyWithModel); // not needed any more
 
 				return aData.reduce(function (mCode2Customizing, oEntity) {
 					var sCode = oEntity[mMapping.code],
@@ -634,6 +655,7 @@ sap.ui.define([
 				if (oCodeListModel.bDestroyed) {
 					// do not cache rejected Promise caused by a destroyed code list model
 					mCodeListUrl2Promise.delete(sCacheKey);
+					mCodeListUrl2Promise.delete(sCacheKeyWithModel);
 				} else {
 					Log.error("Couldn't load code list: " + sCollectionPath + " for "
 							+ that.oDataModel.getCodeListModelParameters().serviceUrl,
@@ -650,7 +672,7 @@ sap.ui.define([
 					oCodeListModelCache.bFirstCodeListRequested = true;
 				}
 			});
-			mCodeListUrl2Promise.set(sCacheKey, oPromise);
+			mCodeListUrl2Promise.set(sCacheKeyWithModel, oPromise);
 
 			return oPromise;
 		});
@@ -664,7 +686,7 @@ sap.ui.define([
 	 *   "/ProductSet(1)/ToSupplier/BusinessPartnerID"; this equals the
 	 *   <a href="http://www.odata.org/documentation/odata-version-2-0/uri-conventions#ResourcePath">
 	 *   resource path</a> component of a URI according to OData V2 URI conventions
-	 * @returns {sap.ui.model.Context}
+	 * @returns {sap.ui.model.Context|null}
 	 *   the context for the corresponding metadata object, i.e. an entity type or its property,
 	 *   or <code>null</code> in case no path is given
 	 * @throws {Error} in case no context can be determined
@@ -765,7 +787,7 @@ sap.ui.define([
 	 *   an entity type as returned by {@link #getODataEntityType getODataEntityType}
 	 * @param {string} sName
 	 *   the name of a navigation property within this entity type
-	 * @returns {object}
+	 * @returns {object|null}
 	 *   the OData association end or <code>null</code> if no such association end is found
 	 * @public
 	 */
@@ -791,7 +813,7 @@ sap.ui.define([
 	 *   an entity type as returned by {@link #getODataEntityType getODataEntityType}
 	 * @param {string} sName
 	 *   the name of a navigation property within this entity type
-	 * @returns {object}
+	 * @returns {object|null}
 	 *   the OData association set end or <code>null</code> if no such association set end is found
 	 * @public
 	 */
@@ -822,7 +844,7 @@ sap.ui.define([
 	 *   a qualified name, e.g. "ACME.Address"
 	 * @param {boolean} [bAsPath=false]
 	 *   determines whether the complex type is returned as a path or as an object
-	 * @returns {object|string}
+	 * @returns {object|string|undefined|null}
 	 *   (the path to) the complex type with the given qualified name; <code>undefined</code> (for
 	 *   a path) or <code>null</code> (for an object) if no such type is found
 	 * @public
@@ -837,7 +859,7 @@ sap.ui.define([
 	 *
 	 * @param {boolean} [bAsPath=false]
 	 *   determines whether the entity container is returned as a path or as an object
-	 * @returns {object|string}
+	 * @returns {object|string|undefined|null}
 	 *   (the path to) the default entity container; <code>undefined</code> (for a path) or
 	 *   <code>null</code> (for an object) if no such container is found
 	 * @public
@@ -855,7 +877,6 @@ sap.ui.define([
 					vResult = bAsPath
 						? "/dataServices/schema/" + i + "/entityContainer/" + j
 						: oSchema.entityContainer[j];
-					return false; //break
 				}
 			});
 
@@ -877,7 +898,7 @@ sap.ui.define([
 	 *   a simple name, e.g. "ProductSet"
 	 * @param {boolean} [bAsPath=false]
 	 *   determines whether the entity set is returned as a path or as an object
-	 * @returns {object|string}
+	 * @returns {object|string|undefined|null}
 	 *   (the path to) the entity set with the given simple name; <code>undefined</code> (for a
 	 *   path) or <code>null</code> (for an object) if no such set is found
 	 * @public
@@ -894,7 +915,7 @@ sap.ui.define([
 	 *   a qualified name, e.g. "ACME.Product"
 	 * @param {boolean} [bAsPath=false]
 	 *   determines whether the entity type is returned as a path or as an object
-	 * @returns {object|string}
+	 * @returns {object|string|undefined|null}
 	 *   (the path to) the entity type with the given qualified name; <code>undefined</code> (for a
 	 *   path) or <code>null</code> (for an object) if no such type is found
 	 * @public
@@ -911,7 +932,7 @@ sap.ui.define([
 	 *   a simple or qualified name, e.g. "Save" or "MyService.Entities/Save"
 	 * @param {boolean} [bAsPath=false]
 	 *   determines whether the function import is returned as a path or as an object
-	 * @returns {object|string}
+	 * @returns {object|string|undefined|null}
 	 *   (the path to) the function import with the given simple name; <code>undefined</code> (for
 	 *   a path) or <code>null</code> (for an object) if no such function import is found
 	 * @public
@@ -982,7 +1003,7 @@ sap.ui.define([
 	 *   <b>BEWARE</b> that this array is modified by removing each part which is understood!
 	 * @param {boolean} [bAsPath=false]
 	 *   determines whether the property is returned as a path or as an object
-	 * @returns {object|string}
+	 * @returns {object|string|undefined|null}
 	 *   (the path to) the last OData property found; <code>undefined</code> (for a path) or
 	 *   <code>null</code> (for an object) if no property was found at all
 	 * @public
@@ -1298,6 +1319,8 @@ sap.ui.define([
 		} else if (sDataPath === "/##@@requestUnitsOfMeasure") {
 			return "UnitsOfMeasure";
 		}
+
+		return undefined;
 	};
 
 	return ODataMetaModel;

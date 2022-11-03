@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -31,7 +31,7 @@ sap.ui.define([
 	 *            [mSettings] Optional object with initial settings for the new instance
 	 * @extends sap.ui.test.actions.Action
 	 * @public
-	 * @name sap.ui.test.actions.EnterText
+	 * @alias sap.ui.test.actions.EnterText
 	 * @author SAP SE
 	 * @since 1.34
 	 */
@@ -161,6 +161,9 @@ sap.ui.define([
 	 * A map of ID suffixes for controls that require a special DOM reference for
 	 * <code>EnterText</code> interaction.
 	 *
+	 * You can specify an ID suffix for specific controls in this map.
+	 * The enter text action will be triggered on the DOM element with the specified suffix.
+	 *
 	 * Here is a sublist of supported controls and their <code>EnterText</code> control adapter:
 	 * <ul>
 	 *  <li>sap.m.StepInput - internal Input</li>
@@ -179,8 +182,8 @@ sap.ui.define([
 	 * </code>
 	 * </pre>
 	 *
-	 * It contains two input tags in its dom.
-	 * When you render your control it creates the following dom:
+	 * It contains two input tags in its DOM.
+	 * When you render your control it creates the following DOM:
 	 *
 	 *
 	 * <pre>
@@ -200,17 +203,14 @@ sap.ui.define([
 	 *
 	 *     // Example usage
 	 *     new EnterText(); // executes on second Input since it is set as default
-	 *     new EnterText({ idSuffix: "firstInput"}); // executes on the first input has to be the same as the last part of the id in the dom
+	 *     new EnterText({ idSuffix: "firstInput"}); // executes on the first input has to be the same as the last part of the ID in the DOM
 	 * </code>
 	 * </pre>
 	 *
 	 *
 	 * @public
 	 * @static
-	 * @name sap.ui.test.actions.EnterText.controlAdapters
-	 * You can specify an Id suffix for specific controls in this map.
-	 * The enter text action will be triggered on the DOM element with the specified suffix
-	 * @type map
+	 * @type Object<string,(string|function(sap.ui.core.Control):string)>
 	 */
 	EnterText.controlAdapters = {};
 	EnterText.controlAdapters["sap.m.StepInput"] = "input-inner"; // focusDomRef: <input>

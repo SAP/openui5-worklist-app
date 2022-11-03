@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -32,7 +32,7 @@ sap.ui.define(["sap/ui/support/library"],
 			resolution: "Either set enabled to true ot set editable to false",
 			resolutionurls: [{
 				text: "API Reference: sap.m.CheckBox",
-				href: "https://sapui5.hana.ondemand.com/#/api/sap.m.CheckBox"
+				href: "https://sdk.openui5.org/api/sap.m.CheckBox"
 			}],
 			check: function (oIssueManager, oCoreFacade, oScope) {
 				oScope.getElementsByClassName("sap.m.CheckBox")

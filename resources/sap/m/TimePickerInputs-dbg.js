@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -49,7 +49,7 @@ sap.ui.define([
 		 * @extends sap.ui.core.Control
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
@@ -69,7 +69,9 @@ sap.ui.define([
 					 */
 					 _texts: { type: "sap.ui.core.InvisibleText", multiple: true, visibility: "hidden" }
 				}
-			}
+			},
+
+			renderer: TimePickerInputsRenderer
 		});
 
 		/**
@@ -632,6 +634,11 @@ sap.ui.define([
 					tooltip: this._oResourceBundle.getText("TIMEPICKER_AMPM_BUTTON_TOOLTIP")
 				}));
 			}
+
+			if (!this.getAggregation("_nowButton")) {
+				this.setAggregation("_nowButton", this._getCurrentTimeButton());
+			}
+
 			aInputs = this.getAggregation("_inputs");
 			this._inputCount = aInputs.length;
 			this._switchInput(0);

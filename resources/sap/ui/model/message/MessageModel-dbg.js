@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -29,7 +29,7 @@ sap.ui.define(['sap/ui/model/BindingMode', 'sap/ui/model/ClientModel', 'sap/ui/m
 	 * @extends sap.ui.model.ClientModel
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @param {sap.ui.core.message.MessageManager} oMessageManager The MessageManager instance
 	 * @public
@@ -68,7 +68,7 @@ sap.ui.define(['sap/ui/model/BindingMode', 'sap/ui/model/ClientModel', 'sap/ui/m
 		return this;
 	};
 
-	/**
+	/*
 	 * @see sap.ui.model.Model.prototype.bindProperty
 	 *
 	 */
@@ -77,7 +77,7 @@ sap.ui.define(['sap/ui/model/BindingMode', 'sap/ui/model/ClientModel', 'sap/ui/m
 		return oBinding;
 	};
 
-	/**
+	/*
 	 * @see sap.ui.model.Model.prototype.bindList
 	 *
 	 */

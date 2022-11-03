@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -10,13 +10,14 @@ sap.ui.define([
 	"sap/ui/core/EnabledPropagator",
 	"sap/ui/core/ResizeHandler",
 	"sap/ui/core/delegate/ScrollEnablement",
-	"sap/ui/layout/library",
-	"./FixFlexRenderer"
-], function (
+	"./FixFlexRenderer",
+	"sap/ui/layout/library"
+], function(
 	Control,
 	EnabledPropagator,
 	ResizeHandler,
-	ScrollEnablement
+	ScrollEnablement,
+	FixFlexRenderer
 ) {
 	"use strict";
 
@@ -52,13 +53,12 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.25.0
 	 * @alias sap.ui.layout.FixFlex
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var FixFlex = Control.extend("sap.ui.layout.FixFlex", /** @lends sap.ui.layout.FixFlex.prototype */ {
 		metadata: {
@@ -102,7 +102,9 @@ sap.ui.define([
 			},
 			designtime: "sap/ui/layout/designtime/FixFlex.designtime",
 			dnd: { draggable: false, droppable: true }
-		}
+		},
+
+		renderer: FixFlexRenderer
 	});
 
 	EnabledPropagator.call(FixFlex.prototype);

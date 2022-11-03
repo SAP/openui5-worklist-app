@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -71,13 +71,12 @@ sap.ui.define([
 	 * @extends sap.f.CardBase
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.64
 	 * @alias sap.f.Card
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var Card = CardBase.extend("sap.f.Card", /** @lends sap.f.Card.prototype */ {
 		metadata: {
@@ -109,8 +108,9 @@ sap.ui.define([
 	/**
 	 * Implements sap.f.ICard interface.
 	 *
+	 * @ui5-restricted
+	 * @private
 	 * @returns {sap.f.cards.IHeader} The header of the card.
-	 * @protected
 	 */
 	Card.prototype.getCardHeader = function () {
 		return this.getHeader();
@@ -119,8 +119,9 @@ sap.ui.define([
 	/**
 	 * Implements sap.f.ICard interface.
 	 *
+	 * @ui5-restricted
+	 * @private
 	 * @returns {sap.f.cards.HeaderPosition} The position of the header of the card.
-	 * @protected
 	 * @since 1.65
 	 */
 	Card.prototype.getCardHeaderPosition = function () {
@@ -130,8 +131,9 @@ sap.ui.define([
 	/**
 	 * Implements sap.f.ICard interface.
 	 *
+	 * @ui5-restricted
+	 * @private
 	 * @returns {sap.ui.core.Control} The content of the card.
-	 * @protected
 	 */
 	Card.prototype.getCardContent = function () {
 		return this.getContent();

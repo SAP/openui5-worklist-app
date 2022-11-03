@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -14,7 +14,8 @@ sap.ui.define([
 	"sap/m/PDFViewerRenderer",
 	"sap/base/Log",
 	"sap/base/assert",
-	"sap/ui/thirdparty/jquery"
+	"sap/ui/thirdparty/jquery",
+	"./PDFViewerRenderer"
 ],
 	function(
 		library,
@@ -25,7 +26,8 @@ sap.ui.define([
 		PDFViewerRenderer,
 		Log,
 		assert,
-		jQuery
+		jQuery,
+		PDFViewerRenderer1
 	) {
 		"use strict";
 
@@ -45,14 +47,13 @@ sap.ui.define([
 		 * @extends sap.ui.core.Control
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 * @since 1.48
 		 *
 		 * @constructor
 		 * @public
 		 * @alias sap.m.PDFViewer
 		 * @see {@link topic:cd80a8bca4ac450b86547d78f0653330 PDF Viewer}
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		var PDFViewer = Control.extend("sap.m.PDFViewer",
 			/** @lends sap.m.PDFViewer.prototype */
@@ -168,7 +169,9 @@ sap.ui.define([
 						 */
 						sourceValidationFailed: {}
 					}
-				}
+				},
+
+				renderer: PDFViewerRenderer1
 			});
 
 
@@ -229,7 +232,7 @@ sap.ui.define([
 			try {
 				//unbind all iFrame events before rendering
 				var oIframeElement = this._getIframeDOMElement();
-				oIframeElement.off();
+				oIframeElement.remove();
 			} catch (error) {
 				Log.info(error);
 			}
@@ -328,7 +331,7 @@ sap.ui.define([
 					// even though the sourceValidationFailed event is fired, the default behaviour is to continue.
 					// when preventDefault is on event object is called, the rendering ends up with error
 					if (!Device.browser.firefox && this.fireEvent("sourceValidationFailed", {}, true)) {
-						this._showMessageBox();
+						this._fireLoadedEvent();
 						return;
 					}
 				}
@@ -362,7 +365,7 @@ sap.ui.define([
 		};
 
 		/**
-		 * @param string oClickedButtonId
+		 * @param {string} oClickedButtonId
 		 * @private
 		 */
 		PDFViewer.prototype._onSourceValidationErrorMessageBoxCloseListener = function (oClickedButtonId) {
@@ -483,6 +486,7 @@ sap.ui.define([
 		 * @private
 		 */
 		PDFViewer.prototype._isEmbeddedModeAllowed = function () {
+			//Allow Embedding only if PDFViewer plugin is present
 			return this._isDisplayTypeAuto() ? Device.system.desktop : this._isDisplayTypeEmbedded();
 		};
 

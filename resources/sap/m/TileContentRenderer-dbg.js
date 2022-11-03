@@ -1,16 +1,16 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define(["./library", "sap/base/security/encodeCSS", "sap/m/GenericTile", "sap/ui/core/library"],
-	function(library, encodeCSS, GenericTile, Core) {
+sap.ui.define(["./library", "sap/base/security/encodeCSS", "sap/m/GenericTile"],
+	function(library, encodeCSS, GenericTile) {
 	"use strict";
 
 	var GenericTileMode = library.GenericTileMode,
 		FrameType = library.FrameType,
-		Priority = Core.Priority;
+		Priority = library.Priority;
 
 	/**
 	 * TileContent renderer.
@@ -24,27 +24,70 @@ sap.ui.define(["./library", "sap/base/security/encodeCSS", "sap/m/GenericTile", 
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered
+	 * @param {sap.m.TileContent} oControl An object representation of the control that should be rendered
 	 */
 	TileContentRenderer.render = function(oRm, oControl) {
 
 		var sTooltip = oControl.getTooltip_AsString();
 		var sContentTypeClass = oControl._getContentType();
+		var sPriority = oControl.getPriority();
 		if (sContentTypeClass) {
 			sContentTypeClass = encodeCSS(sContentTypeClass);
 		}
 		var sFrameTypeClass = encodeCSS("sapMFrameType" + oControl.getFrameType());
 
 		oRm.openStart("div", oControl);
-		oRm.class("sapMTileCnt");
+		oRm.class(oControl.getState() == "Disabled" ? "sapMTileCnt sapMTileCntDisabled" : "sapMTileCnt");
 		oRm.class(sContentTypeClass);
 		oRm.class(sFrameTypeClass);
+		if (sPriority === Priority.None){
+			oRm.class("sapMGTNoPriority");
+		} else {
+			oRm.class("sapMGTPriority");
+		}
 		if (sTooltip.trim()) { // trim check needed since IE11 renders white spaces
 			oRm.attr("title", sTooltip);
 		}
 		oRm.openEnd();
-		this._renderContent(oRm, oControl);
-		this._renderFooter(oRm, oControl);
+		if (oControl.getState() == "Loading") {
+			oRm.openStart("div").class("sapMTileCntContentShimmerPlaceholderItem");
+			oRm.class("sapMTileCntContentShimmerPlaceholderWithDescription");
+			oRm.openEnd();
+			oRm.openStart("div").class("sapMTileCntContentShimmerPlaceholderRows")
+			.openEnd();
+			if (!(oControl.getParent().getFrameType() === "TwoByHalf" || oControl.getParent().getFrameType() === "OneByHalf")) {
+				oRm.openStart("div")
+				.class("sapMTileCntContentShimmerPlaceholderItemBox")
+				.class("sapMTileCntLoadingShimmer")
+				.openEnd()
+				.close("div");
+			}
+			oRm.openStart("div")
+			.class("sapMTileCntContentShimmerPlaceholderItemTextFooter")
+			.class("sapMTileCntLoadingShimmer")
+			.openEnd()
+			.close("div");
+			oRm.close("div");
+			oRm.close("div");
+		} else if (oControl.getState() == "Failed"){
+			oRm.openStart("div", oControl.getId() + "-failed-ftr");
+			oRm.class("sapMTileCntFtrFld");
+			oRm.openEnd();
+			oRm.openStart("div", oControl.getId() + "-failed-icon");
+			oRm.class("sapMTileCntFtrFldIcn");
+			oRm.openEnd();
+			oRm.renderControl(oControl.getParent()._oWarningIcon);
+			oRm.close("div");
+			oRm.openStart("div", oControl.getId() + "-failed-text");
+			oRm.class("sapMTileCntFtrFldTxt");
+			oRm.openEnd();
+			oRm.renderControl(oControl.getParent().getAggregation("_failedMessageText"));
+			oRm.close("div");
+			oRm.close("div");
+		} else {
+			this._renderContent(oRm, oControl);
+			this._renderFooter(oRm, oControl);
+		}
 
 		oRm.close("div");
 	};
@@ -54,7 +97,7 @@ sap.ui.define(["./library", "sap/base/security/encodeCSS", "sap/m/GenericTile", 
 	 *
 	 * @private
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oControl an object representation of the control whose content should be rendered
+	 * @param {sap.m.TileContent} oControl an object representation of the control whose content should be rendered
 	 */
 	TileContentRenderer._renderContent = function(oRm, oControl) {
 		if (!oControl._bRenderContent) {
@@ -65,7 +108,10 @@ sap.ui.define(["./library", "sap/base/security/encodeCSS", "sap/m/GenericTile", 
 			oPriority = oControl.getPriority(),
 			oTile = oControl.getParent(),
 			bIsActionMode = oTile instanceof GenericTile && oTile.getMode() === GenericTileMode.ActionMode && oTile.getFrameType() === FrameType.TwoByOne,
-			bRenderPriority = bIsActionMode && oPriority && oPriority !== Priority.None;
+			sPriorityText = oControl.getPriorityText(),
+			bRenderPriority = bIsActionMode && oPriority && oPriority !== Priority.None && sPriorityText,
+			sPriority = sap.ui.getCore().getLibraryResourceBundle("sap.m").getText("TEXT_CONTENT_PRIORITY"),
+			iMaxLines = (oPriority !== Priority.None && sPriorityText) ? 1 : 3; //if the Priority is present then the text should have 1 line else 3 lines in ActionMode
 
 		if (oContent) {
 			if (bRenderPriority) {
@@ -90,12 +136,15 @@ sap.ui.define(["./library", "sap/base/security/encodeCSS", "sap/m/GenericTile", 
 				oRm.openStart("span", oControl.getId() + "-priority-value");
 				oRm.class("sapMTilePriorityValue");
 				oRm.openEnd();
-				oRm.text(oControl._getPriorityText(oPriority));
+				oRm.text(sPriorityText + " " + sPriority);
 				oRm.close("span");
 				oRm.close("div");
 				oRm.close("div");
+				oRm.close("div");
 			}
-
+			if (oContent.isA("sap.m.Text") && bIsActionMode && (oControl.getFrameType() === FrameType.TwoByOne || oControl.getFrameType() === FrameType.Auto)) {
+				oContent.setProperty("maxLines", iMaxLines,true);
+			}
 			oRm.openStart("div", oControl.getId() + "-content");
 			oRm.class("sapMTileCntContent");
 			oRm.openEnd();
@@ -105,9 +154,6 @@ sap.ui.define(["./library", "sap/base/security/encodeCSS", "sap/m/GenericTile", 
 			oRm.renderControl(oContent);
 			oRm.close("div");
 
-			if (bRenderPriority) {
-				oRm.close("div");
-			}
 		}
 	};
 
@@ -116,7 +162,7 @@ sap.ui.define(["./library", "sap/base/security/encodeCSS", "sap/m/GenericTile", 
 	 *
 	 * @private
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oControl an object representation of the control whose footer should be rendered
+	 * @param {sap.m.TileContent} oControl an object representation of the control whose footer should be rendered
 	 */
 
 	TileContentRenderer._renderFooter = function(oRm, oControl) {

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -58,21 +58,20 @@ sap.ui.define([
 	 * Can be used to define the sizes of columns and rows for different screen sizes, by using the <code>layout</code> aggregations of <code>sap.f.GridContainer</code>.
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @extends sap.ui.base.ManagedObject
 	 *
 	 * @see {@link topic:32d4b9c2b981425dbc374d3e9d5d0c2e Grid Controls}
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @experimental Since 1.65 This class is experimental. The API may change.
 	 * @since 1.65
 	 * @public
 	 * @constructor
 	 * @alias sap.f.GridContainerSettings
-	 * @ui5-metamodel This control/element will also be described in the UI5 (legacy) designtime metamodel
 	 */
 	var GridContainerSettings = ManagedObject.extend("sap.f.GridContainerSettings", {
 		metadata: {

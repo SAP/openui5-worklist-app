@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([], function() {
@@ -18,7 +18,7 @@ sap.ui.define([], function() {
 		 * @private
 		 */
 		_display: function () {
-			var iViewLevel,
+			var iLevel,
 				sName;
 
 			// don't remember previous displays
@@ -28,12 +28,12 @@ sap.ui.define([], function() {
 
 			// maybe a wrong name was provided then there is no last displayed target
 			if (this._oLastDisplayedTarget) {
-				iViewLevel = this._getViewLevel(this._oLastDisplayedTarget);
+				iLevel = this._getLevel(this._oLastDisplayedTarget);
 				sName = this._oLastDisplayedTarget._oOptions._name;
 			}
 
 			this._oTargetHandler.navigate({
-				viewLevel: iViewLevel,
+				level: iLevel,
 				navigationIdentifier: sName,
 				askHistory: true
 			});

@@ -5,12 +5,10 @@
 
 @_sap_m_SearchField_Height: 3rem;
 @_sap_m_SearchField_FormHeight: 2.5rem;
-@_sap_m_SearchField_InputHeight: 2.375rem;
 @_sap_m_SearchField_ButtonSize: 2.375rem;
 @_sap_m_SearchField_ButtonFontSize: 1.125rem;
-@_sap_m_SearchField_NoSearchButtonPadding: 2.375rem;
+@_sap_m_SearchField_CompactButtonLineHeight: 1.5rem;
 @_sap_m_SearchField_Compact_FormPaddingLeft: 0.375rem;
-@_sap_m_SearchField_Compact_NoSearchButtonPadding: 2rem;
 @_sap_m_SearchField_ResetIcon: "\e1c7";
 @_sap_m_SearchField_SearchIcon: "\e00d";
 @_sap_m_SearchField_PlaceholderColor: @sapUiFieldPlaceholderTextColor;
@@ -77,11 +75,7 @@ input.sapMSFI[type="search"]:focus {
 }
 
 .sapMSFR {
-	position: absolute;
-	right: 0px;
-	top: 0px;
-	width: 1.8em;
-	height: 100%;
+	visibility: hidden;
 	background: transparent;
 }
 
@@ -90,31 +84,22 @@ input.sapMSFI[type="search"]:focus {
 }
 
 .sapMSFF {
+	display: flex;
 	box-sizing: border-box;
 	height: @_sap_m_SearchField_FormHeight;
-	line-height: @_sap_m_SearchField_InputHeight;
 	border: @_sap_m_SearchField_Border;
-	background: @sapUiFieldBackground;
+	background: @sapUiFieldBackgroundStyle;
+	background-color: @sapUiFieldBackground;
 	vertical-align: top;
 	width: 100%;
 	position: relative;
 	padding-left: 0.625rem;
-	padding-right: 4.75rem;
-}
-
-.sapMSFF.sapMSFNS { /* no search button */
-	padding-right: @_sap_m_SearchField_NoSearchButtonPadding;
+	overflow: hidden;
 }
 
 /* Block elements do not work with bar layout */
 .sapMBar .sapMSF {
 	display : inline-block;
-}
-
-.sapMSFF>form>input {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .sapMFocus>.sapMSFF {
@@ -130,8 +115,7 @@ input.sapMSFI[type="search"]:focus {
 	font-family: @sapUiFontFamily;
 	font-size: @sapMFontMediumSize;
 	background: transparent;
-	width: 100%;
-	height: @_sap_m_SearchField_InputHeight;
+	height: 100%;
 	border: none;
 	outline: none;
 	padding: 0;
@@ -139,6 +123,7 @@ input.sapMSFI[type="search"]:focus {
 	text-indent: 0.125rem;
 	vertical-align: top;
 	text-overflow: ellipsis;
+	flex: 1;
 }
 
 .sapMSFI[type='search']{
@@ -151,20 +136,16 @@ input.sapMSFI[type="search"]:focus {
 	display: none;
 }
 
-/* custom buttons */
 .sapMSFB {
-	position: absolute;
 	width: @_sap_m_SearchField_ButtonSize;
-	height: @_sap_m_SearchField_ButtonSize;
+	height: 100%;
 	line-height: @_sap_m_SearchField_ButtonSize;
 	font-size: @_sap_m_SearchField_ButtonFontSize;
 	color: @sapUiContentIconColor;
 	text-align: center;
 	cursor: pointer;
-	margin:0;
 	padding:0;
-	right: 0;
-	top: 0;
+	box-sizing: border-box;
 }
 
 .sapMSFB::after {
@@ -174,26 +155,17 @@ input.sapMSFI[type="search"]:focus {
 	-webkit-font-smoothing: antialiased;
 }
 
-/* reset button */
-.sapMSFR:not(.sapMSFNS) {
-	right: 2.375rem;
-}
-
-.sapMSFR {
-	visibility: hidden;
-}
-
 .sapMSFR::after {
 	content: @_sap_m_SearchField_ResetIcon;
 }
 
-.sapMSFVal>.sapMSFF>.sapMSFR,
-:not(.sapMSFVal):not(.sapMFocus)>.sapMSFReload>.sapMSFR {
+.sapMSFVal > .sapMSFF .sapMSFR,
+:not(.sapMSFVal):not(.sapMFocus) > .sapMSFReload .sapMSFR {
 	visibility: visible;
 }
 
 /* search icon in place of the reset button */
-:not(.sapMSFVal)>.sapMSFReload>.sapMSFR::after {
+:not(.sapMSFVal) > .sapMSFReload .sapMSFR::after {
 	content: @_sap_m_SearchField_SearchIcon;
 }
 
@@ -203,7 +175,7 @@ input.sapMSFI[type="search"]:focus {
 }
 
 /* refresh icon in some cases */
-:not(.sapMFocus)>.sapMSFReload>.sapMSFS::after {
+:not(.sapMFocus) > .sapMSFReload .sapMSFS::after {
 	content: "\e010";
 }
 
@@ -221,6 +193,11 @@ input.sapMSFI[type="search"]:focus {
 	opacity: 1; // in FF by default the opacity is 60%
 }
 
+.sapMSF.sapMSFDisabled form,
+.sapMSF:not(.sapMSFVal) form.sapMSFNS:not(.sapMSFReload) {
+	padding-right: 0.625rem;
+}
+
 /* Compact size */
 .sapUiSizeCompact {
 
@@ -232,32 +209,19 @@ input.sapMSFI[type="search"]:focus {
 
 	.sapMSFF {
 		height: 1.625rem;
-		line-height: 1.5rem;
 		padding-left: @_sap_m_SearchField_Compact_FormPaddingLeft;
-		padding-right: 4rem;
 	}
 
-	.sapMSFF.sapMSFNS { /* no search button */
-		padding-right: 2.38rem;
-	}
-
-	/* input */
-	.sapMSFI {
-		height: 1.5rem;
-	}
-
-	/* custom buttons */
 	.sapMSFB {
 		width: 2rem;
-		height: 1.5rem;
 		font-size: 1rem;
 		text-align: center;
-		margin:0;
 		padding:0;
-		line-height: 1.5rem;
+		line-height: @_sap_m_SearchField_CompactButtonLineHeight;
 	}
 
-	.sapMSFR:not(.sapMSFNS) {
-		right: 2rem;
+	.sapMSF.sapMSFDisabled form,
+	.sapMSF:not(.sapMSFVal) form.sapMSFNS:not(.sapMSFReload) {
+		padding-right: @_sap_m_SearchField_Compact_FormPaddingLeft;
 	}
 }

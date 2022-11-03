@@ -1,18 +1,17 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides the basic UI5 support functionality
-sap.ui.define(['sap/ui/base/EventProvider', './Plugin', "sap/base/util/UriParameters", "sap/ui/thirdparty/jquery", "sap/base/Log", "sap/base/util/deepExtend", "sap/base/security/encodeURL"],
+sap.ui.define(['sap/ui/base/EventProvider', './Plugin', "sap/base/util/UriParameters", "sap/ui/thirdparty/jquery", "sap/base/Log", "sap/base/security/encodeURL"],
 	function(
 		EventProvider,
 		Plugin,
 		UriParameters,
 		jQuery,
 		Log,
-		deepExtend,
 		encodeURL
 	) {
 	"use strict";
@@ -26,7 +25,7 @@ sap.ui.define(['sap/ui/base/EventProvider', './Plugin', "sap/base/util/UriParame
 	 * @class This class provides the support tool functionality of UI5. This class is internal and all its functions must not be used by an application.
 	 *
 	 * @extends sap.ui.base.EventProvider
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @private
 	 * @alias sap.ui.core.support.Support
 	 */
@@ -42,7 +41,7 @@ sap.ui.define(['sap/ui/base/EventProvider', './Plugin', "sap/base/util/UriParame
 			this._sType = sType;
 			this._sLocalOrigin = window.location.protocol + "//" + window.location.host;
 
-			var fHandler = jQuery.proxy(this._receiveEvent, this);
+			var fHandler = this._receiveEvent.bind(this);
 			if (window.addEventListener) {
 				window.addEventListener("message", fHandler, false);
 			} else {
@@ -668,7 +667,7 @@ sap.ui.define(['sap/ui/base/EventProvider', './Plugin', "sap/base/util/UriParame
 
 		/**
 		 * Returns the support info by index
-		 * @param {int} the index of the info
+		 * @param {int} iIndex the index of the info
 		 * @experimental
 		 * @private
 		 */
@@ -817,7 +816,7 @@ sap.ui.define(['sap/ui/base/EventProvider', './Plugin', "sap/base/util/UriParame
 		 * Adds an XML modification to the stack of modifications.
 		 * @param {string} sId the id of that is used to identify the change after a reload
 		 * @param {int} iIdx the index of node within the XML document (can be determined by root.querySelectorAll('*')
-		 * @param {object} containing the change as {setAttribute: [attributeName,newValue]}
+		 * @param {object} oChange containing the change as {setAttribute: [attributeName,newValue]}
 		 * @experimental
 		 * @private
 		 */
@@ -942,7 +941,7 @@ sap.ui.define(['sap/ui/base/EventProvider', './Plugin', "sap/base/util/UriParame
 		if ( bAsync ) {
 			sap.ui.require(aModulesWhereToInjectSupportInfo, injectSupportInfo);
 		} else {
-			injectSupportInfo.apply(null, aModulesWhereToInjectSupportInfo.map(sap.ui.requireSync) );
+			injectSupportInfo.apply(null, aModulesWhereToInjectSupportInfo.map(sap.ui.requireSync) ); // legacy-relevant: Sync path
 		}
 	};
 

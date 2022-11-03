@@ -43,10 +43,6 @@
 	}
 }
 
-.sapUiForm .sapMCb {
-	display: table-cell;
-}
-
 .sapUiForm:not(.sapUiFormEdit-CTX) .sapMCb.sapMCbDisplayOnly {
 	height: 1.125rem;
 	line-height: 1.125rem;
@@ -88,6 +84,7 @@ html[dir="rtl"] .sapMCb {
 .sapMCb .sapMLabel {
 	cursor: default;
 	line-height: inherit;
+	display: block;
 
 	&.sapMLabelNoText {
 		position: absolute;
@@ -149,7 +146,6 @@ html[dir="rtl"] .sapMCb {
 	background-clip: padding-box;
 }
 
-.sapUiSizeCompact.sapMCb .sapMCbMarkChecked.sapMCbMarkPartiallyChecked:before,
 .sapUiSizeCompact .sapMCbBg.sapMCbMarkChecked.sapMCbMarkPartiallyChecked:before {
 	border-width: 0.125rem;
 }
@@ -157,6 +153,7 @@ html[dir="rtl"] .sapMCb {
 .sapMCbBg > input {
 	left: 0;
 	-webkit-appearance: none;
+	position: absolute;
 	visibility: hidden;
 }
 

@@ -1,6 +1,6 @@
-/*
- * ! OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+/*!
+ * OpenUI5
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -16,23 +16,23 @@ sap.ui.define([
 	 * @param {object} [mSettings] Initial settings for the new control
 	 *
 	 * @class
-	 * The <code>AbstractContainer</code> control can be used to define a fixed header/footer area while offering the possibility
-	 * to define different controls as content, which can be dynamically added/removed and switched.
+	 * The <code>AbstractContainer</code> control can be used to define a fixed header and footer area while offering the possibility
+	 * to define various controls as content, which can be dynamically added, removed, and switched.
 	 *
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @alias sap.m.p13n.AbstractContainer
 	 * @author SAP SE
-	 * @version 1.96.2
-	 * @since 1.96.0
+	 * @version 1.108.0
+	 * @experimental Since 1.96.
+	 * @since 1.96
 	 *
 	 * @private
-	 * @ui5-retricted
-	 * @experimental
+	 * @ui5-restricted
 	 */
 	var AbstractContainer = Control.extend("sap.m.p13n.AbstractContainer", {
 		metadata: {
@@ -60,7 +60,7 @@ sap.ui.define([
 					}
 				},
 				/**
-				 * Defines the content for the <code>AbstractContainer</code> subHeader area.
+				 * Defines the content for the <code>AbstractContainer</code> <code>subHeader</code> area.
 				 */
 				subHeader: {
 					type: "sap.m.IBar",
@@ -96,7 +96,41 @@ sap.ui.define([
 				_content: {
 					type: "sap.ui.core.Control",
 					multiple: false,
-					hidden: true
+					visibility: "hidden"
+				}
+			},
+			events: {
+				/**
+				 * This event will be fired before a view is switched.
+				 */
+				beforeViewSwitch: {
+					allowPreventDefault: true,
+					parameters: {
+						/**
+						 * This parameter is the current view.
+						 */
+						 source: {type: "string"},
+						 /**
+						  * This parameter is the target view.
+						  */
+						 target: {type: "string"}
+					}
+				},
+				/**
+				 * This event will be fired after a view is switched.
+				 */
+				afterViewSwitch: {
+					allowPreventDefault: true,
+					parameters: {
+						/**
+						 * This parameter is the current view.
+						 */
+						source: {type: "string"},
+						/**
+						 * This parameter is the target view.
+						 */
+						target: {type: "string"}
+					}
 				}
 			}
 		},
@@ -114,6 +148,7 @@ sap.ui.define([
 
 	AbstractContainer.prototype.init = function() {
 		Control.prototype.init.apply(this, arguments);
+		this.addStyleClass("sapMAbstractContainer");
 		this._initializeContent();
 	};
 
@@ -131,10 +166,10 @@ sap.ui.define([
 	/**
 	 * This method can be used to remove a view from the <code>AbstractContainer</code> instance.
 	 *
-	 * @param {string|sap.m.p13n.AbstractContainerItem} vContainerItem View that should be removed
-	 * @param {boolean} bSuppress Supress invalidate
+	 * @param {string|sap.m.p13n.AbstractContainerItem} vContainerItem View that is removed
+	 * @param {boolean} bSuppress Suppress invalidate
 	 *
-	 * @returns {sap.m.p13n.AbstractContainer} The <code>AbstractContainer<code> instance
+	 * @returns {this} The <code>AbstractContainer<code> instance
 	 */
 	AbstractContainer.prototype.removeView = function(vContainerItem, bSuppress){
 		var oContainerItem = typeof vContainerItem == "string" ? this.getView(vContainerItem) : vContainerItem;
@@ -149,10 +184,9 @@ sap.ui.define([
 	/**
 	 * This method can be used to add a view to the <code>AbstractContainer</code> instance.
 	 *
-	 * @param {sap.m.p13n.AbstractContainerItem} vContainerItem <code>AbstractContainerItem</code> that should be added
-	 * @param {boolean} bSuppress Supress invalidate
+	 * @param {sap.m.p13n.AbstractContainerItem} vContainerItem <code>AbstractContainerItem</code> that is added
 	 *
-	 * @returns {sap.m.p13n.AbstractContainer} The <code>AbstractContainer<code> instance
+	 * @returns {this} The <code>AbstractContainer<code> instance
 	 */
 	AbstractContainer.prototype.addView = function(vContainerItem) {
 		if (vContainerItem && vContainerItem.getContent() && !vContainerItem.getContent().hasStyleClass("sapUiMAbstractContainerContent")){
@@ -182,14 +216,12 @@ sap.ui.define([
 	};
 
 	/**
-	 * This method can be used to switch to an existing view using the according <code>ContainerItem</code> key.
+	 * This method can be used to switch to an existing view using the related <code>ContainerItem</code> key.
 	 *
-	 * @param {string} sKey The key of the ContainerItem whose content should be visible up next
+	 * @param {string} sKey The key of the ContainerItem whose content is made visible next
 	 */
 	AbstractContainer.prototype.switchView = function(sKey) {
-
 		var oNewView = this.getView(sKey);
-
 		if (!oNewView) {
 			oNewView = this.getViews()[0];
 			if (!oNewView) {
@@ -197,31 +229,49 @@ sap.ui.define([
 			}
 		}
 
+		if (!this.fireBeforeViewSwitch({source: sCurrentViewKey, target: sKey})) {
+			this._bPrevented = true;
+			return; // view switch event was prevented by event handler.
+		}
+
+		this._bPrevented = false;
+		var sCurrentViewKey = this.getCurrentViewKey();
+
 		this._sCurrentView = oNewView.getKey();
 
 		this.oLayout.removeAllContent();
 		this.oLayout.addContent(oNewView.getContent());
+
+		if (sCurrentViewKey !== sKey) {
+			this.oAfterRenderingDelegate = {
+				onAfterRendering: function () {
+					this.removeEventDelegate(this.oAfterRenderingDelegate);
+					this.fireAfterViewSwitch({source: sCurrentViewKey, target: sKey});
+				}.bind(this)
+			};
+			this.addEventDelegate(this.oAfterRenderingDelegate, this);
+		}
 	};
 
 	/**
-	 * This method can be used to retrieve the current present view by using the according <code>ContainerItem</code> key.
+	 * This method can be used to retrieve the current view by using the related <code>ContainerItem</code> key.
 	 *
-  	 * @param {string} sKey The key of the ContainerItem which should be retrieved
+  	 * @param {string|sap.ui.core.Control} vView The key or the content of the ContainerItem which is retrieved
 	 *
 	 * @returns {sap.m.p13n.AbstractContainerItem} The matching ContainerItem
 	 */
-	AbstractContainer.prototype.getView = function(sKey) {
+	 AbstractContainer.prototype.getView = function(vView) {
 		return this.getViews().find(function(oView){
-			if (oView.getKey() === sKey) {
+			if (oView.getKey() === vView || oView.getContent() === vView) {
 				return oView;
 			}
 		});
 	};
 
 	/**
-	 * Get a plain representation of the current views.
+	 * Gets a plain representation of the current views.
 	 *
-	 * @returns {object} The current view aggeregation as map
+	 * @returns {object} The current view aggregation as map
 	 */
 	AbstractContainer.prototype.getViewMap = function() {
 		return this.getViews().map(function(o){

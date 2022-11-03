@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -36,16 +36,13 @@ sap.ui.define([
 		resolution: "Control and renderer must be migrated to modern rendering syntax. For more information consult with documentation.",
 		resolutionurls: [{
 			text: "Documentation: RenderManager syntax",
-			href: "https://sapui5.hana.ondemand.com/#/api/sap.ui.core.RenderManager"
+			href: "https://sdk.openui5.org/api/sap.ui.core.RenderManager"
 		}],
 		check: function(oIssueManager, oCoreFacade, oScope) {
 			var aControls = oScope.getElements().filter(function (oElement) { return oElement.isA("sap.ui.core.Control"); });
 
 			aControls.forEach(function (oControl) {
-				// The XMLView is excluded for now to not produce false-positive results
-				// Due to the possibility of mixing XHTML and UI5 content in the XML content,
-				// the XMLViewRenderer cannot be migrated fully to API version 2 yet.
-				if (RenderManager.getApiVersion(oControl.getRenderer()) < 2 && !oControl.isA("sap.ui.core.mvc.XMLView")) {
+				if (RenderManager.getApiVersion(oControl.getRenderer()) < 2) {
 					var sControlName = oControl.getMetadata().getName();
 
 					oIssueManager.addIssue({

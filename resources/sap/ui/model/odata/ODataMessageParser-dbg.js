@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -84,7 +84,7 @@ var sClassName = "sap.ui.model.odata.ODataMessageParser",
  * @extends sap.ui.core.message.MessageParser
  *
  * @author SAP SE
- * @version 1.96.2
+ * @version 1.108.0
  * @public
  * @alias sap.ui.model.odata.ODataMessageParser
  */
@@ -170,11 +170,11 @@ ODataMessageParser.prototype.parse = function(oResponse, oRequest, mGetEntities,
 		// Status us 4XX or 5XX - parse body
 		try {
 			aMessages = this._parseBody(oResponse, mRequestInfo);
-			this._logErrorMessages(aMessages, oRequest, sStatusCode);
 		} catch (ex) {
 			aMessages = this._createGenericError(mRequestInfo);
-			Log.error("Request failed with status code " + sStatusCode + ": " + oRequest.method
-				+ " " + oRequest.requestUri, ex, sClassName);
+			Log.debug("Failed to parse error messages from the response body", ex, sClassName);
+		} finally {
+			this._logErrorMessages(aMessages, oRequest, sStatusCode);
 		}
 	} else {
 		// Status neither ok nor error, may happen if no network connection is available (some
@@ -435,7 +435,7 @@ ODataMessageParser._isResponseForCreate = function (mRequestInfo) {
 	if (oRequest.key && oRequest.created && oResponse.statusCode >= 400) {
 		return false;
 	}
-	// return undefined; otherwise
+	return undefined;
 };
 
 /**

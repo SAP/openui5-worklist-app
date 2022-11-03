@@ -23,10 +23,10 @@
  * 3. Update this file. Please pay attention to the modified parts by SAP.
  *
  * @constructor
- * @alias sap/base/util/restricted/_CancelablePromise
+ * @alias module:sap/base/util/restricted/_CancelablePromise
  * @author SAP SE
  * @since 1.79
- * @version 1.96.2
+ * @version 1.108.0
  * @private
  * @ui5-restricted
 */

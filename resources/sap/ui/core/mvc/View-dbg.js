@@ -1,36 +1,38 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides control sap.ui.core.mvc.View.
 sap.ui.define([
-	"sap/base/util/isEmptyObject",
-	"sap/ui/base/ManagedObject",
-	"sap/ui/core/Control",
-	"sap/ui/core/mvc/Controller",
-	"sap/base/util/merge",
-	"./ViewType",
-	"./ViewRenderer",
-	"./XMLProcessingMode",
 	"sap/base/assert",
 	"sap/base/Log",
 	"sap/base/util/extend",
-	"sap/ui/core/Core" // to ensure correct behaviour of sap.ui.getCore()
-],
-	function(
-		isEmptyObject,
-		ManagedObject,
-		Control,
-		Controller,
-		merge,
-		ViewType,
-		ViewRenderer,
-		XMLProcessingMode,
+	"sap/base/util/isEmptyObject",
+	"sap/base/util/merge",
+	"sap/ui/base/ManagedObject",
+	"sap/ui/core/Configuration",
+	"sap/ui/core/Control",
+	"sap/ui/core/Element",
+	"./Controller",
+	"./ViewRenderer",
+	"./ViewType",
+	"./XMLProcessingMode"
+], function(
 		assert,
 		Log,
-		extend
+		extend,
+		isEmptyObject,
+		merge,
+		ManagedObject,
+		Configuration,
+		Control,
+		Element,
+		Controller,
+		ViewRenderer,
+		ViewType,
+		XMLProcessingMode
 	) {
 	"use strict";
 
@@ -145,12 +147,11 @@ sap.ui.define([
 	 * The default implementation of this method returns <code>false</code>.
 	 *
 	 * @extends sap.ui.core.Control
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @alias sap.ui.core.mvc.View
 	 * @abstract
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var View = Control.extend("sap.ui.core.mvc.View", /** @lends sap.ui.core.mvc.View.prototype */ {
 		metadata : {
@@ -183,6 +184,7 @@ sap.ui.define([
 				 */
 				displayBlock : {type : "boolean", group : "Appearance", defaultValue : false}
 			},
+			defaultAggregation: "content",
 			aggregations : {
 
 				/**
@@ -440,7 +442,7 @@ sap.ui.define([
 	 */
 	var createAndConnectController = function(oThis, mSettings) {
 
-		if (!sap.ui.getCore().getConfiguration().getControllerCodeDeactivated()) {
+		if (!Configuration.getControllerCodeDeactivated()) {
 			// only set when used internally
 			var oController = mSettings.controller,
 				sName = oController && typeof oController.getMetadata === "function" && oController.getMetadata().getName(),
@@ -662,11 +664,11 @@ sap.ui.define([
 	 * you should rather use {@link sap.ui.core.Core#byId sap.ui.getCore().byId()}.
 	 *
 	 * @param {string} sId View local ID of the element
-	 * @return {sap.ui.core.Element} Element by its ID or <code>undefined</code>
+	 * @return {sap.ui.core.Element|undefined} Element by its ID or <code>undefined</code>
 	 * @public
 	 */
 	View.prototype.byId = function(sId) {
-		return sap.ui.getCore().byId(this.createId(sId));
+		return Element.registry.get(this.createId(sId));
 	};
 
 	/**
@@ -674,7 +676,7 @@ sap.ui.define([
 	 * by prefixing it with the view ID.
 	 *
 	 * @param {string} sId View local ID of the element
-	 * @return {string} prefixed id
+	 * @returns {string} prefixed id
 	 * @public
 	 */
 	View.prototype.createId = function(sId) {
@@ -690,7 +692,7 @@ sap.ui.define([
 	 * <code>null</code> if the ID does not contain a prefix.
 	 *
 	 * @param {string} sId Prefixed ID
-	 * @return {string} ID without prefix or <code>null</code>
+	 * @returns {string|null} ID without prefix or <code>null</code>
 	 * @public
 	 * @since 1.39.0
 	 */
@@ -703,16 +705,16 @@ sap.ui.define([
 	 * Checks whether the given ID already contains this view's ID prefix
 	 *
 	 * @param {string} sId ID that is checked for the prefix
-	 * @return {boolean} whether the ID is already prefixed
+	 * @returns {boolean} Whether the ID is already prefixed
 	 */
 	View.prototype.isPrefixedId = function(sId) {
 		return !!(sId && sId.indexOf(this.getId() + "--") === 0);
 	};
 
 	/**
-	 * Returns user specific data object
+	 * Returns user specific data object.
 	 *
-	 * @return {object} viewData
+	 * @returns {object} viewData
 	 * @public
 	 */
 	View.prototype.getViewData = function() {
@@ -925,6 +927,7 @@ sap.ui.define([
 	 * <code>bSyncSupport</code> flag to <code>true</code>.
 	 *
 	 * @protected
+	 * @since 1.30
 	 * @static
 	 * @param {string} sType
 	 * 		the type of content to be processed

@@ -1,7 +1,7 @@
 /* eslint-disable linebreak-style */
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
@@ -38,7 +38,7 @@ sap.ui.define([
 				text: "SAP Fiori Design Guidelines: Panel",
 				href: "https://experience.sap.com/fiori-design-web/panel/#components",
 				text2: "Explored Sample",
-				href2: "https://openui5beta.hana.ondemand.com/#/sample/sap.m.sample.Panel/preview"
+				href2: "https://sdk.openui5.org/entity/sap.m.Panel/sample/sap.m.sample.Panel"
 			}],
 			check: function (oIssueManager, oCoreFacade, oScope) {
 				oScope.getElementsByClassName("sap.m.Panel")

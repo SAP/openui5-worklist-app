@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -28,13 +28,12 @@ sap.ui.define([
 	 * @extends sap.ui.core.Element
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.16.0
 	 * @alias sap.ui.layout.form.FormContainer
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var FormContainer = Element.extend("sap.ui.layout.form.FormContainer", /** @lends sap.ui.layout.form.FormContainer.prototype */ { metadata : {
 
@@ -241,7 +240,7 @@ sap.ui.define([
 	 * As Elements must not have a DOM reference it is not sure if one exists
 	 * If the FormContainer has a DOM representation this function returns it,
 	 * independent from the ID of this DOM element
-	 * @return {Element} The Element's DOM representation or null
+	 * @return {Element|null} The Element's DOM representation or null
 	 * @private
 	 */
 	FormContainer.prototype.getRenderedDomRef = function(){
@@ -262,7 +261,7 @@ sap.ui.define([
 	 * If the FormElement has a DOM representation this function returns it,
 	 * independent from the ID of this DOM element
 	 * @param {sap.ui.layout.form.FormElement} oElement FormElement
-	 * @return {Element} The Element's DOM representation or null
+	 * @return {Element|null} The Element's DOM representation or null
 	 * @private
 	 */
 	FormContainer.prototype.getElementRenderedDomRef = function(oElement){

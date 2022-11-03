@@ -1,11 +1,11 @@
 /* eslint-disable max-nested-callbacks */
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define(["sap/base/Log", "sap/ui/thirdparty/jquery"], function(Log, jQuery) {
+sap.ui.define(["sap/base/Log"], function(Log) {
 	"use strict";
 
 	/**
@@ -13,7 +13,7 @@ sap.ui.define(["sap/base/Log", "sap/ui/thirdparty/jquery"], function(Log, jQuery
 	 *
 	 * @alias sap.m.changeHandler.MoveTableColumns
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @experimental Since 1.48
 	 */
 	var MoveTableColumns = {};
@@ -113,7 +113,7 @@ sap.ui.define(["sap/base/Log", "sap/ui/thirdparty/jquery"], function(Log, jQuery
 							iCurrentIndexInAggregation = aColumns.indexOf(oMovedElement);
 							iStoredSourceIndexInChange = mMovedElement.sourceIndex;
 							iTargetIndex = typeof fnIterator === "function" && fnIterator(iStoredSourceIndexInChange);
-							iTargetIndex = jQuery.isNumeric(iTargetIndex) ? iTargetIndex : mMovedElement.targetIndex;
+							iTargetIndex = typeof iTargetIndex === "number" ? iTargetIndex : mMovedElement.targetIndex;
 
 							if (iCurrentIndexInAggregation !== iTargetIndex) {
 								// By default we are getting the index from the aggregation, because it is possible that the order is
@@ -213,7 +213,6 @@ sap.ui.define(["sap/base/Log", "sap/ui/thirdparty/jquery"], function(Log, jQuery
 	MoveTableColumns.completeChangeContent = function (oChange, mSpecificChangeInfo, mPropertyBag) {
 		var oModifier = mPropertyBag.modifier;
 		var oAppComponent = mPropertyBag.appComponent;
-		var mChangeData = oChange.getDefinition();
 		var oSourceControl = oModifier.bySelector(mSpecificChangeInfo.source.id, oAppComponent);
 		var oTargetControl = oModifier.bySelector(mSpecificChangeInfo.target.id, oAppComponent);
 		var mAdditionalSourceInfo = {
@@ -226,17 +225,18 @@ sap.ui.define(["sap/base/Log", "sap/ui/thirdparty/jquery"], function(Log, jQuery
 		};
 
 		// We need to add the information about the movedElements together with the source and target index
-		mChangeData.content = {movedElements: []};
+		var oContent = {movedElements: []};
 		mSpecificChangeInfo.movedElements.forEach(function (mElement) {
 			var oElement = mElement.element || oModifier.bySelector(mElement.id, oAppComponent);
 
-			mChangeData.content.movedElements.push({
+			oContent.movedElements.push({
 				selector: oModifier.getSelector(oElement, oAppComponent),
 				sourceIndex: mElement.sourceIndex,
 				targetIndex: mElement.targetIndex
 			});
 		});
 
+		oChange.setContent(oContent);
 		oChange.addDependentControl(mSpecificChangeInfo.source.id, SOURCE_ALIAS, mPropertyBag, mAdditionalSourceInfo);
 		oChange.addDependentControl(mSpecificChangeInfo.target.id, TARGET_ALIAS, mPropertyBag, mAdditionalTargetInfo);
 		oChange.addDependentControl(mSpecificChangeInfo.movedElements.map(function (element) {

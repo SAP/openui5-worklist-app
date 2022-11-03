@@ -1,15 +1,13 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
 	'./InputBaseRenderer',
-	'sap/ui/core/Renderer',
-	'sap/ui/core/LabelEnablement',
-	'sap/ui/Device'
+	'sap/ui/core/Renderer'
 ],
-	function(InputBaseRenderer, Renderer, LabelEnablement, Device) {
+	function(InputBaseRenderer, Renderer) {
 		"use strict";
 
 		/**
@@ -31,7 +29,7 @@ sap.ui.define([
 		 * Add attributes to the input element.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-		 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+		 * @param {sap.m.ComboBoxTextField} oControl An object representation of the control that should be rendered.
 		 */
 		ComboBoxTextFieldRenderer.writeInnerAttributes = function(oRm, oControl) {
 			oRm.attr("role", "combobox");
@@ -55,10 +53,27 @@ sap.ui.define([
 		 * Add extra styles for input container.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-		 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered.
+		 * @param {sap.m.ComboBoxTextField} oControl An object representation of the control that should be rendered.
 		 */
 		ComboBoxTextFieldRenderer.addOuterStyles = function(oRm, oControl) {
 			oRm.style("max-width", oControl.getMaxWidth());
+		};
+
+		/**
+		 * Renders dropdown icon from the icon aggregations.
+		 *
+		 * @protected
+		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
+		 * @param {sap.ui.core.Icon[]} aIcons List of icons to render
+		 */
+		ComboBoxTextFieldRenderer.writeIcons = function (oRm, aIcons) {
+			oRm.openStart("div")
+				.attr("tabindex", "-1")
+				.attr("aria-hidden", "true")
+				.class("sapMInputBaseIconContainer")
+				.openEnd();
+			aIcons.forEach(oRm.renderControl, oRm);
+			oRm.close("div");
 		};
 
 		return ComboBoxTextFieldRenderer;

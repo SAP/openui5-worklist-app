@@ -1,13 +1,13 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
  * Helper for core functionality in Support Tool infrastructure.
  */
-sap.ui.define(["sap/ui/thirdparty/jquery", "sap/ui/dom/jquery/control"],  // jQuery Plugin "control"
-	function(jQuery) {
+sap.ui.define(["sap/ui/core/Element", "sap/ui/thirdparty/jquery", "sap/ui/core/Configuration"],
+	function(Element, jQuery, Configuration) {
 		"use strict";
 
 		var CoreHelper = {
@@ -24,7 +24,7 @@ sap.ui.define(["sap/ui/thirdparty/jquery", "sap/ui/dom/jquery/control"],  // jQu
 				 */
 				// jQuery Plugin "control"
 				var skipParents = ["sap.ui.core.HTML"],
-					parentNode = jQuery(node).control()[0];
+					parentNode = Element.closestTo(node);
 
 				if (!parentNode) {
 					return false;
@@ -44,7 +44,7 @@ sap.ui.define(["sap/ui/thirdparty/jquery", "sap/ui/dom/jquery/control"],  // jQu
 			 */
 			getExternalStyleSheets : function () {
 				return Array.from(document.styleSheets).filter(function (styleSheet) {
-					var themeName = sap.ui.getCore().getConfiguration().getTheme(),
+					var themeName = Configuration.getTheme(),
 						styleSheetEnding = "/themes/" + themeName + "/library.css",
 						hasHref = !styleSheet.href || !(styleSheet.href.indexOf(styleSheetEnding) !== -1),
 						hasRules = !!styleSheet.rules;

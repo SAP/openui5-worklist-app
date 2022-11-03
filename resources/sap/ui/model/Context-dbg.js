@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -198,6 +198,9 @@ sap.ui.define(['sap/ui/base/Object', "sap/base/util/isPlainObject"],
 	 * @private
 	 */
 	Context.hasChanged = function(oOldContext, oNewContext) {
+		// The check below is used in ManagedObject.setBindingContext as well to avoid
+		// a dependency to Context (ManagedObject should be databinding free).
+		// Both places must kept in sync!
 		return oOldContext !== oNewContext
 			|| !!oNewContext && !!oNewContext.hasChanged();
 	};

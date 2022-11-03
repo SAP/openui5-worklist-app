@@ -17,6 +17,7 @@
 		position: relative;
 		height: 100%;
 		width: 100%;
+		border-radius: 0.23rem 0.23rem 0.25rem 0.25rem;
 	}
 
 	&.sapMSTScopeActions {
@@ -29,6 +30,14 @@
 			z-index: 1;
 			color: @sapUiButtonIconColor;
 			pointer-events: none;
+			background-color: transparent;
+			border: 0;
+			.sapMBtnIcon{
+				bottom: 0.6rem;
+				left: 0.9rem;
+				border: 0;
+				color: @sapButton_Lite_TextColor;
+			}
 			&:focus {
 				outline: none;
 			}
@@ -86,6 +95,47 @@
 				bottom: -0.6875rem;
 				left: -0.6875rem;
 				right: -0.0625rem;
+			}
+		}
+	}
+}
+
+.sapMST{
+	.sapMGT.sapMGTStateLoading{
+		.sapMTileCnt.News{
+			background-color: transparent;
+		}
+	}
+}
+.sapMST.sapMSTWidthForGridContainer.TwoByOne {
+	width: 23rem;
+}
+
+.sapMST.sapMSTWidthForGridContainer.TwoByHalf {
+	width: 23rem;
+}
+
+.sapMTileSmallPhone.sapMST.sapMSTWidthForGridContainer.TwoByOne{
+	width: 19.5rem;
+}
+
+.sapMTileSmallPhone.sapMST.sapMSTWidthForGridContainer.TwoByHalf{
+	width: 19.5rem;
+}
+
+.sapMST.sapMTileSmallPhone {
+	.sapMGT.sapMGTStateLoading.TwoByOne {
+		.sapMTileCntContentShimmerPlaceholderItemTextFooter{
+			width: 5.875rem;
+		}
+	}
+}
+.sapUiSizeCompact{
+	.sapMST {
+		.sapMSTMoreIcon {
+			.sapMBtnIcon{
+				left: 0.3rem;
+				bottom: 0.4rem;
 			}
 		}
 	}
@@ -175,13 +225,13 @@ html.sap-tablet .sapMGTHvrOutln:active {
 	height: 2rem;
 	width: 2rem;
 	z-index: 1;
-	opacity: 0.3;
+	opacity: 0.6;
 	overflow: hidden;
 	border-radius: 50%;
 }
 
 html.sap-desktop .sapMST .sapMSTIconClickTapArea:hover ~.sapMSTIconDisplayArea {
-	opacity: 0.6;
+	opacity: 0.8;
 }
 
 
@@ -198,8 +248,8 @@ html.sap-desktop .sapMST.sapMSTIconPressed .sapMSTIconClickTapArea:hover ~.sapMS
 	position: absolute;
 
 	.sapUiIcon {
-      width: 2rem;
-      line-height: inherit;
+		width: 2rem;
+		line-height: inherit;
 	}
 }
 

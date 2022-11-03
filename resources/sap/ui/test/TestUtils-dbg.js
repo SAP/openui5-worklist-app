@@ -1,16 +1,17 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
-	"jquery.sap.sjax",
 	"sap/base/Log",
 	"sap/base/util/merge",
 	"sap/base/util/UriParameters",
+	"sap/ui/base/SyncPromise",
+	"sap/ui/thirdparty/jquery",
 	"sap/ui/core/Core" // provides sap.ui.getCore()
-], function (jQuery, Log, merge, UriParameters) {
+], function (Log, merge, UriParameters, SyncPromise, jQuery) {
 	"use strict";
 	/*global QUnit, sinon */
 	// Note: The dependency to Sinon.JS has been omitted deliberately. Most test files load it via
@@ -33,6 +34,9 @@ sap.ui.define([
 		rODataHeaders = /^(OData-Version|DataServiceVersion)$/,
 		bRealOData = sRealOData === "true" || sRealOData === "direct",
 		iRequestCount = 0,
+		fnOnRequest = null,
+		sOptimisticBatch = oUriParameters.get("optimisticBatch"),
+		bOptimisticBatch = sOptimisticBatch === null ? undefined : sOptimisticBatch === "true",
 		bSupportAssistant = oUriParameters.get("supportAssistant") === "true",
 		TestUtils;
 
@@ -171,6 +175,87 @@ sap.ui.define([
 		},
 
 		/**
+		 * Checks for a given object its "get*" and "request*" methods, corresponding to the named
+		 * "fetch*" method, using the given arguments.
+		 *
+		 * @param {object} oTestContext
+		 *   The QUnit "test" object
+		 * @param {object} oTestee
+		 *   The test candidate having the get<sMethodName> created via
+		 *   sap.ui.model.odata.v4.lib._Helper.createGetMethod and request<sMethodName> created via
+		 *   sap.ui.model.odata.v4.lib._Helper.createRequestMethod for the corresponding
+		 *   fetch<sMethodName>
+		 * @param {object} assert
+		 *   The QUnit "assert" object
+		 * @param {string} sMethodName
+		 *   Method name "fetch*"
+		 * @param {object[]} aArguments
+		 *   Method arguments
+		 * @param {boolean} [bThrow]
+		 *   Whether the "get*" method throws if the promise is not fulfilled
+		 * @returns {Promise}
+		 *   The "request*" method's promise
+		 *
+		 * @see sap.ui.model.odata.v4.lib._Helper.createGetMethod
+		 * @see sap.ui.model.odata.v4.lib._Helper.createRequestMethod
+		 */
+		checkGetAndRequest: function (oTestContext, oTestee, assert, sMethodName, aArguments,
+				bThrow) {
+			var oExpectation,
+				sGetMethodName = sMethodName.replace("fetch", "get"),
+				oPromiseMock = oTestContext.mock(Promise),
+				oReason = new Error("rejected"),
+				oRejectedPromise = Promise.reject(oReason),
+				sRequestMethodName = sMethodName.replace("fetch", "request"),
+				oResult = {},
+				oSyncPromise = SyncPromise.resolve(oRejectedPromise);
+
+			// resolve...
+			oExpectation = oTestContext.mock(oTestee).expects(sMethodName).exactly(4);
+			oExpectation = oExpectation.withExactArgs.apply(oExpectation, aArguments);
+			oExpectation.returns(SyncPromise.resolve(oResult));
+
+			// get: fulfilled
+			assert.strictEqual(oTestee[sGetMethodName].apply(oTestee, aArguments), oResult);
+
+			// reject...
+			oExpectation.returns(oSyncPromise);
+			oPromiseMock.expects("resolve")
+				.withExactArgs(sinon.match.same(oSyncPromise))
+				.returns(oRejectedPromise); // return any promise (this is not unwrapping!)
+
+			// request (promise still pending!)
+			assert.strictEqual(oTestee[sRequestMethodName].apply(oTestee, aArguments),
+				oRejectedPromise);
+
+			// restore early so that JS coding executed from Selenium Webdriver does not cause
+			// unexpected calls on the mock when it uses Promise.resolve and runs before automatic
+			// mock reset in afterEach
+			oPromiseMock.restore();
+
+			// get: pending
+			if (bThrow) {
+				assert.throws(function () {
+					oTestee[sGetMethodName].apply(oTestee, aArguments);
+				}, new Error("Result pending"));
+			} else {
+				assert.strictEqual(oTestee[sGetMethodName].apply(oTestee, aArguments),
+					undefined, "pending");
+			}
+			return oSyncPromise.catch(function () {
+				// get: rejected
+				if (bThrow) {
+					assert.throws(function () {
+						oTestee[sGetMethodName].apply(oTestee, aArguments);
+					}, oReason);
+				} else {
+					assert.strictEqual(oTestee[sGetMethodName].apply(oTestee, aArguments),
+						undefined, "rejected");
+				}
+			});
+		},
+
+		/**
 		 * Companion to <code>QUnit.deepEqual</code> which only tests for the existence of expected
 		 * properties, not the absence of others.
 		 *
@@ -295,6 +380,10 @@ sap.ui.define([
 					mODataHeaders = getODataHeaders(oRequest);
 
 				iRequestCount += 1;
+				if (fnOnRequest) {
+					fnOnRequest(oRequest.requestBody);
+				}
+
 				oRequest.respond(200,
 					jQuery.extend({}, mODataHeaders, {
 						"Content-Type" : "multipart/mixed;boundary=" + oMultipart.boundary
@@ -657,6 +746,9 @@ sap.ui.define([
 				var oResponse = getResponseFromFixture(oRequest);
 
 				iRequestCount += 1;
+				if (fnOnRequest) {
+					fnOnRequest(oRequest.requestBody);
+				}
 				oRequest.respond(oResponse.code, oResponse.headers, oResponse.message);
 			}
 
@@ -679,7 +771,11 @@ sap.ui.define([
 
 				// set up the fake server
 				oServer = sinon.fakeServer.create();
-				oSandbox.add(oServer);
+				if (oSandbox.getFakes) { // Sinon.JS version >= 5
+					oSandbox.getFakes().push(oServer); // not a public API of Sinon.JS
+				} else {
+					oSandbox.add(oServer); // not a public API of Sinon.JS
+				}
 				oServer.autoRespond = true;
 				if (sAutoRespondAfter) {
 					oServer.autoRespondAfter = parseInt(sAutoRespondAfter);
@@ -772,7 +868,13 @@ sap.ui.define([
 		 * @since 1.27.1
 		 */
 		withNormalizedMessages : function (fnCodeUnderTest) {
-			var oSandbox = sinon.sandbox.create();
+			var oSandbox;
+
+			if (sinon.createSandbox) {
+				oSandbox = sinon.createSandbox();
+			} else {
+				oSandbox = sinon.sandbox.create();
+			}
 
 			try {
 				var oCore = sap.ui.getCore(),
@@ -797,6 +899,15 @@ sap.ui.define([
 			} finally {
 				oSandbox.verifyAndRestore();
 			}
+		},
+
+		/**
+		 * @returns {boolean|undefined}
+		 *   <code>true</code> if optimistic batch should be used, <code>undefined</code> if not
+		 *   specified.
+		 */
+		isOptimisticBatch : function () {
+			return bOptimisticBatch;
 		},
 
 		/**
@@ -836,6 +947,18 @@ sap.ui.define([
 		 */
 		getRequestCount : function () {
 			return iRequestCount;
+		},
+
+		/**
+		 * Sets a callback function which is called when the fake server responds with a fake
+		 * request. The function will be called with the request body as first parameter.
+		 *
+		 * Pass <code>null</code> to remove the listener.
+		 *
+		 * @param {function(string)} [fnCallback] - The function
+		 */
+		onRequest : function (fnCallback) {
+			fnOnRequest = fnCallback;
 		},
 
 		/**
@@ -942,6 +1065,29 @@ sap.ui.define([
 			});
 			TestUtils.useFakeServer(oSandbox, sSourceBase || "sap/ui/core/qunit/odata/v4/data",
 				mResultingFixture, aRegExps, sFilterBase !== "/" ? sFilterBase : undefined);
+		},
+
+		/**
+		 * Creates and returns a spy for <code>XMLHttpRequest.prototype.open</code> which is
+		 * used in {@link sap.base.util.fetch}.
+		 *
+		 * @param {object} oSandbox
+		 *   a Sinon sandbox as created using <code>sinon.sandbox.create()</code>
+		 * @return {object} Returns the spy
+		 */
+		spyFetch : function(oSandbox) {
+			var spy = oSandbox.spy(XMLHttpRequest.prototype, "open");
+
+			/**
+			 * Returns the request URL
+			 * @param  {number} iCall The 'nth' call
+			 * @return {string} Returns the request URL
+			 */
+			spy.calledWithUrl = function(iCall) {
+				return spy.getCall(iCall).args[1];
+			};
+
+			return spy;
 		}
 	};
 

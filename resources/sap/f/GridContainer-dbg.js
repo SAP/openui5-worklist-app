@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -154,6 +154,8 @@ sap.ui.define([
 	 * Both <code>{@link sap.ui.core.dnd.DropInfo}</code> and <code>{@link sap.f.dnd.GridDropInfo}</code> can be used to configure drag and drop.
 	 * The difference is that the <code>{@link sap.f.dnd.GridDropInfo}</code> will provide a drop indicator, which mimics the size of the dragged item and shows the potential drop position inside the grid.
 	 *
+	 * Drag and drop is enabled via keyboard using <code>Ctrl</code> + arrow keys (Windows) and <code>Control</code> + arrow keys (Mac OS).
+	 *
 	 * <h3>Keyboard Navigation:</h3>
 	 * <code>GridContainer</code> provides support for two-dimensional keyboard navigation through its contained controls. Navigating up/down or left/right using the arrow keys follows the configurable two-dimensional grid mesh. This provides stable navigation paths in the cases when there are items of different sizes. When the user presses an arrow key in a direction outward of the <code>GridContainer</code>, a <code>borderReached</code> event will be fired. The implementation of the <code>borderReached</code> event allows the application developer to control where the focus goes, and depending on the surrounding layout pass the focus to a specific place in a neighboring <code>GridContainer</code> using the method {@link #focusItemByDirection}.
 	 *
@@ -163,7 +165,7 @@ sap.ui.define([
 	 * @see {@link sap.f.dnd.GridDropInfo}
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @extends sap.ui.core.Control
 	 *
@@ -171,7 +173,6 @@ sap.ui.define([
 	 * @public
 	 * @constructor
 	 * @alias sap.f.GridContainer
-	 * @ui5-metamodel This control/element will also be described in the UI5 (legacy) designtime metamodel
 	 */
 	var GridContainer = Control.extend("sap.f.GridContainer", /** @lends sap.f.GridContainer.prototype */ {
 		metadata: {
@@ -273,6 +274,18 @@ sap.ui.define([
 				 */
 				_defaultLayout: { type: "sap.f.GridContainerSettings", multiple: false, visibility: "hidden" }
 			},
+			associations : {
+
+				/**
+				 * Association to controls / IDs which describe this control (see WAI-ARIA attribute aria-describedby).
+				 */
+				ariaDescribedBy: {type: "sap.ui.core.Control", multiple: true, singularName: "ariaDescribedBy"},
+
+				/**
+				 * Association to controls / IDs which label this control (see WAI-ARIA attribute aria-labelledby).
+				 */
+				ariaLabelledBy: {type: "sap.ui.core.Control", multiple: true, singularName: "ariaLabelledBy"}
+			},
 			events: {
 
 				/**
@@ -312,23 +325,28 @@ sap.ui.define([
 						event: { type: "jQuery.Event" },
 						/**
 						 * The navigation direction that is used to reach the border.
+						 * @since 1.85
 						 */
 						direction: {type: "sap.f.NavigationDirection"},
 
 						/**
 						 * The row index, from which the border is reached.
+						 * @since 1.85
 						 */
 						row: {type: "int"},
 
 						/**
 						 * The column index, from which the border is reached.
+						 * @since 1.85
 						 */
 						column: {type: "int"}
 					}
 				}
 			},
 			dnd: { draggable: false, droppable: true }
-		}
+		},
+
+		renderer: GridContainerRenderer
 	});
 
 	/**
@@ -652,7 +670,7 @@ sap.ui.define([
 	 * Removes an item from the aggregation named <code>items</code>.
 	 *
 	 * @param {int | string | sap.ui.core.Item} vItem The item to remove or its index or ID.
-	 * @returns {sap.ui.core.Control} The removed item or null.
+	 * @returns {sap.ui.core.Control|null} The removed item or <code>null</code>.
 	 * @public
 	 */
 	GridContainer.prototype.removeItem = function (vItem) {
@@ -1003,6 +1021,10 @@ sap.ui.define([
 	 * @param {jQuery.Event} oEvent The event.
 	 */
 	GridContainer.prototype._moveItem = function (oEvent) {
+		if (!oEvent.ctrlKey) {
+			return;
+		}
+
 		if (!this._isItemWrapper(oEvent.target)) {
 			return;
 		}
@@ -1057,14 +1079,14 @@ sap.ui.define([
 
 	/**
 	 * Moves item for drag-and-drop keyboard handling
-	 * Modifier + Right Arrow || Modifier + Arrow Up
+	 * Ctrl + Right Arrow || Modifier + Arrow Up
 	 * @param {jQuery.Event} oEvent
 	 */
 	GridContainer.prototype.onsapincreasemodifiers = GridContainer.prototype._moveItem;
 
 	/**
 	 * Moves item for drag-and-drop keyboard handling
-	 * Modifier + Left Arrow || Modifier + Arrow Down
+	 * Ctrl + Left Arrow || Modifier + Arrow Down
 	 * @param {jQuery.Event} oEvent
 	 */
 	GridContainer.prototype.onsapdecreasemodifiers = GridContainer.prototype._moveItem;
@@ -1126,11 +1148,6 @@ sap.ui.define([
 			return null;
 		}
 
-		var mGridStyles = window.getComputedStyle(this.getDomRef()),
-			aCssRows = mGridStyles.gridTemplateRows.split(/\s+/),
-			aCssColumns = mGridStyles.gridTemplateColumns.split(/\s+/),
-			oLayoutSettings = this.getActiveLayoutSettings();
-
 		var aItemsDomRefs = this.getItems().reduce(function (aAcc, oItem) {
 			if (oItem.getVisible()) {
 				aAcc.push(GridContainerUtils.getItemWrapper(oItem));
@@ -1138,11 +1155,7 @@ sap.ui.define([
 			return aAcc;
 		}, []);
 
-		return GridNavigationMatrix.create(this.getDomRef(), aItemsDomRefs, {
-					gap: oLayoutSettings.getGapInPx(),
-					rows: aCssRows,
-					columns: aCssColumns
-				});
+		return GridNavigationMatrix.create(this.getDomRef(), aItemsDomRefs);
 	};
 
 	GridContainer.prototype._isItemWrapper = function (oElement) {

@@ -1,7 +1,7 @@
 /* eslint-disable max-nested-callbacks */
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -20,7 +20,7 @@ sap.ui.define([
 	 *
 	 * @alias sap.m.changeHandler.SplitMenuButton
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @experimental Since 1.48
 	 */
 	var SplitMenuButton = {};
@@ -43,7 +43,7 @@ sap.ui.define([
 			return Promise.reject(new Error("Split change can't be applied on XML tree"));
 		}
 
-		var oChangeDefinition = oChange.getDefinition();
+		var oChangeContent = oChange.getContent();
 		var oModifier = mPropertyBag.modifier;
 		var oView = mPropertyBag.view;
 		var oAppComponent = mPropertyBag.appComponent;
@@ -77,7 +77,7 @@ sap.ui.define([
 			})
 			.then(function(iRetrievedAggregationIndex) {
 				iAggregationIndex = iRetrievedAggregationIndex;
-				aNewElementSelectors = oChangeDefinition.content.newElementIds;
+				aNewElementSelectors = oChangeContent.newElementIds;
 				oRevertData = {
 					parentAggregation: sParentAggregation,
 					insertIndex: iAggregationIndex,
@@ -228,7 +228,6 @@ sap.ui.define([
 	SplitMenuButton.completeChangeContent = function(oChange, oSpecificChangeInfo, mPropertyBag) {
 		var oModifier = mPropertyBag.modifier;
 		var oAppComponent = mPropertyBag.appComponent;
-		var oChangeDefinition = oChange.getDefinition();
 
 		if (!oSpecificChangeInfo.newElementIds) {
 			throw new Error("Split of MenuButton cannot be applied : oSpecificChangeInfo.newElementIds attribute required");
@@ -239,20 +238,22 @@ sap.ui.define([
 		}
 
 		oChange.addDependentControl(oSpecificChangeInfo.sourceControlId, SOURCE_CONTROL, mPropertyBag);
-		oChangeDefinition.content.sourceSelector = oModifier.getSelector(oSpecificChangeInfo.sourceControlId, oAppComponent);
-		oChangeDefinition.content.newElementIds = oSpecificChangeInfo.newElementIds.map(function (sElementId) {
+		var oContent = {};
+		oContent.sourceSelector = oModifier.getSelector(oSpecificChangeInfo.sourceControlId, oAppComponent);
+		oContent.newElementIds = oSpecificChangeInfo.newElementIds.map(function (sElementId) {
 			return oModifier.getSelector(sElementId, oAppComponent);
 		});
+		oChange.setContent(oContent);
 	};
 
 	/**
 	 * Callback function which is attached via modifier in applyChange
 	 *
 	 * @param {sap.ui.base.Event} oEvent Event object
-	 * @param {object} mSelector Selector object
-	 * @param {string} mSelector.id ID used for determination of the flexibility target
-	 * @param {boolean} mSelector.idIsLocal flag if the selector.id has to be concatenated with the application component ID
-	 * while applying the change.
+	 * @param {object} mParameters
+	 * @param {{id: string, idIsLocal: boolean}} mParameters.selector Selector describing the target of the flexibility change
+	 * @param {sap.ui.core.ID} mParameters.appComponentId
+	 * @param {sap.ui.core.Control} mParameters.menu
 	 */
 	SplitMenuButton.pressHandler = function (oEvent, mParameters) {
 		var oMenuItem = JsControlTreeModifier.bySelector(mParameters.selector, Component.get(mParameters.appComponentId));

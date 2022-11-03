@@ -1,25 +1,23 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides control sap.m.OverflowToolbar.
 sap.ui.define([
 	"sap/ui/core/library",
+	"sap/ui/core/Core",
 	"./library",
 	"sap/ui/core/Control",
 	"sap/m/ToggleButton",
 	"sap/ui/core/InvisibleText",
 	"sap/m/Toolbar",
-	"sap/m/ToolbarSpacer",
 	"sap/m/OverflowToolbarLayoutData",
 	"sap/m/OverflowToolbarAssociativePopover",
 	"sap/m/OverflowToolbarAssociativePopoverControls",
 	'sap/ui/core/ResizeHandler',
 	"sap/ui/core/IconPool",
-	'sap/ui/core/theming/Parameters',
-	'sap/ui/dom/units/Rem',
 	"sap/ui/Device",
 	"./OverflowToolbarRenderer",
 	"sap/base/Log",
@@ -27,19 +25,17 @@ sap.ui.define([
 	"sap/ui/dom/jquery/Focusable" // jQuery Plugin "lastFocusableDomRef"
 ], function(
 	coreLibrary,
+	oCore,
 	library,
 	Control,
 	ToggleButton,
 	InvisibleText,
 	Toolbar,
-	ToolbarSpacer,
 	OverflowToolbarLayoutData,
 	OverflowToolbarAssociativePopover,
 	OverflowToolbarAssociativePopoverControls,
 	ResizeHandler,
 	IconPool,
-	Parameters,
-	DomUnitsRem,
 	Device,
 	OverflowToolbarRenderer,
 	Log,
@@ -90,10 +86,12 @@ sap.ui.define([
 	 * <h3>Overflow Behavior</h3>
 	 * By default, only the following controls can move to the overflow area:
 	 *
-	 * <ul><li>{@link sap.m.Button}</li>
+	 * <ul><li>{@link sap.m.Breadcrumbs}</li>
+	 * <li>{@link sap.m.Button}</li>
 	 * <li>{@link sap.m.CheckBox}</li>
 	 * <li>{@link sap.m.ComboBox}</li>
 	 * <li>{@link sap.m.DatePicker}</li>
+	 * <li>{@link sap.m.DateRangeSelection}</li>
 	 * <li>{@link sap.m.DateTimeInput}</li>
 	 * <li>{@link sap.m.DateTimePicker}</li>
 	 * <li>{@link sap.m.GenericTag}</li>
@@ -117,7 +115,7 @@ sap.ui.define([
 	 * <b>Note:</b> The <code>OverflowToolbar</code> is an adaptive container that checks the available
 	 * width and hides the part of its content that doesn't fit. It is intended that simple controls,
 	 * such as {@link sap.m.Button} and {@link sap.m.Label} are used as content. Embedding other
-	 * adaptive container controls, such as {@link sap.m.Breadcrumbs}, results in competition for the available
+	 * adaptive container controls (with the exception of {@link sap.m.Breadcrumbs}), results in competition for the available
 	 * space - both controls calculate the available space based on the other one's size and both change their
 	 * width at the same time, leading to incorrectly distributed space.
 	 *
@@ -131,13 +129,12 @@ sap.ui.define([
 	 * @implements sap.ui.core.Toolbar,sap.m.IBar
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.28
 	 * @alias sap.m.OverflowToolbar
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 *
 	 */
 	var OverflowToolbar = Toolbar.extend("sap.m.OverflowToolbar", {
@@ -161,13 +158,16 @@ sap.ui.define([
 				_popover: {type: "sap.m.Popover", multiple: false, visibility: "hidden"}
 			},
 			designtime: "sap/m/designtime/OverflowToolbar.designtime"
-		}
+		},
+
+		renderer: OverflowToolbarRenderer
 	});
 
 	/**
 	 * STATIC MEMBERS
 	 */
 	OverflowToolbar.ARIA_ROLE_DESCRIPTION = "OVERFLOW_TOOLBAR_ROLE_DESCRIPTION";
+	OverflowToolbar.TOGGLE_BUTTON_TOOLTIP = "OVERFLOW_TOOLBAR_TOGGLE_BUTTON_TOOLTIP";
 
 	OverflowToolbar.CONTENT_SIZE_TOLERANCE = 1;
 
@@ -218,6 +218,9 @@ sap.ui.define([
 		// Overflow Button clone, it helps to calculate correct size of the button
 		this._oOverflowToolbarButtonClone = null;
 
+		// Width of the content with "NeverOverflow" priority
+		this._iToolbarOnlyContentSize = 0;
+
 		this._aMovableControls = []; // Controls that can be in the toolbar or Popover
 		this._aToolbarOnlyControls = []; // Controls that can't go to the Popover (inputs, labels, buttons with special layout, etc...)
 		this._aPopoverOnlyControls = []; // Controls that are forced to stay in the Popover (buttons with layout)
@@ -225,7 +228,7 @@ sap.ui.define([
 
 		this.addStyleClass("sapMOTB");
 
-		this._sAriaRoleDescription = sap.ui.getCore()
+		this._sAriaRoleDescription = oCore
 			.getLibraryResourceBundle("sap.m")
 			.getText(OverflowToolbar.ARIA_ROLE_DESCRIPTION);
 
@@ -307,8 +310,7 @@ sap.ui.define([
 	 * @private
 	 */
 	OverflowToolbar.prototype._doLayout = function () {
-		var oCore = sap.ui.getCore(),
-			iWidth;
+		var iWidth;
 
 		// If the theme is not applied, control widths should not be measured and cached
 		if (!oCore.isThemeApplied()) {
@@ -375,7 +377,7 @@ sap.ui.define([
 			$LastFocusableChildControl = this.$().lastFocusableDomRef();
 
 		if (this.sFocusedChildControlId) {
-			oFocusedChildControl = sap.ui.getCore().byId(this.sFocusedChildControlId);
+			oFocusedChildControl = oCore.byId(this.sFocusedChildControlId);
 		}
 
 		if (oFocusedChildControl && oFocusedChildControl.getDomRef()){
@@ -400,7 +402,7 @@ sap.ui.define([
 	 */
 	OverflowToolbar.prototype._preserveChildControlFocusInfo = function () {
 		// Preserve focus info
-		var sActiveElementId = sap.ui.getCore().getCurrentFocusedControlId();
+		var sActiveElementId = oCore.getCurrentFocusedControlId();
 
 		if (this._getControlsIds().indexOf(sActiveElementId) !== -1) {
 			this._bControlWasFocused = true;
@@ -479,13 +481,22 @@ sap.ui.define([
 		var aVisiblePopoverOnlyControls,
 			bHasVisiblePopoverOnlyControls,
 			iLeftPadding = parseInt(this.$().css("padding-right")) || 0,
-			iRightPadding =  parseInt(this.$().css("padding-left")) || 0;
+			iRightPadding =  parseInt(this.$().css("padding-left")) || 0,
+			iOverflowButtonSize = this._getOverflowButtonSize(),
+			iToolbarOnlyContentSize = this._iToolbarOnlyContentSize;
 
 		this._iOldContentSize = this._iContentSize;
 		this._iContentSize = 0; // The total *optimal* size of all controls in the toolbar
+		this._iToolbarOnlyContentSize = 0;
 		this._bNeedUpdateOnControlsCachedSizes = false;
 
 		this.getContent().forEach(this._updateControlsCachedSizes, this);
+
+		if (iToolbarOnlyContentSize !== this._iToolbarOnlyContentSize) {
+			this.fireEvent("_minWidthChange", {
+				minWidth: this._iToolbarOnlyContentSize > 0 ? this._iToolbarOnlyContentSize + iOverflowButtonSize : 0
+			});
+		}
 
 		// If the system is a phone sometimes due to specificity in the flex the content can be rendered 1px larger that it should be.
 		// This causes an overflow of the last element/button
@@ -502,7 +513,7 @@ sap.ui.define([
 
 			if (bHasVisiblePopoverOnlyControls) {
 				// At least one control will be in the Popover, so the overflow button is required within content
-				this._iContentSize += this._getOverflowButtonSize();
+				this._iContentSize += iOverflowButtonSize;
 			}
 		}
 
@@ -538,6 +549,10 @@ sap.ui.define([
 		// Only add up the size of controls that can be shown in the toolbar, hence this addition is here
 		if (sPriority !== OverflowToolbarPriority.AlwaysOverflow) {
 			this._iContentSize += iControlSize;
+		}
+
+		if (sPriority === OverflowToolbarPriority.NeverOverflow) {
+			this._iToolbarOnlyContentSize += iControlSize;
 		}
 	};
 
@@ -814,7 +829,9 @@ sap.ui.define([
 	 */
 	OverflowToolbar.prototype._markControlWithShrinkableLayoutData = function(oControl) {
 		var sWidth,
-			oLayout;
+			oLayout,
+			bShrinkable,
+			bBreadcrumbs;
 
 		// remove old class
 		oControl.removeStyleClass(Toolbar.shrinkClass);
@@ -827,7 +844,14 @@ sap.ui.define([
 
 		// check shrinkable via layout data
 		oLayout = oControl.getLayoutData();
-		if (oLayout && oLayout.isA("sap.m.ToolbarLayoutData") && oLayout.getShrinkable()) {
+		bShrinkable = oLayout && oLayout.isA("sap.m.ToolbarLayoutData") && oLayout.getShrinkable();
+
+		// check explicitly for sap.m.Breadcrumbs, as text
+		// controls implement sap.ui.core.IShrinkable too,
+		// and they are not meant to be included
+		bBreadcrumbs = oControl.isA("sap.m.Breadcrumbs");
+
+		if (bShrinkable || bBreadcrumbs) {
 			oControl.addStyleClass(Toolbar.shrinkClass);
 		}
 	};
@@ -949,7 +973,7 @@ sap.ui.define([
 				id: this.getId() + sIdPrefix,
 				icon: IconPool.getIconURI("overflow"),
 				press: this._overflowButtonPressed.bind(this),
-				ariaLabelledBy: InvisibleText.getStaticId("sap.ui.core", "Icon.overflow"),
+				tooltip: oCore.getLibraryResourceBundle("sap.m").getText(OverflowToolbar.TOGGLE_BUTTON_TOOLTIP),
 				type: ButtonType.Transparent
 		});
 	};
@@ -981,6 +1005,10 @@ sap.ui.define([
 			this._oOverflowToolbarButtonClone = this._getToggleButton("-overflowButtonClone")
 				.addStyleClass("sapMTBHiddenElement");
 		}
+
+		//Removing accessibility attributes
+		this._oOverflowToolbarButtonClone._getTooltip = function() { return ""; };
+		this._oOverflowToolbarButtonClone.removeAllAssociation("ariaLabelledBy");
 
 		return this._oOverflowToolbarButtonClone;
 	};
@@ -1429,10 +1457,21 @@ sap.ui.define([
 	OverflowToolbar.prototype._getOptimalControlWidth = function (oControl, iOldSize) {
 		var iOptimalWidth,
 			oLayoutData = oControl.getLayoutData(),
-			bShrinkable = oLayoutData && oLayoutData.isA("sap.m.ToolbarLayoutData") ? oLayoutData.getShrinkable() : false,
-			iMinWidth = bShrinkable ? this._getMinWidthOfShrinkableControl(oControl) : 0,
+			bLayoutData = oLayoutData && oLayoutData.isA("sap.m.ToolbarLayoutData"),
 			bVisible = oControl.getVisible(),
+			bBreadcrumbs = oControl.isA("sap.m.Breadcrumbs"),
+			bShrinkable = false,
+			iMinWidth,
 			iSpacerWidth;
+
+		// sap.m.Breadcrumbs is always shrinkable, regardless of sap.m.ToolbarLayoutData.shrinkable
+		if (bBreadcrumbs) {
+			bShrinkable = true;
+		} else if (bLayoutData) {
+			bShrinkable = oLayoutData.getShrinkable();
+		}
+
+		iMinWidth = bShrinkable ? this._getMinWidthOfShrinkableControl(oControl) : 0;
 
 		// For spacers, get the width (if specified) + margins
 		if (oControl.isA("sap.m.ToolbarSpacer")) {
@@ -1565,6 +1604,22 @@ sap.ui.define([
 		return null;
 	};
 
+	OverflowToolbar.prototype.getAccessibilityInfo = function () {
+		var aContent = [],
+			aVisibleContent = this._getVisibleAndNonOverflowContent();
+
+		if (aVisibleContent.length > 0) {
+			aContent = aContent.concat(aVisibleContent);
+		}
+
+		if (this._getOverflowButtonNeeded()) {
+			aContent.push(this._getOverflowButton());
+		}
+
+		return {
+			children: aContent
+		};
+	};
 
 	/**
 	 * Returns the control group based on the layout data

@@ -2,7 +2,7 @@
 /* eslint-disable valid-jsdoc */
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -199,23 +199,33 @@ sap.ui.define([
 		 * @inheritDoc
 		 */
 		createControl: function (sClassName, oAppComponent, oView, oSelector, mSettings) {
-			return new Promise(function(fnResolve, fnReject) {
-				if (this.bySelector(oSelector, oAppComponent)) {
-					var sErrorMessage = "Can't create a control with duplicated ID " + (oSelector.id || oSelector);
-					fnReject(sErrorMessage);
-					return;
-				}
-				sap.ui.require([sClassName.replace(/\./g,"/")],
-					function(ClassObject) {
-						var sId = this.getControlIdBySelector(oSelector, oAppComponent);
-						fnResolve(new ClassObject(sId, mSettings));
-					}.bind(this),
-					function() {
-						fnReject(new Error("Required control '" + sClassName + "' couldn't be created asynchronously"));
-					}
-				);
-			}.bind(this));
+			sClassName = sClassName.replace(/\./g,"/");
+			if (this.bySelector(oSelector, oAppComponent)) {
+				var sErrorMessage = "Can't create a control with duplicated ID " + (oSelector.id || oSelector);
+				return Promise.reject(sErrorMessage);
+			}
 
+			var oPromise;
+			var oClassObject = sap.ui.require(sClassName);
+			if (oClassObject) {
+				oPromise = Promise.resolve(oClassObject);
+			} else {
+				oPromise = new Promise(function(fnResolve, fnReject) {
+					sap.ui.require([sClassName],
+						function(oClassObject) { fnResolve(oClassObject); },
+						function() {
+							fnReject(new Error("Required control '" + sClassName
+								+ "' couldn't be created asynchronously"));
+						}
+					);
+				});
+			}
+
+			return oPromise
+				.then(function(ClassObject) {
+					var sId = this.getControlIdBySelector(oSelector, oAppComponent);
+					return new ClassObject(sId, mSettings);
+				}.bind(this));
 		},
 
 		/**
@@ -457,11 +467,11 @@ sap.ui.define([
 						sId: oView && oView.getId(),
 						controller: oView.getController()
 					});
-				}).then(function(aNewControls) {
-					if (!Array.isArray(aNewControls)) {
-						aNewControls = [aNewControls];
+				}).then(function(vNewControls) {
+					if (vNewControls && !Array.isArray(vNewControls)) {
+						vNewControls = [vNewControls];
 					}
-					return aNewControls;
+					return vNewControls || [];
 				});
 		},
 

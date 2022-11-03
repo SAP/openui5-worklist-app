@@ -1,6 +1,6 @@
 /*
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -8,22 +8,22 @@
 sap.ui
 	.define(
 		[
-			'jquery.sap.global',
-			'sap/ui/base/ManagedObject',
-			'sap/ui/thirdparty/sinon',
 			'sap/base/Log',
 			'sap/base/util/isEmptyObject',
+			'sap/ui/base/ManagedObject',
 			'sap/ui/core/util/MockServerAnnotationsHandler',
 			'sap/ui/core/util/DraftEnabledMockServer',
-			'jquery.sap.xml',
-			'jquery.sap.sjax'
+			'sap/ui/thirdparty/jquery',
+			'sap/ui/thirdparty/sinon'
 		],
-		function(jQuery, ManagedObject, sinon, Log, isEmptyObject, MockServerAnnotationsHandler, DraftEnabledMockServer/*, jQuerySapXml, jQuerySapSjax*/) {
+		function(Log, isEmptyObject, ManagedObject, MockServerAnnotationsHandler, DraftEnabledMockServer, jQuery, sinon) {
 			"use strict";
 
 			/**
-			 * Creates a mocked server. This helps to mock all or some back-end calls, e.g. for OData V2/JSON Models or simple XHR calls, without
+			 * Creates a mocked server. This helps to mock some back-end calls, e.g. for OData V2/JSON Models or simple XHR calls, without
 			 * changing the application code. This class can also be used for qunit tests.
+			 *
+			 * <b>Note:</b> Not all features of mock and all properties are supported.
 			 *
 			 * @param {string} [sId] id for the new server object; generated automatically if no non-empty id is given
 			 *      Note: this can be omitted, no matter whether <code>mSettings</code> will be given or not!
@@ -34,7 +34,7 @@ sap.ui
 			 * @extends sap.ui.base.ManagedObject
 			 * @abstract
 			 * @author SAP SE
-			 * @version 1.96.2
+			 * @version 1.108.0
 			 * @public
 			 * @alias sap.ui.core.util.MockServer
 			 */
@@ -100,38 +100,113 @@ sap.ui
 						recordRequests: {type : "boolean", defaultValue : true},
 
 						/**
+						 * Methods that can be used to respond to a request.
+						 *
+						 * @interface
+						 * @name sap.ui.core.util.MockServer.Response
+						 * @public
+						 */
+
+						/**
+						 * Responds to the incoming request with the given <code>iStatusCode</code>,
+						 * <code>mHeaders</code> and <code>sBody</code>.
+						 *
+						 * @param {int} [StatusCode=200]
+						 *    HTTP status code to send with the response
+						 * @param {Object<string,string>} [mHeaders={}]
+						 *    HTTP headers to send with the response
+						 * @param {string} [sBody=""]
+						 *    A string that will be sent as response body
+						 * @public
+						 * @function
+						 * @name sap.ui.core.util.MockServer.Response.prototype.respond
+						 */
+
+						/**
+						 * Convenience variant of {@link #respond} which simplifies sending a JSON response.
+						 *
+						 * The response content <code>vBody</code> can either be given as a string, which is then
+						 * assumed to be in JSON format. Or it can be any JSON-stringifiable value which then will
+						 * be converted to a string using <code>JSON.stringify</code>. If no <code>vBody</code>
+						 * is given, an empty response will be sent.
+						 *
+						 * If no <code>Content-Type</code> header is given, it will be set to <code>application/json</code>.
+						 *
+						 * @param {int} [iStatusCode=200]
+						 *    HTTP status code to send with the response
+						 * @param {Object<string,string>} [mHeaders={}]
+						 *    HTTP Headers to send with the response
+						 * @param {object|string} [vBody=""]
+						 *    A valid JSON-string or a JSON-stringifiable object that should be sent as response body
+						 * @public
+						 * @function
+						 * @name sap.ui.core.util.MockServer.Response.prototype.respondJSON
+						 */
+
+						/**
+						 * Convenience variant of {@link #respond} which simplifies sending an XML response.
+						 *
+						 * If no <code>Content-Type</code> header is given, it will be set to <code>application/xml</code>.
+						 *
+						 * @param {int} [iStatusCode=200]
+						 *    HTTP status code to send with the response
+						 * @param {Object<string,string>} [mHeaders={}]
+						 *    HTTP Headers to send with the response
+						 * @param {string} [sXmlString='']
+						 *    XML string to send as response body
+						 * @public
+						 * @function
+						 * @name sap.ui.core.util.MockServer.Response.prototype.respondXML
+						 */
+
+						/**
+						 * Convenience variant of {@link #respond} which allows to send the content of an external
+						 * resource as response.
+						 *
+						 * This method first synchronously fetches the given <code>sFileUrl</code>. Depending on the
+						 * extension and path of the <code>sFileUrl</code>, it propagates the received response body
+						 * to {@link #respondJSON}, {@link #respondXML} or {@link #respond}, using the given
+						 * <code>iStatus</code> and <code>mHeaders</code>.
+						 *
+						 * The status code and headers of the received response are ignored. In particular, the
+						 * <code>Content-Type</code> header is not used for the mock server's response.
+						 *
+						 * @param {int} [iStatusCode=200]
+						 *    HTTP status code to send with the response
+						 * @param {Object<string,string>} [mHeaders={}]
+						 *    HTTP Headers to send with the response
+						 * @param {string} sFileUrl
+						 *    URL to get the response body from
+						 * @throws {Error} if the external resource cannot be fetched
+						 * @public
+						 * @function
+						 * @name sap.ui.core.util.MockServer.Response.prototype.respondFile
+						 */
+
+						/**
+						 * @typedef {object} sap.ui.core.util.MockServer.RequestHandler
+						 * @property {sap.ui.core.util.MockServer.HTTPMETHOD} method Any HTTP verb
+						 * @property {string|RegExp} path
+						 *    A string path is converted to a regular expression, so it can contain normal regular expression syntax.
+						 *
+						 *    All regular expression groups are forwarded as arguments to the <code>response</code> function.
+						 *    In addition to this, parameters can be written in this notation: <code>:param</code>.
+						 *    These placeholders will be replaced by regular expression groups.
+						 * @property {function(sap.ui.core.util.MockServer.Response,...any)} response
+						 *    A response handler function that will be called when an incoming request
+						 *    matches <code>method</code> and <code>path</code>.
+						 *    The first parameter of the handler will be a <code>Response</code> object which can be used
+						 *    to respond on the request.
+						 * @public
+						 */
+
+						/**
 						 * Setter for property <code>requests</code>.
 						 *
-						 * Default value is is <code>[]</code>
+						 * Default value is <code>[]</code>
 						 *
-						 * Each array entry should consist of an object with the following properties / values:
-						 *
-						 * <ul>
-						 * <li><b>method <string>: "GET"|"POST"|"DELETE|"PUT"</b>
-						 * <br>
-						 * (any HTTP verb)
-						 * </li>
-						 * <li><b>path <string>: "/path/to/resource"</b>
-						 * <br>
-						 * The path is converted to a regular expression, so it can contain normal regular expression syntax.
-						 * All regular expression groups are forwarded as arguments to the <code>response</code> function.
-						 * In addition to this, parameters can be written in this notation: <code>:param</code>. These placeholder will be replaced by regular expression groups.
-						 * </li>
-						 * <li><b>response <function>: function(xhr, param1, param2, ...) { }</b>
-						 * <br>
-						 * The xhr object can be used to respond on the request. Supported methods are:
-						 * <br>
-						 * <code>xhr.respond(iStatusCode, mHeaders, sBody)</code>
-						 * <br>
-						 * <code>xhr.respondJSON(iStatusCode, mHeaders, oJsonObjectOrString)</code>. By default a JSON header is set for response header
-						 * <br>
-						 * <code>xhr.respondXML(iStatusCode, mHeaders, sXmlString)</code>. By default an XML header is set for response header
-						 * <br>
-						 * <code>xhr.respondFile(iStatusCode, mHeaders, sFileUrl)</code>. By default the mime type of the file is set for response header
-						 * </li>
-						 * </ul>
-						 *
-						 * @param {object[]} requests new value for property <code>requests</code>
+						 * @param {sap.ui.core.util.MockServer.RequestHandler[]} requests new value for the <code>requests</code> property
+						 * @returns {this} Returns <code>this</code> to allow method chaining
 						 * @public
 						 * @name sap.ui.core.util.MockServer#setRequests
 						 * @function
@@ -142,7 +217,7 @@ sap.ui
 						 *
 						 * Default value is <code>[]</code>
 						 *
-						 * @return {object[]} the value of property <code>requests</code>
+						 * @returns {sap.ui.core.util.MockServer.RequestHandler[]} the value of property <code>requests</code>
 						 * @public
 						 * @name sap.ui.core.util.MockServer#getRequests
 						 * @function
@@ -185,12 +260,13 @@ sap.ui
 
 			/**
 			 * Generates a floating-point, pseudo-random number in the range [0, 1[
-			 * using a linear congruential generator with drand48 parameters
-			 * the seed is fixed, so the generated random sequence is always the same
-			 * each property type has a own seed. Valid types are:
+			 * using a linear congruential generator with drand48 parameters.
+			 *
+			 * The seed is fixed, so the generated random sequence is always the same
+			 * each property type has an own seed. Valid types are:
 			 * String, DateTime, Int, Decimal, Boolean, Byte, Double, Single, SByte, Time, Guid, Binary, DateTimeOffset
 			 * @private
-			 * @param {string} specific property type of random mock value to be generated
+			 * @param {string} sType specific property type of random mock value to be generated
 			 * @return (number) pseudo-random number
 			 */
 			MockServer.prototype._getPseudoRandomNumber = function (sType) {
@@ -209,7 +285,7 @@ sap.ui
 			 * @private
 			 */
 			MockServer.prototype._resetPseudoRandomNumberGenerator = function () {
-					this._oRandomSeed = {};
+				this._oRandomSeed = {};
 			};
 
 
@@ -253,7 +329,7 @@ sap.ui
 
 			/**
 			 * Attaches an event handler to be called before the built-in request processing of the mock server
-			 * @param {string} event type according to HTTP Method
+			 * @param {string} sHttpMethod - event type according to HTTP Method
 			 * @param {function} fnCallback - the name of the function that will be called at this exit.
 			 * The callback function exposes an event with parameters, depending on the type of the request.
 			 * oEvent.getParameters() lists the parameters as per the request. Examples are:
@@ -268,7 +344,7 @@ sap.ui
 
 			/**
 			 * Attaches an event handler to be called after the built-in request processing of the mock server
-			 * @param {string} event type according to HTTP Method
+			 * @param {string} sHttpMethod - event type according to HTTP Method
 			 * @param {function} fnCallback - the name of the function that will be called at this exit
 			 * The callback function exposes an event with parameters, depending on the type of the request.
 			 * oEvent.getParameters() lists the parameters as per the request. Examples are:
@@ -283,7 +359,7 @@ sap.ui
 
 			/**
 			 * Removes a previously attached event handler
-			 * @param {string} event type according to HTTP Method
+			 * @param {string} sHttpMethod - event type according to HTTP Method
 			 * @param {function} fnCallback - the name of the function that will be called at this exit
 			 * @param {string} sEntitySet - (optional) the name of the entity set
 			 * @public
@@ -295,7 +371,7 @@ sap.ui
 
 			/**
 			 * Removes a previously attached event handler
-			 * @param {string} event type according to HTTP Method
+			 * @param {string} sHttpMethod - event type according to HTTP Method
 			 * @param {function} fnCallback - the name of the function that will be called at this exit
 			 * @param {string} sEntitySet - (optional) the name of the entity set
 			 * @public
@@ -530,7 +606,7 @@ sap.ui
 
 			/**
 			 * Removes duplicate entries from the given array
-			 * @param {object} aDataSet
+			 * @param {array} array the data set
 			 * @private
 			 */
 			MockServer.prototype._arrayUnique = function(array) {
@@ -588,7 +664,8 @@ sap.ui
 			/**
 			 * Applies the $filter OData system query option string on the given array.
 			 * This function is called recursively on expressions in brackets.
-			 * @param {string} sString
+			 * @param {array} aDataSet
+			 * @param {string} sODataQueryValue
 			 * @private
 			 */
 			MockServer.prototype._recursiveOdataQueryFilter = function(aDataSet, sODataQueryValue) {
@@ -684,6 +761,8 @@ sap.ui
 				}
 				var that = this;
 				var fnGetFilteredData = function(bValue, iValueIndex, iPathIndex, fnSelectFilteredData) {
+					// TODO: do the check using the property type and not value
+					//       or consider the reuse of sap/ui/model/odata/ODataUtils.parseValue
 					var aODataFilterValues, sValue, sPath;
 					if (!bValue) { //e.g eq, ne, gt, lt, le, ge
 						aODataFilterValues = rExp.exec(sODataQueryValue);
@@ -699,13 +778,7 @@ sap.ui
 					if (/^\(.+\)$/.test(sValue)) {
 						sValue = sValue.replace(/^\(|\)$/g, "");
 					}
-					//TODO do the check using the property type and not value
-					// remove number suffixes from EDM types decimal, Int64, Single
-					var sTypecheck = sValue[sValue.length - 1];
-					if (sTypecheck === "M" || sTypecheck === "m" || sTypecheck === "L" || sTypecheck === "f") {
-						sValue = sValue.substring(0, sValue.length - 1);
-					}
-					//fix for filtering on date time properties
+					// fix for filtering on date time properties
 					if (sValue.indexOf("datetime") === 0) {
 						sValue = that._getJsonDate(sValue);
 					} else if (sValue.indexOf("guid") === 0) {
@@ -870,78 +943,53 @@ sap.ui
 			 */
 			MockServer.prototype._getOdataQuerySelect = function(aDataSet, sODataQueryValue, sEntitySetName) {
 				var that = this;
-				var sPropName, sComplexOrNavProperty;
 				var aProperties = sODataQueryValue.split(',');
 				var aSelectedDataSet = [];
-				var oPushedObject;
 				var oDataEntry = aDataSet[0] ? aDataSet[0][aProperties[0].split('/')[0]] : null;
 				if (!(oDataEntry != null && oDataEntry.results && oDataEntry.results.length > 0)) {
 					var fnCreatePushedEntry = function (aProperties, oData, oPushedObject, sParentName) {
-						// Get for each complex type or navigation property its list of properties
-						var oComplexOrNav = {};
 						jQuery.each(aProperties, function (i, sPropertyName) {
-							var iComplexOrNavProperty = sPropertyName.indexOf("/");
-							// This is a complex type or navigation property
-							if (iComplexOrNavProperty !== -1) {
-								sPropName = sPropertyName.substring(iComplexOrNavProperty + 1);
-								sComplexOrNavProperty = sPropertyName.substring(0, iComplexOrNavProperty);
-								if (oComplexOrNav[sComplexOrNavProperty]) {
-									oComplexOrNav[sComplexOrNavProperty].push(sPropName);
-								} else {
-									oComplexOrNav[sComplexOrNavProperty] = [sPropName];
-								}
-							}
-						});
-						jQuery.each(Object.keys(oComplexOrNav), function (i, sComplexOrNav) {
-							if (!oPushedObject[sComplexOrNav]) {
-								oPushedObject[sComplexOrNav] = {};
-							}
-							// call recursively to get the properties of each complex type or navigation property
-							oPushedObject[sComplexOrNav] = fnCreatePushedEntry(oComplexOrNav[sComplexOrNav], oData[sComplexOrNav], oPushedObject[sComplexOrNav], sComplexOrNav);
-						});
-
-						if (oData.results) {
-							// Navigation property - filter the results for each navigation property based on the properties defined by $select
-							var oFilteredResults = [];
-							jQuery.each(oData.results, function (i, oResult) {
-								var oFilteredResult = {};
-								jQuery.each(aProperties, function (j, sPropertyName) {
-									oFilteredResult[sPropertyName] = oResult[sPropertyName];
-								});
-								oFilteredResults.push(oFilteredResult);
-							});
-							if (oPushedObject) {
-								oPushedObject.results = oFilteredResults;
-							}
-						} else {
-							// Complex types or flat properties
+							// Take over __metadata for complex types or properties
 							if (oData["__metadata"]) {
 								oPushedObject["__metadata"] = oData["__metadata"];
 							}
-							jQuery.each(aProperties, function (i, sPropertyName) {
-								var iComplexType = sPropertyName.indexOf("/");
-								if (iComplexType === -1) { // Complex types were already handled above
-									if (oData && !oData.hasOwnProperty(sPropertyName)) {
-										var bExist = false;
-										var aTypeProperties = [];
-										if (sParentName) {
-											var sTargetEntitySet = that._mEntitySets[sEntitySetName].navprops[sParentName].to.entitySet;
-											aTypeProperties = that._mEntityTypes[that._mEntitySets[sTargetEntitySet].type].properties;
-											for (var i = 0; i < aTypeProperties.length; i++) {
-												if (aTypeProperties[i].name === sPropertyName) {
-													bExist = true;
-													break;
-												}
+							// Resolve complex types (determined by path syntax)
+							if (sPropertyName.indexOf("/") > -1) {
+								var aPropParts = sPropertyName.split("/");
+								var sPropName = aPropParts[0];
+								var sPath = aPropParts.splice(1).join("/");
+								oPushedObject[sPropName] = oPushedObject[sPropName] || {};
+								if (oData[sPropName] && oData[sPropName].results) {
+									// Navigation property - filter the results for each navigation property based on the properties defined by $select
+									var results = oPushedObject[sPropName].results = oPushedObject[sPropName].results || [];
+									jQuery.each(oData[sPropName].results, function (i, oResult) {
+										results[i] = fnCreatePushedEntry([sPath], oResult, results[i] || {}, sPropName);
+									});
+								} else {
+									// call recursively to get the properties of each complex type or navigation property
+									oPushedObject[sPropName] = fnCreatePushedEntry([sPath], oData[sPropName], oPushedObject[sPropName] || {}, sPropName);
+								}
+							} else {
+								if (oData && !oData.hasOwnProperty(sPropertyName)) {
+									var bExist = false;
+									var aTypeProperties = [];
+									if (sParentName) {
+										var sTargetEntitySet = that._mEntitySets[sEntitySetName].navprops[sParentName].to.entitySet;
+										aTypeProperties = that._mEntityTypes[that._mEntitySets[sTargetEntitySet].type].properties;
+										for (var i = 0; i < aTypeProperties.length; i++) {
+											if (aTypeProperties[i].name === sPropertyName) {
+												bExist = true;
+												break;
 											}
 										}
-										if (!bExist) {
-											that._logAndThrowMockServerCustomError(404, that._oErrorMessages.RESOURCE_NOT_FOUND_FOR_SEGMENT, sPropertyName);
-										}
 									}
-									oPushedObject[sPropertyName] = oData[sPropertyName];
+									if (!bExist) {
+										that._logAndThrowMockServerCustomError(404, that._oErrorMessages.RESOURCE_NOT_FOUND_FOR_SEGMENT, sPropertyName);
+									}
 								}
-							});
-						}
+								oPushedObject[sPropertyName] = oData[sPropertyName];
+							}
+						});
 						return oPushedObject;
 					};
 
@@ -957,8 +1005,7 @@ sap.ui
 
 					// for each entry in the dataset create a new object that contains only the properties in $select clause
 					jQuery.each(aDataSet, function(iIndex, oData) {
-						oPushedObject = {};
-						aSelectedDataSet.push(fnCreatePushedEntry(aProperties, oData, oPushedObject));
+						aSelectedDataSet.push(fnCreatePushedEntry(aProperties, oData, {}));
 					});
 				} else {
 					//Add Support for multiple select return 1...n
@@ -1023,6 +1070,7 @@ sap.ui
 
 			/**
 			 * Applies the Format OData system query option
+			 * @param {array} aDataSet
 			 * @param {string} sODataQueryValue
 			 * @private
 			 */
@@ -1125,7 +1173,7 @@ sap.ui
 
 			/**
 			 * Loads the service metadata for the given url
-			 * @param {string} sMetadataUrl url to the service metadata document
+			 * @param {string} sMetadata url to the service metadata document or content of the metadata document
 			 * @return {XMLDocument} the xml document object
 			 * @private
 			 */
@@ -1136,7 +1184,7 @@ sap.ui
 				// "<" as first character is a strong indicator for an XML-containing string. Everything else: URL...
 				if (sMetadata.substring(0,1) !== "<") {
 					// load the metadata as string to avoid usage of serializer
-					sMetadata = jQuery.sap.sjax({
+					sMetadata = syncAjax({
 						url: sMetadata,
 						dataType: "text"
 					}).data;
@@ -1368,7 +1416,7 @@ sap.ui
 					mData = {};
 				this._oMockdata = {};
 				var fnLoadMockData = function(sUrl, oEntitySet) {
-					var oResponse = jQuery.sap.sjax({
+					var oResponse = syncAjax({
 						url: sUrl,
 						dataType: "json"
 					});
@@ -1398,7 +1446,7 @@ sap.ui
 
 				// load all the mock data in one single file
 				if (sBaseUrl.endsWith(".json")) {
-					var oResponse = jQuery.sap.sjax({
+					var oResponse = syncAjax({
 						url: sBaseUrl,
 						dataType: "json"
 					});
@@ -1516,8 +1564,8 @@ sap.ui
 
 			/**
 			 * verify entitytype keys type ((e.g. Int, String, SByte, Time, DateTimeOffset, Decimal, Double, Single, Boolean, DateTime)
-			 * @param {oEntitySet} the entity set for verification
-			 * @param {aRequestedKeys} aRequestedKeys the requested Keys
+			 * @param {Object} oEntitySet the entity set for verification
+			 * @param {string[]} aRequestedKeys aRequestedKeys the requested Keys
 			 * @return boolean
 			 * @private
 			 */
@@ -1570,9 +1618,9 @@ sap.ui
 			 * Takes a string '<poperty1>=<value1>, <poperty2>=<value2>,...' and creates an
 			 * object (hash map) out of it.
 			 *
-			 * @param {sKeys}
-			 *            the string of porperty/value pairs
-			 * @param {object}
+			 * @param {string} sKeys
+			 *            the string of property/value pairs
+			 * @param {object} oEntitySet
 			 *            object consisting of the parsed properties
 			 */
 			MockServer.prototype._parseKeys = function(sKeys, oEntitySet) {
@@ -1963,7 +2011,7 @@ sap.ui
 
 				// helper to handle xsrf token
 				var fnHandleXsrfTokenHeader = function(oXhr, mHeaders) {
-					if (oXhr.requestHeaders["x-csrf-token"] === "Fetch") {
+					if (oXhr.requestHeaders["x-csrf-token"] === "Fetch" || oXhr.requestHeaders["X-CSRF-Token"] === "Fetch") {
 						mHeaders["X-CSRF-Token"] = "42424242424242424242424242424242";
 					}
 				};
@@ -2008,7 +2056,7 @@ sap.ui
 									break;
 								case "Edm.Int16":
 								case "Edm.Int32":
-								//case "Edm.Int64": In ODataModel this type is represented as a string. (https://openui5.hana.ondemand.com/docs/api/symbols/sap.ui.model.odata.type.Int64.html)
+								//case "Edm.Int64": In ODataModel this type is represented as a string. (https://sdk.openui5.org/api/sap.ui.model.odata.type.Int64)
 								// eslint-ignore-next-line no-fallthrough
 								case "Edm.Decimal":
 								case "Edm.Byte":
@@ -3491,7 +3539,11 @@ sap.ui
 			 * @private
 			 */
 			MockServer.prototype._isValidNumber = function(sString) {
-				return !isNaN(parseFloat(sString)) && isFinite(sString);
+				if (/^([-+]?)0*(\d+)(\.\d+|)([eE][-+]?\d+[d]?|[mldf])?$/i.test(sString)) {
+					var anyNumber = parseFloat(sString);
+					return !isNaN(anyNumber) && isFinite(anyNumber);
+				}
+				return false;
 			};
 
 			/**
@@ -3771,6 +3823,30 @@ sap.ui
 				return false;
 			};
 
+			function syncAjax(options) {
+				var oResult;
+				Object.assign(options, {
+					async: false,
+					success : function(data, textStatus, xhr) {
+						oResult = { success : true, data : data, status : textStatus, statusCode : xhr && xhr.status };
+					},
+					error : function(xhr, textStatus, error) {
+						oResult = { success : false, data : undefined, status : textStatus, error : error, statusCode : xhr.status, errorResponse :  xhr.responseText};
+					}
+				});
+				jQuery.ajax(options);
+				return oResult;
+			}
+
+			/**
+			 * Convenience helper for synchronous ajax calls.
+			 *
+			 * @private
+			 * @ui5-restricted sap.ui.core.util
+			 * @function
+			 */
+			MockServer._syncAjax = syncAjax;
+
 			// ================================
 			// SINON CONFIGURATON AND EXTENSION
 			// ================================
@@ -3810,7 +3886,7 @@ sap.ui
 			 * @public
 			 */
 			window.sinon.FakeXMLHttpRequest.prototype.respondFile = function(iStatus, mHeaders, sFileUrl) {
-				var oResponse = jQuery.sap.sjax({
+				var oResponse = syncAjax({
 					url: sFileUrl,
 					dataType: "text"
 				});

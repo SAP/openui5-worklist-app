@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -10,7 +10,6 @@ sap.ui.define([
 	"./ShortcutHint",
 	"./Popup",
 	"./InvisibleText",
-	"sap/ui/dom/containsOrEquals",
 	"sap/ui/events/checkMouseEnterOrLeave",
 	"sap/ui/Device"
 ],
@@ -20,7 +19,6 @@ sap.ui.define([
 		ShortcutHint,
 		Popup,
 		InvisibleText,
-		containsOrEquals,
 		checkMouseEnterOrLeave,
 		Device
 	) {
@@ -338,7 +336,7 @@ sap.ui.define([
 			oHintInfo = aInfos[i];
 			oHintInfo.ref = document.getElementById(oHintInfo.id);
 
-			if (containsOrEquals(oHintInfo.ref, domEventTarget)) {
+			if (oHintInfo.ref && oHintInfo.ref.contains(domEventTarget)) {
 				aResultInfos.push(oHintInfo);
 			}
 		}
@@ -414,6 +412,10 @@ sap.ui.define([
 	oHintRegistry.mDOMNodes = {};
 
 	var oHintsEventDelegate = {
+		/**
+		 * @type {sap.ui.core.Control}
+		 * @private
+		 */
 		"onfocusin": function(oEvent) {
 			var oShortcutHintRefs = this._findShortcutOptionsForRef(oEvent.target);
 
@@ -426,6 +428,10 @@ sap.ui.define([
 			this._updateShortcutHintAccLabel(oShortcutHintRefs[0]);
 			this.showShortcutHint(oShortcutHintRefs);
 		},
+		/**
+		 * @type {sap.ui.core.Control}
+		 * @private
+		 */
 		"onfocusout": function(oEvent) {
 			var oShortcutHintRefs = this._findShortcutOptionsForRef(oEvent.target);
 
@@ -435,6 +441,10 @@ sap.ui.define([
 
 			this.hideShortcutHint();
 		},
+		/**
+		 * @type {sap.ui.core.Control}
+		 * @private
+		 */
 		"onmouseover": function(oEvent) {
 			var oShortcutHintRefs = this._findShortcutOptionsForRef(oEvent.target),
 				oDOMRef;
@@ -455,6 +465,10 @@ sap.ui.define([
 				this.showShortcutHint(oShortcutHintRefs);
 			}
 		},
+		/**
+		 * @type {sap.ui.core.Control}
+		 * @private
+		 */
 		"onmouseout": function(oEvent) {
 			var oShortcutHintRefs = this._findShortcutOptionsForRef(oEvent.target);
 
@@ -464,13 +478,17 @@ sap.ui.define([
 
 			if (checkMouseEnterOrLeave(oEvent, oShortcutHintRefs[0].ref)) {
 				// do not hide if the element is focused
-				if (containsOrEquals(oShortcutHintRefs[0].ref, document.activeElement)) {
+				if (oShortcutHintRefs[0].ref.contains(document.activeElement)) {
 					return;
 				}
 
 				this.hideShortcutHint();
 			}
 		},
+		/**
+		 * @type {sap.ui.core.Control}
+		 * @private
+		 */
 		"onAfterRendering": function() {
 			var aInfos = this.getRegisteredShortcutInfos(),
 				oElement,

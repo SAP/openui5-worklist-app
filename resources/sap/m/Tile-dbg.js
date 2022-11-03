@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -35,34 +35,37 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.12
 	 * @deprecated as of version 1.50, replaced by {@link sap.m.GenericTile}
 	 * @alias sap.m.Tile
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var Tile = Control.extend("sap.m.Tile", /** @lends sap.m.Tile.prototype */ { metadata : {
+	var Tile = Control.extend("sap.m.Tile", /** @lends sap.m.Tile.prototype */ {
+		metadata : {
 
-		library : "sap.m",
-		deprecated: true,
-		properties : {
+			library : "sap.m",
+			deprecated: true,
+			properties : {
 
-			/**
-			 * Determines whether the tile is movable within the surrounding tile container. The remove event is fired by the tile container.
-			 */
-			removable : {type : "boolean", group : "Misc", defaultValue : true}
+				/**
+				 * Determines whether the tile is movable within the surrounding tile container. The remove event is fired by the tile container.
+				 */
+				removable : {type : "boolean", group : "Misc", defaultValue : true}
+			},
+			events : {
+
+				/**
+				 * Tap event is raised if the user taps or clicks the control.
+				 */
+				press : {}
+			}
 		},
-		events : {
 
-			/**
-			 * Tap event is raised if the user taps or clicks the control.
-			 */
-			press : {}
-		}
-	}});
+		renderer: TileRenderer
+	});
 
 	/**
 	 * Initializes the control.
@@ -89,7 +92,7 @@ sap.ui.define([
 	 * @private
 	 */
 	Tile.prototype.onAfterRendering = function(){
-		if (this._rendered && !this._bIsDragged && this.getParent() instanceof sap.m.TileContainer) {
+		if (this._rendered && !this._bIsDragged && this.getParent() && this.getParent().isA("sap.m.TileContainer")) {
 			this.setPos(this._posX,this._posY);
 		}
 		this._rendered = true;
@@ -249,7 +252,7 @@ sap.ui.define([
 		if (!bVisible) {
 			this._rendered = false;
 		}
-		if (this.getParent() && this.getParent() instanceof sap.m.TileContainer) {
+		if (this.getParent() && this.getParent().isA("sap.m.TileContainer")) {
 			this.getParent().invalidate(); // Force rerendering of TileContainer, so the tiles can be rearanged
 		}
 		return this;

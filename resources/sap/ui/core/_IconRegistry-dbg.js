@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /* global FontFace */
@@ -9,11 +9,13 @@
  * Code other than the UI5 core library must not introduce dependencies to this module.
  */
 sap.ui.define([
-	'sap/ui/thirdparty/URI',
+	"sap/ui/thirdparty/URI",
 	"sap/base/i18n/ResourceBundle",
-	"sap/base/Log"
+	"sap/base/Log",
+	"sap/base/util/fetch",
+	"sap/base/util/syncFetch"
 ],
-	function(URI, ResourceBundle, Log) {
+	function(URI, ResourceBundle, Log, fetch, syncFetch) {
 		"use strict";
 
 		/**
@@ -559,13 +561,13 @@ sap.ui.define([
 				'sys-minus': 0xe1f7,
 				'dropdown': 0xe1f8,
 				'expand-group': 0xe1f9,
-				'collapse-group': 0xe200,
 				'vertical-grip': 0xe1fa,
 				'horizontal-grip': 0xe1fb,
 				'sort-descending': 0xe1fc,
 				'sort-ascending': 0xe1fd,
 				'arrow-down': 0xe1fe,
 				'legend': 0xe1ff,
+				'collapse-group': 0xe200,
 				'message-warning': 0xe201,
 				'message-information': 0x1e202,
 				'message-success': 0x1e203,
@@ -711,7 +713,26 @@ sap.ui.define([
 				'qr-code': 0x1e28f,
 				'space-navigation': 0xe290,
 				'in-progress': 0x1e291,
-				'not-editable': 0xe292
+				'not-editable': 0xe292,
+				'heart': 0xe293,
+				'heart-2': 0xe294,
+				'tri-state': 0xe295,
+				'bookmark-2': 0xe296,
+				'detail-less': 0xe297,
+				'detail-more': 0xe298,
+				'flag-2': 0x1e299,
+				'folder-2': 0xe29a,
+				'paint-bucket': 0xe29b,
+				'direction-arrows': 0xe29c,
+				'non-binary': 0xe29d,
+				'female': 0xe29e,
+				'male': 0x1e29f,
+				'gender-male-and-female': 0x1e300,
+				'rotate': 0xe301,
+				'locate-me-2': 0xe302,
+				'map-fill': 0xe303,
+				'cloud-check': 0x1e304,
+				'enablement': 0x1e305
 			}
 		};
 
@@ -892,7 +913,7 @@ sap.ui.define([
 			// icon collection should have name undefined
 			collectionName = collectionName === 'undefined' ? undefined : collectionName;
 
-			// fetch the info from the registry
+			// get the info from the registry
 			info = getInfo();
 
 			// load icon metadata if not available (except for default collection)
@@ -905,11 +926,14 @@ sap.ui.define([
 					return oLoaded.then(function () {
 						info = getInfo();
 						if (!info) {
-							Log.warning("Icon info for icon '" + iconName + "' in collection '" + collectionName + "' could not be fetched");
+							Log.warning("Icon info for icon '" + iconName + "' in collection '" + collectionName + "' could not be found");
 						}
 						return info;
 					});
 				} else if (loadingMode === "async") {
+					if (!info) {
+						Log.warning("Icon info for icon '" + iconName + "' in collection '" + collectionName + "' could not be found");
+					}
 					return Promise.resolve(info);
 				} else {
 					info = getInfo();
@@ -921,7 +945,7 @@ sap.ui.define([
 
 			// show a warning when the icon could not be found
 			if (!info) {
-				Log.warning("Icon info for icon '" + iconName + "' in collection '" + collectionName + "' could not be fetched");
+				Log.warning("Icon info for icon '" + iconName + "' in collection '" + collectionName + "' could not be found");
 			}
 			return info;
 		};
@@ -1059,6 +1083,11 @@ sap.ui.define([
 				mFontRegistry[collectionName].metadataLoaded = true;
 			}
 
+			var fnErrorCallback = function() {
+				Log.error("An error occurred loading the font metadata for collection '" + collectionName + "'");
+				mFontRegistry[collectionName].metadataLoaded = false;
+			};
+
 			if (oConfig) {
 				// search for a metadata file with the font family name in the same folder
 				if (oConfig.metadataURI === undefined) {
@@ -1069,38 +1098,38 @@ sap.ui.define([
 					if (mFontRegistry[collectionName].metadataLoaded instanceof Promise) {
 						return mFontRegistry[collectionName].metadataLoaded;
 					}
-					// the first time create a metadataLoaded promise
-					var oPromise = new Promise(function (fnResolve) {
-						if (mRegistry[collectionName] === undefined) {
-							// store fnResolve to call it from outside the Promise
-							mFontRegistry[collectionName].metadataLoadedResolve = fnResolve;
-							// load the metadata asynchronously and save the XHR object
-							mFontRegistry[collectionName].metadataXhr = jQuery.ajax(oConfig.metadataURI, {
-								dataType: "json",
-								success: function (oJSON) {
-									loadFont(oJSON);
-									delete mFontRegistry[collectionName].metadataXhr;
-									delete mFontRegistry[collectionName].metadataLoadedResolve;
-									fnResolve();
-								},
-								error: function (jqXHR, sStatus) {
-									if (sStatus !== "abort") { // log an error if it isn't aborted
-										Log.error("An error occurred loading the font metadata for collection '" + collectionName + "'");
-										mFontRegistry[collectionName].metadataLoaded = false;
-										fnResolve();
-									}
-								}
-							});
-						}
-					});
+					if (mRegistry[collectionName] === undefined) {
+						// load the metadata asynchronously and save the XHR object
+						var oAbortController = new AbortController();
+						mFontRegistry[collectionName].abortController = oAbortController;
 
-					mFontRegistry[collectionName].metadataLoaded = oPromise;
-					return oPromise;
+						mFontRegistry[collectionName].metadataLoaded = fetch(oConfig.metadataURI, {
+							headers: {
+								Accept: fetch.ContentTypes.JSON
+							},
+							signal: oAbortController.signal
+						}).then(function(response) {
+							if (response.ok) {
+								return response.json().then(function(oJSON) {
+									loadFont(oJSON);
+									delete mFontRegistry[collectionName].abortController;
+								});
+							}
+							// response not ok
+							throw new Error();
+
+						}).catch(function(error) {
+							if (error.name !== "AbortError") {
+								fnErrorCallback();
+							}
+						});
+					}
+					return mFontRegistry[collectionName].metadataLoaded;
 				} else if (oConfig.metadataURI) {
-					if (mFontRegistry[collectionName].metadataXhr) { // there is an async request ongoing
+					if (mFontRegistry[collectionName].abortController) { // there is an async request ongoing
 						// the async request is aborted before the sync request is sent
-						mFontRegistry[collectionName].metadataXhr.abort("Replaced by sync request");
-						mFontRegistry[collectionName].metadataXhr = null;
+						mFontRegistry[collectionName].abortController.abort("Replaced by sync request");
+						mFontRegistry[collectionName].abortController = null;
 					}
 					Log.warning("Synchronous loading of font meta data in IconPool, due to .getIconInfo() call" +
 						" for '" + collectionName + "'. Use loading mode 'async' to avoid this call.", "SyncXHR", null, function() {
@@ -1109,28 +1138,24 @@ sap.ui.define([
 							name: "IconPool"
 						};
 					});
-					// load the metadata synchronously
-					jQuery.ajax(oConfig.metadataURI, {
-						dataType: "json",
-						async: false,
-						success: function (oJSON) {
+
+					try {
+						// load the metadata synchronously
+						var response = syncFetch(oConfig.metadataURI, {
+							headers: {
+								Accept: syncFetch.ContentTypes.JSON
+							}
+						});
+
+						if (response.ok) {
+							var oJSON = response.json();
 							loadFont(oJSON);
-							if (mFontRegistry[collectionName].metadataLoadedResolve) {
-								// resolve the Promise for the async request
-								mFontRegistry[collectionName].metadataLoadedResolve();
-								delete mFontRegistry[collectionName].metadataLoadedResolve;
-							}
-						},
-						error: function () {
-							if (mFontRegistry[collectionName].metadataLoadedResolve) {
-								// resolve the Promise for the async request
-								mFontRegistry[collectionName].metadataLoadedResolve();
-								delete mFontRegistry[collectionName].metadataLoadedResolve;
-							}
-							Log.error("An error occurred loading the font metadata for collection '" + collectionName + "'");
-							mFontRegistry[collectionName].metadataLoaded = false;
+						} else {
+							fnErrorCallback();
 						}
-					});
+					} catch (error) {
+						fnErrorCallback();
+					}
 				} else {
 					// pass on the configuration object
 					loadFont(oConfig.metadata);

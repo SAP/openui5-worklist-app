@@ -4,6 +4,7 @@
 /* ============================ */
 
 @_sap_m_Label_AsteriskWidth: 6px;
+@_sap_m_Label_ColonWidth: 4px;
 
 .sapMLabel {
 	color: @sapUiContentLabelColor;
@@ -30,6 +31,10 @@
 
 .sapMLabel.sapMLabelRequired:not(.sapMLabelWrapped) .sapMLabelTextWrapper {
 	max-width: calc(~"100% - 0.125rem - @{_sap_m_Label_AsteriskWidth}");
+}
+
+.sapMLabel.sapMLabelRequired.sapMLabelShowColon:not(.sapMLabelWrapped) .sapMLabelTextWrapper {
+	max-width: calc(~"100% - 0.125rem - @{_sap_m_Label_AsteriskWidth} - @{_sap_m_Label_ColonWidth}");
 }
 
 .sapMLabelBold,
@@ -79,6 +84,10 @@ html[dir="ltr"] .sapMLabel[dir="rtl"].sapMLabelRequired .sapMLabelColonAndRequir
 	font-family: @sapUiFontFamily;
 	font-size: @sapMFontMediumSize;
 	color: @sapUiPageFooterTextColor;
+}
+
+.sapMTB-Info-CTX.sapMTB.sapMTBInactive .sapMLabel {
+	color: @sapUiListTextColor;
 }
 
 /* Toolbar overflow context */
@@ -176,6 +185,9 @@ td.sapUiFormElementLbl:not(.sapUiGridLabelFull) > .sapMLabel{
 			&:lang(zh-TW) {
 				padding-right: 1.59em;
 			}
+			&:lang(zh-CN) {
+				padding-right: 1.59em;
+			}
 
 			.sapMLabelColonAndRequired {
 				position: absolute;
@@ -203,9 +215,12 @@ td.sapUiFormElementLbl:not(.sapUiGridLabelFull) > .sapMLabel{
 	vertical-align: top; /* align vertically to multiline texts */
 }
 
-.sapUiFormLblColon .sapUiFormElementLbl > .sapMLabel .sapMLabelColonAndRequired::before {
-	content: attr(data-colon);
-	white-space: pre;
+.sapMLabel.sapMLabelShowColon,
+.sapUiFormLblColon .sapUiFormElementLbl > .sapMLabel {
+	.sapMLabelColonAndRequired::before {
+		content: attr(data-colon);
+		white-space: pre;
+	}
 }
 
 /* Wrapping of the Label's text */
@@ -281,7 +296,7 @@ td.sapUiFormElementLbl:not(.sapUiGridLabelFull) > .sapMLabel{
 
 .sapUiSizeCompact,
 .sapUiSizeCondensed {
-	.sapUiTableCell .sapMLabel {
+	.sapUiTableCell:not(.sapUiTableHeaderDataCell) .sapMLabel {
 		font-weight: normal;
 		font-size: @sapMFontHeader6Size;
 	}

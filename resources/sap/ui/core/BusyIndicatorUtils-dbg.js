@@ -1,12 +1,12 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides utility class sap.ui.core.BusyIndicatorUtils
-sap.ui.define(['./BlockLayerUtils'], //require of sap/ui/core/library not possible due to cyclic dependencies
-	function(BlockLayerUtils) {
+sap.ui.define(['./BlockLayerUtils', 'sap/ui/core/library'],
+	function(BlockLayerUtils, coreLibrary) {
 	"use strict";
 
 	// Static class
@@ -19,21 +19,34 @@ sap.ui.define(['./BlockLayerUtils'], //require of sap/ui/core/library not possib
 	 */
 	var BusyIndicatorUtils = function() {};
 
+	var BusyIndicatorSize = coreLibrary.BusyIndicatorSize;
+
 	/**
 	 * Returns the HTML content for the busy indicator
 	 * styling + animation: LocalBusyIndicator.less
 	 *
-	 * @param {string} sSize either "Large" or "Medium". Other sizes will be mapped to "Medium"
-	 * @returns {DOM.element} the element for the busy indicator
+	 * @param {string} sSize either "Large", "Medium" or "Section". Other sizes will be mapped to "Medium"
+	 * @returns {Element} the element for the busy indicator
 	 * @private
 	 * @ui5-restricted sap.ui.core, sap.chart
 	 */
 	BusyIndicatorUtils.getElement = function(sSize) {
-		//default size is medium
-		var sSizeClass = "sapUiLocalBusyIndicatorSizeMedium";
+		var sSizeClass;
 
-		if (sSize === "Large") {
-			sSizeClass = "sapUiLocalBusyIndicatorSizeBig";
+		switch (sSize) {
+			case BusyIndicatorSize.Large:
+				sSizeClass = "sapUiLocalBusyIndicatorSizeBig sapUiLocalBusyIndicatorShowContainer";
+				break;
+			case BusyIndicatorSize.Medium:
+				sSizeClass = "sapUiLocalBusyIndicatorSizeMedium";
+				break;
+			case BusyIndicatorSize.Section:
+				sSizeClass = "sapUiLocalBusyIndicatorSizeSection sapUiLocalBusyIndicatorShowContainer";
+				break;
+			default:
+				//default size is medium
+				sSizeClass = "sapUiLocalBusyIndicatorSizeMedium";
+				break;
 		}
 
 		var oContainer = document.createElement("div");
@@ -84,19 +97,19 @@ sap.ui.define(['./BlockLayerUtils'], //require of sap/ui/core/library not possib
 	 * @see sap.ui.core.BusyIndicatorSize
 	 */
 	BusyIndicatorUtils.addHTML = function (oBusyBlockState, sSize) {
-		// Note: to avoid the cycle (Core -> Control -> BusyIndicatorUtils -> library -> Core),
-		//       this cannot be modeled as a top-level dependency
-		var BusyIndicatorSize = sap.ui.require("sap/ui/core/library").BusyIndicatorSize,
-			sSizeClass = "sapUiLocalBusyIndicatorSizeMedium",
-			sAnimationSizeClass;
+		var sSizeClass, sAnimationSizeClass;
 
 		switch (sSize) {
 			case BusyIndicatorSize.Small:
 				sSizeClass = "sapUiLocalBusyIndicatorSizeMedium";
 				sAnimationSizeClass = "sapUiLocalBusyIndicatorAnimSmall";
 				break;
+			case BusyIndicatorSize.Section:
+				sSizeClass = "sapUiLocalBusyIndicatorSizeSection sapUiLocalBusyIndicatorShowContainer";
+				sAnimationSizeClass = "sapUiLocalBusyIndicatorAnimStandard ";
+				break;
 			case BusyIndicatorSize.Large:
-				sSizeClass = "sapUiLocalBusyIndicatorSizeBig";
+				sSizeClass = "sapUiLocalBusyIndicatorSizeBig sapUiLocalBusyIndicatorShowContainer";
 				sAnimationSizeClass = "sapUiLocalBusyIndicatorAnimStandard";
 				break;
 			case BusyIndicatorSize.Auto:

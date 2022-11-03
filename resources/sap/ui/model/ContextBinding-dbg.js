@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -46,7 +46,7 @@ sap.ui.define(['./Binding'],
 	 * Check whether this Binding would provide new values and in case it changed, inform interested
 	 * parties about this.
 	 *
-	 * @param {boolean} bForceupdate Ignored in this method
+	 * @param {boolean} [bForceupdate] Ignored in this method
 	 */
 	ContextBinding.prototype.checkUpdate = function(bForceupdate) {
 		// nothing to do here, data changes can not change the context
@@ -55,7 +55,7 @@ sap.ui.define(['./Binding'],
 	/**
 	 * Return the bound context.
 	 *
-	 * @returns {sap.ui.model.Context}
+	 * @returns {sap.ui.model.Context|null}
 	 *   Context object used by this context binding or <code>null</code>
 	 * @public
 	 */

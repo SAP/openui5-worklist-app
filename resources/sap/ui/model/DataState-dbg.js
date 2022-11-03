@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -65,7 +65,7 @@ sap.ui.define([
 	 * @extends sap.ui.base.Object
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @alias sap.ui.model.DataState
@@ -123,10 +123,29 @@ sap.ui.define([
 	};
 
 	/**
-	 * Returns the array of this data state's messages combining the model and control messages.
-	 * The array is sorted descendingly by message severity.
+	 * Returns an array of all model and control messages, regardless of whether they are old or
+	 * new.
+	 *
+	 * @returns {sap.ui.core.Message[]} The array of all messages
+	 *
+	 * @public
+	 * @since 1.98.0
+	 */
+	 DataState.prototype.getAllMessages = function () {
+		var oResultSet = new Set();
+
+		this.getMessages().forEach(oResultSet.add.bind(oResultSet));
+		this._getOldMessages().forEach(oResultSet.add.bind(oResultSet));
+
+		return Array.from(oResultSet);
+	};
+
+	/**
+	 * Returns the array of this data state's current messages combining the model and control
+	 * messages. The array is sorted descendingly by message severity.
 	 *
 	 * @returns {sap.ui.core.Message[]} The sorted array of all messages
+	 *
 	 * @public
 	 */
 	DataState.prototype.getMessages = function () {
@@ -160,7 +179,7 @@ sap.ui.define([
 			aModelMessages = mProperties.modelMessages;
 
 		if (aModelMessages || aControlMessages) {
-			aMessages = aMessages.concat(aModelMessages || [], aControlMessages || []);
+			aMessages = aMessages.concat(aControlMessages || [], aModelMessages || []);
 			aMessages.sort(Message.compare);
 		}
 		return aMessages;
@@ -179,9 +198,10 @@ sap.ui.define([
 	};
 
 	/**
-	 * Returns the array of state messages of the model or undefined.
+	 * Returns the array of this data state's current model messages.
 	 *
 	 * @returns {sap.ui.core.Message[]} The array of messages of the model
+	 *
 	 * @public
 	 */
 	DataState.prototype.getModelMessages = function() {
@@ -201,9 +221,10 @@ sap.ui.define([
 	};
 
 	/**
-	 * Returns the array of state messages of the control.
+	 * Returns the array of this data state's current control messages.
 	 *
-	 * @return {sap.ui.core.Message[]} The array of control messages
+	 * @returns {sap.ui.core.Message[]} The array of control messages
+	 *
 	 * @public
 	 */
 	DataState.prototype.getControlMessages = function() {
@@ -289,7 +310,7 @@ sap.ui.define([
 	 * value was not rejected it returns <code>undefined</code>. In this case the current
 	 * model value can be accessed using the {@link #getValue} method.
 	 *
-	 * @returns {any} The value that was rejected or <code>undefined</code>
+	 * @returns {any|undefined} The value that was rejected or <code>undefined</code>
 	 * @public
 	 */
 	DataState.prototype.getInvalidValue = function() {

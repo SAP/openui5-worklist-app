@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -9,13 +9,14 @@ sap.ui.define([
 	'./library',
 	'sap/ui/core/Control',
 	'sap/ui/base/DataType',
+	'sap/base/security/URLListValidator',
 	'./ImageRenderer',
 	"sap/ui/events/KeyCodes",
 	"sap/ui/thirdparty/jquery",
 	"sap/base/security/encodeCSS",
 	"sap/ui/core/library"
 ],
-	function(library, Control, DataType, ImageRenderer, KeyCodes, jQuery, encodeCSS, coreLibrary) {
+	function(library, Control, DataType, URLListValidator, ImageRenderer, KeyCodes, jQuery, encodeCSS, coreLibrary) {
 	"use strict";
 
 
@@ -57,207 +58,210 @@ sap.ui.define([
 	 * @implements sap.ui.core.IFormContent
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @alias sap.m.Image
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var Image = Control.extend("sap.m.Image", /** @lends sap.m.Image.prototype */ { metadata : {
+	var Image = Control.extend("sap.m.Image", /** @lends sap.m.Image.prototype */ {
+		metadata : {
 
-		interfaces : ["sap.ui.core.IFormContent"],
-		library : "sap.m",
-		designtime: "sap/m/designtime/Image.designtime",
-		properties : {
+			interfaces : ["sap.ui.core.IFormContent"],
+			library : "sap.m",
+			designtime: "sap/m/designtime/Image.designtime",
+			properties : {
 
-			/**
-			 * Relative or absolute path to URL where the image file is stored.
-			 *
-			 * The path will be adapted to the density-aware format according to the density of the device
-			 * following the naming convention [imageName]@[densityValue].[extension].
-			 */
-			src : {type : "sap.ui.core.URI", group : "Data", defaultValue : null},
+				/**
+				 * Relative or absolute path to URL where the image file is stored.
+				 *
+				 * The path will be adapted to the density-aware format according to the density of the device
+				 * following the naming convention [imageName]@[densityValue].[extension].
+				 */
+				src : {type : "sap.ui.core.URI", group : "Data", defaultValue : null},
 
-			/**
-			 * When the empty value is kept, the original size is not changed.
-			 *
-			 * It is also possible to make settings for width or height only, in which case the original
-			 * ratio between width/height is maintained. When the <code>mode</code> property is set to
-			 * <code>sap.m.ImageMode.Background</code>, this property always needs to be set.
-			 * Otherwise the output DOM element has a 0 size.
-			 */
-			width : {type : "sap.ui.core.CSSSize", group : "Appearance", defaultValue : null},
+				/**
+				 * When the empty value is kept, the original size is not changed.
+				 *
+				 * It is also possible to make settings for width or height only, in which case the original
+				 * ratio between width/height is maintained. When the <code>mode</code> property is set to
+				 * <code>sap.m.ImageMode.Background</code>, this property always needs to be set.
+				 * Otherwise the output DOM element has a 0 size.
+				 */
+				width : {type : "sap.ui.core.CSSSize", group : "Appearance", defaultValue : null},
 
-			/**
-			 * When the empty value is kept, the original size is not changed.
-			 *
-			 * It is also possible to make settings for width or height only, in which case the original
-			 * ratio between width/height is maintained. When the <code>mode</code> property is set to
-			 * <code>sap.m.ImageMode.Background</code>, this property always needs to be set.
-			 * Otherwise the output DOM element has a 0 size.
-			 */
-			height : {type : "sap.ui.core.CSSSize", group : "Appearance", defaultValue : null},
+				/**
+				 * When the empty value is kept, the original size is not changed.
+				 *
+				 * It is also possible to make settings for width or height only, in which case the original
+				 * ratio between width/height is maintained. When the <code>mode</code> property is set to
+				 * <code>sap.m.ImageMode.Background</code>, this property always needs to be set.
+				 * Otherwise the output DOM element has a 0 size.
+				 */
+				height : {type : "sap.ui.core.CSSSize", group : "Appearance", defaultValue : null},
 
-			/**
-			 * A decorative image is included for design reasons; accessibility tools will ignore decorative images.
-			 *
-			 * Note: If the image has an image map (<code>useMap</code> is set), this property will be overridden
-			 * (the image will not be rendered as decorative). A decorative image has no <code>ALT</code> attribute,
-			 * so the <code>alt</code> property is ignored if the image is decorative.
-			 */
-			decorative : {type : "boolean", group : "Accessibility", defaultValue : true},
+				/**
+				 * A decorative image is included for design reasons; accessibility tools will ignore decorative images.
+				 *
+				 * Note: If the image has an image map (<code>useMap</code> is set), this property will be overridden
+				 * (the image will not be rendered as decorative). A decorative image has no <code>ALT</code> attribute,
+				 * so the <code>alt</code> property is ignored if the image is decorative.
+				 */
+				decorative : {type : "boolean", group : "Accessibility", defaultValue : true},
 
-			/**
-			 * The alternative text that is displayed in case the image is not available, or cannot be displayed.
-			 *
-			 * If the image is set to decorative, this property is ignored.
-			 */
-			alt : {type : "string", group : "Accessibility", defaultValue : null},
+				/**
+				 * The alternative text that is displayed in case the image is not available, or cannot be displayed.
+				 *
+				 * If the image is set to decorative, this property is ignored.
+				 */
+				alt : {type : "string", group : "Accessibility", defaultValue : null},
 
-			/**
-			 * The name of the image map that defines the clickable areas.
-			 */
-			useMap : {type : "string", group : "Misc", defaultValue : null},
+				/**
+				 * The name of the image map that defines the clickable areas.
+				 */
+				useMap : {type : "string", group : "Misc", defaultValue : null},
 
-			/**
-			 * If this is set to <code>true</code>, one or more network requests will be made
-			 * that try to obtain the density perfect version of the image.
-			 *
-			 * By default, this is set to <code>false</code>, so the <code>src</code> image is loaded
-			 * directly without attempting to fetch the density perfect image for high-density devices.
-			 *
-			 * <b>Note:</b> Before 1.60, the default value was set to <code>true</code>, which
-			 * brought redundant network requests for apps that used the default but did not
-			 * provide density perfect image versions on server-side.
-			 * You should set this property to <code>true</code> only if you also provide the
-			 * corresponding image versions for high-density devices.
-			 */
-			densityAware : {type : "boolean", group : "Misc", defaultValue : false},
+				/**
+				 * If this is set to <code>true</code>, one or more network requests will be made
+				 * that try to obtain the density perfect version of the image.
+				 *
+				 * By default, this is set to <code>false</code>, so the <code>src</code> image is loaded
+				 * directly without attempting to fetch the density perfect image for high-density devices.
+				 *
+				 * <b>Note:</b> Before 1.60, the default value was set to <code>true</code>, which
+				 * brought redundant network requests for apps that used the default but did not
+				 * provide density perfect image versions on server-side.
+				 * You should set this property to <code>true</code> only if you also provide the
+				 * corresponding image versions for high-density devices.
+				 */
+				densityAware : {type : "boolean", group : "Misc", defaultValue : false},
 
-			/**
-			 * The source property which is used when the image is pressed.
-			 */
-			activeSrc : {type : "sap.ui.core.URI", group : "Data", defaultValue : ""},
+				/**
+				 * The source property which is used when the image is pressed.
+				 */
+				activeSrc : {type : "sap.ui.core.URI", group : "Data", defaultValue : ""},
 
-			/**
-			 * Defines how the <code>src</code> and the <code>activeSrc</code> is output to the DOM Element.
-			 *
-			 * When set to <code>sap.m.ImageMode.Image</code>, which is the default value, the <code>src</code>
-			 * (<code>activeSrc</code>) is set to the <code>src</code> attribute of the &lt;img&gt; tag. When
-			 * set to <code>sap.m.ImageMode.Background</code>, the <code>src</code> (<code>activeSrc</code>)
-			 * is set to the CSS style <code>background-image</code> and the root DOM element is rendered as a
-			 * &lt;span&gt; tag instead of an &lt;img&gt; tag.
-			 * @since 1.30.0
-			 */
-			mode : {type : "sap.m.ImageMode", group : "Misc", defaultValue : "Image"},
+				/**
+				 * Defines how the <code>src</code> and the <code>activeSrc</code> is output to the DOM Element.
+				 *
+				 * When set to <code>sap.m.ImageMode.Image</code>, which is the default value, the <code>src</code>
+				 * (<code>activeSrc</code>) is set to the <code>src</code> attribute of the &lt;img&gt; tag. When
+				 * set to <code>sap.m.ImageMode.Background</code>, the <code>src</code> (<code>activeSrc</code>)
+				 * is set to the CSS style <code>background-image</code> and the root DOM element is rendered as a
+				 * &lt;span&gt; tag instead of an &lt;img&gt; tag.
+				 * @since 1.30.0
+				 */
+				mode : {type : "sap.m.ImageMode", group : "Misc", defaultValue : "Image"},
 
-			/**
-			 * Defines the size of the image in <code>sap.m.ImageMode.Background</code> mode.
-			 *
-			 * This property is set on the output DOM element using the CSS style <code>background-size</code>.
-			 * It takes effect only when the <code>mode</code> property is set to <code>sap.m.ImageMode.Background</code>.
-			 * @since 1.30.0
-			 */
-			backgroundSize : {type : "string", group : "Appearance", defaultValue : "cover"},
+				/**
+				 * Defines the size of the image in <code>sap.m.ImageMode.Background</code> mode.
+				 *
+				 * This property is set on the output DOM element using the CSS style <code>background-size</code>.
+				 * It takes effect only when the <code>mode</code> property is set to <code>sap.m.ImageMode.Background</code>.
+				 * @since 1.30.0
+				 */
+				backgroundSize : {type : "string", group : "Appearance", defaultValue : "cover"},
 
-			/**
-			* Defines the position of the image in <code>sap.m.ImageMode.Background</code> mode.
-			*
-			* This property is set on the output DOM element using the CSS style <code>background-position</code>.
-			* It takes effect only when the <code>mode</code> property is set to <code>sap.m.ImageMode.Background</code>.
-			* @since 1.30.0
-			*/
-			backgroundPosition : {type : "string", group : "Appearance", defaultValue : "initial"},
+				/**
+				* Defines the position of the image in <code>sap.m.ImageMode.Background</code> mode.
+				*
+				* This property is set on the output DOM element using the CSS style <code>background-position</code>.
+				* It takes effect only when the <code>mode</code> property is set to <code>sap.m.ImageMode.Background</code>.
+				* @since 1.30.0
+				*/
+				backgroundPosition : {type : "string", group : "Appearance", defaultValue : "initial"},
 
-			/**
-			* Defines whether the source image is repeated when the output DOM element is bigger than the source.
-			*
-			* This property is set on the output DOM element using the CSS style <code>background-repeat</code>.
-			* It takes effect only when the <code>mode</code> property is set to <code>sap.m.ImageMode.Background</code>.
-			* @since 1.30.0
-			*/
-			backgroundRepeat : {type : "string", group : "Appearance", defaultValue : "no-repeat"},
-			/**
-			* Enables lazy loading for images that are offscreen. If set to <code>true</code>, the property
-			* ensures that offscreen images are loaded early enough so that they have finished loading once
-			* the user scrolls near them.
-			*
-			* <b>Note:</b> Keep in mind that the property uses the loading attribute of HTML <code>&lt;img&gt;</code> element
-			* which is not supported for Internet Explorer.
-			*
-			* @since 1.87
-			*/
-			lazyLoading : {type : "boolean", defaultValue : false },
+				/**
+				* Defines whether the source image is repeated when the output DOM element is bigger than the source.
+				*
+				* This property is set on the output DOM element using the CSS style <code>background-repeat</code>.
+				* It takes effect only when the <code>mode</code> property is set to <code>sap.m.ImageMode.Background</code>.
+				* @since 1.30.0
+				*/
+				backgroundRepeat : {type : "string", group : "Appearance", defaultValue : "no-repeat"},
+				/**
+				* Enables lazy loading for images that are offscreen. If set to <code>true</code>, the property
+				* ensures that offscreen images are loaded early enough so that they have finished loading once
+				* the user scrolls near them.
+				*
+				* <b>Note:</b> Keep in mind that the property uses the loading attribute of HTML <code>&lt;img&gt;</code> element
+				* which is not supported for Internet Explorer.
+				*
+				* @since 1.87
+				*/
+				lazyLoading : {type : "boolean", defaultValue : false },
 
-			/**
-			 * Defines the aria-haspopup attribute of the <code>Image</code>.
-			 *
-			 * <b>Guidance for choosing appropriate value:</b>
-			 * <ul>
-			 * <li> We recommend you to use the property only when press handler is set.</li>
-			 * <li> If you use controls based on <code>sap.m.Popover</code> or <code>sap.m.Dialog</code>,
-			 * then you must use <code>AriaHasPopup.Dialog</code> (both <code>sap.m.Popover</code> and
-			 * <code>sap.m.Dialog</code> have role "dialog" assigned internally).</li>
-			 * <li> If you use other controls, or directly <code>sap.ui.core.Popup</code>, you need to check
-			 * the container role/type and map the value of <code>ariaHasPopup</code> accordingly.</li>
-			 * </ul>
-			 *
-			 * @since 1.87.0
-			 */
-			ariaHasPopup : {type : "sap.ui.core.aria.HasPopup", group : "Accessibility", defaultValue : AriaHasPopup.None}
+				/**
+				 * Defines the aria-haspopup attribute of the <code>Image</code>.
+				 *
+				 * <b>Guidance for choosing appropriate value:</b>
+				 * <ul>
+				 * <li> We recommend you to use the property only when press handler is set.</li>
+				 * <li> If you use controls based on <code>sap.m.Popover</code> or <code>sap.m.Dialog</code>,
+				 * then you must use <code>AriaHasPopup.Dialog</code> (both <code>sap.m.Popover</code> and
+				 * <code>sap.m.Dialog</code> have role "dialog" assigned internally).</li>
+				 * <li> If you use other controls, or directly <code>sap.ui.core.Popup</code>, you need to check
+				 * the container role/type and map the value of <code>ariaHasPopup</code> accordingly.</li>
+				 * </ul>
+				 *
+				 * @since 1.87.0
+				 */
+				ariaHasPopup : {type : "sap.ui.core.aria.HasPopup", group : "Accessibility", defaultValue : AriaHasPopup.None}
+			},
+			aggregations : {
+				/**
+				 * A <code>sap.m.LightBox</code> instance that will be opened automatically when the user interacts
+				 * with the <code>Image</code> control.
+				 *
+				 * The <code>tap</code> event will still be fired.
+				 */
+				detailBox: {type: 'sap.m.LightBox', multiple: false, bindable: "bindable"}
+			},
+			associations : {
+				/**
+				 * Association to controls / ids which describe this control (see WAI-ARIA attribute aria-describedby).
+				 */
+				ariaDescribedBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaDescribedBy"},
+
+				/**
+				 * Association to controls / ids which label this control (see WAI-ARIA attribute aria-labelledBy).
+				 */
+				ariaLabelledBy: {type : "sap.ui.core.Control", multiple : true, singularName : "ariaLabelledBy"},
+
+				/**
+				 * Association to controls / IDs which are details to this control (see WAI-ARIA attribute aria-details).
+				 * @since 1.79
+				 */
+				ariaDetails: {type : "sap.ui.core.Control", multiple : true, singularName : "ariaDetails"}
+			},
+			events : {
+
+				/**
+				 * Event is fired when the user clicks on the control. (This event is deprecated, use the press event instead)
+				 */
+				tap : {},
+
+				/**
+				 * Event is fired when the user clicks on the control.
+				 */
+				press : {},
+
+				/**
+				 * Event is fired when the image resource is loaded.
+				 * @since 1.36.2
+				 */
+				load : {},
+
+				/**
+				 * Event is fired when the image resource can't be loaded. If densityAware is set to true, the event is fired when none of the fallback resources can be loaded.
+				 * @since 1.36.2
+				 */
+				error : {}
+			},
+			dnd: { draggable: true, droppable: false }
 		},
-		aggregations : {
-			/**
-			 * A <code>sap.m.LightBox</code> instance that will be opened automatically when the user interacts
-			 * with the <code>Image</code> control.
-			 *
-			 * The <code>tap</code> event will still be fired.
-			 */
-			detailBox: {type: 'sap.m.LightBox', multiple: false, bindable: "bindable"}
-		},
-		associations : {
-			/**
-			 * Association to controls / ids which describe this control (see WAI-ARIA attribute aria-describedby).
-			 */
-			ariaDescribedBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaDescribedBy"},
 
-			/**
-			 * Association to controls / ids which label this control (see WAI-ARIA attribute aria-labelledBy).
-			 */
-			ariaLabelledBy: {type : "sap.ui.core.Control", multiple : true, singularName : "ariaLabelledBy"},
-
-			/**
-			 * Association to controls / IDs which are details to this control (see WAI-ARIA attribute aria-details).
-			 * @since 1.79
-			 */
-			ariaDetails: {type : "sap.ui.core.Control", multiple : true, singularName : "ariaDetails"}
-		},
-		events : {
-
-			/**
-			 * Event is fired when the user clicks on the control. (This event is deprecated, use the press event instead)
-			 */
-			tap : {},
-
-			/**
-			 * Event is fired when the user clicks on the control.
-			 */
-			press : {},
-
-			/**
-			 * Event is fired when the image resource is loaded.
-			 * @since 1.36.2
-			 */
-			load : {},
-
-			/**
-			 * Event is fired when the image resource can't be loaded. If densityAware is set to true, the event is fired when none of the fallback resources can be loaded.
-			 * @since 1.36.2
-			 */
-			error : {}
-		},
-		dnd: { draggable: true, droppable: false }
-	}});
+		renderer: ImageRenderer
+	});
 
 	Image._currentDevicePixelRatio = (function() {
 
@@ -281,6 +285,10 @@ sap.ui.define([
 
 		return ratio;
 	}());
+
+	Image.prototype.init = function () {
+		this._oSvgCachedData = {};
+	};
 
 	/**
 	 * Function is called when image is loaded successfully.
@@ -388,7 +396,7 @@ sap.ui.define([
 	/**
 	 * Sets the <code>detailBox</code> aggregation.
 	 * @param {sap.m.LightBox|undefined} oLightBox - Instance of the <code>LightBox</code> control or undefined
-	 * @returns {object} <code>this</code> for chaining
+	 * @returns {this} <code>this</code> for chaining
 	 * @override
 	 * @public
 	 */
@@ -416,6 +424,17 @@ sap.ui.define([
 		}
 
 		return this.setAggregation("detailBox", oLightBox);
+	};
+
+	Image.prototype.setSrc = function (sSrc) {
+		var oPreviousSrc = this.getSrc(),
+			oResult = this.setProperty("src", sSrc);
+
+		if (sSrc && oPreviousSrc !== this.getSrc() && this.getMode() === ImageMode.InlineSvg) {
+			sSrc.endsWith("svg") && this._loadSvg();
+		}
+
+		return oResult;
 	};
 
 	/*
@@ -449,6 +468,10 @@ sap.ui.define([
 		if (this.getMode() == ImageMode.Image) {
 			var $DomNode = this.getDetailBox() ? this.$().find(".sapMImg") : this.$();
 			$DomNode.off("load").off("error");
+		}
+
+		if (this.getMode() === ImageMode.InlineSvg) {
+			this._loadSvg();
 		}
 	};
 
@@ -501,6 +524,8 @@ sap.ui.define([
 		if (this._fnLightBoxOpen) {
 			this._fnLightBoxOpen = null;
 		}
+
+		this._oSvgCachedData = null;
 	};
 
 	/**
@@ -598,6 +623,54 @@ sap.ui.define([
 	 */
 	Image.prototype.onsapspace = function(oEvent) {
 		oEvent.preventDefault();
+	};
+
+	/**
+	* Loads "svg"
+	* @private
+	*/
+	Image.prototype._loadSvg = function() {
+		var that = this,
+			sSrc = this.getSrc(),
+			oSvg;
+
+		if (!this._oSvgCachedData[sSrc]) {
+			that._oSvgCachedData[sSrc] = {};
+			jQuery.get(this.getSrc(), function(data) {
+				oSvg = jQuery(data).find('svg')[0];
+
+				if (oSvg) {
+					sap.ui.require(["sap/m/_thirdparty/purify"],
+					function(DOMPurify) {
+							that._oSvgCachedData[sSrc].oSvgDomRef = DOMPurify.sanitize(oSvg, {RETURN_DOM: true});
+							that.invalidate();
+					});
+				}
+			})
+			.done(function() {
+				that.fireLoad();
+			})
+			.fail(function() {
+				that.fireError();
+			});
+		}
+	};
+
+	Image.prototype._getSvgCachedData = function () {
+		var sSrc = this.getSrc();
+
+		if (this._oSvgCachedData[sSrc]
+			&& typeof this._oSvgCachedData[sSrc].oSvgDomRef === "object") {
+				return this._oSvgCachedData[sSrc].oSvgDomRef;
+		}
+	};
+
+	/**
+	* Checks if href is valid
+	* @private
+	*/
+	Image.prototype._isHrefValid = function (sURL) {
+		return URLListValidator.validate(sURL);
 	};
 
 	/**

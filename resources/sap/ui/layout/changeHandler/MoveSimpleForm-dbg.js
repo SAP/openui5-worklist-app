@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -20,7 +20,7 @@ sap.ui.define([
 	 *
 	 * @alias sap.ui.layout.changeHandler.MoveSimpleForm
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @experimental Since 1.34.0
 	 */
 	var MoveSimpleForm = {};
@@ -168,12 +168,8 @@ sap.ui.define([
 		return aResult;
 	}
 
-	function getGroupHeader(oHeader) {
-		var oResult = oHeader.getTitle();
-		if (!oResult) {
-			oResult = oHeader.getToolbar();
-		}
-		return oResult;
+	function getGroupHeader(oElement) {
+		return oElement.getTitle() || oElement.getToolbar();
 	}
 
 	function moveFormContainer(oSimpleForm, mMovedElement, mPropertyBag) {
@@ -410,17 +406,23 @@ sap.ui.define([
 			Log.error("Element not found. This may be caused by an unstable id!");
 		}
 
-		var mChangeData = oChange.getDefinition();
-		mChangeData.content.targetSelector = mStableChangeInfo.targetSelector;
-		mChangeData.content.movedElements = mStableChangeInfo.movedElements;
-		// legacy changes had only a string with <appComponentId>---<uid>
-		mChangeData.content.newControlId = oModifier.getSelector(oView.createId(uid()), oAppComponent);
+		var oContent = {
+			targetSelector: mStableChangeInfo.targetSelector,
+			movedElements: mStableChangeInfo.movedElements,
+			// legacy changes had only a string with <appComponentId>---<uid>
+			newControlId: oModifier.getSelector(oView.createId(uid()), oAppComponent)
+		};
+		oChange.setContent(oContent);
 
 		if (mStableChangeInfo.source && mStableChangeInfo.target){
 			oChange.addDependentControl(mStableChangeInfo.source, "sourceParent", mPropertyBag);
 			oChange.addDependentControl(mStableChangeInfo.target, "targetParent", mPropertyBag);
 		}
-		oChange.addDependentControl([mStableChangeInfo.movedControl], "movedElements", mPropertyBag);
+
+		// Headerless groups will get a Title during apply
+		if (mStableChangeInfo.movedControl) {
+			oChange.addDependentControl([mStableChangeInfo.movedControl], "movedElements", mPropertyBag);
+		}
 	};
 
 	/**
@@ -463,16 +465,32 @@ sap.ui.define([
 	};
 
 	MoveSimpleForm.getChangeVisualizationInfo = function(oChange, oAppComponent) {
+		var oSourceContainer;
+		var oTargetContainer;
 		var oMovedElement = oChange.getContent().movedElements[0];
 		var oGroupSelector = oMovedElement.source.groupSelector;
 		var oAffectedControlSelector = JsControlTreeModifier.bySelector(oMovedElement.elementSelector, oAppComponent).getParent().getId();
+		if (oChange.getChangeType() === MoveSimpleForm.CHANGE_TYPE_MOVE_FIELD) {
+			var oSourceTitleElement = JsControlTreeModifier.bySelector(oMovedElement.source.groupSelector, oAppComponent);
+			var oTargetTitleElement = JsControlTreeModifier.bySelector(oMovedElement.target.groupSelector, oAppComponent);
+			oSourceContainer = oSourceTitleElement ? oSourceTitleElement.getParent().getId() : null;
+			oTargetContainer = oTargetTitleElement ? oTargetTitleElement.getParent().getId() : null;
+			oGroupSelector = {
+				id: oSourceContainer
+			};
+		}
 		return {
 			affectedControls: [oAffectedControlSelector],
 			dependentControls: [
 				oGroupSelector && oGroupSelector.id
 					? oGroupSelector
 					: oChange.getContent().targetSelector
-			]
+			],
+			updateRequired: true,
+			descriptionPayload: {
+				sourceContainer: oSourceContainer,
+				targetContainer: oTargetContainer
+			}
 		};
 	};
 

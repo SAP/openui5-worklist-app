@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -18,7 +18,7 @@ sap.ui.define(['./ComponentMetadata', 'sap/ui/core/mvc/ViewType'],
 	 * @experimental Since 1.15.1. The Component concept is still under construction, so some implementation details can be changed in future.
 	 * @class
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @since 1.15.1
 	 * @alias sap.ui.core.UIComponentMetadata
 	 * @extends sap.ui.core.ComponentMetadata
@@ -57,7 +57,7 @@ sap.ui.define(['./ComponentMetadata', 'sap/ui/core/mvc/ViewType'],
 	 * the Component metadata or in the proper Component manifest.
 	 *
 	 * @param {boolean} [bDoNotMerge] Returns the local root view configuration if set to <code>true</code>.
-	 * @return {object} root view as configuration object or null ({@link sap.ui.view})
+	 * @return {object|null} root view as configuration object or null ({@link sap.ui.view})
 	 * @protected
 	 * @since 1.15.1
 	 * @deprecated Since 1.27.1. Please use {@link sap.ui.core.Component#getManifestEntry}("/sap.ui5/rootView")

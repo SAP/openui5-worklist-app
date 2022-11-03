@@ -1,15 +1,11 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
-	"sap/ui/fl/changeHandler/Base",
-	"sap/base/Log"
 ], function(
-	BaseChangeHandler,
-	Log
 ) {
 	"use strict";
 
@@ -18,7 +14,7 @@ sap.ui.define([
 	 *
 	 * @alias sap.ui.layout.changeHandler.RenameFormContainer
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @since 1.48
 	 * @private
 	 * @experimental Since 1.48. This class is experimental and provides only limited functionality. Also the API might be changed in future.
@@ -42,7 +38,7 @@ sap.ui.define([
 	 */
 	RenameFormContainer.applyChange = function(oChangeWrapper, oControl, mPropertyBag) {
 		var oModifier = mPropertyBag.modifier,
-			oChangeDefinition = oChangeWrapper.getDefinition(),
+			oTexts = oChangeWrapper.getTexts(),
 			oRenamedElement = oChangeWrapper.getDependentControl(_CONSTANTS.TARGET_ALIAS, mPropertyBag);
 
 		return Promise.resolve()
@@ -50,9 +46,8 @@ sap.ui.define([
 				return oModifier.getAggregation(oRenamedElement, "title");
 			})
 			.then(function(oTitle) {
-				if (oChangeDefinition.texts && oChangeDefinition.texts.formText && this._isProvided(oChangeDefinition.texts.formText.value)) {
-
-					var sValue = oChangeDefinition.texts.formText.value;
+				if (oTexts && oTexts.formText && this._isProvided(oTexts.formText.value)) {
+					var sValue = oTexts.formText.value;
 					var oRevertDataPromise;
 					if (typeof oTitle === "string") {
 						oRevertDataPromise = Promise.resolve(oModifier.getProperty(oRenamedElement, "title")).then(function(sTitle) {
@@ -66,9 +61,6 @@ sap.ui.define([
 						});
 					}
 					return oRevertDataPromise;
-				} else {
-					Log.error("Change does not contain sufficient information to be applied: [" + oChangeDefinition.layer + "]" + oChangeDefinition.namespace + "/" + oChangeDefinition.fileName + "." + oChangeDefinition.fileType);
-					//however subsequent changes should be applied
 				}
 			}.bind(this));
 	};
@@ -76,14 +68,12 @@ sap.ui.define([
 	/**
 	 * Completes the change by adding change handler specific content
 	 *
-	 * @param {sap.ui.fl.Change} oChangeWrapper Change wrapper object to be completed
+	 * @param {sap.ui.fl.Change} oChange Change wrapper object to be completed
 	 * @param {object} oSpecificChangeInfo With attribute fieldLabel, the new field label to be included in the change
 	 * @param {object} mPropertyBag Map containing the application component
 	 * @private
 	 */
-	RenameFormContainer.completeChangeContent = function(oChangeWrapper, oSpecificChangeInfo, mPropertyBag) {
-		var oChangeDefinition = oChangeWrapper.getDefinition();
-
+	RenameFormContainer.completeChangeContent = function(oChange, oSpecificChangeInfo, mPropertyBag) {
 		if (!(oSpecificChangeInfo.renamedElement && oSpecificChangeInfo.renamedElement.id)) {
 			throw new Error("Rename of the group cannot be executed: oSpecificChangeInfo.renamedElement attribute required");
 		}
@@ -92,9 +82,8 @@ sap.ui.define([
 			throw new Error("Rename of the group cannot be executed: oSpecificChangeInfo.value attribute required");
 		}
 
-		oChangeWrapper.addDependentControl(oSpecificChangeInfo.renamedElement.id, _CONSTANTS.TARGET_ALIAS, mPropertyBag);
-		BaseChangeHandler.setTextInChange(oChangeDefinition, "formText", oSpecificChangeInfo.value, "XGRP");
-
+		oChange.addDependentControl(oSpecificChangeInfo.renamedElement.id, _CONSTANTS.TARGET_ALIAS, mPropertyBag);
+		oChange.setText("formText", oSpecificChangeInfo.value, "XGRP");
 	};
 
 	/**

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -30,17 +30,20 @@ sap.ui.define([
 	 * @extends sap.m.ListItemBase
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.42.0
 	 * @alias sap.m.TreeItemBase
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var TreeItemBase = ListItemBase.extend("sap.m.TreeItemBase", /** @lends sap.m.TreeItemBase.prototype */ { metadata : {
-		library : "sap.m"
-	}});
+	var TreeItemBase = ListItemBase.extend("sap.m.TreeItemBase", /** @lends sap.m.TreeItemBase.prototype */ {
+		metadata : {
+			library : "sap.m"
+		},
+
+		renderer: TreeItemBaseRenderer
+	});
 
 	TreeItemBase.prototype.ExpandedIconURI = IconPool.getIconURI("navigation-down-arrow");
 	TreeItemBase.prototype.CollapsedIconURI = IconPool.getIconURI("navigation-right-arrow");
@@ -64,12 +67,11 @@ sap.ui.define([
 	 */
 	TreeItemBase.prototype.getItemNodeContext = function() {
 		var oTree = this.getTree();
+		var oTreeProxy = this._getTreeBindingProxy();
 		var oNode = null;
-		var oBinding = oTree ? oTree.getBinding("items") : null;
 
-		if (oTree && oBinding) {
-			oBinding = oTree.getBinding("items");
-			oNode = oBinding.getNodeByIndex(oTree.indexOfItem(this));
+		if (oTreeProxy) {
+			oNode = oTreeProxy.getNodeByIndex(oTree.indexOfItem(this));
 		}
 
 		return oNode;
@@ -127,9 +129,14 @@ sap.ui.define([
 	 */
 	TreeItemBase.prototype.isLeaf = function() {
 		var oTree = this.getTree(),
-			oNode = this.getItemNodeContext();
+			oTreeProxy = this._getTreeBindingProxy();
 
-		return oNode ? !oTree.getBinding("items").nodeHasChildren(oNode) : false;
+		if (oTreeProxy) {
+			var iIndex = oTree.indexOfItem(this);
+			return oTreeProxy.isLeaf(iIndex);
+		}
+
+		return false;
 	};
 
 	/**
@@ -162,14 +169,14 @@ sap.ui.define([
 	 * @since 1.42.0
 	 */
 	TreeItemBase.prototype.getExpanded = function() {
-		var oTree = this.getTree();
-		if (!oTree) {
+		var oTree = this.getTree(),
+			oTreeProxy = this._getTreeBindingProxy();
+		if (!oTree || !oTreeProxy) {
 			return false;
 		}
 
 		var iIndex = oTree.indexOfItem(this);
-		var oBinding = oTree.getBinding("items");
-		return (oBinding && oBinding.isExpanded(iIndex));
+		return oTreeProxy.isExpanded(iIndex);
 	};
 
 	TreeItemBase.prototype.setSelected = function (bSelected) {
@@ -288,7 +295,7 @@ sap.ui.define([
 	/**
 	 * The event is fired when + is pressed.
 	 *
-	 * @param {jQuery.Event} The event object.
+	 * @param {jQuery.Event} oEvent The event object.
 	 */
 	TreeItemBase.prototype.onsapplus = function(oEvent) {
 		this.informTree("ExpanderPressed", true);
@@ -297,7 +304,7 @@ sap.ui.define([
 	/**
 	 * The event is fired when - is pressed.
 	 *
-	 * @param {jQuery.Event} The event object.
+	 * @param {jQuery.Event} oEvent The event object.
 	 */
 	TreeItemBase.prototype.onsapminus = function(oEvent) {
 		this.informTree("ExpanderPressed", false);
@@ -306,7 +313,7 @@ sap.ui.define([
 	/**
 	 * The event is fired when the right arrow key is pressed.
 	 *
-	 * @param {jQuery.Event} The event object.
+	 * @param {jQuery.Event} oEvent The event object.
 	 */
 	TreeItemBase.prototype.onsapright = function(oEvent) {
 		if (oEvent.srcControl !== this || this.isLeaf()) {
@@ -325,7 +332,7 @@ sap.ui.define([
 	/**
 	 * The event is fired when the left arrow key is pressed.
 	 *
-	 * @param {jQuery.Event} The event object.
+	 * @param {jQuery.Event} oEvent The event object.
 	 */
 	TreeItemBase.prototype.onsapleft = function(oEvent) {
 		if (oEvent.srcControl !== this || this.isTopLevel() && !this.getExpanded()) {
@@ -347,7 +354,7 @@ sap.ui.define([
 	/**
 	 * The event is fired when the backspace key is pressed.
 	 *
-	 * @param {jQuery.Event} The event object.
+	 * @param {jQuery.Event} oEvent The event object.
 	 */
 	TreeItemBase.prototype.onsapbackspace = function(oEvent) {
 		// Only set focus on parent when the event is fired by item itself.
@@ -373,6 +380,13 @@ sap.ui.define([
 
 	TreeItemBase.prototype.onlongdragover = function(oEvent) {
 		this.informTree("LongDragOver");
+	};
+
+	TreeItemBase.prototype._getTreeBindingProxy = function() {
+		var oTree = this.getTree();
+		if (oTree) {
+			return oTree._oProxy;
+		}
 	};
 
 	return TreeItemBase;

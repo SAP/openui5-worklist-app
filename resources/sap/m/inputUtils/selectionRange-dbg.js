@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*
@@ -8,8 +8,7 @@
  * Code other than the OpenUI5 libraries must not introduce dependencies to this module.
  */
 sap.ui.define([
-	'sap/ui/Device'
-	], function (Device) {
+	], function () {
 	"use strict";
 
 	/**

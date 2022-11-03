@@ -1,6 +1,6 @@
-/*
- * ! OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+/*!
+ * OpenUI5
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -30,23 +30,18 @@ sap.ui.define([
 	 * @param {object} [mSettings] Initial settings for the new control
 	 *
 	 * @class
-	 * This control serves as base class for personalization implementations.
-	 * This base class is faceless and should be inherited to implement control specific personalization panels.
-	 * Constructor for a new Container. The Container can be used
-	 * to dynamically add personalization content to a switchable
-	 * layout container, by allowing to switch the content using
-	 * an <code>IconTabBar</code> or a <code>List</code> control,
-	 * depending on the desired layout mode.
+	 * Constructor for a new <code>Container</code>. The <code>Container</code> class can be used to dynamically add personalization content to a switchable
+	 * layout container. The <code>Container</code> class provides an option for switching content by using an <code>IconTabBar</code> or a <code>List</code> control
+	 * respectively, depending on the desired layout mode. See also {@link sap.m.p13n.AbstractContainer}.
 	 *
 	 * @extends sap.m.p13n.AbstractContainer
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @private
 	 * @ui5-restricted
-	 * @experimental
-	 *
+	 * @experimental Since 1.96.
 	 * @since 1.96
 	 * @alias sap.m.p13n.Container
 	 */
@@ -55,7 +50,7 @@ sap.ui.define([
 			library: "sap.m",
 			properties: {
 				listLayout: {
-					type: "Boolean",
+					type: "boolean",
 					defaultValue: false
 				}
 			}
@@ -74,11 +69,10 @@ sap.ui.define([
 	};
 
 	/**
-	 * Determines whether a <code>List</code> control should be used
-	 * as inner layout or a <code>IconTabBar</code> to display the different views.
+	 * Determines whether a <code>List</code> control or code>IconTabBar</code> is used as the inner layout to display the different views.
 	 *
-	 * @param {boolean} bListLayout Defines which layout mode should be used.
-	 * @returns {sap.ui.core.Control} The <code>Container</code> instance.
+	 * @param {boolean} bListLayout Defines which layout mode is used
+	 * @returns {sap.m.p13n.Container} The <code>Container</code> instance
 	 */
 	Container.prototype.setListLayout = function (bListLayout) {
 		this.setProperty("listLayout", bListLayout);
@@ -128,23 +122,63 @@ sap.ui.define([
 	 */
 	Container.prototype.switchView = function (sKey) {
 		AbstractContainer.prototype.switchView.apply(this, arguments);
+		if (this._bPrevented) {
+			return;
+		}
 		var oParent = this.getParent();
 		if (oParent && oParent.isA("sap.ui.core.Control")){
-			oParent.focus();
 			oParent.invalidate();
+
+			// invalidate dependents as well
+			var aDependents = oParent.getDependents();
+			if (aDependents) {
+				aDependents.forEach(function (oDependent) {
+					if (oDependent && oDependent.isA("sap.ui.core.Control")) {
+						oDependent.invalidate();
+					}
+				});
+			}
 		}
-		this.oLayout.setShowHeader(sKey !== this.DEFAULT_KEY); //Don't show header in default view (avoid empty space),
+		this.oLayout.setShowHeader(sKey !== this.DEFAULT_KEY); //Don't show header in default view
+		this.oLayout.setShowFooter(sKey !== this.DEFAULT_KEY); //Don't show footer in default view
 		this._getTabBar().setSelectedKey(sKey);
 		this._getNavBackBtn().setVisible(sKey !== this.DEFAULT_KEY);
-		this._getNavBackBtn().setText(sKey);
+		this._getNavBackBtn().setText((this.getView(sKey) && this.getView(sKey).getText()) || sKey);
 	};
 
 	/**
 	 * @override
 	 */
-	Container.prototype.addView = function (oContainerItem) {
+	Container.prototype.addView = function (vContainerItem) {
+		this._addToNavigator(typeof vContainerItem == "string" ? this.getView(vContainerItem) : vContainerItem);
 		AbstractContainer.prototype.addView.apply(this, arguments);
-		this._addToNavigator(oContainerItem);
+		return this;
+	};
+
+	/**
+	* @override
+	*/
+	Container.prototype.removeView = function (vContainerItem) {
+		this._removeFromNavigator(typeof vContainerItem == "string" ? this.getView(vContainerItem) : vContainerItem);
+		AbstractContainer.prototype.removeView.apply(this, arguments);
+		return this;
+	};
+
+	/*
+	 * This method can be used to add a separator line to the last added item.
+	 * This will only take effect in the "list" mode.
+	 *
+	 * @returns {sap.m.p13n.Container} The Container instance
+	 */
+	Container.prototype.addSeparator = function () {
+		if (!this.getProperty("listLayout")) {
+			return;
+		}
+
+		var oItems = this._getNavigationList().getItems();
+		var oLastItem = oItems[oItems.length - 1];
+		oLastItem.addStyleClass("sapMMenuDivider");
+
 		return this;
 	};
 
@@ -198,7 +232,14 @@ sap.ui.define([
 
 	Container.prototype._addToNavigator = function (oContainerItem) {
 
-		var sKey = oContainerItem.getKey(), sText = oContainerItem.getText(), sIcon = oContainerItem.getIcon();
+		var sKey = oContainerItem.getKey(), oContainerItemTextBindingInfo = oContainerItem.getBindingInfo("text"), vText = oContainerItem.getText(), sIcon = oContainerItem.getIcon();
+
+		//In case the text of the Abstract container item is bound, the binding should be forwarded instead of the value
+		if (oContainerItemTextBindingInfo && oContainerItemTextBindingInfo.parts) {
+			vText = {
+				parts: oContainerItemTextBindingInfo.parts
+			};
+		}
 
 		if (sKey == this.DEFAULT_KEY) {
 			return;
@@ -209,15 +250,36 @@ sap.ui.define([
 			var oItem =  new StandardListItem({
 				type: ListItemType.Navigation,
 				icon: sIcon,
-				title: sText
+				title: vText
 			});
 			oItem._key = sKey;
 			this._getNavigationList().addItem(oItem);
 		} else {
 			this._getTabBar().addItem(new IconTabFilter({
 				key: sKey,
-				text: sText || sKey
+				text: vText || sKey
 			}));
+		}
+	};
+
+	Container.prototype._removeFromNavigator = function (oContainerItem) {
+
+		var sKey = oContainerItem.getKey();
+
+		if (sKey == this.DEFAULT_KEY) {
+			return;
+		}
+
+		if (this.getListLayout()) {
+			var oItem = this._getNavigationList().getItems().find(function(oListItem){
+				return oListItem._key === sKey;
+			});
+			this._getNavigationList().removeItem(oItem);
+		} else {
+			var oTab = this._getTabBar().getItems().find(function(oTab){
+				return oTab.getKey() === sKey;
+			});
+			this._getTabBar().removeItem(oTab);
 		}
 	};
 

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -9,10 +9,11 @@ sap.ui.define([
 	"sap/base/assert",
 	"sap/base/util/extend",
 	"sap/ui/base/EventProvider",
+	"sap/ui/core/Configuration",
 	"sap/ui/core/cache/CacheManager",
 	"sap/ui/model/odata/AnnotationParser",
 	"sap/ui/thirdparty/jquery"
-], function(assert, extend, EventProvider, CacheManager, AnnotationParser, jQuery) {
+], function(assert, extend, EventProvider, Configuration, CacheManager, AnnotationParser, jQuery) {
 	"use strict";
 
 	///////////////////////////////////////////////// Class Definition /////////////////////////////////////////////////
@@ -35,7 +36,7 @@ sap.ui.define([
 	 * @class Annotation loader for OData V2 services
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @since 1.37.0
@@ -836,7 +837,7 @@ sap.ui.define([
 	ODataAnnotations.prototype._getHeaders = function() {
 		//The 'sap-cancel-on-close' header marks the OData annotation request as cancelable. This helps to save resources at the back-end.
 		return extend({"sap-cancel-on-close": true}, this.getHeaders(), {
-			"Accept-Language": sap.ui.getCore().getConfiguration().getLanguageTag() // Always overwrite
+			"Accept-Language": Configuration.getLanguageTag() // Always overwrite
 		});
 	};
 

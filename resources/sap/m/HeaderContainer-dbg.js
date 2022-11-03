@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -20,14 +20,11 @@ sap.ui.define([
 		"sap/ui/events/KeyCodes",
 		"sap/ui/events/PseudoEvents",
 		"sap/ui/thirdparty/jquery",
-		// jQuery Plugin "control"
-		"sap/ui/dom/jquery/control",
-		// jQuery Plugin "scrollLeftRTL"
-		"sap/ui/dom/jquery/scrollLeftRTL",
-		// jQuery Plugin "scrollRightRTL"
-		"sap/ui/dom/jquery/scrollRightRTL",
-		// jQuery custom selectors ":sapTabbable"
-		"sap/ui/dom/jquery/Selectors"
+		"sap/ui/core/Configuration",
+		"sap/ui/dom/jquery/control", // jQuery Plugin "control"
+		"sap/ui/dom/jquery/scrollLeftRTL", // jQuery Plugin "scrollLeftRTL"
+		"sap/ui/dom/jquery/scrollRightRTL", // jQuery Plugin "scrollRightRTL"
+		"sap/ui/dom/jquery/Selectors" // jQuery custom selectors ":sapTabbable"
 	],
 	function (
 		library,
@@ -45,12 +42,14 @@ sap.ui.define([
 		Log,
 		KeyCodes,
 		PseudoEvents,
-		jQuery
+		jQuery,
+		Configuration
 	) {
 		"use strict";
 
 		// shortcut for sap.ui.core.Orientation
 		var Orientation = coreLibrary.Orientation;
+		var ScreenSizes = library.ScreenSizes;
 
 		var HeaderContainerItemContainer = Control.extend("sap.m.HeaderContainerItemContainer", {
 			metadata: {
@@ -124,11 +123,10 @@ sap.ui.define([
 		 * @since 1.44.0
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @public
 		 * @alias sap.m.HeaderContainer
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		var HeaderContainer = Control.extend("sap.m.HeaderContainer", /** @lends sap.m.HeaderContainer.prototype */ {
 			metadata: {
@@ -201,7 +199,14 @@ sap.ui.define([
 					/**
 					 * The height of the whole HeaderContainer. If not specified, it is rendered as 'auto' in horizontal orientation and as '100%' in vertical orientation.
 					 */
-					height: {type: "sap.ui.core.CSSSize", group: "Appearance"}
+					height: {type: "sap.ui.core.CSSSize", group: "Appearance"},
+					/**
+					* Enables grid layout in mobile view.
+                                        * @private
+                                        * @since 1.99
+					* @experimental since 1.99
+					*/
+					gridLayout: {type: "boolean", defaultValue: false}
 				},
 				defaultAggregation: "content",
 				aggregations: {
@@ -260,7 +265,9 @@ sap.ui.define([
 
 					}
 				}
-			}
+			},
+
+			renderer: HeaderContainerRenderer
 		});
 
 		/* ============================================================ */
@@ -269,7 +276,7 @@ sap.ui.define([
 
 		HeaderContainer.prototype.init = function () {
 			this._aItemEnd = [];
-			this._bRtl = sap.ui.getCore().getConfiguration().getRTL();
+			this._bRtl = Configuration.getRTL();
 			this._oRb = sap.ui.getCore().getLibraryResourceBundle("sap.m");
 			this._oScrollCntr = new ScrollContainer(this.getId() + "-scrl-cntnr", {
 				width: "100%",
@@ -303,15 +310,17 @@ sap.ui.define([
 				}).addStyleClass("sapMHdrCntrBtn").addStyleClass("sapMHdrCntrRight");
 				this._oArrowNext._bExcludeFromTabChain = true;
 				this.setAggregation("_nextButton", this._oArrowNext, true);
-			} else if (Device.system.phone || Device.system.tablet) {
-				this._oArrowPrev = new Icon({
-					id: this.getId() + "-scrl-prev-button"
-				}).addStyleClass("sapMHdrCntrBtn").addStyleClass("sapMHdrCntrLeft");
-				this.setAggregation("_prevButton", this._oArrowPrev, true);
-				this._oArrowNext = new Icon({
-					id: this.getId() + "-scrl-next-button"
-				}).addStyleClass("sapMHdrCntrBtn").addStyleClass("sapMHdrCntrRight");
-				this.setAggregation("_nextButton", this._oArrowNext, true);
+			} else if ((Device.system.phone || Device.system.tablet)) {
+				if (!this._isMobileView()) {
+					this._oArrowPrev = new Icon({
+						id: this.getId() + "-scrl-prev-button"
+					}).addStyleClass("sapMHdrCntrBtn").addStyleClass("sapMHdrCntrLeft").addStyleClass("sapMHdrCntrBtnIcon");
+					this.setAggregation("_prevButton", this._oArrowPrev, true);
+					this._oArrowNext = new Icon({
+						id: this.getId() + "-scrl-next-button"
+					}).addStyleClass("sapMHdrCntrBtn").addStyleClass("sapMHdrCntrRight").addStyleClass("sapMHdrCntrBtnIcon");
+					this.setAggregation("_nextButton", this._oArrowNext, true);
+				}
 			}
 
 			this._oScrollCntr.addDelegate({
@@ -328,9 +337,6 @@ sap.ui.define([
 							this._oItemNavigation.attachEvent(ItemNavigation.Events.BorderReached, this._handleBorderReached, this);
 							this._oItemNavigation.attachEvent(ItemNavigation.Events.AfterFocus, this._handleAfterFocus, this);
 							this._oItemNavigation.attachEvent(ItemNavigation.Events.BeforeFocus, this._handleBeforeFocus, this);
-							if (Device.browser.msie || Device.browser.edge) {
-								this._oItemNavigation.attachEvent(ItemNavigation.Events.FocusAgain, this._handleFocusAgain, this);
-							}
 						}
 						this._oItemNavigation.setRootDomRef(oFocusRef);
 						this._oItemNavigation.setItemDomRefs(aDomRefs);
@@ -338,6 +344,67 @@ sap.ui.define([
 						this._oItemNavigation.setCycling(false);
 
 						this._handleMobileScrolling();
+					}
+					if (this._isMobileView()) {
+						this._oScrollCntr.attachBrowserEvent("scrollstart", function(oEvent){
+							var aItems = this._filterVisibleItems();
+							this.aItemSize = [];
+								this.aItemScrollValue = [0];
+								var fnGetItemSize = function (oItem) {
+									 if (oItem.getDomRef() && oItem.getDomRef().parentElement) {
+										return oItem.getDomRef().parentElement.offsetWidth
+										+ parseFloat(getComputedStyle(oItem.getDomRef().parentElement).marginLeft)
+										+ parseFloat(getComputedStyle(oItem.getDomRef().parentElement).marginRight);
+									 }
+								};
+								for (var i = 0; i < aItems.length; i++) {
+									this.aItemSize.push(fnGetItemSize(aItems[i]));
+									this.aItemScrollValue.push(this.aItemScrollValue[i] ? this.aItemScrollValue[i] + this.aItemSize[i] : this.aItemSize[i]);
+								}
+							this.triggerScrollStop = false;
+						}.bind(this));
+						this._oScrollCntr.attachBrowserEvent("scrollstop", function(oEvent){
+							if (!this.triggerScrollStop) {
+								var aItems = this._filterVisibleItems();
+								this.triggerScrollStop = true;
+								var iScrollValue = 0, iScrollOffset = 15;
+								var oFinalItem = aItems[aItems.length - 1];
+								var oScrollCntrDomRef = this._oScrollCntr.getDomRef();
+								if ( oScrollCntrDomRef && oFinalItem){
+									var oFinalItemParentDomRef = oFinalItem.getParent().getDomRef();
+									var oFinalItemDomRef = oFinalItem.getDomRef();
+									var iScrollContainerScrollLeft = oScrollCntrDomRef.scrollLeft;
+									var iScrollContainerWidth = iScrollContainerScrollLeft + oScrollCntrDomRef.clientWidth;
+									var iFinalElementScrollLeft = oFinalItemParentDomRef.offsetLeft;
+									var iFinalElementContainerWidth = iFinalElementScrollLeft + oFinalItemDomRef.clientWidth;
+
+									var bIsFinalItemVisible = ((iFinalElementContainerWidth <= iScrollContainerWidth) && (iFinalElementScrollLeft >= iScrollContainerScrollLeft));
+									var iCurrectScrollValue = this._bRtl ? Math.abs(oEvent.currentTarget.scrollLeft) : oEvent.currentTarget.scrollLeft;
+
+									if (bIsFinalItemVisible) {
+										iScrollValue = this.aItemScrollValue[aItems.length - 1] - iScrollOffset - iCurrectScrollValue;
+										this.triggerScrollStop = false;
+									} else {
+										var value = this.aItemScrollValue.reduce(function(a, b) {
+											var aDiff = Math.abs(a - iCurrectScrollValue);
+											var bDiff = Math.abs(b - iCurrectScrollValue);
+											if (aDiff == bDiff) {
+												return a > b ? a : b;
+											} else {
+												return bDiff < aDiff ? b : a;
+											}
+										});
+										if (iCurrectScrollValue == 0) {
+											iScrollValue = 0;
+											this.triggerScrollStop = false;
+										} else {
+											iScrollValue = value - iScrollOffset - iCurrectScrollValue;
+										}
+									}
+									this._scroll(iScrollValue, this.getScrollTime());
+							}
+						}
+						}.bind(this));
 					}
 				}.bind(this)
 			});
@@ -367,7 +434,7 @@ sap.ui.define([
 		};
 
 		HeaderContainer.prototype.onAfterRendering = function () {
-			this._bRtl = sap.ui.getCore().getConfiguration().getRTL();
+			this._bRtl = Configuration.getRTL();
 			this._checkOverflow();
 		};
 
@@ -577,7 +644,7 @@ sap.ui.define([
 			if (!this._bRtl) {
 				iScrollLeft = oDomRef.scrollLeft;
 				iScrollWidth = oDomRef.scrollWidth;
-				iClientWidth = oDomRef.clientWidth + (Device.browser.msie ? 1 : 0);
+				iClientWidth = oDomRef.clientWidth;
 				iScrollTarget = iScrollLeft + delta;
 				iPaddingWidth = parseFloat(this.$("scroll-area").css("padding-left"));
 
@@ -651,6 +718,7 @@ sap.ui.define([
 				}
 
 				return iSize !== 0 ? iSize + OFFSET - iButtonSize : 0;
+
 			}.bind(this);
 
 			var fnGetItemSize = function (oItem) {
@@ -693,7 +761,6 @@ sap.ui.define([
 				// we sum width (height for vertical) of each item and compare it with scrolling start position
 				for (var i = 0; i < aItems.length; i++) {
 					iSize += fnGetItemSize(aItems[i]);
-
 					if (iSize >= iScroll) {
 						iTarget = i;
 						break;
@@ -858,7 +925,7 @@ sap.ui.define([
 				}
 				if (this._bRtl) {
 					var iScrollLeftRTL = jQuery(oBarHead).scrollLeftRTL();
-					if (iScrollLeftRTL > ((Device.browser.msie || Device.browser.edge) ? 1 : 0)) {
+					if (iScrollLeftRTL > 0) {
 						bScrollForward = true;
 					}
 				} else if (iScrollLeft > iFirst) {
@@ -879,22 +946,22 @@ sap.ui.define([
 				bScrollForward = this._checkForOverflowItem(bScrollForward);
 
 				var bOldScrollBack = $ButtonContainer.is(":visible");
-				if (bOldScrollBack && !bScrollBack) {
+				if (bOldScrollBack && !bScrollBack && !this._isMobileView()) {
 					$ButtonContainer.hide();
 					this.$().removeClass("sapMHrdrLeftPadding");
 				}
-				if (!bOldScrollBack && bScrollBack) {
+				if (!bOldScrollBack && bScrollBack && !this._isMobileView()) {
 					$ButtonContainer.show();
 					this.$().addClass("sapMHrdrLeftPadding");
 				}
 
 				$ButtonContainer = this.$("next-button-container");
 				var bOldScrollForward = $ButtonContainer.is(":visible");
-				if (bOldScrollForward && !bScrollForward) {
+				if (bOldScrollForward && !bScrollForward && !this._isMobileView()) {
 					$ButtonContainer.hide();
 					this.$().removeClass("sapMHrdrRightPadding");
 				}
-				if (!bOldScrollForward && bScrollForward) {
+				if (!bOldScrollForward && bScrollForward && !this._isMobileView()) {
 					$ButtonContainer.show();
 					this.$().addClass("sapMHrdrRightPadding");
 				}
@@ -958,9 +1025,6 @@ sap.ui.define([
 		};
 
 		HeaderContainer.prototype._handleBorderReached = function (oEvt) {
-			if (Device.browser.msie && this.bScrollInProcess) {
-				return;
-			}
 			var iIndex = oEvt.getParameter("index");
 			if (iIndex === 0) {
 				this._scroll(this._getScrollValue(false), this.getScrollTime());
@@ -970,14 +1034,6 @@ sap.ui.define([
 		};
 
 		HeaderContainer.prototype._handleAfterFocus = function (oEvt) {
-			//For Edge and IE on mousedown input element not getting focused.Hence setting focus manually.
-			var oSrcEvent = oEvt.getParameter("event");
-			if ((Device.browser.msie || Device.browser.edge) && oSrcEvent.type === "mousedown" && oSrcEvent.srcControl instanceof sap.m.Input) {
-				oSrcEvent.srcControl.focus();
-			}
-			if (Device.browser.msie && this.bScrollInProcess) {
-				return;
-			}
 			var iIndex = oEvt.getParameter("index");
 			if (iIndex === 0) {
 				this._scroll(this._getScrollValue(false), this.getScrollTime());
@@ -988,11 +1044,6 @@ sap.ui.define([
 		};
 
 		HeaderContainer.prototype._handleFocusAgain = function (oEvt) {
-			//For Edge and IE on mousedown input element not getting focused.Hence setting focus manually.
-			var oSrcEvent = oEvt.getParameter("event");
-			if ((Device.browser.msie || Device.browser.edge) && oSrcEvent.type === "mousedown" && oSrcEvent.srcControl instanceof sap.m.Input) {
-				oSrcEvent.srcControl.focus();
-			}
 			oEvt.getParameter("event").preventDefault();
 		};
 
@@ -1006,6 +1057,12 @@ sap.ui.define([
 			} else {
 				this.$().find(".sapMHdrCntrItemCntr").css("border-color", "transparent");
 			}
+		};
+
+		HeaderContainer.prototype._isMobileView = function() {
+			return this.getGridLayout()
+						&& this.getOrientation() === Orientation.Horizontal
+						&& Device.resize.width >= ScreenSizes.xsmall && Device.resize.width < ScreenSizes.tablet;
 		};
 
 		/**

@@ -1,11 +1,11 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define(["./ListItemBaseRenderer", "sap/ui/core/Renderer"],
-	function(ListItemBaseRenderer, Renderer) {
+sap.ui.define(["./ListItemBaseRenderer", "sap/ui/core/Renderer", "sap/ui/core/Configuration"],
+	function(ListItemBaseRenderer, Renderer, Configuration) {
 	"use strict";
 
 	/**
@@ -28,7 +28,7 @@ sap.ui.define(["./ListItemBaseRenderer", "sap/ui/core/Renderer"],
 		}
 
 		var iIndentation = oLI._getPadding();
-		if (sap.ui.getCore().getConfiguration().getRTL()){
+		if (Configuration.getRTL()){
 			rm.style("padding-right", iIndentation + "rem");
 		} else {
 			rm.style("padding-left", iIndentation + "rem");
@@ -52,8 +52,8 @@ sap.ui.define(["./ListItemBaseRenderer", "sap/ui/core/Renderer"],
 	/**
 	 * Returns the ARIA accessibility role.
 	 *
-	 * @param {sap.ui.core.Control} oLI An object representation of the control
-	 * @returns {String}
+	 * @param {sap.m.TreeItemBase} oLI An object representation of the control
+	 * @returns {string}
 	 * @protected
 	 */
 	TreeItemBaseRenderer.getAriaRole = function(oLI) {

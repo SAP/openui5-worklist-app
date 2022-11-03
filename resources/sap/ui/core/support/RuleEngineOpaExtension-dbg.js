@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -91,7 +91,7 @@ sap.ui.define([
 			 * @alias sap.ui.core.support.RuleEngineOpaAssertions
 			 * @public
 			 */
-			var oRuleEngineAssertions = /** @lends sap.ui.core.support.RuleEngineOpaAssertions */ {
+			var oRuleEngineAssertions = {
 				/**
 				 * Run the Support Assistant and analyze against a specific state of the application.
 				 * Depending on the options passed the assertion might either fail or not if any issues were found.
@@ -120,7 +120,6 @@ sap.ui.define([
 						metadata = options.metadata,
 						executionScope = options.executionScope;
 
-					// private API provided by jquery.sap.global
 					RuleAnalyzer.analyze(executionScope, rules || preset, metadata).then(function () {
 						var analysisHistory = RuleAnalyzer.getAnalysisHistory(),
 							lastAnalysis = { issues: [] };

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -18,11 +18,11 @@ sap.ui.define([
 	"sap/ui/core/InvisibleText",
 	"./DynamicPageTitleRenderer",
 	"sap/base/Log",
-	"sap/ui/core/HTML",
 	"sap/ui/core/Icon",
 	"sap/ui/Device",
     "sap/ui/events/KeyCodes",
-	"sap/ui/core/InvisibleMessage"
+	"sap/ui/core/InvisibleMessage",
+	"sap/ui/core/Core"
 ], function(
 	library,
 	CoreLibrary,
@@ -36,11 +36,11 @@ sap.ui.define([
 	InvisibleText,
 	DynamicPageTitleRenderer,
 	Log,
-	HTML,
 	Icon,
 	Device,
 	KeyCodes,
-	InvisibleMessage
+	InvisibleMessage,
+	oCore
 ) {
 	"use strict";
 
@@ -48,7 +48,6 @@ sap.ui.define([
 	var DynamicPageTitleArea = library.DynamicPageTitleArea,
 		ToolbarStyle = mobileLibrary.ToolbarStyle,
 		InvisibleMessageMode = CoreLibrary.InvisibleMessageMode;
-	var oCore = sap.ui.getCore();
 
 	/**
 	 * Constructor for a new <code>DynamicPageTitle</code>.
@@ -90,13 +89,12 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.42
 	 * @alias sap.f.DynamicPageTitle
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var DynamicPageTitle = Control.extend("sap.f.DynamicPageTitle", /** @lends sap.f.DynamicPageTitle.prototype */ {
 		metadata: {
@@ -342,7 +340,9 @@ sap.ui.define([
 				}
 			},
 			designtime: "sap/f/designtime/DynamicPageTitle.designtime"
-		}
+		},
+
+		renderer: DynamicPageTitleRenderer
 	});
 
 	function exists(vObject) {
@@ -687,7 +687,7 @@ sap.ui.define([
 	/**
 	 * Checks if an action already exists in <code>DynamicPageTitle</code> actions/navigationActions.
 	 * @param {sap.ui.core.Control} oAction
-	 * @param {String} sAggregationName
+	 * @param {string} sAggregationName
 	 * @returns {boolean}
 	 * @private
 	 */
@@ -826,6 +826,18 @@ sap.ui.define([
 	};
 
 	/**
+	 * Called when LayoutData of actions/content buttons is changed
+	 */
+	DynamicPageTitle.prototype.onLayoutDataChange = function(oEvent) {
+		var oEventSource = oEvent.srcControl,
+			oOverflowToolbar = oEventSource && typeof oEventSource._fnOriginalGetParent === "function" && oEventSource._fnOriginalGetParent();
+
+		if (oOverflowToolbar) {
+			oOverflowToolbar.onLayoutDataChange(oEvent);
+		}
+	};
+
+	/**
 	 * Starts observing the <code>visible</code> property.
 	 * @param {sap.ui.core.Control} oControl
 	 * @private
@@ -883,7 +895,7 @@ sap.ui.define([
 	/**
 	 * Toggles navigation actions placement change if certain preconditions are met.
 	 *
-	 * @param {Number} iCurrentWidth
+	 * @param {number} iCurrentWidth
 	 * @private
 	 */
 	DynamicPageTitle.prototype._updateTopAreaVisibility = function (iCurrentWidth) {
@@ -906,7 +918,7 @@ sap.ui.define([
 	/**
 	 * Handles control re-sizing.
 	 * <b>Note:</b> The method is called by the parent <code>DynamicPage</code>.
-	 * @param {Number} iCurrentWidth
+	 * @param {number} iCurrentWidth
 	 * @private
 	 */
 	DynamicPageTitle.prototype._onResize = function (iCurrentWidth) {
@@ -1028,9 +1040,9 @@ sap.ui.define([
 
 	/**
 	 * Sets flex-shrink CSS style to the Heading, Content and Actions areas
-	 * @param {Number} fHeadingFactor - Heading shrink factor
-	 * @param {Number} fContentFactor - Content shrink factor
-	 * @param {Number} fActionsFactor - Actions shrink factor
+	 * @param {number} fHeadingFactor - Heading shrink factor
+	 * @param {number} fContentFactor - Content shrink factor
+	 * @param {number} fActionsFactor - Actions shrink factor
 	 * @private
 	 */
 	DynamicPageTitle.prototype._setShrinkFactors = function(fHeadingFactor, fContentFactor, fActionsFactor) {
@@ -1041,7 +1053,7 @@ sap.ui.define([
 
 	/**
 	 * Determines if the <code>navigationActions</code> should be rendered in the top area.
-	 * @param {Number} iCurrentWidth
+	 * @param {number} iCurrentWidth
 	 * @returns {boolean}
 	 * @private
 	 */
@@ -1276,11 +1288,11 @@ sap.ui.define([
 			hasTopContent: bHasTopContent,
 			hasOnlyBreadcrumbs: bHasOnlyBreadcrumbs,
 			hasOnlyNavigationActions: bHasOnlyNavigationActions,
-			contentAreaFlexBasis: this._sContentAreaFlexBasis,
-			actionsAreaFlexBasis: this._sActionsAreaFlexBasis,
 			contentAreaHasContent: this._bContentAreaHasContent,
 			actionsAreaHasContent: this._bActionsAreaHasContent,
-			isFocusable: this._bIsFocusable
+			isFocusable: this._bIsFocusable,
+			actionsAreaMinWidth: this._sActionsAreaMinWidth,
+			contentAreaMinWidth: this._sContentAreaMinWidth
 		};
 	};
 
@@ -1328,7 +1340,8 @@ sap.ui.define([
 	*/
 	DynamicPageTitle.prototype._observeContentChanges = function (oChanges) {
 		var oControl = oChanges.child,
-			sMutation = oChanges.mutation;
+			sMutation = oChanges.mutation,
+			$node =  oControl.$().parent();
 
 		// Only overflow toolbar is supported as of now
 		if (!(oControl instanceof OverflowToolbar)) {
@@ -1337,9 +1350,12 @@ sap.ui.define([
 
 		if (sMutation === "insert") {
 			oControl.attachEvent("_contentSizeChange", this._onContentSizeChange, this);
+			oControl.attachEvent("_minWidthChange", this._onContentMinWidthChange, this);
 		} else if (sMutation === "remove") {
 			oControl.detachEvent("_contentSizeChange", this._onContentSizeChange, this);
-			this._setContentAreaFlexBasis(0, oControl.$().parent());
+			oControl.detachEvent("_minWidthChange", this._onContentMinWidthChange, this);
+			this._setContentAreaFlexBasis(0, $node);
+			$node.css({ "min-width": "" });
 		}
 	};
 
@@ -1351,7 +1367,27 @@ sap.ui.define([
 	 */
 	DynamicPageTitle.prototype._onContentSizeChange = function (oEvent) {
 		var iContentSize = oEvent.getParameter("contentSize");
-			this._setContentAreaFlexBasis(iContentSize, oEvent.getSource().$().parent());
+		this._setContentAreaFlexBasis(iContentSize, oEvent.getSource().$().parent());
+	};
+
+	/**
+	 * Called whenever the required min-width of an overflow toolbar's content, used in the content aggregation, changes.
+	 * Min-width is defined as the total width of the content, which never overflows, and the overflow button.
+	 * @param oEvent
+	 * @private
+	 */
+		DynamicPageTitle.prototype._onContentMinWidthChange = function (oEvent) {
+		var iMinWidth = oEvent.getParameter("minWidth"),
+			sMinWidth = iMinWidth > 0 ? iMinWidth + "px" : "",
+			$node = oEvent.getSource().$().parent();
+
+		$node.css({ "min-width": sMinWidth });
+
+		if ($node.hasClass("sapFDynamicPageTitleMainContent")) {
+			this._sContentAreaMinWidth = sMinWidth;
+		} else if ($node.hasClass("sapFDynamicPageTitleMainActions")) {
+			this._sActionsAreaMinWidth = sMinWidth;
+		}
 	};
 
 	/**
@@ -1362,23 +1398,15 @@ sap.ui.define([
 	 * @private
 	 */
 	DynamicPageTitle.prototype._setContentAreaFlexBasis = function (iContentSize, $node) {
-		var sFlexBasis,
-			sFlexBasisCachedValue,
-			bAreaHasContent;
+		var bAreaHasContent;
 
 		iContentSize = parseInt(iContentSize);
 		bAreaHasContent = iContentSize && iContentSize > 1;
-		sFlexBasis = iContentSize ? iContentSize + "px" : "auto";
-		sFlexBasisCachedValue = sFlexBasis !== "auto" ? sFlexBasis : undefined;
-
-		$node.css({ "flex-basis": sFlexBasis });
 
 		if ($node.hasClass("sapFDynamicPageTitleMainContent")) {
-			this._sContentAreaFlexBasis = sFlexBasisCachedValue;
 			this._bContentAreaHasContent = bAreaHasContent;
 			$node.toggleClass("sapFDynamicPageTitleMainContentHasContent", bAreaHasContent);
 		} else if ($node.hasClass("sapFDynamicPageTitleMainActions")) {
-			this._sActionsAreaFlexBasis = sFlexBasisCachedValue;
 			this._bActionsAreaHasContent = bAreaHasContent;
 			$node.toggleClass("sapFDynamicPageTitleMainActionsHasContent", bAreaHasContent);
 		}

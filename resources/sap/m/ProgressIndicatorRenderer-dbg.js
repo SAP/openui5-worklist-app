@@ -1,10 +1,11 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
-sap.ui.define(["sap/ui/core/library"],
-	function(coreLibrary) {
+sap.ui.define(["sap/ui/core/library",
+"sap/ui/core/Configuration"],
+	function(coreLibrary,  Configuration) {
 	"use strict";
 
 
@@ -24,7 +25,7 @@ sap.ui.define(["sap/ui/core/library"],
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oControl an object representation of the control that should be rendered
+	 * @param {sap.m.ProgressIndicator} oControl an object representation of the control that should be rendered
 	 */
 	ProgressIndicatorRenderer.render = function(oRm, oControl) {
 		var fPercentValue = oControl.getPercentValue(),
@@ -36,7 +37,10 @@ sap.ui.define(["sap/ui/core/library"],
 			sState = oControl.getState(),
 			sTextDirectionLowerCase = oControl.getTextDirection().toLowerCase(),
 			sControlId = oControl.getId(),
-			bEnabled = oControl.getEnabled();
+			bEnabled = oControl.getEnabled(),
+			sAnimationMode = Configuration.getAnimationMode(),
+			bAnimate = sAnimationMode !== Configuration.AnimationMode.none && sAnimationMode !== Configuration.AnimationMode.minimal
+				&& oControl.getDisplayAnimation();
 
 		// PI container
 		oRm.openStart("div", oControl);
@@ -101,6 +105,11 @@ sap.ui.define(["sap/ui/core/library"],
 			oRm.class("sapMPIBarNeutral");
 		}
 
+		if (bAnimate) {
+			oRm.style("transition-property", "flex-basis");
+			oRm.style("transition-duration", (Math.abs(oControl._fPercentValueDiff) * 20) + "ms");
+			oRm.style("transition-timing-function", "linear");
+		}
 
 		oRm.style("flex-basis", fPercentValue + "%");
 		oRm.openEnd();

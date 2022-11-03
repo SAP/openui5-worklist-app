@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -136,6 +136,9 @@ sap.ui.define([
 		 *    }
 		 * </pre>
 		 *
+		 * <b>Note:</b> {@link topic:b11d853a8e784db6b2d210ef57b0f7d7 Requiring modules in XML} will result in side effects that might cause the XMLComposite to not work properly.
+		 * We suggest you require the needed modules inside the JavaScript coding of the class extending the XMLComposite.
+		 *
 		 * @see sap.ui.core.Control
 		 * @see sap.ui.core.Fragment
 		 *
@@ -143,7 +146,7 @@ sap.ui.define([
 		 * @extends sap.ui.core.Control
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 * @since 1.56.0
 		 * @alias sap.ui.core.XMLComposite
 		 * @see {@link topic:b83a4dcb7d0e46969027345b8d32fd44 XML Composite Controls}
@@ -228,7 +231,7 @@ sap.ui.define([
 		 * May only be used by the implementation of a specific XMLComposite, not by an application using a XMLComposite.
 		 *
 		 * @param {string} sId XMLComposite-local ID of the inner element
-		 * @returns {sap.ui.core.Element} element by its ID or <code>undefined</code>
+		 * @returns {sap.ui.core.Element|undefined} element by its ID or <code>undefined</code>
 		 * @protected
 		 */
 		XMLComposite.prototype.byId = function (sId) {

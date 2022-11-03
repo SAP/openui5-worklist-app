@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*
@@ -53,7 +53,7 @@ sap.ui.define(["sap/ui/performance/XHRInterceptor", "sap/ui/thirdparty/URI"], fu
 	var Passport = {};
 
 	/**
-	 * @returns {String} a generated a passport header
+	 * @returns {string} a generated a passport header
 	 * @private
 	 */
 	Passport.header = function(trcLvl, RootID, TransID, component, action) {
@@ -125,7 +125,7 @@ sap.ui.define(["sap/ui/performance/XHRInterceptor", "sap/ui/thirdparty/URI"], fu
 	};
 
 	/**
-	 * @param {String} lvl Tracing level to be calculated
+	 * @param {string} lvl Tracing level to be calculated
 	 * @return {int[]} Array with two int representations of characters for trace level
 	 * @private
 	 */
@@ -151,7 +151,7 @@ sap.ui.define(["sap/ui/performance/XHRInterceptor", "sap/ui/thirdparty/URI"], fu
 	};
 
 	/**
-	 * @returns {String} a generated GUID
+	 * @returns {string} a generated GUID
 	 * @private
 	 */
 	Passport.createGUID = function() {

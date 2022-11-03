@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -29,27 +29,30 @@ function(library, Control, ToolbarSpacerRenderer, Log) {
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.16
 	 * @alias sap.m.ToolbarSpacer
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var ToolbarSpacer = Control.extend("sap.m.ToolbarSpacer", /** @lends sap.m.ToolbarSpacer.prototype */ { metadata : {
+	var ToolbarSpacer = Control.extend("sap.m.ToolbarSpacer", /** @lends sap.m.ToolbarSpacer.prototype */ {
+		metadata : {
 
-		library : "sap.m",
-		properties : {
+			library : "sap.m",
+			properties : {
 
-			/**
-			 * Defines the width of the horizontal space.
-			 * Note: Empty("") value makes the space flexible which means it covers the remaining space between toolbar items.
-			 * This feature can be used to push next item to the edge of the toolbar.
-			 */
-			width : {type : "sap.ui.core.CSSSize", group : "Appearance", defaultValue : ''}
-		}
-	}});
+				/**
+				 * Defines the width of the horizontal space.
+				 * Note: Empty("") value makes the space flexible which means it covers the remaining space between toolbar items.
+				 * This feature can be used to push next item to the edge of the toolbar.
+				 */
+				width : {type : "sap.ui.core.CSSSize", group : "Appearance", defaultValue : ''}
+			}
+		},
+
+		renderer: ToolbarSpacerRenderer
+	});
 
 	ToolbarSpacer.prototype.setLayoutData = function (oLayoutData) {
 		if (oLayoutData && oLayoutData.isA("sap.m.ToolbarLayoutData")) {

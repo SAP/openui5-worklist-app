@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -56,7 +56,7 @@ sap.ui.define([
 		 * With this plugIn the performance measurements are displayed
 		 *
 		 * @extends sap.ui.core.support.Plugin
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 * @private
 		 * @alias sap.ui.core.support.plugins.Performance
 		 */
@@ -99,13 +99,7 @@ sap.ui.define([
 		};
 
 		function initInTools(oSupportStub) {
-			var rm = Core.createRenderManager();
-
-			//create the initial html for the performance tool
-			rm.write(_getPerformanceToolHTML());
-			rm.flush(this.$().get(0));
-			rm.destroy();
-
+			this.$().get(0).innerHTML = _getPerformanceToolHTML();
 			//create all event listeners
 			_registerEventListeners();
 		}
@@ -116,7 +110,6 @@ sap.ui.define([
 		}
 
 		function getPerformanceData(oSupportStub) {
-			//var bActive = jQuery.sap.measure.getActive();
 			var aMeasurements = Measurement.getAllMeasurements(true);
 
 			this._oStub.sendEvent(this.getId() + "SetMeasurements", {"measurements": aMeasurements});
@@ -350,13 +343,14 @@ sap.ui.define([
 			}, false);
 
 			window.addEventListener('keydown', _onArrowMove);
-			jQuery("#slideHandle").on('dblclick', _initSlider);
-			jQuery("#sapUiSupportPerfToggleRecordingBtn").on("click", _handlerTogglePlayButton).attr('data-state', 'Start recording');
+			document.getElementById("slideHandle").addEventListener('dblclick', _initSlider);
+			document.getElementById("sapUiSupportPerfToggleRecordingBtn").addEventListener("click", _handlerTogglePlayButton);
+			document.getElementById("sapUiSupportPerfToggleRecordingBtn").dataset.state = 'Start recording';
 		}
 
 		/* =============================================================================================================
 		 * Timeline overview
-		 ============================================================================================================= */
+		 ========1===================================================================================================== */
 
 		function _getTimelineOverViewBarTitle(duration, time) {
 			return 'Duration: ' + duration.toFixed(2) + ' ms.\nTime: ' + time.toFixed(2) + ' ms.';
@@ -682,8 +676,7 @@ sap.ui.define([
 				className = 'renderingType';
 			}
 
-			//escaping is not needed
-			return encodeXML(className);
+			return className;
 		}
 
 		function _getBarColor(time) {
@@ -955,6 +948,9 @@ sap.ui.define([
 		}
 
 		function _calculateSliderSize() {
+			if (_sliderVars.nodes.handle == null ||  _sliderVars.nodes.slider == null) {
+				return;
+			}
 			var handleComputedWidth = window.getComputedStyle(_sliderVars.nodes.handle).width;
 			var oldSliderWidth = _sliderVars.sizes.width;
 

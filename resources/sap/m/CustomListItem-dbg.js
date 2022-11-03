@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -24,35 +24,38 @@ sap.ui.define(['./ListItemBase', './library', './CustomListItemRenderer'],
 	 * @extends sap.m.ListItemBase
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @alias sap.m.CustomListItem
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var CustomListItem = ListItemBase.extend("sap.m.CustomListItem", /** @lends sap.m.CustomListItem.prototype */ { metadata : {
+	var CustomListItem = ListItemBase.extend("sap.m.CustomListItem", /** @lends sap.m.CustomListItem.prototype */ {
+		metadata : {
 
-		library : "sap.m",
-		defaultAggregation : "content",
-		properties: {
-			/**
-			 * Defines the custom accessibility announcement.
-			 *
-			 * <b>Note:</b> If defined, then only the provided custom accessibility description is announced when there is a focus on the list item.
-			 * @since 1.84
-			 */
-			accDescription: {tpye: "string", group: "Behavior"}
-		},
-		aggregations : {
+			library : "sap.m",
+			defaultAggregation : "content",
+			properties: {
+				/**
+				 * Defines the custom accessibility announcement.
+				 *
+				 * <b>Note:</b> If defined, then only the provided custom accessibility description is announced when there is a focus on the list item.
+				 * @since 1.84
+				 */
+				accDescription: {tpye: "string", group: "Behavior"}
+			},
+			aggregations : {
 
-			/**
-			 * The content of this list item
-			 */
-			content : {type : "sap.ui.core.Control", multiple : true, singularName : "content", bindable : "bindable"}
+				/**
+				 * The content of this list item
+				 */
+				content : {type : "sap.ui.core.Control", multiple : true, singularName : "content", bindable : "bindable"}
+			},
+			designtime: "sap/m/designtime/CustomListItem.designtime"
 		},
-		designtime: "sap/m/designtime/CustomListItem.designtime"
-	}});
+
+		renderer: CustomListItemRenderer
+	});
 
 	CustomListItem.prototype.setAccDescription = function(sAccDescription) {
 		this.setProperty("accDescription", sAccDescription, true);

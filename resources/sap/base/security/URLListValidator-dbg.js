@@ -1,13 +1,13 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([], function() {
 	"use strict";
 
 	// validation regexes
-	var rBasicUrl = /^(?:([^:\/?#]+):)?((?:\/\/((?:\[[^\]]+\]|[^\/?#:]+))(?::([0-9]+))?)?([^?#]*))(?:\?([^#]*))?(?:#(.*))?$/;
+	var rBasicUrl = /^(?:([^:\/?#]+):)?((?:[\/\\]{2,}((?:\[[^\]]+\]|[^\/?#:]+))(?::([0-9]+))?)?([^?#]*))(?:\?([^#]*))?(?:#(.*))?$/;
 	var rCheckPath = /^([a-z0-9-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*$/i;
 	var rCheckQuery = /^([a-z0-9-._~!$&'()*+,;=:@\/?]|%[0-9a-f]{2})*$/i;
 	var rCheckFragment = rCheckQuery;
@@ -17,6 +17,10 @@ sap.ui.define([], function() {
 	var rCheckIPv6 = /^\[[^\]]+\]$/;
 	var rCheckValidIPv6 = /^\[(((([0-9a-f]{1,4}:){6}|(::([0-9a-f]{1,4}:){5})|(([0-9a-f]{1,4})?::([0-9a-f]{1,4}:){4})|((([0-9a-f]{1,4}:){0,1}[0-9a-f]{1,4})?::([0-9a-f]{1,4}:){3})|((([0-9a-f]{1,4}:){0,2}[0-9a-f]{1,4})?::([0-9a-f]{1,4}:){2})|((([0-9a-f]{1,4}:){0,3}[0-9a-f]{1,4})?::[0-9a-f]{1,4}:)|((([0-9a-f]{1,4}:){0,4}[0-9a-f]{1,4})?::))(([0-9a-f]{1,4}:[0-9a-f]{1,4})|(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])))|((([0-9a-f]{1,4}:){0,5}[0-9a-f]{1,4})?::[0-9a-f]{1,4})|((([0-9a-f]{1,4}:){0,6}[0-9a-f]{1,4})?::))\]$/i;
 	var rCheckHostName = /^([a-z0-9]([a-z0-9\-]*[a-z0-9])?\.)*[a-z0-9]([a-z0-9\-]*[a-z0-9])?$/i;
+	var rSpecialSchemeURLs = /^((?:ftp|https?|wss?):)([\s\S]+)$/;
+
+	/* eslint-disable no-control-regex */
+	var rCheckWhitespaces = /[\u0009\u000A\u000D]/;
 
 	/**
 	 * Registry to manage allowed URLs and validate against them.
@@ -95,6 +99,10 @@ sap.ui.define([], function() {
 	 * Note:
 	 * Adding the first entry to the list of allowed entries will disallow all URLs but the ones matching the newly added entry.
 	 *
+	 * <b>Note</b>:
+	 * It is strongly recommended to set a path only in combination with an origin (never set a path alone).
+	 * There's almost no case where checking only the path of a URL would allow to ensure its validity.
+	 *
 	 * @param {string} [protocol] The protocol of the URL, can be falsy to allow all protocols for an entry e.g. "", "http", "mailto"
 	 * @param {string} [host] The host of the URL, can be falsy to allow all hosts. A wildcard asterisk can be set at the beginning, e.g. "examples.com", "*.example.com"
 	 * @param {string} [port] The port of the URL, can be falsy to allow all ports, e.g. "", "8080"
@@ -132,7 +140,16 @@ sap.ui.define([], function() {
 	/**
 	 * Validates a URL. Check if it's not a script or other security issue.
 	 *
-	 * Split URL into components and check for allowed characters according to RFC 3986:
+	 * <b>Note</b>:
+	 * It is strongly recommended to validate only absolute URLs. There's almost no case
+	 * where checking only the path of a URL would allow to ensure its validity.
+	 * For compatibility reasons, this API cannot automatically resolve URLs relative to
+	 * <code>document.baseURI</code>, but callers should do so. In that case, and when the
+	 * allow list is not empty, an entry for the origin of <code>document.baseURI</code>
+	 * must be added to the allow list.
+	 *
+	 * <h3>Details</h3>
+	 * Splits the given URL into components and checks for allowed characters according to RFC 3986:
 	 *
 	 * <pre>
 	 * authority     = [ userinfo "@" ] host [ ":" port ]
@@ -244,7 +261,23 @@ sap.ui.define([], function() {
 	 */
 	oURLListValidator.validate = function(sUrl) {
 
-		var result = rBasicUrl.exec(sUrl);
+		// Test for not allowed whitespaces
+		if (typeof sUrl === "string") {
+			if (rCheckWhitespaces.test(sUrl)) {
+				return false;
+			}
+		}
+
+		// for 'special' URLs without a given base URL, the whatwg spec allows any number of slashes.
+		// As the rBasicUrl regular expression cannot handle 'special' URLs, the URL is modified upfront,
+		// if it wouldn't be recognized by the regex.
+		// See https://url.spec.whatwg.org/#scheme-state (case 2.6.)
+		var result = rSpecialSchemeURLs.exec(sUrl);
+		if (result && !/^[\/\\]{2}/.test(result[2])) {
+			sUrl = result[1] + "//" + result[2];
+		}
+
+		result = rBasicUrl.exec(sUrl);
 		if (!result) {
 			return false;
 		}

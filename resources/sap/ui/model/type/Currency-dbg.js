@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -32,7 +32,7 @@ sap.ui.define([
 	 * @extends sap.ui.model.CompositeType
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @param {object} [oFormatOptions]
@@ -84,7 +84,7 @@ sap.ui.define([
 	 * @param {string} sTargetType
 	 *   The target type; must be "string", or a type with "string" as its
 	 *   {@link sap.ui.base.DataType#getPrimitiveType primitive type}
-	 * @returns {string}
+	 * @returns {string|null}
 	 *   The formatted output value; the values <code>undefined</code> or <code>null</code> or
 	 *   an amount <code>undefined</code> or <code>null</code> are formatted to <code>null</code>
 	 * @throws {sap.ui.model.FormatException}

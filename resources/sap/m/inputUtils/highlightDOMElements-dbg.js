@@ -1,11 +1,11 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*
  * IMPORTANT: This is a private module, its API must not be used and is subject to change.
- * Code other than the OpenUI5 libraries must not introduce dependencies to this module.
+ * Code other than the libraries specified in the restricted flag below must not introduce dependencies to this module.
  */
 sap.ui.define([
 	"sap/m/inputUtils/wordStartsWithValue",
@@ -82,8 +82,9 @@ sap.ui.define([
 	 * @param {Array<HTMLElement>} aItemsDomRef DOM elements on which formatting would be applied
 	 * @param {string} sInputValue Text to highlight
 	 * @param {boolean} bWordMode Whether to highlight single string or to highlight each string that starts with space + sInputValue
-	 * @param {integer} iLimit Threshold of the items to enable highlighting. Above that limit, highlighting would be disabled due to performance reasons- DOM trashing. Default: 200
-	 * @ui5-restricted
+	 * @param {int} iLimit Threshold of the items to enable highlighting. Above that limit, highlighting would be disabled due to performance reasons- DOM trashing. Default: 200
+	 * @private
+	 * @ui5-restricted sap.m, sap.ui.comp, sap.fe
 	 */
 	var highlightItems = function (aItemsDomRef, sInputValue, bWordMode, iLimit) {
 		var i, highlightedTexts;

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -14,7 +14,14 @@ sap.ui.define(['../base/ManagedObject', "sap/base/assert"],
 
 	// The controls which should not be referenced by a "for" attribute (Specified in the HTML standard).
 	// Extend when needed.
-	var NON_LABELABLE_CONTROLS = ["sap.ui.comp.navpopover.SmartLink", "sap.m.Link", "sap.m.Label", "sap.m.Text"];
+	var NON_LABELABLE_CONTROLS = [
+		"sap.ui.comp.navpopover.SmartLink",
+		"sap.m.Link",
+		"sap.m.Label",
+		"sap.m.Text",
+		"sap.ui.webc.main.Label",
+		"sap.ui.webc.main.Link"
+	];
 
 	// Returns the control for the given id (if available) and invalidates it if desired
 	function toControl(sId, bInvalidate) {
@@ -129,7 +136,7 @@ sap.ui.define(['../base/ManagedObject', "sap/base/assert"],
 	 * @see sap.ui.core.LabelEnablement#enrich
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @protected
 	 * @alias sap.ui.core.LabelEnablement
 	 * @namespace

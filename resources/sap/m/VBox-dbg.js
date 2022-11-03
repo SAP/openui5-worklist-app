@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -26,7 +26,7 @@ sap.ui.define(['./FlexBox', './library', "./VBoxRenderer"],
 	 * @extends sap.m.FlexBox
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
@@ -35,13 +35,16 @@ sap.ui.define(['./FlexBox', './library', "./VBoxRenderer"],
 	 * @see https://www.w3.org/TR/css-flexbox-1/#propdef-justify-content
 	 * @see https://www.w3.org/TR/css-flexbox-1/#propdef-flex-direction
 	 * @see https://www.w3schools.com/css/css3_flexbox.asp#flex-direction
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var VBox = FlexBox.extend("sap.m.VBox", /** @lends sap.m.VBox.prototype */ { metadata : {
+	var VBox = FlexBox.extend("sap.m.VBox", /** @lends sap.m.VBox.prototype */ {
+		metadata : {
 
-		library : "sap.m",
-		designtime: "sap/m/designtime/VBox.designtime"
-	}});
+			library : "sap.m",
+			designtime: "sap/m/designtime/VBox.designtime"
+		},
+
+		renderer: VBoxRenderer
+	});
 
 	VBox.prototype.init = function () {
 		this.setDirection(FlexDirection.Column);

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -11,7 +11,8 @@ sap.ui.define([
 	"sap/ui/core/delegate/ScrollEnablement",
 	"sap/ui/core/Element",
 	"./ScrollContainerRenderer",
-	"sap/ui/dom/denormalizeScrollBeginRTL"
+	"sap/ui/dom/denormalizeScrollBeginRTL",
+	"sap/ui/core/Configuration"
 ],
 	function(
 		library,
@@ -19,7 +20,8 @@ sap.ui.define([
 		ScrollEnablement,
 		Element,
 		ScrollContainerRenderer,
-		denormalizeScrollBeginRTL
+		denormalizeScrollBeginRTL,
+		Configuration
 	) {
 		"use strict";
 
@@ -37,12 +39,11 @@ sap.ui.define([
 		 * @extends sap.ui.core.Control
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
 		 * @alias sap.m.ScrollContainer
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		var ScrollContainer = Control.extend("sap.m.ScrollContainer", /** @lends sap.m.ScrollContainer.prototype */ {
 			metadata: {
@@ -93,7 +94,9 @@ sap.ui.define([
 				},
 				dnd: { draggable: false, droppable: true },
 				designtime: "sap/m/designtime/ScrollContainer.designtime"
-			}
+			},
+
+			renderer: ScrollContainerRenderer
 		});
 
 		ScrollContainer.prototype.init = function () {
@@ -150,7 +153,6 @@ sap.ui.define([
 		 *         The value <code>0</code> results in immediate scrolling without animation.
 		 * @returns {this} <code>this</code> to facilitate method chaining
 		 * @public
-		 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		ScrollContainer.prototype.scrollTo = function (x, y, time) {
 			if (this._oScroller) {
@@ -158,7 +160,7 @@ sap.ui.define([
 				var oDomRef = this.getDomRef();
 				if (oDomRef) {
 					// only if rendered
-					if (sap.ui.getCore().getConfiguration().getRTL()) {
+					if (Configuration.getRTL()) {
 						x = denormalizeScrollBeginRTL(x, oDomRef);
 					}
 					this._oScroller.scrollTo(x, y, time);

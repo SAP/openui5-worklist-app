@@ -1,12 +1,12 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides default renderer for control sap.ui.layout.DynamicSideContent
-sap.ui.define(["sap/ui/layout/library", "sap/ui/Device"],
-	function(library, Device) {
+sap.ui.define(["sap/ui/layout/library", "sap/ui/Device", "sap/ui/core/Configuration"],
+	function(library, Device, Configuration) {
 		"use strict";
 
 		// shortcut for sap.ui.layout.SideContentPosition
@@ -38,7 +38,7 @@ sap.ui.define(["sap/ui/layout/library", "sap/ui/Device"],
 		DynamicSideContentRenderer.renderSubControls = function (oRm, oSideControl) {
 			var iSideContentId = oSideControl.getId(),
 				bShouldSetHeight = oSideControl._shouldSetHeight(),
-				bPageRTL = sap.ui.getCore().getConfiguration().getRTL(),
+				bPageRTL = Configuration.getRTL(),
 				position = oSideControl.getSideContentPosition();
 
 			if ((position === SideContentPosition.Begin && !bPageRTL) || (bPageRTL && position === SideContentPosition.End)) {

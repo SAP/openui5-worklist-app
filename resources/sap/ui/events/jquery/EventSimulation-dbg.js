@@ -1,19 +1,19 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
 	'sap/base/util/Version',
+	'sap/ui/core/Element',
 	'sap/ui/events/PseudoEvents',
 	'sap/ui/events/checkMouseEnterOrLeave',
 	'sap/ui/events/ControlEvents',
 	'sap/ui/Device',
 	'sap/ui/events/TouchToMouseMapping',
 	'sap/ui/thirdparty/jquery',
-	'sap/ui/thirdparty/jquery-mobile-custom',
-	'sap/ui/dom/jquery/control'
-], function(Version, PseudoEvents, checkMouseEnterOrLeave, ControlEvents, Device, TouchToMouseMapping, jQuery /*, jQueryMobile, control, EventExtension*/) {
+	'sap/ui/thirdparty/jquery-mobile-custom'
+], function(Version, Element, PseudoEvents, checkMouseEnterOrLeave, ControlEvents, Device, TouchToMouseMapping, jQuery /*, jQueryMobile*/) {
 	"use strict";
 
 	/**
@@ -113,7 +113,7 @@ sap.ui.define([
 		}
 
 		var $DomRef = jQuery(oConfig.domRef),
-			oControl = jQuery.fn.control ? jQuery(oEvent.target).control(0) : null,
+			oControl = Element.closestTo(oEvent.target),
 			sTouchStartControlId = $DomRef.data("__touchstart_control"),
 			oTouchStartControlDOM = sTouchStartControlId && window.document.getElementById(sTouchStartControlId);
 
@@ -229,13 +229,12 @@ sap.ui.define([
 	};
 
 	// Simulate mouse events on browsers firing touch events
-	oEventSimulation._initMouseEventSimulation = function(bBlackberryDevice) {
+	oEventSimulation._initMouseEventSimulation = function() {
 
 		var bFingerIsMoved = false,
 			iMoveThreshold = jQuery.vmouse.moveDistanceThreshold,
 			iStartX, iStartY,
-			iOffsetX, iOffsetY,
-			iLastTouchMoveTime;
+			iOffsetX, iOffsetY;
 
 		var fnCreateNewEvent = function(oEvent, oConfig, oMappedEvent) {
 			var oNewEvent = jQuery.event.fix(oEvent.originalEvent || oEvent);
@@ -280,14 +279,6 @@ sap.ui.define([
 					Math.abs(oTouch.pageY - iStartY) > iMoveThreshold);
 			}
 
-			if (bBlackberryDevice) {
-				//Blackberry sends many touchmoves -> create a simulated mousemove every 50ms
-				if (iLastTouchMoveTime && oEvent.timeStamp - iLastTouchMoveTime < 50) {
-					return;
-				}
-				iLastTouchMoveTime = oEvent.timeStamp;
-			}
-
 			var oNewEvent = fnCreateNewEvent(oEvent, oConfig, oEvent.touches[0]);
 
 			setTimeout(function() {
@@ -321,7 +312,6 @@ sap.ui.define([
 
 				var oTouch = oEvent.originalEvent.touches[0];
 				bFingerIsMoved = false;
-				iLastTouchMoveTime = 0;
 				iStartX = oTouch.pageX;
 				iStartY = oTouch.pageY;
 				iOffsetX = Math.round(oTouch.pageX - jQuery(oEvent.target).offset().left);
@@ -404,7 +394,7 @@ sap.ui.define([
 	}
 
 	if (!oEventSimulation.disableTouchToMouseHandling) {
-		oEventSimulation.disableTouchToMouseHandling = jQuery.noop;
+		oEventSimulation.disableTouchToMouseHandling = function() {};
 	}
 
 	// touch events natively supported
@@ -438,7 +428,7 @@ sap.ui.define([
 		if (Device.support.touch) {
 			// Deregister the previous touch to mouse event simulation (see line 25 in this file)
 			oEventSimulation.disableTouchToMouseHandling();
-			oEventSimulation._initMouseEventSimulation(Device.os.blackberry);
+			oEventSimulation._initMouseEventSimulation();
 		}
 		ControlEvents.events = oEventSimulation._init(ControlEvents.events);
 	}());

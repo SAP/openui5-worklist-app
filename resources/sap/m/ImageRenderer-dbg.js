@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -29,7 +29,7 @@ sap.ui.define(['sap/m/library', "sap/base/security/encodeCSS", "sap/ui/core/libr
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the Render-Output-Buffer
-	 * @param {sap.ui.core.Control} oImage The control that should be rendered
+	 * @param {sap.m.Image} oImage The control that should be rendered
 	 */
 	ImageRenderer.render = function(oRm, oImage) {
 		var sMode = oImage.getMode(),
@@ -42,6 +42,8 @@ sap.ui.define(['sap/m/library', "sap/base/security/encodeCSS", "sap/ui/core/libr
 			aDescribedBy = oImage.getAriaDescribedBy(),
 			aDetails = oImage.getAriaDetails(),
 			bIsImageMode = sMode === ImageMode.Image,
+			bIsSvgMode = sMode === ImageMode.InlineSvg,
+			bIsBackGroundMode = sMode === ImageMode.Background,
 			bLazyLoading = oImage.getLazyLoading(),
 			sAriaHasPopup = oImage.getAriaHasPopup();
 
@@ -61,6 +63,8 @@ sap.ui.define(['sap/m/library', "sap/base/security/encodeCSS", "sap/ui/core/libr
 				oRm.attr("loading", "lazy");
 			}
 
+		} else  if (bIsSvgMode) {
+			oRm.openStart("div", oImage);
 		} else {
 			oRm.openStart("span", !oLightBox ? oImage : oImage.getId() + "-inner");
 		}
@@ -84,7 +88,7 @@ sap.ui.define(['sap/m/library', "sap/base/security/encodeCSS", "sap/ui/core/libr
 
 		if (bIsImageMode) {
 			oRm.attr("src", oImage._getDensityAwareSrc());
-		} else {
+		} else if (bIsBackGroundMode) {
 			// preload the image with a window.Image instance. The source uri is set to the output DOM node via CSS style 'background-image' after the source image is loaded (in onload function)
 			oImage._preLoadImage(oImage._getDensityAwareSrc());
 			if (oImage._isValidBackgroundSizeValue(oImage.getBackgroundSize())) {
@@ -141,11 +145,71 @@ sap.ui.define(['sap/m/library', "sap/base/security/encodeCSS", "sap/ui/core/libr
 		oRm.style("width", oImage.getWidth());
 		oRm.style("height", oImage.getHeight());
 
-		bIsImageMode ? oRm.voidEnd() : oRm.openEnd().close("span"); // close the <img>/<span> element
+		if (bIsImageMode) {
+			oRm.voidEnd();
+		} else if (bIsSvgMode) {
+			oRm.openEnd();
+			this._renderSvg(oRm, oImage);
+			oRm.close("div");
+		} else {
+			oRm.openEnd().close("span");
+		}
 
 		if (oLightBox) {
 			oRm.close("span");
 		}
+	};
+
+	ImageRenderer._renderSvg = function(oRm, oImage) {
+		var oSvg = oImage._getSvgCachedData(),
+			oChildren;
+
+		if (!oSvg) {
+			return;
+		}
+
+		oChildren = oSvg.children;
+		this._renderSvgChildren(oRm, oChildren, oImage);
+	};
+
+	ImageRenderer._renderSvgAttributes = function (oRm, aAttributes, oImage) {
+		for (var i = 0; i < aAttributes.length; i++) {
+			var oAttr = aAttributes[i],
+				iNamespaceIndex = oAttr.name.indexOf(":"),
+				sAttributeName = iNamespaceIndex < 0 ? oAttr.name : oAttr.name.slice(iNamespaceIndex + 1);
+
+			if (sAttributeName === "href" && !oImage._isHrefValid(oAttr.value)) {
+				continue;
+			}
+
+			oRm.attr(sAttributeName, oAttr.value);
+		}
+	};
+
+	ImageRenderer._renderSvgChildren = function (oRm, oChildren, oImage) {
+		var aChildren = [].slice.call(oChildren).filter(function (oChild) {
+			return (oChild.nodeType !== Node.TEXT_NODE)
+				// Do not return empty textContent -> line spaces/endings
+				|| (oChild.nodeType === Node.TEXT_NODE && oChild.textContent.trim() !== "");
+		});
+
+		aChildren.forEach(function (oChild) {
+			var sTagName = oChild.tagName,
+				aAttributes = oChild.attributes,
+				oChildren = oChild.childNodes;
+
+			if (oChild.nodeType !== Node.TEXT_NODE) {
+				oRm.openStart(sTagName);
+				this._renderSvgAttributes(oRm, aAttributes, oImage);
+				oRm.openEnd();
+
+				oChildren.length && this._renderSvgChildren(oRm, oChildren, oImage);
+				oRm.close(sTagName);
+
+			} else {
+				oChild.textContent.length && oRm.text(oChild.textContent.trim());
+			}
+		}, this);
 	};
 
 	return ImageRenderer;

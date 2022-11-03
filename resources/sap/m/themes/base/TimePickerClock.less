@@ -152,6 +152,17 @@
 			transform: rotate(-@angle);
 		}
 	}
+
+	html[dir=rtl] .@{class} {
+		transform: translate(-50%) rotate(-@angle);
+		.sapMTPCNumber {
+			transform: rotate(@angle);
+		}
+	}
+}
+
+.sapMTPNow {
+	margin-left: 0.5rem;
 }
 
 .sapUiSizeCompact {

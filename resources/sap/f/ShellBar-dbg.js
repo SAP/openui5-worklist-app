@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -26,8 +26,8 @@ function(
 	Accessibility,
 	BarInPageEnabler,
 	BadgeCustomData,
-	Button
-	/*, ShellBarRenderer */
+	Button,
+	ShellBarRenderer
 ) {
 	"use strict";
 
@@ -56,13 +56,12 @@ function(
 	 * @implements sap.f.IShellBar, sap.m.IBar, sap.tnt.IToolHeader
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @alias sap.f.ShellBar
 	 * @since 1.63
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var ShellBar = Control.extend("sap.f.ShellBar", /** @lends sap.f.ShellBar.prototype */ {
 		metadata: {
@@ -247,7 +246,9 @@ function(
 					}
 				}
 			}
-		}
+		},
+
+		renderer: ShellBarRenderer
 	});
 
 	// Enhance the prototype with additional content aggregation support

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -8,6 +8,21 @@
 sap.ui.define([],
 	function() {
 		"use strict";
+
+		function isParentListBaseInstanceAndBound(oElement) {
+			var oParent = oElement;
+			while (oParent) {
+				if (oParent.isA("sap.m.ListBase")) {
+					var oBinding = oParent.getBinding("items");
+					if (oBinding) {
+						return true;
+					}
+					return false;
+				}
+				oParent = oParent.getParent();
+			}
+			return false;
+		}
 
 		return {
 			name: {
@@ -22,6 +37,17 @@ sap.ui.define([],
 			},
 			aggregations: {
 				items: {
+					propagateMetadata: function(oElement) {
+						if (isParentListBaseInstanceAndBound(oElement)) {
+							return {
+								// prevent remove & rename actions on "items" aggregation and its inner controls when binding exists
+								actions: {
+									remove: null,
+									rename: null
+								}
+							};
+						}
+					},
 					domRef: ":sap-domref > .sapMListUl:not(.sapMGrowingList)",
 					actions: {
 						move: "moveControls"
@@ -38,6 +64,9 @@ sap.ui.define([],
 					domRef: ":sap-domref .sapMListInfoTBar"
 				},
 				contextMenu: {
+					ignore: true
+				},
+				noData: {
 					ignore: true
 				}
 			},

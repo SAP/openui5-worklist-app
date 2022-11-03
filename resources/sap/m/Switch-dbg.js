@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -13,7 +13,8 @@ sap.ui.define([
 	'sap/ui/core/theming/Parameters',
 	'sap/ui/events/KeyCodes',
 	'./SwitchRenderer',
-	"sap/base/assert"
+	"sap/base/assert",
+	"sap/ui/core/Configuration"
 ],
 function(
 	library,
@@ -23,7 +24,8 @@ function(
 	Parameters,
 	KeyCodes,
 	SwitchRenderer,
-	assert
+	assert,
+	Configuration
 	) {
 		"use strict";
 
@@ -48,83 +50,86 @@ function(
 		 * @extends sap.ui.core.Control
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
 		 * @alias sap.m.Switch
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
-		var Switch = Control.extend("sap.m.Switch", /** @lends sap.m.Switch.prototype */ { metadata: {
+		var Switch = Control.extend("sap.m.Switch", /** @lends sap.m.Switch.prototype */ {
+			metadata: {
 
-			interfaces: [
-				"sap.ui.core.IFormContent",
-				"sap.m.IOverflowToolbarContent"
-			],
-			library: "sap.m",
-			properties: {
+				interfaces: [
+					"sap.ui.core.IFormContent",
+					"sap.m.IOverflowToolbarContent"
+				],
+				library: "sap.m",
+				properties: {
 
-				/**
-				 * A boolean value indicating whether the switch is on or off.
-				 */
-				state: { type: "boolean", group: "Misc", defaultValue: false },
+					/**
+					 * A boolean value indicating whether the switch is on or off.
+					 */
+					state: { type: "boolean", group: "Misc", defaultValue: false },
 
-				/**
-				 * Custom text for the "ON" state.
-				 *
-				 * "ON" translated to the current language is the default value.
-				 * Beware that the given text will be cut off if available space is exceeded.
-				 */
-				customTextOn: { type: "string", group: "Misc", defaultValue: "" },
+					/**
+					 * Custom text for the "ON" state.
+					 *
+					 * "ON" translated to the current language is the default value.
+					 * Beware that the given text will be cut off if available space is exceeded.
+					 */
+					customTextOn: { type: "string", group: "Misc", defaultValue: "" },
 
-				/**
-				 * Custom text for the "OFF" state.
-				 *
-				 * "OFF" translated to the current language is the default value.
-				 * Beware that the given text will be cut off if available space is exceeded.
-				 */
-				customTextOff: { type: "string", group: "Misc", defaultValue: "" },
+					/**
+					 * Custom text for the "OFF" state.
+					 *
+					 * "OFF" translated to the current language is the default value.
+					 * Beware that the given text will be cut off if available space is exceeded.
+					 */
+					customTextOff: { type: "string", group: "Misc", defaultValue: "" },
 
-				/**
-				 * Whether the switch is enabled.
-				 */
-				enabled: { type: "boolean", group: "Data", defaultValue: true },
+					/**
+					 * Whether the switch is enabled.
+					 */
+					enabled: { type: "boolean", group: "Data", defaultValue: true },
 
-				/**
-				 * The name to be used in the HTML code for the switch (e.g. for HTML forms that send data to the server via submit).
-				 */
-				name: { type: "string", group: "Misc", defaultValue: "" },
+					/**
+					 * The name to be used in the HTML code for the switch (e.g. for HTML forms that send data to the server via submit).
+					 */
+					name: { type: "string", group: "Misc", defaultValue: "" },
 
-				/**
-				 * Type of a Switch. Possibles values "Default", "AcceptReject".
-				 */
-				type: { type : "sap.m.SwitchType", group: "Appearance", defaultValue: SwitchType.Default }
-			},
-			associations: {
+					/**
+					 * Type of a Switch. Possibles values "Default", "AcceptReject".
+					 */
+					type: { type : "sap.m.SwitchType", group: "Appearance", defaultValue: SwitchType.Default }
+				},
+				associations: {
 
-				/**
-				 * Association to controls / ids which label this control (see WAI-ARIA attribute aria-labelledby).
-				 * @since 1.27.0
-				 */
-				ariaLabelledBy: { type: "sap.ui.core.Control", multiple: true, singularName: "ariaLabelledBy" }
-			},
-			events: {
+					/**
+					 * Association to controls / ids which label this control (see WAI-ARIA attribute aria-labelledby).
+					 * @since 1.27.0
+					 */
+					ariaLabelledBy: { type: "sap.ui.core.Control", multiple: true, singularName: "ariaLabelledBy" }
+				},
+				events: {
 
-				/**
-				 * Triggered when a switch changes the state.
-				 */
-				change: {
-					parameters: {
+					/**
+					 * Triggered when a switch changes the state.
+					 */
+					change: {
+						parameters: {
 
-						/**
-						 * The new state of the switch.
-						 */
-						state: { type: "boolean" }
+							/**
+							 * The new state of the switch.
+							 */
+							state: { type: "boolean" }
+						}
 					}
-				}
+				},
+				designtime: "sap/m/designtime/Switch.designtime"
 			},
-			designtime: "sap/m/designtime/Switch.designtime"
-		}});
+
+			renderer: SwitchRenderer
+		});
 
 		IconPool.insertFontFaceStyle();
 		EnabledPropagator.apply(Switch.prototype, [true]);
@@ -155,7 +160,7 @@ function(
 			}
 
 			this._iCurrentPosition = iPosition;
-			this.getDomRef("inner").style[sap.ui.getCore().getConfiguration().getRTL() ? "right" : "left"] = iPosition + "px";
+			this.getDomRef("inner").style[Configuration.getRTL() ? "right" : "left"] = iPosition + "px";
 			this._setTempState(Math.abs(iPosition) < Switch._SWAPPOINT);
 		};
 
@@ -208,11 +213,24 @@ function(
 			return sText;
 		};
 
+		var mParams = Object.assign({
+			// add base styles as default
+			"_sap_m_Switch_OnPosition": -32,
+			"_sap_m_Switch_OffPosition": 0
+		}, Parameters.get({
+			name: ["_sap_m_Switch_OnPosition", "_sap_m_Switch_OffPosition"],
+			callback: function (_mParams) {
+				Switch._ONPOSITION = Number(_mParams["_sap_m_Switch_OnPosition"]);
+				Switch._OFFPOSITION = Number(_mParams["_sap_m_Switch_OffPosition"]);
+				Switch._SWAPPOINT = Math.abs((Switch._ONPOSITION - Switch._OFFPOSITION) / 2);
+			}
+		}));
+
 		// the position of the inner HTML element whether the switch is "ON"
-		Switch._ONPOSITION = Number(Parameters.get("_sap_m_Switch_OnPosition"));
+		Switch._ONPOSITION = Number(mParams["_sap_m_Switch_OnPosition"]);
 
 		// the position of the inner HTML element whether the switch is "OFF"
-		Switch._OFFPOSITION = Number(Parameters.get("_sap_m_Switch_OffPosition"));
+		Switch._OFFPOSITION = Number(mParams["_sap_m_Switch_OffPosition"]);
 
 		// swap point
 		Switch._SWAPPOINT = Math.abs((Switch._ONPOSITION - Switch._OFFPOSITION) / 2);
@@ -329,7 +347,7 @@ function(
 			iPosition = ((this._iStartPressPosX - oTouch.pageX) * -1) + this._iPosition;
 
 			// RTL mirror
-			if (sap.ui.getCore().getConfiguration().getRTL()) {
+			if (Configuration.getRTL()) {
 				iPosition = -iPosition;
 			}
 

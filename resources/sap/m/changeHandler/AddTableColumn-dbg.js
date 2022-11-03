@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -16,19 +16,18 @@ sap.ui.define([
 	var CELLS_AGGREGATION_NAME = "cells";
 	var ITEMS_AGGREGATION_NAME = "items";
 
-	function getLabel(mChangeDefinition, mInnerControls, oModifier, oView, oAppComponent){
-		var sEntityType = ObjectPath.get("oDataInformation.entityType", mChangeDefinition);
+	function getLabel(oChangeContent, mInnerControls, oModifier, oView, oAppComponent, oChangeODataInformation){
+		var sEntityType = oChangeODataInformation && oChangeODataInformation.entityType;
 		if (sEntityType) {
-			var mContent = mChangeDefinition.content;
 			return Promise.resolve()
 				.then(oModifier.createControl.bind(
 					oModifier,
 					'sap.m.Text',
 					oAppComponent,
 					oView,
-					mContent.newFieldSelector.id + '--column',
+					oChangeContent.newFieldSelector.id + '--column',
 					{
-						text: "{/#" + sEntityType + "/" + mContent.bindingPath + "/@sap:label}"
+						text: "{/#" + sEntityType + "/" + oChangeContent.bindingPath + "/@sap:label}"
 					}
 				));
 		}
@@ -44,7 +43,7 @@ sap.ui.define([
 	 *
 	 * @author SAP SE
 	 *
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @experimental Since 1.51.0 This class is experimental and provides only limited functionality.
 	 * Also the API might be changed in future.
@@ -55,9 +54,9 @@ sap.ui.define([
 		aggregationName: COLUMNS_AGGREGATION_NAME,
 		parentAlias: "targetTable",
 		fieldSuffix: "--field",
-		skipCreateLabel: function(mPropertyBag) {
+		skipCreateLabel: function(oChangeODataInformation) {
 			//if entity type is given we create label ourselves
-			return !!ObjectPath.get("changeDefinition.oDataInformation.entityType", mPropertyBag);
+			return !!(oChangeODataInformation && oChangeODataInformation.entityType);
 		},
 		skipCreateLayout: true,
 		supportsDefault: true,
@@ -82,10 +81,10 @@ sap.ui.define([
 
 			var oChange = mPropertyBag.change;
 			var oRevertData = oChange.getRevertData();
-			var mChangeDefinition = oChange.getDefinition();
-			var mContent = mChangeDefinition.content;
-			var iIndex = mContent.newFieldIndex;
-			var mFieldSelector = mContent.newFieldSelector;
+			var oChangeContent = oChange.getContent();
+			var oChangeODataInformation = oChange.getODataInformation();
+			var iIndex = oChangeContent.newFieldIndex;
+			var mFieldSelector = oChangeContent.newFieldSelector;
 
 			return Promise.resolve()
 				.then(oModifier.getBindingTemplate.bind(oModifier,oTable, ITEMS_AGGREGATION_NAME, oView))
@@ -97,10 +96,8 @@ sap.ui.define([
 							.then(oModifier.insertAggregation.bind(oModifier, oTemplate, CELLS_AGGREGATION_NAME, oSmartField, iIndex, oView))
 							.then(oModifier.updateAggregation.bind(oModifier, oTable, ITEMS_AGGREGATION_NAME)) //only needed in JS case
 							.then(function() {
-								oRevertData.newCellSelector = {
-									id: mFieldSelector.id + '--field',
-									idIsLocal: true
-								};
+								// getSelector() helps to decide whether idIsLocal is true/false
+								oRevertData.newCellSelector = oModifier.getSelector(oSmartField, oAppComponent);
 								oChange.setRevertData(oRevertData);
 							});
 					}
@@ -108,7 +105,7 @@ sap.ui.define([
 				})
 				.then(oModifier.createControl.bind(oModifier, 'sap.m.Column', oAppComponent, oView, mFieldSelector))
 				.then(function(oCreatedControl) {
-					return getLabel(mChangeDefinition, mInnerControls, oModifier, oView, oAppComponent)
+					return getLabel(oChangeContent, mInnerControls, oModifier, oView, oAppComponent, oChangeODataInformation)
 						.then(function(oLabel) {
 							return Promise.resolve()
 								.then(oModifier.insertAggregation.bind(oModifier, oCreatedControl, 'header', oLabel, 0, oView))

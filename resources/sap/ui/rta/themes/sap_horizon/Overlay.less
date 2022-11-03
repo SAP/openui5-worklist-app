@@ -1,18 +1,20 @@
-/* =================================== */
-/* CSS for control sap.ui.rta/Overlay  */
-/* Horizon theme                       */
-/* =================================== */
-
-@_sap_ui_rta_Overlay_BaseBG: @sapBackgroundColor; //#fafafa
-@_sap_ui_rta_Overlay_BaseColor: @sapPrimary1; //#3f5161
-@_sap_ui_rta_Overlay_Base_PlaceholderBG: lighten(saturate(@sapPrimary4, 15%), 2%); //#f1f5f6
+/******************************************************************
+	Style of the RTA Overlays - Horizon Theme
+*******************************************************************/
+@_sap_ui_rta_Overlay_ShellBG: transparent;
+@_sap_ui_rta_Overlay_PlaceholderBG: lighten(saturate(@sapUiShellBackground, 15%), 2%); // #fafbfc
+@_sap_ui_rta_Overlay_BorderRadius: @sapUiButtonBorderCornerRadius; // 0.5rem
+@_sap_ui_rta_Overlay_HoverBG: fade(@sapUiSelected, 5%); // rgba(0, 112, 242, 0.05)
+@_sap_ui_rta_Overlay_PersButtonBG: @sapUiSelected; //#0070f2
+@_sap_ui_rta_Overlay_PersButtonBorder: @sapUiShellBackground; // #f5f6f7
+@_sap_ui_rta_Overlay_PersButtonIcon: @sapUiShellBackground; // #f5f6f7
 
 .sapUiRta {
-	.sapUiDtOverlayDropZone {
-		> .sapUiDtOverlayChildren {
-			> .sapUiDtOverlayMovable {
-				background: inherit;
-			}
+	&:not(.sapUiRtaVisualizationMode) {
+		.sapUiRtaOverlayHover:after {
+			border-radius: @_sap_ui_rta_Overlay_BorderRadius;
+			border: none;
+			background: @_sap_ui_rta_Overlay_HoverBG;
 		}
 	}
 }

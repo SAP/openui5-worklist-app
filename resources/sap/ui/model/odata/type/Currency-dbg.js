@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -61,7 +61,7 @@ sap.ui.define([
 	 * @extends sap.ui.model.type.Currency
 	 * @public
 	 * @since 1.63.0
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 */
 	var Currency = BaseCurrency.extend("sap.ui.model.odata.type.Currency", {
 		constructor : function (oFormatOptions, oConstraints) {

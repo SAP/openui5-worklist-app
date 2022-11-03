@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -34,6 +34,7 @@ sap.ui.define([
 		 * @alias sap.ui.model.TreeBindingAdapter
 		 * @class
 		 * @experimental This module is only for experimental and internal use!
+		 *
 		 * @protected
 		 */
 		var TreeBindingAdapter = function() {
@@ -78,13 +79,12 @@ sap.ui.define([
 
 		/**
 		 * Returns a tree state handle to encapsulate the actual tree state.
-		 * TODO: Encode the list to avoid conflicts with delimiters in the flat expanded list?
-		 *       Re-Check this when back-end support is implemented.
 		 *
 		 * This function is exposed in the sub-classes/adapters (e.g. ODataTreeBindingAdapter) if
 		 * necessary/possible.
 		 *
 		 * @returns {object} The current tree state
+		 *
 		 * @private
 		 */
 		TreeBindingAdapter.prototype.getCurrentTreeState = function () {
@@ -138,6 +138,7 @@ sap.ui.define([
 		 * Only in OperationMode.Client.
 		 *
 		 * @param {object} oTreeState Only valid tree states from the same binding are accepted
+		 *
 		 * @private
 		 */
 		TreeBindingAdapter.prototype.setTreeState = function (oTreeState) {
@@ -148,6 +149,8 @@ sap.ui.define([
 		 * Sets the auto expand mode for this Adapter. Default is "Bundled".
 		 *
 		 * @param {sap.ui.model.TreeAutoExpandMode} sAutoExpandMode The new auto expand mode to set
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype.setAutoExpandMode = function (sAutoExpandMode) {
 			this._autoExpandMode = sAutoExpandMode;
@@ -157,6 +160,7 @@ sap.ui.define([
 		 * Returns the number of entries in the tree.
 		 *
 		 * @return {number} Returns the number of entries in the tree
+		 *
 		 * @public
 		 */
 		TreeBindingAdapter.prototype.getLength = function() {
@@ -177,6 +181,11 @@ sap.ui.define([
 		 * @returns {sap.ui.model.Context|undefined}
 		 *   The context of the node at the given index or <code>undefined</code> if the binding is
 		 *   initial or no node was found at the given index
+		 *
+		 * @private
+		 * @ui5-restricted sap.gantt.GanttChart,
+		 * sap.suite.ui.generic.template.lib.presentationControl.SmartTableHandler,
+		 * sap.ui.table.AnalyticalTable, sap.ui.table.TreeTable
 		 */
 		TreeBindingAdapter.prototype.getContextByIndex = function (iIndex) {
 			//step out if the binding is initial (as long as the metadata is not yet loaded)
@@ -188,6 +197,10 @@ sap.ui.define([
 			return oNode ? oNode.context : undefined;
 		};
 
+		/*
+		 * @private
+		 * @ui5-restricted sap.m.TreeItemBase, sap.ui.table.AnalyticalTable, sap.ui.table.TreeTable
+		 */
 		TreeBindingAdapter.prototype.getNodeByIndex = function(iIndex) {
 			//step out if the binding is initial (as long as the metadata is not yet loaded)
 			if (this.isInitial()) {
@@ -212,6 +225,10 @@ sap.ui.define([
 		 *
 		 * @returns {object|undefined}
 		 *   The found node or <code>undefined</code> if the binding is initial or no node is found
+		 *
+		 * @private
+		 * @ui5-restricted sap.gantt.simple.GanttPrinting,
+		 * sap.suite.ui.generic.template.listTemplates.controller.DetailController
 		 */
 		TreeBindingAdapter.prototype.findNode = function (iRowIndex) {
 
@@ -252,6 +269,9 @@ sap.ui.define([
 			return oFoundNode;
 		};
 
+		/*
+		 * @private
+		 */
 		TreeBindingAdapter.prototype._createTreeState = function (bReset) {
 			if (!this._mTreeState || bReset) {
 				//general tree status information, the nodes are referenced by their groupID
@@ -264,6 +284,9 @@ sap.ui.define([
 			}
 		};
 
+		/*
+		 * @private
+		 */
 		TreeBindingAdapter.prototype._updateTreeState = function (mParameters) {
 			mParameters = mParameters || {};
 
@@ -301,6 +324,8 @@ sap.ui.define([
 		 *
 		 * @returns {object|undefined}
 		 *   The created node state or <code>undefined</code> if no group id is given
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype._createNodeState = function (mParameters) {
 			if (!mParameters.groupID) {
@@ -340,6 +365,9 @@ sap.ui.define([
 			return oNodeState;
 		};
 
+		/*
+		 * @private
+		 */
 		TreeBindingAdapter.prototype._getNodeState = function (sGroupID) {
 			var oExpanded = this._mTreeState.expanded[sGroupID];
 			var oCollapsed = this._mTreeState.collapsed[sGroupID];
@@ -362,6 +390,8 @@ sap.ui.define([
 		 *
 		 * @returns {object|undefined}
 		 *   The merged sections
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype._updateNodeSections = function (sGroupID, oNewSection) {
 			var oNodeState = this._getNodeState(sGroupID);
@@ -389,6 +419,8 @@ sap.ui.define([
 		/**
 		 * Increases the section length of all sections of all nodes in the tree. This is necessary in case the page size increases between requests.
 		 * Otherwise unnecessary requests would be performed, because the section length does not match the requested page size.
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype._increaseSections = function() {
 			var fnIncreaseSections = function (oNode) {
@@ -421,6 +453,8 @@ sap.ui.define([
 		 * @param {object} oNode The node to calculate the group-size for
 		 *
 		 * @returns {number} The maximum possible group-size
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype._getMaxGroupSize = function (oNode) {
 			var iMaxGroupSize = 0;
@@ -486,13 +520,9 @@ sap.ui.define([
 				return [];
 			}
 
-			if (!iLength) {
-				iLength = this.oModel.iSizeLimit;
-			}
-
-			if (!iThreshold) {
-				iThreshold = 0;
-			}
+			iStartIndex = iStartIndex || 0;
+			iLength = iLength || this.oModel.iSizeLimit;
+			iThreshold = iThreshold || 0;
 
 			// test if the pagesize has increased -> used to optimise "too small" node sections, see _loadChildContexts
 			if (iLength > this._iPageSize) {
@@ -574,6 +604,7 @@ sap.ui.define([
 		 *   The requested tree nodes
 		 *
 		 * @protected
+		 * @ui5-restricted sap.ui.table.TreeTable
 		 */
 		TreeBindingAdapter.prototype.getNodes = function (iStartIndex, iLength, iThreshold) {
 			return this._getContextsOrNodes(true, iStartIndex, iLength, iThreshold);
@@ -584,6 +615,8 @@ sap.ui.define([
 		 *
 		 * @param {object[]} aNodes The nodes to update
 		 * @param {number} iStartIndex The position where the update should start
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype._updateRowIndexMap = function (aNodes, iStartIndex) {
 			//throw away the old mapping index
@@ -610,6 +643,7 @@ sap.ui.define([
 		 * @return {object[]} An array containing all collected nodes, for which the absolute node
 		 *   index is greater than iStartIndex; the length of the array will be iLength (or less if
 		 *   the tree does not have that many nodes).
+		 *
 		 * @private
 		 */
 		TreeBindingAdapter.prototype._retrieveNodeSection = function (oNode, iStartIndex, iLength) {
@@ -644,6 +678,8 @@ sap.ui.define([
 		 *
 		 * @param {int} iStartIndex Index from which the tree shall be built
 		 * @param {int} iLength Number of Nodes
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype._buildTree = function(iStartIndex, iLength) {
 			//throw away our tree
@@ -725,6 +761,9 @@ sap.ui.define([
 			return iRequestedLength;
 		};
 
+		/*
+		 * @private
+		 */
 		TreeBindingAdapter.prototype._loadChildContexts = function (oNode) {
 			var oNodeState = oNode.nodeState;
 
@@ -868,6 +907,10 @@ sap.ui.define([
 		 * AnalyticalBindings might differ.
 		 *
 		 * @returns {boolean} true
+		 *
+		 * @private
+		 * @ui5-restricted unified.shell.override, sap.ca.scfld.md.controller.BaseMasterController,
+		 * sap.m.GrowingEnablement, sap.m.ListBase, sap.m.UploadCollection, sap.m.UploadSet
 		 */
 		TreeBindingAdapter.prototype.isGrouped = function () {
 			return true;
@@ -877,6 +920,8 @@ sap.ui.define([
 		 * Hook which needs to be implemented by subclasses
 		 * Calculates a unique group ID for a given node
 		 * @param {Object} oNode Node of which the group ID shall be calculated
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype._calculateGroupID = function (oNode) {
 			Log.error("TreeBindingAdapter#_calculateGroupID: Not implemented. Needs to be implemented in respective sub-classes.");
@@ -886,6 +931,8 @@ sap.ui.define([
 		 * Creates a new tree node with valid default values
 		 * @param {object} mParameters a set of parameters which might differ from the default values
 		 * @returns {object} a newly created tree node
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype._createNode = function (mParameters) {
 			mParameters = mParameters || {};
@@ -924,6 +971,10 @@ sap.ui.define([
 		 * Expand the tree node sitting at the given index.
 		 * @param {int} iIndex the absolute row index
 		 * @param {boolean} bSuppressChange if set to true, no change event will be fired
+		 *
+		 * @private
+		 * @ui5-restricted sap.gantt.simple.GanttPrinting, sap.m.Tree,
+		 * sap.ui.documentation.sdk.controller.App.controller, sap.ui.table.TreeTable
 		 */
 		TreeBindingAdapter.prototype.expand = function(iIndex, bSuppressChange) {
 			var oNode = this.findNode(iIndex);
@@ -944,6 +995,9 @@ sap.ui.define([
 		 * Expands the tree to the given level.
 		 * Change-Event is fired.
 		 * @param {int} iLevel the level to which the data should be expanded
+		 *
+		 * @private
+		 * @ui5-restricted sap.m.Tree, sap.ui.table.AnalyticalTable, sap.ui.table.TreeTable
 		 */
 		TreeBindingAdapter.prototype.expandToLevel = function (iLevel) {
 			this._mTreeState.collapsed = {};
@@ -957,6 +1011,10 @@ sap.ui.define([
 		 * @param {number} iIndex The index for which the expansion state should be retrieved
 		 *
 		 * @returns {boolean} Whether the node at the given index is expanded
+		 *
+		 * @private
+		 * @ui5-restricted sap.gantt.simple.GanttPrinting, sap.m.Tree, sap.m.TreeItemBase,
+		 * sap.ui.table.TreeTable
 		 */
 		TreeBindingAdapter.prototype.isExpanded = function (iIndex) {
 			var oNode = this.findNode(iIndex);
@@ -967,6 +1025,9 @@ sap.ui.define([
 		 * Collapses the given node, identified via an absolute row index.
 		 * @param {int} vParam the row index of the tree node
 		 * @param {boolean} bSuppressChange if set to true, no change event will be fired
+		 *
+		 * @private
+		 * @ui5-restricted sap.gantt.simple.GanttPrinting, sap.m.Tree, sap.ui.table.TreeTable
 		 */
 		TreeBindingAdapter.prototype.collapse = function(vParam, bSuppressChange) {
 			var oNodeStateForCollapsingNode;
@@ -1046,6 +1107,9 @@ sap.ui.define([
 		 * Collape all nodes up to level "iLevel".
 		 * If iLevel is undefined: the tree will be collapsed up to the first child level of the root node.
 		 * @param {int} iLevel the level to which all lower sub-trees should be collapsed
+		 *
+		 * @private
+		 * @ui5-restricted sap.m.Tree, sap.ui.table.TreeTable
 		 */
 		TreeBindingAdapter.prototype.collapseToLevel = function(iLevel) {
 			//default level is 1, meaning all sub nodes of the root will be collapsed (to the top)
@@ -1075,6 +1139,8 @@ sap.ui.define([
 		 *
 		 * @param {object} oNode the starting node for the function mapping
 		 * @param {function} fnMapFunction the function which should be mapped for each node in the sub-tree
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype._map = function (oNode, fnMapFunction) {
 
@@ -1118,6 +1184,8 @@ sap.ui.define([
 		 *
 		 * @returns {boolean}
 		 *   Whether the <code>iMaxNumberOfMatches</code> has been reached
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype._match = function (oNode, aResults, iMaxNumberOfMatches, fnMatchFunction, iPositionInParent, oParentNode) {
 
@@ -1155,6 +1223,9 @@ sap.ui.define([
 		/**
 		 * Toggles the tree node sitting at the given index.
 		 * @param {int} iIndex the absolute row index
+		 *
+		 * @private
+		 * @ui5-restricted sap.m.Tree, sap.ui.table.TreeTable
 		 */
 		TreeBindingAdapter.prototype.toggleIndex = function(iIndex) {
 			var oNode = this.findNode(iIndex);
@@ -1177,6 +1248,8 @@ sap.ui.define([
 		 * @param {string} sGroupID The group ID to get the level from
 		 *
 		 * @returns {number} The level of the group ID
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype._getGroupIdLevel = function (sGroupID) {
 			if (sGroupID == null) {
@@ -1192,6 +1265,8 @@ sap.ui.define([
 		 * @param {object} oNode The node to determine the size of
 		 *
 		 * @returns {number} The child count of the given node
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype._getGroupSize = function (oNode) {
 			return this.getChildCount(oNode.context);
@@ -1205,6 +1280,8 @@ sap.ui.define([
 		 * Sets the selection state of the given node.
 		 * @param {object} oNodeState the node state for which the selection should be changed
 		 * @param {boolean} bIsSelected the selection state for the given node
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype.setNodeSelection = function (oNodeState, bIsSelected) {
 
@@ -1231,6 +1308,9 @@ sap.ui.define([
 		 * @param {number} iRowIndex The row index to check for selection state
 		 *
 		 * @returns {boolean} Whether the node at the given index is selected
+		 *
+		 * @private
+		 * @ui5-restricted sap.ui.table.plugins.BindingSelection
 		 */
 		TreeBindingAdapter.prototype.isIndexSelected = function (iRowIndex) {
 			var oNode = this.getNodeByIndex(iRowIndex);
@@ -1244,6 +1324,9 @@ sap.ui.define([
 		 * @param {number} iRowIndex The row index which should be checked for "selectability"
 		 *
 		 * @returns {boolean} Whether the node at the given index is selectable
+		 *
+		 * @private
+		 * @ui5-restricted sap.ui.table.plugins.BindingSelection
 		 */
 		TreeBindingAdapter.prototype.isIndexSelectable = function (iRowIndex) {
 			var oNode = this.getNodeByIndex(iRowIndex);
@@ -1257,6 +1340,8 @@ sap.ui.define([
 		 * @param {object} oNode The node to check
 		 *
 		 * @returns {boolean} Whether the node can be selected
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype._isNodeSelectable = function (oNode) {
 			return !!oNode && !oNode.isArtificial;
@@ -1266,6 +1351,9 @@ sap.ui.define([
 		 * Marks a single TreeTable node sitting on iRowIndex as selected.
 		 * Also sets the lead selection index to this node.
 		 * @param {int} iRowIndex the absolute row index which should be selected
+		 *
+		 * @private
+		 * @ui5-restricted sap.m.TreeItemBase, sap.ui.table.plugins.BindingSelection
 		 */
 		TreeBindingAdapter.prototype.setSelectedIndex = function (iRowIndex) {
 			var oNode = this.findNode(iRowIndex);
@@ -1299,6 +1387,9 @@ sap.ui.define([
 		 * Retrieves the "Lead-Selection-Index". Normally this is the last selected node/table row.
 		 *
 		 * @return {number} Returns the lead selection index or -1 if none is set
+		 *
+		 * @private
+		 * @ui5-restricted sap.ui.table.plugins.BindingSelection
 		 */
 		TreeBindingAdapter.prototype.getSelectedIndex = function () {
 			//if we have no nodes selected, the lead selection index is -1
@@ -1340,6 +1431,9 @@ sap.ui.define([
 		 * Returns an array with all selected row indices.
 		 * Only absolute row indices for nodes known to the client will can be retrieved this way
 		 * @return {int[]} an array with all selected indices
+		 *
+		 * @private
+		 * @ui5-restricted sap.ui.table.plugins.BindingSelection
 		 */
 		TreeBindingAdapter.prototype.getSelectedIndices = function () {
 			var aResultIndices = [];
@@ -1381,7 +1475,9 @@ sap.ui.define([
 		 * Returns the number of selected nodes (including not-yet loaded).
 		 *
 		 * @returns {number} The count of selected nodes
+		 *
 		 * @private
+		 * @ui5-restricted sap.ui.table.plugins.BindingSelection
 		 */
 		TreeBindingAdapter.prototype.getSelectedNodesCount = function () {
 			var iSelectedNodes;
@@ -1451,6 +1547,8 @@ sap.ui.define([
 		 * @param {object} [oNode] The node to get the selectable nodes count from
 		 *
 		 * @returns {int} Number of currently selectable nodes
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype._getSelectableNodesCount = function (oNode) {
 			if (oNode) {
@@ -1466,6 +1564,8 @@ sap.ui.define([
 		 *
 		 * @return {sap.ui.model.Context[]}
 		 *   An array containing the binding contexts for all selected nodes
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype.getSelectedContexts = function () {
 			var aResultContexts = [];
@@ -1512,6 +1612,9 @@ sap.ui.define([
 		 *
 		 * @param {number} iFromIndex The first index to select
 		 * @param {number} iToIndex The last index to select
+		 *
+		 * @private
+		 * @ui5-restricted sap.ui.table.plugins.BindingSelection
 		 */
 		TreeBindingAdapter.prototype.setSelectionInterval = function (iFromIndex, iToIndex) {
 			var i, iIndex,
@@ -1567,6 +1670,7 @@ sap.ui.define([
 		 *
 		 * @returns {object}
 		 *   A map containing info about the changed selection
+		 *
 		 * @private
 		 */
 		TreeBindingAdapter.prototype._setSelectionInterval = function (iFromIndex, iToIndex, bSelectionValue) {
@@ -1646,6 +1750,9 @@ sap.ui.define([
 		 *
 		 * @param {number} iFromIndex The first index to mark
 		 * @param {number} iToIndex The last index to mark
+		 *
+		 * @private
+		 * @ui5-restricted sap.m.TreeItemBase, sap.ui.table.plugins.BindingSelection
 		 */
 		TreeBindingAdapter.prototype.addSelectionInterval = function (iFromIndex, iToIndex) {
 			var mParams = this._setSelectionInterval(iFromIndex, iToIndex, true);
@@ -1657,6 +1764,9 @@ sap.ui.define([
 		 *
 		 * @param {number} iFromIndex The first index to remove the selection from
 		 * @param {number} iToIndex The last index to remove the selection from
+		 *
+		 * @private
+		 * @ui5-restricted sap.m.TreeItemBase, sap.ui.table.plugins.BindingSelection
 		 */
 		TreeBindingAdapter.prototype.removeSelectionInterval = function (iFromIndex, iToIndex) {
 			var mParams = this._setSelectionInterval(iFromIndex, iToIndex, false);
@@ -1665,6 +1775,9 @@ sap.ui.define([
 
 		/**
 		 * Selects all avaliable nodes
+		 *
+		 * @private
+		 * @ui5-restricted sap.ui.table.plugins.BindingSelection
 		 */
 		TreeBindingAdapter.prototype.selectAll = function () {
 
@@ -1720,6 +1833,7 @@ sap.ui.define([
 		 * Removes the selection from all nodes.
 		 *
 		 * @returns {object} An object containing information about the new selection state
+		 *
 		 * @private
 		 */
 		TreeBindingAdapter.prototype._clearSelection = function () {
@@ -1795,6 +1909,9 @@ sap.ui.define([
 		 *
 		 * @param {boolean} bSuppressSelectionChangeEvent
 		 *   Whether to suppress the <code>selectionChange</code> event
+		 *
+		 * @private
+		 * @ui5-restricted sap.ui.table.plugins.BindingSelection
 		 */
 		TreeBindingAdapter.prototype.clearSelection = function (bSuppressSelectionChangeEvent) {
 			var oChanges = this._clearSelection();
@@ -1811,6 +1928,8 @@ sap.ui.define([
 		 *
 		 * @param {object} mParams
 		 *   An object containing information about selection change
+		 *
+		 * @private
 		 */
 		TreeBindingAdapter.prototype._publishSelectionChanges = function (mParams) {
 
@@ -1845,6 +1964,9 @@ sap.ui.define([
 		 * collapsed as well.
 		 *
 		 * @param {boolean} bCollapseRecursive Whether to enable the recursive collapsing
+		 *
+		 * @private
+		 * @ui5-restricted sap.ui.table.AnalyticalTable, sap.ui.table.TreeTable
 		 */
 		TreeBindingAdapter.prototype.setCollapseRecursive = function (bCollapseRecursive) {
 			this.bCollapseRecursive = !!bCollapseRecursive;
@@ -1854,6 +1976,9 @@ sap.ui.define([
 		 * Gets the collapsing behavior when parent nodes are collapsed.
 		 *
 		 * @returns {boolean} Whether recursive collapsing is enabled
+		 *
+		 * @private
+		 * @ui5-restricted sap.ui.table.TreeTable
 		 */
 		TreeBindingAdapter.prototype.getCollapseRecursive = function () {
 			return this.bCollapseRecursive;
@@ -1882,6 +2007,7 @@ sap.ui.define([
 		 *            <code>TreeBindingAdapter</code> itself
 		 *
 		 * @returns {this} Reference to <code>this</code> in order to allow method chaining
+		 *
 		 * @public
 		 */
 		TreeBindingAdapter.prototype.attachSelectionChanged = function(oData, fnFunction, oListener) {
@@ -1900,6 +2026,7 @@ sap.ui.define([
 		 * @param {object}
 		 *            [oListener] Context object on which the given function had to be called
 		 * @returns {this} Reference to <code>this</code> in order to allow method chaining
+		 *
 		 * @public
 		 */
 		TreeBindingAdapter.prototype.detachSelectionChanged = function(fnFunction, oListener) {
@@ -1920,6 +2047,7 @@ sap.ui.define([
 		 * @param {int} oParameters.leadIndex Lead selection index
 		 * @param {int[]} [oParameters.rowIndices] Other selected indices (if available)
 		 * @returns {this} Reference to <code>this</code> in order to allow method chaining
+		 *
 		 * @protected
 		 */
 		TreeBindingAdapter.prototype.fireSelectionChanged = function(oParameters) {

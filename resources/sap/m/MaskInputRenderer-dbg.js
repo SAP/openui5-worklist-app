@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -16,54 +16,30 @@ sap.ui.define(['sap/ui/core/Renderer', './InputBaseRenderer'], function(Renderer
 	MaskInputRenderer.apiVersion = 2;
 
 	/**
-	 * Returns the inner aria labelledby announcement texts for the accessibility.
+	 * Returns the accessibility state of the control.
 	 *
 	 * @override
-	 * @param {sap.ui.core.Control} oControl an object representation of the control.
-	 * @returns {String} The inner aria labelledby announcement texts
+	 * @param {sap.m.MaskInput} oControl an object representation of the control.
+	 * @returns {Object}
 	 */
+	MaskInputRenderer.getAccessibilityState = function (oControl) {
+		var oResourceBundle = sap.ui.getCore().getLibraryResourceBundle("sap.m"),
+			sCustomRole = oResourceBundle.getText("MASKINPUT_ROLE_DESCRIPTION"),
+			mAccessibilityState = InputBaseRenderer.getAccessibilityState.apply(this, arguments);
+
+		mAccessibilityState["roledescription"] = sCustomRole;
+
+		return mAccessibilityState;
+	};
+
 	MaskInputRenderer.getLabelledByAnnouncement = function(oControl) {
-		var sMask = oControl.getMask(),
-			sPlaceholder = oControl.getPlaceholder() || "",
-			oResourceBundle,
-			sMaskScreenReaderTag,
-			sAnnouncement = "";
+		var sMask = oControl.getMask();
 
 		if (sMask && sMask.length) {
-			oResourceBundle = sap.ui.getCore().getLibraryResourceBundle("sap.m");
-			sMaskScreenReaderTag = oResourceBundle.getText("MASKINPUT_SCREENREADER_TAG");
-
-			if (sPlaceholder) {
-				sPlaceholder = " " + sPlaceholder + " ";
-			}
-			sAnnouncement = sMaskScreenReaderTag + sPlaceholder;
-			return sAnnouncement;
+			return oControl.getPlaceholder() || "";
 		}
 
 		return InputBaseRenderer.getLabelledByAnnouncement.apply(this, arguments);
-	};
-
-	/**
-	 * Returns the inner aria describedby announcement texts for the accessibility.
-	 * Hook for the subclasses.
-	 *
-	 * @param {sap.ui.core.Control} oControl an object representation of the control.
-	 * @returns {String} The inner aria describedby announcement texts
-	 */
-	MaskInputRenderer.getDescribedByAnnouncement = function(oControl) {
-		var sMask = oControl.getMask(),
-			sMaskPlaceholderSymbol = oControl.getPlaceholderSymbol(),
-			oResourceBundle,
-			sAnnouncement = "";
-
-		if (sMask.length && sMaskPlaceholderSymbol) {
-			oResourceBundle = sap.ui.getCore().getLibraryResourceBundle("sap.m");
-			sAnnouncement = oResourceBundle.getText("MASKINPUT_SCREENREADER_DESCRIPTION", [sMaskPlaceholderSymbol, sMask]);
-
-			return sAnnouncement.trim();
-		}
-
-		return InputBaseRenderer.getDescribedByAnnouncement.apply(this, arguments);
 	};
 
 	return MaskInputRenderer;

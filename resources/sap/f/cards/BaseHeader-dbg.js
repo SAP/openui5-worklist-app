@@ -1,16 +1,18 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
 	"sap/ui/core/Control",
+	"sap/ui/core/Core",
 	"sap/ui/core/IntervalTrigger",
 	"sap/ui/core/format/DateFormat",
 	"sap/ui/core/date/UniversalDate",
 	"sap/m/Text"
 ], function (
 	Control,
+	Core,
 	IntervalTrigger,
 	DateFormat,
 	UniversalDate,
@@ -36,13 +38,12 @@ sap.ui.define([
 	 * @abstract
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.86
 	 * @alias sap.f.cards.BaseHeader
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var BaseHeader = Control.extend("sap.f.cards.BaseHeader", {
 		metadata: {
@@ -64,7 +65,13 @@ sap.ui.define([
 				 * Set to true to show that the data timestamp is currently updating.
 				 * @private
 				 */
-				dataTimestampUpdating: { type: "boolean", defaultValue: false, visibility: "hidden" }
+				dataTimestampUpdating: { type: "boolean", defaultValue: false, visibility: "hidden" },
+
+				/**
+				 * Set to false if header shouldn't be focusable.
+				 * @private
+				 */
+				focusable: { type: "boolean", defaultValue: true, visibility: "hidden" }
 			},
 			aggregations: {
 				/**
@@ -87,8 +94,23 @@ sap.ui.define([
 		}
 	});
 
+	BaseHeader.prototype.init = function () {
+		this._oRb = Core.getLibraryResourceBundle("sap.f");
+
+		this._oToolbarDelegate = {
+			onfocusin: this._onToolbarFocusin,
+			onfocusout: this._onToolbarFocusout
+		};
+	};
+
 	BaseHeader.prototype.exit = function () {
 		this._removeTimestampListener();
+
+		if (this._oToolbarDelegate) {
+			this._oToolbarDelegate = null;
+		}
+
+		this._oRb = null;
 	};
 
 	BaseHeader.prototype.onBeforeRendering = function () {
@@ -96,6 +118,62 @@ sap.ui.define([
 
 		if (oToolbar) {
 			oToolbar.addStyleClass("sapFCardHeaderToolbar");
+			oToolbar.removeEventDelegate(this._oToolbarDelegate, this);
+		}
+	};
+
+	BaseHeader.prototype.onAfterRendering = function () {
+		var oToolbar = this.getToolbar();
+
+		if (oToolbar) {
+			oToolbar.addEventDelegate(this._oToolbarDelegate, this);
+		}
+	};
+
+	BaseHeader.prototype.getFocusDomRef = function () {
+		return this.getDomRef("focusable");
+	};
+
+	BaseHeader.prototype.ontap = function (oEvent) {
+		var srcControl = oEvent.srcControl;
+		if (srcControl && srcControl.getId().indexOf("overflowButton") > -1) { // better way?
+			return;
+		}
+
+		if (this._isInteractive()) {
+			this.firePress();
+		}
+	};
+
+	/**
+	 * Fires the <code>sap.f.cards.NumericHeader</code> press event.
+	 */
+	BaseHeader.prototype.onsapselect = function () {
+		if (this._isInteractive()) {
+			this.firePress();
+		}
+	};
+
+	/**
+	 * Adds a CSS class on the header which removes its focus outline
+	 * to prevent drawing two focuses when the toolbar is focused.
+	 * @private
+	 */
+	BaseHeader.prototype._onToolbarFocusin = function () {
+		var oDomRef = this.getDomRef();
+		if (oDomRef) {
+			this.getDomRef().classList.add("sapFCardHeaderToolbarFocused");
+		}
+	};
+
+	/**
+	 * Removes a CSS class on the header which allows the header to show its focus outline.
+	 * @private
+	 */
+	BaseHeader.prototype._onToolbarFocusout = function () {
+		var oDomRef = this.getDomRef();
+		if (oDomRef) {
+			this.getDomRef().classList.remove("sapFCardHeaderToolbarFocused");
 		}
 	};
 
@@ -228,14 +306,28 @@ sap.ui.define([
 	 * @ui5-restricted
 	 */
 	BaseHeader.prototype.getAriaRole = function () {
-		return this.hasListeners("press") ? "button" : "heading";
+		return "group";
+	};
+
+	/**
+	 * @ui5-restricted
+	 */
+	BaseHeader.prototype.getTitleAriaRole = function () {
+		return "heading";
+	};
+
+	/**
+	 * @ui5-restricted
+	 */
+	BaseHeader.prototype.getFocusableElementAriaRole = function () {
+		return this.hasListeners("press") ? "button" : null;
 	};
 
 	/**
 	 * @ui5-restricted
 	 */
 	BaseHeader.prototype.getAriaHeadingLevel = function () {
-		return this.hasListeners("press") ? undefined : "3";
+		return "3";
 	};
 
 	/**
@@ -243,6 +335,29 @@ sap.ui.define([
 	 */
 	BaseHeader.prototype.getAriaRoleDescription = function () {
 		return this.hasListeners("press") ? this._oRb.getText("ARIA_ROLEDESCRIPTION_INTERACTIVE_CARD_HEADER") : this._oRb.getText("ARIA_ROLEDESCRIPTION_CARD_HEADER");
+	};
+
+	/**
+	 * Returns if the control is inside a sap.f.GridContainer
+	 *
+	 * @private
+	 */
+	BaseHeader.prototype._isInsideGridContainer = function() {
+		var oParent = this.getParent();
+		if (!oParent) {
+			return false;
+		}
+
+		oParent = oParent.getParent();
+		if (!oParent) {
+			return false;
+		}
+
+		return oParent.isA("sap.f.GridContainer");
+	};
+
+	BaseHeader.prototype._isInteractive = function() {
+		return this.hasListeners("press");
 	};
 
 	return BaseHeader;

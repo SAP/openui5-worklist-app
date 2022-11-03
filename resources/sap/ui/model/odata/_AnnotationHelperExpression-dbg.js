@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -187,11 +187,11 @@ sap.ui.define([
 		 * Handling of "14.5.3 Expression edm:Apply".
 		 *
 		 * @param {sap.ui.core.util.XMLPreprocessor.IContext|sap.ui.model.Context} oInterface
-		 *   the callback interface related to the current formatter call
+		 *   The callback interface related to the current formatter call
 		 * @param {object} oPathValue
-		 *   path and value information pointing to the apply (see Expression object)
-		 * @returns {object}
-		 *   the result object
+		 *   Path and value information pointing to the apply (see Expression object)
+		 * @returns {object|undefined}
+		 *   The result object or <code>undefined</code> in error cases
 		 */
 		apply : function (oInterface, oPathValue) {
 			var oName = Basics.descend(oPathValue, "Name", "string"),
@@ -206,6 +206,7 @@ sap.ui.define([
 					return Expression.uriEncode(oInterface, oParameters);
 				default:
 					Basics.error(oName, "unknown function: " + oName.value);
+					return undefined;
 			}
 		},
 
@@ -360,11 +361,11 @@ sap.ui.define([
 		 * Calculates an expression.
 		 *
 		 * @param {sap.ui.core.util.XMLPreprocessor.IContext|sap.ui.model.Context} oInterface
-		 *   the callback interface related to the current formatter call
+		 *   The callback interface related to the current formatter call
 		 * @param {object} oPathValue
-		 *   path and value information pointing to the parameters array (see Expression object)
-		 * @returns {object}
-		 *   the result object
+		 *   Path and value information pointing to the parameters array (see Expression object)
+		 * @returns {object|undefined}
+		 *   The result object or <code>undefined</code> in error cases
 		 */
 		expression : function (oInterface, oPathValue) {
 			var oRawValue = oPathValue.value,
@@ -428,6 +429,7 @@ sap.ui.define([
 					};
 				default:
 					Basics.error(oPathValue, "Unsupported OData expression");
+					return undefined;
 			}
 		},
 
@@ -945,4 +947,4 @@ sap.ui.define([
 	Expression._setDateTimeFormatter();
 
 	return Expression;
-}, /* bExport= */ false);
+});

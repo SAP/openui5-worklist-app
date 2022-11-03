@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(['./TileRenderer', 'sap/ui/core/Renderer'],
@@ -20,7 +20,7 @@ sap.ui.define(['./TileRenderer', 'sap/ui/core/Renderer'],
 	 *
 	 * @param {sap.ui.core.RenderManager}
 	 *                rm The RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control}
+	 * @param {sap.m.CustomTile}
 	 *                oControl An object representation of the control that should be rendered
 	 */
 	 CustomTileRenderer.render = function(rm, oControl) {
@@ -34,7 +34,7 @@ sap.ui.define(['./TileRenderer', 'sap/ui/core/Renderer'],
 		}
 
 		/* WAI ARIA if in TileContainer context */
-		if (oControl.getParent() instanceof sap.m.TileContainer) {
+		if (oControl.getParent() && oControl.getParent().isA("sap.m.TileContainer")) {
 			// @ui5-non-local-rendering
 			oTileContainer = oControl.getParent();
 			aVisibleTiles = oTileContainer._getVisibleTiles();

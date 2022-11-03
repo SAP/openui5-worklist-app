@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -19,6 +19,9 @@ sap.ui.define([
 		// shortcut for sap.ui.core.MessageType
 		var MessageType = coreLibrary.MessageType;
 
+		// shortcut for sap.m.ListType
+		var ListType = library.ListType;
+
 		/**
 		 * Constructor for a new MessageListItem.
 		 *
@@ -30,12 +33,11 @@ sap.ui.define([
 		 * @extends sap.m.StandardListItem
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @private
 		 * @alias sap.m.MessageListItem
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		var MessageListItem = StandardListItem.extend("sap.m.MessageListItem", /** @lends sap.m.MessageListItem.prototype */ {
 			metadata: {
@@ -51,7 +53,9 @@ sap.ui.define([
 				events: {
 					activeTitlePress: {}
 				}
-			}
+			},
+
+			renderer: MessageListItemRenderer
 		});
 
 		MessageListItem.prototype.onBeforeRendering = function () {
@@ -78,7 +82,7 @@ sap.ui.define([
 		};
 
 		MessageListItem.prototype._getLinkAriaDescribedBy = function () {
-			var sAccessibilityText = sap.ui.getCore().getLibraryResourceBundle("sap.m").getText("MESSAGE_VIEW_LINK_FOCUS_TEXT", [this.getMessageType()]);
+			var sAccessibilityText = sap.ui.getCore().getLibraryResourceBundle("sap.m").getText("MESSAGE_VIEW_LINK_FOCUS_TEXT_" + this.getMessageType().toUpperCase());
 
 			return new InvisibleText(this.getId() + "-link", {
 				text: sAccessibilityText
@@ -98,13 +102,14 @@ sap.ui.define([
 
 		MessageListItem.prototype.getContentAnnouncement = function(oBundle) {
 			var sAnnouncement = StandardListItem.prototype.getContentAnnouncement.apply(this, arguments),
-				sAdditionalText, sMessageType;
+				sAdditionalTextLocation, sAdditionalTextDescription, sMessageType;
 
 			if (this.getActiveTitle()) {
-				sMessageType = oBundle.getText("MESSAGEVIEW_BUTTON_TOOLTIP_" + this.getMessageType().toUpperCase());
-				sAdditionalText = oBundle.getText("MESSAGE_LIST_ITEM_FOCUS_TEXT", [sMessageType]);
+				sMessageType = this.getMessageType().toUpperCase();
+				sAdditionalTextLocation = oBundle.getText("MESSAGE_LIST_ITEM_FOCUS_TEXT_LOCATION_" + sMessageType);
+				sAdditionalTextDescription = this.getType() === ListType.Navigation ? oBundle.getText("MESSAGE_LIST_ITEM_FOCUS_TEXT_DESCRIPTION") : "";
 
-				sAnnouncement += " ".concat(sAdditionalText);
+				sAnnouncement += ". ".concat(sAdditionalTextLocation, ". ", sAdditionalTextDescription);
 			}
 			return sAnnouncement;
 		};

@@ -186,7 +186,7 @@ Mobify.UI.Carousel = (function($, Utils) {
 
         this.element = element;
         this.$element = $(element);
-        this.$inner = this.$element.find('.' + this._getClass('inner'));
+        this.$inner = this.$element.find('> .' + this._getClass('inner'));
         this.$items = this.$inner.children();
 
         this.$start = this.$items.eq(0);
@@ -529,10 +529,6 @@ Mobify.UI.Carousel = (function($, Utils) {
 
             self.$element.find('#' + sPageIndicatorId + ' > [data-slide=\'' + previousSlide + '\']').removeClass(self._getClass('active'));
             self.$element.find('#' + sPageIndicatorId + ' > [data-slide=\'' + nextSlide + '\']').addClass(self._getClass('active'));
-
-            if (self.$items[nextSlide - 1]) {
-                this.setAttribute('aria-activedescendant', self.$items[nextSlide - 1].id);
-            }
         });
 
 

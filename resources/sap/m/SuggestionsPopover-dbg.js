@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -11,14 +11,10 @@ sap.ui.define([
 	'sap/ui/core/ValueStateSupport',
 	'sap/m/library',
 	'sap/ui/core/library',
-	'sap/m/Button',
-	'sap/m/GroupHeaderListItem',
 	'sap/m/List',
-	"sap/m/ValueStateHeader",
 	"sap/m/inputUtils/scrollToItem",
 	"sap/m/inputUtils/SuggestionsPopoverDialogMixin",
-	"sap/m/inputUtils/SuggestionsPopoverPopoverMixin",
-	"sap/m/inputUtils/ListHelpers"
+	"sap/m/inputUtils/SuggestionsPopoverPopoverMixin"
 ], function (
 	Device,
 	EventProvider,
@@ -26,14 +22,10 @@ sap.ui.define([
 	ValueStateSupport,
 	library,
 	coreLibrary,
-	Button,
-	GroupHeaderListItem,
 	List,
-	ValueStateHeader,
 	scrollToItem,
 	SuggestionsPopoverDialogMixin,
-	SuggestionsPopoverPopoverMixin,
-	ListHelpers
+	SuggestionsPopoverPopoverMixin
 ) {
 	"use strict";
 
@@ -60,7 +52,7 @@ sap.ui.define([
 	 * @alias sap.m.SuggestionsPopover
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 */
 	var SuggestionsPopover = EventProvider.extend("sap.m.SuggestionsPopover", /** @lends sap.m.SuggestionsPopover.prototype */ {
 
@@ -138,12 +130,12 @@ sap.ui.define([
 	 * @param mOptions {object} Settings for the Popover
 	 * @public
 	 */
-	SuggestionsPopover.prototype.createSuggestionPopup = function (oParent, mOptions) {
+	SuggestionsPopover.prototype.createSuggestionPopup = function (oParent, mOptions, InputClass) {
 		var oPopover,
 			oList = this.getItemsContainer();
 
 		mOptions = mOptions || [];
-		oPopover = this.createPopover(oParent, mOptions);
+		oPopover = this.createPopover(oParent, mOptions, InputClass);
 
 		this.setPopover(oPopover);
 		oPopover.addStyleClass(CSS_CLASS_SUGGESTIONS_POPOVER);
@@ -158,7 +150,7 @@ sap.ui.define([
 	/**
 	 * Helper function that creates  (List/Table) for the suggestion popup.
 	 *
-	 * @param {string} sParent The input control that instantiates this suggestions popover
+	 * @param {string} sParentId The input control that instantiates this suggestions popover
 	 * @param {sap.ui.core.Control} oContent Typically a List or a Table which would be Popover's content
 	 * @public
 	 */
@@ -179,6 +171,8 @@ sap.ui.define([
 				showSeparators: ListSeparators.None,
 				busyIndicatorDelay: 0
 			});
+
+			oList.applyAriaRole("listbox");
 		}
 
 		this.addContent(oList);
@@ -196,7 +190,7 @@ sap.ui.define([
 	/**
 	 * Adds flex content.
 	 *
-	 * @param {sap.m.Control} oControl Control to be added
+	 * @param {sap.ui.core.Control} oControl Control to be added
 	 * @protected
 	 */
 	SuggestionsPopover.prototype.addContent = function(oControl) {
@@ -226,8 +220,8 @@ sap.ui.define([
 	 * Handles the navigation inside the list.
 	 *
 	 * @private
-	 * @param {jQuery.Event} oEvent Arrow key event.
 	 * @param {sap.ui.core.Control} oParent The input control that instantiates this suggestions popover
+	 * @param {jQuery.Event} oEvent Arrow key event.
 	 */
 	SuggestionsPopover.prototype.handleListNavigation = function(oParent, oEvent) {
 		var	oPopover = this.getPopover();
@@ -298,7 +292,6 @@ sap.ui.define([
 	 * Handles the list navigation on <code>onsapdown</code>.
 	 *
 	 * @private
-	 * @param {jQuery.Event} oEvent Arrow key event.
 	 */
 	SuggestionsPopover.prototype.handleArrowDown = function(aSelectableItems, iSelectedItemIndex, bFocusInInput, bHasValueStateHeader) {
 		// if the focus is on the input and there is no VSH available, return the first selectable item
@@ -329,7 +322,6 @@ sap.ui.define([
 	 * Handles the list navigation on <code>onsapup</code>.
 	 *
 	 * @private
-	 * @param {jQuery.Event} oEvent Arrow key event.
 	 */
 	SuggestionsPopover.prototype.handleArrowUp = function(aSelectableItems, iSelectedItemIndex, bFocusInInput, bHasValueStateHeader) {
 		// if the focus is on the input field, do nothing
@@ -354,7 +346,6 @@ sap.ui.define([
 	 * Handles the list navigation on <code>onsapend</code>.
 	 *
 	 * @private
-	 * @param {jQuery.Event} oEvent Arrow key event.
 	 */
 	SuggestionsPopover.prototype.handleEnd = function(aSelectableItems, bHasValueStateHeader) {
 		// if the focus is on the VSH, we should remove the active state
@@ -369,7 +360,6 @@ sap.ui.define([
 	 * Handles the list navigation on <code>onsaphome</code>.
 	 *
 	 * @private
-	 * @param {jQuery.Event} oEvent Arrow key event.
 	 */
 	SuggestionsPopover.prototype.handleHome = function(aSelectableItems, bHasValueStateHeader) {
 		// if a VSH is present, Home key should move the focus to it
@@ -386,7 +376,6 @@ sap.ui.define([
 	 * Handles the list navigation on <code>onsappagedown</code>.
 	 *
 	 * @private
-	 * @param {jQuery.Event} oEvent Arrow key event.
 	 */
 	SuggestionsPopover.prototype.handlePageDown = function(aSelectableItems, iSelectedItemIndex, bHasValueStateHeader) {
 		// if the focus is on the VSH, we should remove the active state
@@ -401,7 +390,6 @@ sap.ui.define([
 	 * Handles the list navigation on <code>onsappageup</code>.
 	 *
 	 * @private
-	 * @param {jQuery.Event} oEvent Arrow key event.
 	 */
 	SuggestionsPopover.prototype.handlePageUp = function(aSelectableItems, iSelectedItemIndex, bHasValueStateHeader) {
 		// if there is an item one page up, return the item
@@ -497,7 +485,6 @@ sap.ui.define([
 	 * Handles the navigation inside the list.
 	 *
 	 * @private
-	 * @param {sap.ui.core.Control} oParent The input control that instantiates this suggestions popover
 	 * @param {sap.m.GroupHeaderListItem | sap.m.StandardListItem | sap.m.ColumnListItem} oItem The item to be selected.
 	 */
 	SuggestionsPopover.prototype.handleSelectionFromList = function(oItem) {

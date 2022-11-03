@@ -1,6 +1,6 @@
-/*
- * ! OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+/*!
+ * OpenUI5
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -23,12 +23,11 @@ sap.ui.define([
 	 * @param {object} [mSettings] initial settings for the new control
 	 * @class The P13nFilterPanel control is used to define filter-specific settings for table personalization.
 	 * @extends sap.m.P13nPanel
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @constructor
 	 * @public
 	 * @since 1.26.0
 	 * @alias sap.m.P13nFilterPanel
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var P13nFilterPanel = P13nPanel.extend("sap.m.P13nFilterPanel", /** @lends sap.m.P13nFilterPanel.prototype */ {
 		metadata: {
@@ -495,18 +494,23 @@ sap.ui.define([
 				oMessageStrip.addStyleClass("sapUiResponsiveMargin");
 				this.insertAggregation("content", oMessageStrip, 0);
 			}
-
 			aKeyFields = [];
 			sModelName = (this.getBindingInfo("items") || {}).model;
-			var fGetValueOfProperty = function(sName, oContext, oItem) {
+			var fGetValueOfProperty = function (sName, oContext, oItem) {
 				var oBinding = oItem.getBinding(sName),
-					oMetadata;
+					oMetadata = oItem.getMetadata(),
+					vPropertyValue = oMetadata.hasProperty(sName) ? oMetadata.getProperty(sName).get(oItem) : oMetadata.getAggregation(sName).get(oItem),
+					vContextValue;
 
 				if (oBinding && oContext) {
-					return oContext.getObject()[oBinding.getPath()];
+					vContextValue =  oContext.getObject()[oBinding.getPath()];
+					if (sName === "text") {
+						return vContextValue || vContextValue === "" ? vContextValue : vPropertyValue;
+					} else {
+						return vContextValue;
+					}
 				}
-				oMetadata = oItem.getMetadata();
-				return oMetadata.hasProperty(sName) ? oMetadata.getProperty(sName).get(oItem) : oMetadata.getAggregation(sName).get(oItem);
+				return vPropertyValue;
 			};
 			this.getItems().forEach(function(oItem_) {
 				var oContext = oItem_.getBindingContext(sModelName),

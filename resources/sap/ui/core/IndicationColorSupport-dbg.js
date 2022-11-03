@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -16,7 +16,7 @@ sap.ui.define(['./library'],
 		 * Helper functionality for indication color support.
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 * @public
 		 * @namespace sap.ui.core.IndicationColorSupport
 		 * @since 1.66
@@ -47,7 +47,7 @@ sap.ui.define(['./library'],
 		 * represents one of five states.
 		 *
 		 * @param {sap.ui.core.Element|sap.ui.core.IndicationColor} vValue the Element of which the indicationColor needs to be checked, or the IndicationColor explicitly
-		 * @returns {string} the indication color text, if appropriate; otherwise null
+		 * @returns {string|null} the indication color text, if appropriate; otherwise <code>null</code>
 		 *
 		 * @public
 		 * @name sap.ui.core.IndicationColorSupport.getAdditionalText

@@ -1,12 +1,12 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides control sap.ui.core.Message.
-sap.ui.define(['./Element', './library', "sap/base/Log"],
-	function(Element, library, Log) {
+sap.ui.define(['./Element', './library', "sap/base/Log", "sap/ui/core/Configuration"],
+	function(Element, library, Log, Configuration) {
 	"use strict";
 
 	// shortcut
@@ -26,11 +26,10 @@ sap.ui.define(['./Element', './library', "sap/base/Log"],
 	 * @extends sap.ui.core.Element
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @alias sap.ui.core.Message
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var Message = Element.extend("sap.ui.core.Message", /** @lends sap.ui.core.Message.prototype */ { metadata : {
 
@@ -72,10 +71,9 @@ sap.ui.define(['./Element', './library', "sap/base/Log"],
 	 * @param {string} [sSize="16x16"] Only the values "16x16" or "32x32" are allowed. Otherwise the default value is used.
 	 * @return {sap.ui.core.URI} URI of the default icon.
 	 * @public
-	 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	Message.prototype.getDefaultIcon = function(sSize) {
-		var sModulePath = sap.ui.require.toUrl("sap/ui/core/themes/" + sap.ui.getCore().getConfiguration().getTheme());
+		var sModulePath = sap.ui.require.toUrl("sap/ui/core/themes/" + Configuration.getTheme());
 
 		var sImagesPath = sModulePath + "/img/message/";
 		if (sSize && sSize == "32x32") {

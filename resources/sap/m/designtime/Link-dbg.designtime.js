@@ -1,38 +1,40 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides the Design Time Metadata for the sap.m.Link control
-sap.ui.define(["sap/ui/model/json/JSONModel"],
-	function (JSONModel) {
+sap.ui.define(["sap/base/util/Deferred", "sap/ui/core/Fragment", "sap/ui/model/json/JSONModel"],
+	function (Deferred, Fragment, JSONModel) {
 		"use strict";
 
-	var oSelectTargetDialog = function(oControl, mPropertyBag) {
+	var fnSelectTargetDialog = function(oControl, mPropertyBag) {
 		var oTextResources = sap.ui.getCore().getLibraryResourceBundle("sap.m.designtime");
-		return new Promise(function(fnResolve) {
+		return Fragment.load({
+			name: "sap.m.designtime.LinkTargetSelectDialog"
+		}).then(function(oDialog) {
 
-			var data = {
+			var oModel = new JSONModel({
 				selectedKey : oControl.getTarget(),
 				titleText : oTextResources.getText("LINK_DIALOG_TITLE_CHANGE_TARGET"),
 				cancelBtn : oTextResources.getText("LINK_DIALOG_CANCEL_BTN"),
 				okBtn : oTextResources.getText("LINK_DIALOG_OK_BTN")
-			};
-			var oModel = new JSONModel();
-			oModel.setData(data);
+			});
 
-			var oDialog = sap.ui.xmlfragment("sap.m.designtime.LinkTargetSelectDialog", this);
 			oDialog.setModel(oModel);
+
+			var oDeferred = new Deferred();
 
 			oDialog.getBeginButton().attachPress(function(oEvent) {
 				var sTargetValue = sap.ui.getCore().byId("targetCombo").getValue();
 
-				fnResolve(sTargetValue);
+				oDeferred.resolve(sTargetValue);
 				oDialog.close();
 			});
 
 			oDialog.getEndButton().attachPress(function(oEvent) {
+				oDeferred.resolve(undefined);
 				oDialog.close();
 			});
 
@@ -42,8 +44,14 @@ sap.ui.define(["sap/ui/model/json/JSONModel"],
 
 			oDialog.addStyleClass(mPropertyBag.styleClass);
 			oDialog.open();
+
+			return oDeferred.promise;
 		}).then(
 				function (sTargetValue) {
+					if ( sTargetValue === undefined ) {
+						// no change (cancel)
+						return [];
+					}
 					return [{
 						selectorControl : oControl,
 						changeSpecificData : {
@@ -86,7 +94,7 @@ sap.ui.define(["sap/ui/model/json/JSONModel"],
 						isEnabled: function(oControl){
 							return !!oControl.getHref();
 						},
-						handler: oSelectTargetDialog
+						handler: fnSelectTargetDialog
 					}
 				};
 			}

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -20,7 +20,7 @@ sap.ui.define([], function () {
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRM the RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.ui.core.Control} oControl an object representation of the control that should be rendered
+	 * @param {sap.f.GridContainer} oControl an object representation of the control that should be rendered
 	 */
 	GridContainerRenderer.render = function (oRM, oControl) {
 		var sId = oControl.getId(),
@@ -58,13 +58,13 @@ sap.ui.define([], function () {
 
 		oRM.openEnd();
 
-		this.renderDummyArea(oRM, sId, "before");
+		this.renderDummyArea(oRM, sId, "before", -1);
 
 		aItems.forEach(function (oItem, iIndex) {
 			this.renderItem(oRM, oItem, oControl, iIndex);
 		}.bind(this));
 
-		this.renderDummyArea(oRM, sId, "after");
+		this.renderDummyArea(oRM, sId, "after", 0);
 
 		oRM.close("div");
 	};
@@ -85,7 +85,7 @@ sap.ui.define([], function () {
 	 * Renders a single item in the grid.
 	 * @param {sap.ui.core.RenderManager} oRM The RenderManager that can be used for writing to the render output buffer
 	 * @param {sap.ui.core.Control} oItem The grid item
-	 * @param {sap.ui.core.Control} oControl The control
+	 * @param {sap.f.GridContainer} oControl The control
 	 * @param {int} iIndex The index of the grid item
 	 */
 	GridContainerRenderer.renderItem = function (oRM, oItem, oControl, iIndex) {
@@ -123,7 +123,7 @@ sap.ui.define([], function () {
 	/**
 	 * Gets styles and classes which has to be applied to an item's wrapper element.
 	 * @param {sap.ui.core.Control} oItem The grid item
-	 * @param {sap.ui.core.Control} oControl The grid
+	 * @param {sap.f.GridContainer} oControl The grid
 	 * @returns {object} An object containing styles and classes
 	 */
 	GridContainerRenderer.getStylesForItemWrapper = function (oItem, oControl) {
@@ -172,11 +172,12 @@ sap.ui.define([], function () {
 	 * @param {sap.ui.core.RenderManager} oRM The RenderManager that can be used for writing to the render output buffer
 	 * @param {string} sControlId the ID of the control
 	 * @param {string} sAreaId the ID of the dummy area (either, "before" or "after")
+	 * @param {int} iTabIndex the tabindex of the dummy area
 	 */
-	GridContainerRenderer.renderDummyArea = function (oRM, sControlId, sAreaId) {
+	GridContainerRenderer.renderDummyArea = function (oRM, sControlId, sAreaId, iTabIndex) {
 		oRM.openStart("div", sControlId + "-" + sAreaId)
 			.class("sapFGridContainerDummyArea")
-			.attr("tabindex", "-1")
+			.attr("tabindex", iTabIndex)
 			.openEnd()
 			.close("div");
 	};

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -10,9 +10,10 @@ sap.ui.define([
 	'sap/ui/core/LocaleData',
 	"sap/base/Log",
 	"sap/base/util/extend",
-	"sap/base/util/isEmptyObject"
+	"sap/base/util/isEmptyObject",
+	"sap/ui/core/Configuration"
 ],
-	function(Locale, LocaleData, Log, extend, isEmptyObject) {
+	function(Locale, LocaleData, Log, extend, isEmptyObject, Configuration) {
 	"use strict";
 
 	/**
@@ -53,7 +54,7 @@ sap.ui.define([
 	 * Create an instance of the ListFormat.
 	 *
 	 * @param {object} [oFormatOptions] Object which defines the format options
-	 * @param {{sap.ui.core.Locale}} [oLocale] Locale to get the formatter for
+	 * @param {sap.ui.core.Locale} [oLocale] Locale to get the formatter for
 	 * @return {sap.ui.core.format.ListFormat} Instance of the ListFormat
 	 * @private
 	 */
@@ -66,7 +67,7 @@ sap.ui.define([
 		}
 
 		if (!oLocale) {
-			oLocale = sap.ui.getCore().getConfiguration().getFormatSettings().getFormatLocale();
+			oLocale = Configuration.getFormatSettings().getFormatLocale();
 		}
 		oFormat.oLocale = oLocale;
 		oFormat.oLocaleData = LocaleData.getInstance(oLocale);

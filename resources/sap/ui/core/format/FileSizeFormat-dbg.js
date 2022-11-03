@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -9,9 +9,10 @@ sap.ui.define([
 	'sap/ui/base/Object',
 	'sap/ui/core/Locale',
 	'sap/ui/core/LocaleData',
-	'sap/ui/core/format/NumberFormat'
+	'sap/ui/core/format/NumberFormat',
+	'sap/ui/core/Configuration'
 ],
-	function(BaseObject, Locale, LocaleData, NumberFormat) {
+	function(BaseObject, Locale, LocaleData, NumberFormat, Configuration) {
 	"use strict";
 
 
@@ -96,7 +97,7 @@ sap.ui.define([
 			oFormatOptions = undefined;
 		}
 		if (!oLocale) {
-			oLocale = sap.ui.getCore().getConfiguration().getFormatSettings().getFormatLocale();
+			oLocale = Configuration.getFormatSettings().getFormatLocale();
 		}
 		oFormat.oLocale = oLocale;
 		oFormat.oLocaleData = LocaleData.getInstance(oLocale);

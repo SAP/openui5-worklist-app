@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -58,13 +58,12 @@ sap.ui.define([
 		 * @extends sap.ui.core.Control
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
 		 * @since 1.42
 		 * @alias sap.f.DynamicPageHeader
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		var DynamicPageHeader = Control.extend("sap.f.DynamicPageHeader", /** @lends sap.f.DynamicPageHeader.prototype */ {
 			metadata: {
@@ -104,7 +103,9 @@ sap.ui.define([
 					_collapseButton: {type: "sap.m.Button", multiple: false,  visibility: "hidden"}
 				},
 				designtime: "sap/f/designtime/DynamicPageHeader.designtime"
-			}
+			},
+
+			renderer: DynamicPageHeaderRenderer
 		});
 
 		/*************************************** Static members ******************************************/
@@ -119,7 +120,6 @@ sap.ui.define([
 
 		DynamicPageHeader.ARIA = {
 			ARIA_CONTROLS: "aria-controls",
-			ARIA_EXPANDED: "aria-expanded",
 			ARIA_LABEL: "aria-label",
 			LABEL_EXPANDED: DynamicPageHeader._getResourceBundle().getText("EXPANDED_HEADER"),
 			LABEL_COLLAPSED: DynamicPageHeader._getResourceBundle().getText("SNAPPED_HEADER"),
@@ -203,7 +203,6 @@ sap.ui.define([
 		DynamicPageHeader.prototype._initARIAState = function () {
 			var $header = this.$();
 
-			$header.attr(DynamicPageHeader.ARIA.ARIA_EXPANDED, DynamicPageHeader.ARIA.STATE_TRUE);
 			$header.attr(DynamicPageHeader.ARIA.ARIA_LABEL, DynamicPageHeader.ARIA.LABEL_EXPANDED);
 		};
 
@@ -229,10 +228,8 @@ sap.ui.define([
 			var $header = this.$();
 
 			if (bExpanded) {
-				$header.attr(DynamicPageHeader.ARIA.ARIA_EXPANDED, DynamicPageHeader.ARIA.STATE_TRUE);
 				$header.attr(DynamicPageHeader.ARIA.ARIA_LABEL, DynamicPageHeader.ARIA.LABEL_EXPANDED);
 			} else {
-				$header.attr(DynamicPageHeader.ARIA.ARIA_EXPANDED, DynamicPageHeader.ARIA.STATE_FALSE);
 				$header.attr(DynamicPageHeader.ARIA.ARIA_LABEL, DynamicPageHeader.ARIA.LABEL_COLLAPSED);
 			}
 		};

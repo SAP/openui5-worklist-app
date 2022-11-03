@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -29,6 +29,8 @@ sap.ui.define([
 		oDateTimeFormatMs,
 		oDateTimeOffsetFormat,
 		rDecimal = /^([-+]?)0*(\d+)(\.\d+|)$/,
+		// URL might be encoded, "(" becomes %28
+		rSegmentAfterCatalogService = /\/(Annotations|ServiceNames|ServiceCollection)(\(|%28)/,
 		oTimeFormat,
 		rTrailingDecimal = /\.$/,
 		rTrailingZeroes = /0+$/;
@@ -73,7 +75,7 @@ sap.ui.define([
 	ODataUtils.createSortParams = function(aSorters) {
 		var sSortParam;
 		if (!aSorters || aSorters.length == 0) {
-			return;
+			return undefined;
 		}
 		sSortParam = "$orderby=";
 		for (var i = 0; i < aSorters.length; i++) {
@@ -122,7 +124,7 @@ sap.ui.define([
 		}
 
 		if (!oFilter) {
-			return;
+			return undefined;
 		}
 		return "$filter=" + this._createFilterParams(oFilter, oMetadata, oEntityType);
 	};
@@ -180,18 +182,20 @@ sap.ui.define([
 		}
 
 		if (!oFilter) {
-			return;
+			return undefined;
 		}
 
 		return create(oFilter, true);
 	};
 
 	/**
-	 * Converts a string or object-map with URL Parameters into an array.
-	 * If vParams is an object map, it will be also encoded properly.
+	 * Converts a string or object-map with URL parameters into an array.
+	 * If <code>vParams</code> is an object map, it will be also encoded properly.
+	 *
+	 * @param {string|object|array} vParams URL parameters
+	 * @returns {string[]} Encoded URL parameters
 	 *
 	 * @private
-	 * @param {string|object|array} vParams parameters
 	 */
 	ODataUtils._createUrlParamsArray = function(vParams) {
 		var aUrlParams, sType = typeof vParams, sParams;
@@ -352,21 +356,17 @@ sap.ui.define([
 	ODataUtils.setAnnotationOrigin = function(sAnnotationURL, vParameters){
 
 		var sFinalAnnotationURL;
-		var iAnnotationIndex = sAnnotationURL.indexOf("/Annotations(");
+		var iSegmentAfterCatalogServiceIndex = sAnnotationURL.search(rSegmentAfterCatalogService);
 		var iHanaXsSegmentIndex = vParameters && vParameters.preOriginBaseUri ? vParameters.preOriginBaseUri.indexOf(".xsodata") : -1;
 
-		if (iAnnotationIndex === -1){ // URL might be encoded, "(" becomes %28
-			iAnnotationIndex = sAnnotationURL.indexOf("/Annotations%28");
-		}
-
-		if (iAnnotationIndex >= 0) { // annotation path is there
-			if (sAnnotationURL.indexOf("/$value", iAnnotationIndex) === -1) { // $value missing
+		if (iSegmentAfterCatalogServiceIndex >= 0) {
+			if (sAnnotationURL.indexOf("/$value", iSegmentAfterCatalogServiceIndex) === -1) { // $value missing
 				Log.warning("ODataUtils.setAnnotationOrigin: Annotation url is missing $value segment.");
 				sFinalAnnotationURL = sAnnotationURL;
 			} else {
 				// if the annotation URL is an SAP specific annotation url, we add the origin path segment...
-				var sAnnotationUrlBase =  sAnnotationURL.substring(0, iAnnotationIndex);
-				var sAnnotationUrlRest =  sAnnotationURL.substring(iAnnotationIndex, sAnnotationURL.length);
+				var sAnnotationUrlBase =  sAnnotationURL.substring(0, iSegmentAfterCatalogServiceIndex);
+				var sAnnotationUrlRest =  sAnnotationURL.substring(iSegmentAfterCatalogServiceIndex, sAnnotationURL.length);
 				var sAnnotationWithOrigin = ODataUtils.setOrigin(sAnnotationUrlBase, vParameters);
 				sFinalAnnotationURL = sAnnotationWithOrigin + sAnnotationUrlRest;
 			}
@@ -387,7 +387,12 @@ sap.ui.define([
 
 
 	/**
-	 * convert multi filter to filter string
+	 * Convert multi filter to filter string.
+	 *
+	 * @param {object} oMultiFilter A multi filter
+	 * @param {sap.ui.model.odata.ODataMetadata} oMetadata The metadata
+	 * @param {object} oEntityType The entity type to filter
+	 * @returns {string} A filter string
 	 *
 	 * @private
 	 */
@@ -419,7 +424,16 @@ sap.ui.define([
 	};
 
 	/**
-	 * Create a single filter segment of the OData filter parameters
+	 * Create a single filter segment of the OData filter parameters.
+	 *
+	 * @param {string} sPath The path to the value
+	 * @param {sap.ui.model.odata.ODataMetadata} oMetadata The metadata
+	 * @param {object} oEntityType The value's entity type
+	 * @param {string} sOperator The filter operator
+	 * @param {object} oValue1 The first value
+	 * @param {object} oValue2 The second value
+	 * @param {boolean} [bCaseSensitive=true] Whether the case should be considered
+	 * @returns {string} The encoded string representation of the given filter
 	 *
 	 * @private
 	 */
@@ -455,7 +469,6 @@ sap.ui.define([
 			sPath =  "toupper(" + sPath + ")";
 		}
 
-		// TODO embed 2nd value
 		switch (sOperator) {
 			case "EQ":
 			case "NE":

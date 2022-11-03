@@ -146,11 +146,6 @@ html[data-sap-ui-os^="iOS"] .sapMBtnBase:not(.sapMBtn) .sapMBtnContent {
 		height:           1.625rem;
 		min-width:        2.0rem;
 	}
-	.sapMBtnInner.sapMBtnText,
-	.sapMBtnInner.sapMBtnIconFirst {
-		padding-left: 0.4375rem;
-		padding-right: 0.4375rem;
-	}
 
 	.sapMBtnContent {
 		line-height:      1.500rem;
@@ -385,7 +380,7 @@ span.sapMBtnInner.sapMBtnEmphasized {
 }
 
 :not(.sapMBtnDisabled) > span.sapMBtnInner.sapMBtnEmphasized.sapMBtnActive > .sapMBtnIcon {
-	color: @sapUiButtonActiveTextColor;
+	color: @sapUiButtonEmphasizedActiveTextColor;
 }
 
 .sapMBtn:hover > .sapMBtnHoverable.sapMBtnEmphasized:not(.sapMBtnActive):not(.sapMToggleBtnPressed) {
@@ -455,7 +450,7 @@ span.sapMBtnInner.sapMBtnEmphasized {
 .sapMBtn .sapMBtnNegative.sapMBtnInner,
 .sapMBtn .sapMBtnSuccess.sapMBtnInner,
 .sapMBtn .sapMBtnNeutral.sapMBtnInner{
-		text-shadow: none;
+	text-shadow: @sapUiContentContrastTextShadow;
 }
 
 .sapMBtn:not(.sapMBtnDisabled):hover .sapMBtnCritical{
@@ -887,4 +882,3 @@ html.sap-desktop .sapMFooter-CTX .sapMBtnInner :not(.sapMBtnDisabled) {
 		}
 	}
 }
-

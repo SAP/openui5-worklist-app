@@ -25,12 +25,9 @@
 	}
 
 	.sapMSLITitle {
-		color: @sapUiGroupTitleTextColor;
+		font-size: @sapMFontHeader6Size;
 	}
 
-	.sapMSLIDescription {
-		color: @sapUiContentLabelColor;
-	}
 
 	.sapMMsgViewDescriptionText {
 		padding-bottom:0;
@@ -42,6 +39,10 @@
 
 	.sapMMsgViewTitleText {
 		margin: 0 0 1rem 2.5rem;
+		font-family: @sapUiFontHeaderFamily;
+		font-size: @sapUiFontHeader5Size;
+		font-weight: @sapUiFontHeaderWeight;
+		color: @sapUiGroupTitleTextColor;
 	}
 
 	.sapMMsgViewDescriptionLink {
@@ -84,6 +85,7 @@
 .sapMMsgView .sapMMsgViewDescriptionLink,
 .sapMMsgView .sapMMsgViewItem .sapMSLITitle {
 	width: fit-content;
+	max-width: 100%;
 }
 
 /* Compact size */

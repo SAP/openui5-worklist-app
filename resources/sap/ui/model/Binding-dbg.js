@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
@@ -547,7 +547,8 @@ sap.ui.define([
 	 * of the binding is fired. The default implementation just fires the change event when the
 	 * method is called. Subclasses should implement this, if possible.
 	 *
-	 * @param {boolean} bForceUpdate Whether the event should be fired when the binding is suspended
+	 * @param {boolean} [bForceUpdate] Whether the event should be fired when the binding is
+	 *   suspended
 	 *
 	 * @private
 	 */
@@ -564,7 +565,7 @@ sap.ui.define([
 	 * To update a control, even if no data has been changed, e.g. to reset a control after failed
 	 * validation, please use the parameter <code>bForceUpdate</code>.
 	 *
-	 * @param {boolean} bForceUpdate Update the bound control even if no data has been changed
+	 * @param {boolean} [bForceUpdate] Update the bound control even if no data has been changed
 	 *
 	 * @public
 	 */
@@ -591,7 +592,7 @@ sap.ui.define([
 	/**
 	 * _refresh for compatibility
 	 *
-	 * @param {boolean} bForceUpdate Whether an update should be forced
+	 * @param {boolean} [bForceUpdate] Whether an update should be forced
 	 * @private
 	 */
 	Binding.prototype._refresh = function(bForceUpdate) {

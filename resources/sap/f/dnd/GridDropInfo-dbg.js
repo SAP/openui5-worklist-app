@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -37,13 +37,12 @@ sap.ui.define([
 	 * @extends sap.ui.core.dnd.DropInfo
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @experimental Since 1.68 This class is experimental. The API may change.
 	 * @since 1.68
 	 * @alias sap.f.dnd.GridDropInfo
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var GridDropInfo = DropInfo.extend("sap.f.dnd.GridDropInfo", /** @lends sap.f.dnd.GridDropInfo.prototype */ { metadata: {
 		library: "sap.f",

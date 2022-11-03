@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -178,10 +178,6 @@ sap.ui.define([
 		 * The function <code>foo</code> is called with arguments such that <code>
 		 * oInterface.getModel(i).getObject(oInterface.getPath(i)) === arguments[i + 1]</code>
 		 * holds.
-		 * This use is not supported within an expression binding, that is, <code>&lt;Text
-		 * text="{= ${parts: [{path: 'Label'}, {path: 'Value'}], formatter: 'foo'} }"/></code>
-		 * does not work as expected because the property <code>requiresIContext = true</code> is
-		 * ignored.
 		 *
 		 * To distinguish those two use cases, just check whether <code>oInterface.getModel() ===
 		 * undefined</code>, in which case the formatter is called on root level of a composite
@@ -197,6 +193,22 @@ sap.ui.define([
 		 * @since 1.27.1
 		 */
 		return /** @lends sap.ui.core.util.XMLPreprocessor.IContext */ {
+			/**
+			 * @param {number} iStart - Start index of slice
+			 * @param {number} iEnd - End index of slice
+			 * @returns {sap.ui.core.util.XMLPreprocessor.IContext}
+			 *   Sliced interface or <code>this</code> in case no slice is needed
+			 *
+			 * @private
+			 */
+			_slice : function (iStart, iEnd) {
+				getBindingOrContext(0); // just to trigger lazy init of vBindingOrContext
+				return !iStart && iEnd >= vBindingOrContext.length
+					? this // no slice needed
+					: createContextInterface(null, mSettings, undefined,
+						vBindingOrContext.slice(iStart, iEnd));
+			},
+
 			/**
 			 * Returns a context interface for the indicated part in case of the root formatter of a
 			 * composite binding. The new interface provides access to the original settings, but
@@ -282,7 +294,7 @@ sap.ui.define([
 			 * @param {number} [iPart]
 			 *   index of part in case of the root formatter of a composite binding
 			 *   (since 1.31.0)
-			 * @returns {sap.ui.model.Model}
+			 * @returns {sap.ui.model.Model|undefined}
 			 *   the model related to the current formatter call, or (since 1.31.0)
 			 *   <code>undefined</code> in case of a root formatter if no <code>iPart</code> is
 			 *   given or if <code>iPart</code> is out of range
@@ -298,7 +310,7 @@ sap.ui.define([
 			 *
 			 * @param {number} [iPart]
 			 *   index of part in case of the root formatter of a composite binding (since 1.31.0)
-			 * @returns {string}
+			 * @returns {string|undefined}
 			 *   the absolute path related to the current formatter call, or (since 1.31.0)
 			 *   <code>undefined</code> in case of a root formatter if no <code>iPart</code> is
 			 *   given or if <code>iPart</code> is out of range
@@ -532,6 +544,7 @@ sap.ui.define([
 		 *   If visitor or namespace is invalid
 		 *
 		 * @private
+		 * @ui5-restricted sap.fe
 		 */
 		plugIn : function (fnVisitor, sNamespace, sLocalName) {
 			var fnOldVisitor = mVisitors[sNamespace];
@@ -985,7 +998,7 @@ sap.ui.define([
 			 *
 			 * @param {Element} oIfElement
 			 *   the <template:if> XML DOM element
-			 * @returns {Element[]}
+			 * @returns {Element[]|null}
 			 *   the XML DOM element children (a <then>, zero or more <elseif> and possibly an
 			 *   <else>) or null if there is no <then>
 			 * @throws {Error}
@@ -1324,7 +1337,7 @@ sap.ui.define([
 					if (!oViewInfo.sync) {
 						return asyncRequire();
 					}
-					aURNs.forEach(sap.ui.requireSync);
+					aURNs.forEach(sap.ui.requireSync); // legacy-relevant: Sync path
 				}
 				return oSyncPromiseResolved;
 			}

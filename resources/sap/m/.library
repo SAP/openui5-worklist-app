@@ -4,9 +4,9 @@
   <name>sap.m</name>
   <vendor>SAP SE</vendor>
   <copyright>OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.</copyright>
-  <version>1.96.2</version>
+  <version>1.108.0</version>
 
   <documentation>The main UI5 control library, with responsive controls that can be used in touch devices as well as desktop browsers.</documentation>
 
@@ -30,11 +30,27 @@
     <!-- excludes for the JSDoc -->
     <jsdoc xmlns="http://www.sap.com/ui5/buildext/jsdoc" >
         <exclude name="sap.m.js." />
+        <exclude name="sap.m._thirdparty." />
     </jsdoc>
     <!-- excludes for the JSCoverage -->
     <jscoverage xmlns="http://www.sap.com/ui5/buildext/jscoverage" >
         <exclude name="sap.m.js." />
+        <exclude name="sap.m._thirdparty." />
     </jscoverage>
+    <!-- excludes for the library-preload.js -->
+    <packaging xmlns="http://www.sap.com/ui5/buildext/packaging" version="2.0" >
+        <all-in-one>
+            <exclude name="sap/m/_thirdparty/purify.js" />
+        </all-in-one>
+    </packaging>
+    <!-- Thirdparty references -->
+    <thirdparty xmlns="http://www.sap.com/ui5/buildext/thirdparty" >
+        <lib name="DOMPurify" displayName="purify.js" npmName="dompurify" version="2.3.8" hash="a12fd82a376dc194563c5af82a30ebc8" homepage="https://github.com/cure53/DOMPurify/" id="73554900106100137292">
+            <license url="https://github.com/cure53/DOMPurify/blob/main/LICENSE" type="Apache-2.0" />
+            <copyright>Mario Heiderich</copyright>
+            <pattern>sap/m/_thirdparty/purify.js</pattern>
+        </lib>
+    </thirdparty>
     <documentation xmlns="http://www.sap.com/ui5/buildext/documentation"
         indexUrl="../../../test-resources/sap/m/demokit/docuindex.json"
         resolve="lib" />
@@ -55,6 +71,9 @@
                 <module>sap/m/FeedInput</module>
                 <module>sap/m/FeedListItem</module>
                 <module>sap/m/UploadCollection</module>
+                <module>sap/m/ActionTile</module>
+                <module>sap/m/ActionTileContent</module>
+                <module>sap/m/CustomAttribute</module>
                 <module>sap/m/SlideTile</module>
                 <module>sap/m/GenericTile</module>
                 <module>sap/m/TileContent</module>
@@ -83,6 +102,7 @@
                 <module>sap/m/upload/Uploader</module>
                 <module>sap/m/upload/UploadSet</module>
                 <module>sap/m/upload/UploadSetItem</module>
+                <module>sap/m/upload/UploadSetToolbarPlaceholder</module>
             </modules>
         </component>
         <component>

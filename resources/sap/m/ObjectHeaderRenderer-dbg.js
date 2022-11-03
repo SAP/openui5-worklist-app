@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -12,9 +12,10 @@ sap.ui.define([
 	'sap/m/Link',
 	'sap/m/Text',
 	"sap/ui/thirdparty/jquery",
-	"sap/ui/util/defaultLinkTypes"
+	"sap/ui/util/defaultLinkTypes",
+	"sap/ui/core/Configuration"
 ],
-	function(Control, coreLibrary, library, Device, Log, Link, Text, jQuery, defaultLinkTypes) {
+	function(Control, coreLibrary, library, Device, Log, Link, Text, jQuery, defaultLinkTypes, Configuration) {
 	"use strict";
 
 
@@ -79,7 +80,7 @@ sap.ui.define([
 	/**
 	 * A row is considered empty if both input parameters are empty.
 	 *
-	 * @param {sap.ui.core.Control} oLeft control to be checked
+	 * @param {sap.m.ObjectAttribute} oLeft control to be checked
 	 *
 	 * @param {sap.ui.core.Control[]} aRight array of controls to be checked
 	 *
@@ -161,7 +162,7 @@ sap.ui.define([
 	 *
 	 * @param {sap.m.ObjectHeader} oOH the ObjectHeader that contains markers
 	 *
-	 * @returns {Array} array of {sap.m.ObjectMarker} controls
+	 * @returns {sap.m.ObjectMarker[]} array of ObjectMarker controls
 	 *
 	 * @private
 	 */
@@ -231,7 +232,7 @@ sap.ui.define([
 	 * sap.m.ProgressIndicator and returns only the visible once that should be rendered
 	 *
 	 * @param {sap.m.ObjectHeader} oOH an object to be rendered
-	 * @returns {array} The visible statuses
+	 * @returns {Array<sap.m.ObjectStatus|sap.m.ProgressIndicator>} The visible statuses
 	 * @private
 	 */
 	ObjectHeaderRenderer._getVisibleStatuses = function(oOH) {
@@ -248,7 +249,7 @@ sap.ui.define([
 			var aStatuses = oOH.getStatuses();
 			for (var i = 0; i < aStatuses.length; i++) {
 				if (!aStatuses[i].getVisible || aStatuses[i].getVisible()) {
-					if ((aStatuses[i] instanceof sap.m.ObjectStatus && !aStatuses[i]._isEmpty()) || aStatuses[i] instanceof sap.m.ProgressIndicator) {
+					if ((aStatuses[i].isA("sap.m.ObjectStatus") && !aStatuses[i]._isEmpty()) || aStatuses[i].isA("sap.m.ProgressIndicator")) {
 						aVisibleStatuses.push([aStatuses[i]]);
 					} else {
 						Log.warning("Only sap.m.ObjectStatus or sap.m.ProgressIndicator are allowed in \"sap.m.ObjectHeader.statuses\" aggregation." + " Current object is "
@@ -314,7 +315,7 @@ sap.ui.define([
 			this._renderAttribute(oRM, oOH, oLeft, ObjectHeaderRenderer._isEmptyArray(aRight));
 		} else if (ObjectHeaderRenderer._isEmptyObject(oLeft) && !ObjectHeaderRenderer._isEmptyArray(aRight)) {
 			// if there are no attributes at all and the array containing statuses and progress indicators isn't empty
-			if (aRight[0] instanceof sap.m.ProgressIndicator) { // check if the first element in the array is progress indicator, and if it's so then place an empty "attribute" div before the progress indicator
+			if (aRight[0] && aRight[0].isA("sap.m.ProgressIndicator")) { // check if the first element in the array is progress indicator, and if it's so then place an empty "attribute" div before the progress indicator
 				oRM.openStart("div");
 				oRM.class("sapMOHAttr");
 				oRM.openEnd();
@@ -324,9 +325,9 @@ sap.ui.define([
 
 		if (!ObjectHeaderRenderer._isEmptyArray(aRight)) { // check do we have statuses, icons or progress indicators and render them accordingly
 			oRM.openStart("div");
-			if (aRight[0] instanceof sap.m.ProgressIndicator) {
+			if (aRight[0] && aRight[0].isA("sap.m.ProgressIndicator")) {
 				oRM.class("sapMOHStatusFixedWidth");
-			} else if (aRight[0] instanceof sap.m.ObjectMarker) {
+			} else if (aRight[0] && aRight[0].isA("sap.m.ObjectMarker")) {
 				oRM.class("sapMOHStatusFixedWidth");
 				oRM.class("sapMObjStatusMarker");
 			} else {
@@ -814,7 +815,7 @@ sap.ui.define([
 
 		oRM.close("div");
 
-		if (oHeaderContainer && oHeaderContainer instanceof sap.m.IconTabBar) {
+		if (oHeaderContainer && oHeaderContainer.isA("sap.m.IconTabBar")) {
 			this._renderChildControl(oRM, oOH, oHeaderContainer);
 		}
 
@@ -1061,7 +1062,7 @@ sap.ui.define([
 	ObjectHeaderRenderer._renderResponsiveMarkers = function(oRM, oControl) {
 		var aMarkers = [],
 			sTextDir = oControl.getTitleTextDirection(),
-			bPageRTL = sap.ui.getCore().getConfiguration().getRTL();
+			bPageRTL = Configuration.getRTL();
 
 		// load markers based on control state
 		aMarkers = oControl._getVisibleMarkers();
@@ -1141,15 +1142,15 @@ sap.ui.define([
 			oIconTabHeader;
 
 		if (oHeaderContainer) {
-			if (oHeaderContainer instanceof sap.m.IconTabBar) {
+			if (oHeaderContainer.isA("sap.m.IconTabBar")) {
 				oIconTabHeader = oHeaderContainer._getIconTabHeader();
 				if (oIconTabHeader.getVisible()) {
 					oControl._iCountVisTabs = oIconTabHeader.getItems().length;
 					return !!oIconTabHeader.getItems().length;
 				}
-			} else if (oHeaderContainer.getMetadata().getName() === "sap.m.HeaderContainer") {
+			} else if (oHeaderContainer.isA("sap.m.HeaderContainer")) {
 				return !!oHeaderContainer.getContent().length;
-			} else if (oHeaderContainer.getMetadata().getName() === "sap.suite.ui.commons.HeaderContainer") {
+			} else if (oHeaderContainer.isA("sap.suite.ui.commons.HeaderContainer")) {
 				return !!oHeaderContainer.getItems().length;
 			}
 		}
@@ -1172,17 +1173,17 @@ sap.ui.define([
 
 		oRM.openStart("div");
 		oRM.class("sapMOHRTabs");
-		if (oHeaderContainer instanceof sap.m.IconTabBar) {
+		if (oHeaderContainer && oHeaderContainer.isA("sap.m.IconTabBar")) {
 			oRM.class("sapMOHRTabsITB");
 		}
 		oRM.openEnd();
 		if (oHeaderContainer) {
-			if (oHeaderContainer instanceof sap.m.IconTabBar) {
+			if (oHeaderContainer.isA("sap.m.IconTabBar")) {
 				oIconTabHeader = oHeaderContainer._getIconTabHeader();
 				this._renderChildControl(oRM, oControl, oIconTabHeader);
 				// tell iconTabBar to not render the header
 				oHeaderContainer._bHideHeader = true;
-			} else if (oHeaderContainer.getMetadata().getName() === "sap.m.HeaderContainer" || oHeaderContainer.getMetadata().getName() === "sap.suite.ui.commons.HeaderContainer") {
+			} else if (oHeaderContainer.isA(["sap.m.HeaderContainer", "sap.suite.ui.commons.HeaderContainer"])) {
 				// render the header container
 				this._renderChildControl(oRM, oControl, oHeaderContainer);
 			} else {

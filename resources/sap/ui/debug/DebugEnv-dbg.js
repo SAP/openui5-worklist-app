@@ -1,12 +1,12 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // A core plugin that bundles debug features and connects with an embedding testsuite
-sap.ui.define('sap/ui/debug/DebugEnv', ['sap/ui/base/Interface', './ControlTree', './LogViewer', './PropertyList', "sap/base/Log", "sap/ui/thirdparty/jquery"],
-	function(Interface, ControlTree, LogViewer, PropertyList, Log, jQuery) {
+sap.ui.define('sap/ui/debug/DebugEnv', ['sap/ui/base/Interface', './ControlTree', './LogViewer', './PropertyList', "sap/base/Log", "sap/ui/thirdparty/jquery", "sap/ui/core/Configuration"],
+	function(Interface, ControlTree, LogViewer, PropertyList, Log, jQuery, Configuration) {
 	"use strict";
 
 
@@ -16,7 +16,7 @@ sap.ui.define('sap/ui/debug/DebugEnv', ['sap/ui/base/Interface', './ControlTree'
 	 * @class Central Class for the Debug Environment
 	 *
 	 * @author Martin Schaus, Frank Weigel
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @private
 	 * @alias sap.ui.debug.DebugEnv
 	 */
@@ -73,7 +73,7 @@ sap.ui.define('sap/ui/debug/DebugEnv', ['sap/ui/base/Interface', './ControlTree'
 		this.oControlTreeWindow = this.bRunsEmbedded ? this.oWindow : (top.document.getElementById("sap-ui-ControlTreeWindow") || top.frames["sap-ui-ControlTreeWindow"] || top);
 		this.oPropertyListWindow = this.bRunsEmbedded ? this.oWindow : (top.document.getElementById("sap-ui-PropertyListWindow") || top.frames["sap-ui-PropertyListWindow"] || top);
 
-		var bRtl = sap.ui.getCore().getConfiguration().getRTL();
+		var bRtl = Configuration.getRTL();
 
 		/* TODO enable switch to testsuite
 		if ( this.bRunsEmbedded ) {

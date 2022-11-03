@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -15,7 +15,8 @@ sap.ui.define([
 	"sap/base/util/JSTokenizer",
 	"sap/base/util/ObjectPath",
 	"sap/base/util/resolveReference",
-	"sap/base/Log"
+	"sap/base/Log",
+	"sap/ui/core/Configuration"
 ],
 	function(
 		BindingParser,
@@ -27,7 +28,8 @@ sap.ui.define([
 		JSTokenizer,
 		ObjectPath,
 		resolveReference,
-		Log
+		Log,
+		Configuration
 	) {
 		"use strict";
 
@@ -78,7 +80,7 @@ sap.ui.define([
 				var fnHandler, iStartBracket, sFunctionName;
 				sName = sName.trim();
 
-				if (sap.ui.getCore().getConfiguration().getControllerCodeDeactivated()) {
+				if (Configuration.getControllerCodeDeactivated()) {
 					// When design mode is enabled, controller code is not loaded. That is why we stub the handler functions.
 					fnHandler = function() {};
 				} else {

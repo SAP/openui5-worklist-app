@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -47,13 +47,12 @@ sap.ui.define([
 		 * A thin wrapper over {@link sap.ui.unified.ColorPicker} allowing the latter to be used in a popover.
 		 *
 		 * @extends sap.ui.core.Control
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
 		 * @since 1.60
 		 * @alias sap.ui.unified.ColorPickerPopover
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		var ColorPickerPopover = Control.extend("sap.ui.unified.ColorPickerPopover", /** @lends sap.ui.unified.ColorPickerPopover.prototype */ {
 			metadata: {
@@ -247,11 +246,10 @@ sap.ui.define([
 		 * The popover is positioned relative to the control parameter on tablet or desktop and is full screen on phone.
 		 * Therefore the openBy parameter is only used on tablet or desktop and is ignored on phone.
 		 *
-		 * @param {Object} openBy When this control is displayed on tablet or desktop, the <code>ColorPickerPopover</code>
+		 * @param {sap.ui.core.Control|HTMLElement} openBy When this control is displayed on tablet or desktop, the <code>ColorPickerPopover</code>
 		 * is positioned relative to this control
-		 * @returns {Object} Reference to the opening control
+		 * @returns {sap.m.Popover|sap.m.Dialog} Reference to the opening control
 		 * @public
-		 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		ColorPickerPopover.prototype.openBy = function (openBy) {
 			return ResponsivePopover.prototype.openBy.apply(this._ensurePopover(), arguments);
@@ -264,7 +262,6 @@ sap.ui.define([
 		 * @function
 		 * @type sap.ui.core.Control
 		 * @public
-		 * @ui5-metamodel This method also will be described in the UI5 (legacy) designtime metamodel
 		 */
 
 

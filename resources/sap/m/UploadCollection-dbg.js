@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -29,13 +29,15 @@ sap.ui.define([
 	"sap/m/UploadCollectionParameter",
 	"sap/m/UploadCollectionToolbarPlaceholder",
 	"sap/ui/core/HTML",
-	"sap/m/CustomListItem",
+    "sap/ui/core/InvisibleText",
+    "sap/m/CustomListItem",
 	"sap/ui/core/ResizeHandler",
 	"sap/ui/Device",
 	"./UploadCollectionRenderer",
 	"sap/ui/thirdparty/jquery",
 	"sap/ui/events/KeyCodes",
 	"sap/base/Log",
+	"sap/ui/core/Configuration",
 	"sap/ui/dom/jquery/selectText" // jQuery Plugin "selectText"
 ], function(
 	Library,
@@ -62,13 +64,15 @@ sap.ui.define([
 	UploadCollectionParameter,
 	UploadCollectionToolbarPlaceholder,
 	HTML,
+	InvisibleText,
 	CustomListItem,
 	ResizeHandler,
 	Device,
 	UploadCollectionRenderer,
 	jQuery,
 	KeyCodes,
-	Log
+	Log,
+	Configuration
 ) {
 	"use strict";
 
@@ -88,13 +92,12 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @deprecated as of version 1.88, replaced by {@link sap.m.upload.UploadSet}
 	 * @alias sap.m.UploadCollection
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var UploadCollection = Control.extend("sap.m.UploadCollection", /** @lends sap.m.UploadCollection.prototype */ {
 
@@ -124,7 +127,7 @@ sap.ui.define([
 				if (bInstantUpload === false) {
 					this.bInstantUpload = bInstantUpload;
 					this._oFormatDecimal = FileSizeFormat.getInstance({
-						binaryFilesize: true,
+						binaryFilesize: false,
 						maxFractionDigits: 1,
 						maxIntegerDigits: 4
 					});
@@ -615,7 +618,9 @@ sap.ui.define([
 					}
 				}
 			}
-		}
+		},
+
+		renderer: UploadCollectionRenderer
 	});
 
 	UploadCollection._uploadingStatus = "uploading";
@@ -671,7 +676,7 @@ sap.ui.define([
 		this._oListEventDelegate = null;
 		this._oItemToUpdate = null;
 		this._sReziseHandlerId = null;
-		this.oInvisibleText = new sap.ui.core.InvisibleText().toStatic();
+		this.oInvisibleText = new InvisibleText().toStatic();
 	};
 
 	/* =========================================================== */
@@ -895,7 +900,7 @@ sap.ui.define([
 
 	/**
 	 * Retrieves the currently selected UploadCollectionItem.
-	 * @returns {sap.m.UploadCollectionItem | null} The currently selected item or null
+	 * @returns {sap.m.UploadCollectionItem | null} The currently selected item or <code>null</code>
 	 * @since 1.34.0
 	 * @public
 	 */
@@ -2959,7 +2964,7 @@ sap.ui.define([
 		// set application language to request headers
 		oLangRequestHeader = {
 			name: this._headerParamConst.acceptLanguage,
-			value: sap.ui.getCore().getConfiguration().getLanguage()
+			value: Configuration.getLanguage()
 		};
 		event.getParameter("requestHeaders").push(oLangRequestHeader);
 
@@ -3312,8 +3317,8 @@ sap.ui.define([
 
 	/**
 	 * Helper function for better Event API. This reference points to the oEvent coming from the FileUploader
-	 * @param {string} sHeaderParameterName Header parameter name (optional)
-	 * @returns {UploadCollectionParameter | UploadCollectionParameter[] | null} Header parameter or null
+	 * @param {string} [sHeaderParameterName] Header parameter name (optional)
+	 * @returns {sap.m.UploadCollectionParameter | sap.m.UploadCollectionParameter[] | null} Header parameter or null
 	 * @private
 	 */
 	UploadCollection.prototype._getHeaderParameterWithinEvent = function(sHeaderParameterName) {
@@ -3504,7 +3509,7 @@ sap.ui.define([
 	 * Retrieves the sap.m.ListItem from the internal sap.m.List based on the ID
 	 * @param {string} listItemId The item ID used for finding the UploadCollectionItem
 	 * @param {sap.m.ListItemBase[]} listItems The array of list items to search in
-	 * @returns {sap.m.UploadCollectionItem} The matching UploadCollectionItem or null if none is found
+	 * @returns {sap.m.UploadCollectionItem|null} The matching UploadCollectionItem or null if none is found
 	 * @private
 	 */
 	UploadCollection._findById = function(listItemId, listItems) {

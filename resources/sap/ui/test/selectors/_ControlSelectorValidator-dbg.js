@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -22,7 +22,7 @@ sap.ui.define([
      */
     var _ControlSelectorValidator = ManagedObject.extend("sap.ui.test.selectors._ControlSelectorValidator", {
         /**
-         * contruct a validator
+         * Construct a validator
          * @param {object} oValidationRoot control which will be used to test the selector
          * The selector should be unique in the control subtree with root oOptions.validationRoot. By default, this subtree is the entire app control tree.
          * @param {boolean} bMultiple whether to validate non-unique selectors as well. Default value is false, meaning that only unique selectors are valid.

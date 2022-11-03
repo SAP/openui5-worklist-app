@@ -1,18 +1,15 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 sap.ui.define([
 	"sap/base/util/uid",
-	"sap/ui/core/util/reflection/JsControlTreeModifier",
-	"sap/ui/core/Component",
+	"sap/ui/core/Configuration",
 	"sap/ui/fl/util/ManagedObjectModel" // used implicitly by oModifier.createControl() function
 ], function (
-	uid,
-	JsControlTreeModifier,
-	Component
+	uid, Configuration
 ) {
 	"use strict";
 
@@ -21,19 +18,19 @@ sap.ui.define([
 	 *
 	 * @alias sap.m.changeHandler.CombineButtons
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @experimental Since 1.48
 	 */
 	var CombineButtons = {};
 
 	var sCombineButtonsModelName = "$sap.m.flexibility.CombineButtonsModel";
 
-	function fnHandleMenuItems(aButtons, oModifier, oAppComponent, oMenu, oParent, sParentAggregation, oView, oChangeDefinition, oRevertData) {
+	function fnHandleMenuItems(aButtons, oModifier, oAppComponent, oMenu, oParent, sParentAggregation, oView, oChangeContent, oRevertData) {
 		var sPropertyEnabled = "";
 		var sPropertyVisible = "";
 		var sOR = "";
 		var aMenuButtonModels = [];
-		var bIsRtl = sap.ui.getCore().getConfiguration().getRTL();
+		var bIsRtl = Configuration.getRTL();
 		var aMenuButtonName = [];
 
 		return aButtons.reduce(function(oPreviousPromise, oButton, index) {
@@ -41,7 +38,7 @@ sap.ui.define([
 			var iIndex = index;
 			var oMenuItem;
 			var oManagedObjectModel;
-			var oSelector = oChangeDefinition.content.buttonsIdForSave[iIndex];
+			var oSelector = oChangeContent.buttonsIdForSave[iIndex];
 			var sButtonText;
 			var sModelName = "$sap.m.flexibility.MenuButtonModel" + iIndex;
 			return oPreviousPromise
@@ -185,7 +182,7 @@ sap.ui.define([
 			return Promise.reject(new Error("Combine buttons change can't be applied on XML tree"));
 		}
 
-		var oChangeDefinition = oChange.getDefinition();
+		var oChangeContent = oChange.getContent();
 		var oModifier = mPropertyBag.modifier;
 		var oView = mPropertyBag.view;
 		var oAppComponent = mPropertyBag.appComponent;
@@ -204,12 +201,12 @@ sap.ui.define([
 		var aMenuButtonName = [];
 
 		return Promise.resolve()
-			.then(oModifier.bySelector.bind(oModifier, oChangeDefinition.content.combineButtonSelectors[0], oAppComponent, oView))
+			.then(oModifier.bySelector.bind(oModifier, oChangeContent.combineButtonSelectors[0], oAppComponent, oView))
 			.then(function(oReturnedSourceControl) {
 				oSourceControl = oReturnedSourceControl;
 				oParent = oModifier.getParent(oSourceControl); // === oControl
 				var aPromises = [];
-				oChangeDefinition.content.combineButtonSelectors.forEach(function(oCombineButtonSelector) {
+				oChangeContent.combineButtonSelectors.forEach(function(oCombineButtonSelector) {
 					var oPromise = Promise.resolve()
 						.then(oModifier.bySelector.bind(oModifier, oCombineButtonSelector, oAppComponent, oView));
 					aPromises.push(oPromise);
@@ -227,7 +224,7 @@ sap.ui.define([
 			})
 			.then(function(iAggrIndex){
 				iAggregationIndex = iAggrIndex;
-				return oModifier.createControl("sap.m.Menu", oAppComponent, oView, oChangeDefinition.content.menuIdSelector);
+				return oModifier.createControl("sap.m.Menu", oAppComponent, oView, oChangeContent.menuIdSelector);
 			})
 			.then(function(oCreatedMenu){
 				oMenu = oCreatedMenu;
@@ -246,7 +243,7 @@ sap.ui.define([
 					oParent,
 					sParentAggregation,
 					oView,
-					oChangeDefinition,
+					oChangeContent,
 					oRevertData);
 			})
 			// Create MenuButton
@@ -259,7 +256,7 @@ sap.ui.define([
 					"sap.m.MenuButton",
 					oAppComponent,
 					oView,
-					oChangeDefinition.content.menuButtonIdSelector,
+					oChangeContent.menuButtonIdSelector,
 					{
 						visible: "{= " + sPropertyVisible + "}",
 						enabled: "{= " + sPropertyEnabled + "}"
@@ -315,18 +312,18 @@ sap.ui.define([
 		var oModifier = mPropertyBag.modifier;
 		var oView = mPropertyBag.view;
 		var oRevertData = oChange.getRevertData();
-		var oChangeDefinition = oChange.getDefinition();
+		var oChangeContent = oChange.getContent();
 		var sParentAggregation = oRevertData.parentAggregation;
 		var oMenuButton, oParent, aButtonsIdsReversed;
 
 		return Promise.resolve()
 			.then(function(){
-				return oModifier.bySelector(oChangeDefinition.content.menuButtonIdSelector, mPropertyBag.appComponent, oView);
+				return oModifier.bySelector(oChangeContent.menuButtonIdSelector, mPropertyBag.appComponent, oView);
 			})
 			.then(function(oRetrievedButton) {
 				oMenuButton = oRetrievedButton;
 				oParent = oModifier.getParent(oMenuButton);
-				aButtonsIdsReversed = oChangeDefinition.content.combineButtonSelectors.slice().reverse();
+				aButtonsIdsReversed = oChangeContent.combineButtonSelectors.slice().reverse();
 				// FIXME: fix implementation of ObjectPageDynamicHeaderTitle and remove next line
 				return oModifier.removeAggregation(oParent, sParentAggregation, oMenuButton);
 			})
@@ -374,23 +371,24 @@ sap.ui.define([
 	CombineButtons.completeChangeContent = function(oChange, oSpecificChangeInfo, mPropertyBag) {
 		var oModifier = mPropertyBag.modifier;
 		var oAppComponent = mPropertyBag.appComponent;
-		var oChangeDefinition = oChange.getDefinition();
 		var aCombineButtonIds = oSpecificChangeInfo.combineElementIds;
 
 		if (aCombineButtonIds && aCombineButtonIds.length > 1) {
+			var oContent = {};
 			oChange.addDependentControl(aCombineButtonIds, "combinedButtons", mPropertyBag);
-			oChangeDefinition.content.combineButtonSelectors = aCombineButtonIds.map(function (sCombineButtonId) {
+			oContent.combineButtonSelectors = aCombineButtonIds.map(function (sCombineButtonId) {
 				return oModifier.getSelector(sCombineButtonId, oAppComponent);
 			});
 
 			// generate ids for Menu and MenuButton
-			oChangeDefinition.content.menuButtonIdSelector = oModifier.getSelector(oAppComponent.createId(uid()), oAppComponent);
-			oChangeDefinition.content.menuIdSelector = oModifier.getSelector(oAppComponent.createId(uid()), oAppComponent);
+			oContent.menuButtonIdSelector = oModifier.getSelector(oAppComponent.createId(uid()), oAppComponent);
+			oContent.menuIdSelector = oModifier.getSelector(oAppComponent.createId(uid()), oAppComponent);
 
 			// generate id for menu button items
-			oChangeDefinition.content.buttonsIdForSave = aCombineButtonIds.map(function() {
+			oContent.buttonsIdForSave = aCombineButtonIds.map(function() {
 				return oModifier.getSelector(oAppComponent.createId(uid()), oAppComponent);
 			});
+			oChange.setContent(oContent);
 		} else {
 			throw new Error("Combine buttons action cannot be completed: oSpecificChangeInfo.combineElementIds attribute required");
 		}

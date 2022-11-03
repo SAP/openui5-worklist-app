@@ -1,16 +1,16 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides helper sap.m.BadgeEnabler
 sap.ui.define([
 		'sap/m/BadgeCustomData',
-		'sap/base/Log',
-		'sap/m/library'
+		'sap/m/library',
+		'sap/ui/thirdparty/jquery'
 	],
-	function(BadgeCustomData, Log, library) {
+	function(BadgeCustomData, library, jQuery) {
 		"use strict";
 
 		var IBADGE_CSS_CLASS = "sapMBadge";

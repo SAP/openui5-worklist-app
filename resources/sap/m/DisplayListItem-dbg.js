@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -30,36 +30,39 @@ sap.ui.define([
 	 * @extends sap.m.ListItemBase
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @alias sap.m.DisplayListItem
 	 * @see {@link fiori:/display-list-item/ Display List Item}
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var DisplayListItem = ListItemBase.extend("sap.m.DisplayListItem", /** @lends sap.m.DisplayListItem.prototype */ { metadata : {
+	var DisplayListItem = ListItemBase.extend("sap.m.DisplayListItem", /** @lends sap.m.DisplayListItem.prototype */ {
+		metadata : {
 
-		library : "sap.m",
-		properties : {
+			library : "sap.m",
+			properties : {
 
-			/**
-			 * Defines the label of the list item.
-			 */
-			label : {type : "string", group : "Misc", defaultValue : null},
+				/**
+				 * Defines the label of the list item.
+				 */
+				label : {type : "string", group : "Misc", defaultValue : null},
 
-			/**
-			 * Defines the value of the list item.
-			 */
-			value : {type : "string", group : "Data", defaultValue : null},
+				/**
+				 * Defines the value of the list item.
+				 */
+				value : {type : "string", group : "Data", defaultValue : null},
 
-			/**
-			 * Defines the <code>value</code> text directionality with enumerated options. By default, the control inherits text direction from the DOM.
-			 * @since 1.28.0
-			 */
-			valueTextDirection : {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit}
-		}
-	}});
+				/**
+				 * Defines the <code>value</code> text directionality with enumerated options. By default, the control inherits text direction from the DOM.
+				 * @since 1.28.0
+				 */
+				valueTextDirection : {type : "sap.ui.core.TextDirection", group : "Appearance", defaultValue : TextDirection.Inherit}
+			}
+		},
+
+		renderer: DisplayListItemRenderer
+	});
 
 	DisplayListItem.prototype.getContentAnnouncement = function() {
 		return this.getLabel() + " " + this.getValue();

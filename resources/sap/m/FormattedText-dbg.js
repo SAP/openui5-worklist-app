@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -13,7 +13,9 @@ sap.ui.define([
 	'./FormattedTextRenderer',
 	"sap/base/Log",
 	"sap/base/security/URLListValidator",
-	"sap/base/security/sanitizeHTML"
+	"sap/base/security/sanitizeHTML",
+	"sap/ui/util/openWindow",
+	'sap/ui/core/Core'
 ],
 function(
 	library,
@@ -23,7 +25,9 @@ function(
 	FormattedTextRenderer,
 	Log,
 	URLListValidator,
-	sanitizeHTML0
+	sanitizeHTML0,
+	openWindow,
+	Core
 	) {
 		"use strict";
 
@@ -42,13 +46,12 @@ function(
 		 * @class
 		 * The FormattedText control allows the usage of a limited set of tags for inline display of formatted text in HTML format.
 		 * @extends sap.ui.core.Control
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
 		 * @since 1.38.0
 		 * @alias sap.m.FormattedText
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		var FormattedText = Control.extend("sap.m.FormattedText", /** @lends sap.m.FormattedText.prototype */ {
 			metadata: {
@@ -151,7 +154,9 @@ function(
 					*/
 					controls: {type: "sap.m.Link", multiple: true, singularName: "control"}
 				}
-			}
+			},
+
+			renderer: FormattedTextRenderer
 		});
 
 		/*
@@ -317,20 +322,22 @@ function(
 			});
 		}
 
-		// prohibit a new window from accessing window.opener.location
-		function openExternalLink (oEvent) {
-			var newWindow = window.open();
-			newWindow.opener = null;
-			newWindow.location = oEvent.currentTarget.href;
+		// open links href using safe API
+		function openLink (oEvent) {
 			oEvent.preventDefault();
+			var oLink = Core.byId(oEvent.currentTarget.id);
+			if (oLink && oLink.isA('sap.m.Link') && oLink.getAccessibleRole() === library.LinkAccessibleRole.Button) {
+				return;
+			}
+			openWindow(oEvent.currentTarget.href, oEvent.currentTarget.target);
 		}
 
 		FormattedText.prototype.onAfterRendering = function () {
-			this.$().find('a[target="_blank"]').on("click", openExternalLink);
+			this.$().find('a').on("click", openLink);
 		};
 
 		FormattedText.prototype.onBeforeRendering = function () {
-			this.$().find('a[target="_blank"]').off("click", openExternalLink);
+			this.$().find('a').off("click", openLink);
 		};
 
 		FormattedText.prototype._getDisplayHtml = function (){
@@ -367,6 +374,9 @@ function(
 			this._renderingRules = bLimit ? _limitedRenderingRules : _defaultRenderingRules;
 		};
 
+		FormattedText.prototype.getFocusDomRef = function () {
+			return this.getDomRef() && this.getDomRef().querySelector("a");
+		};
 
 		return FormattedText;
 	});

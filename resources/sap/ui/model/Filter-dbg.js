@@ -1,16 +1,16 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /*eslint-disable max-len */
 // Provides a filter for list bindings
 sap.ui.define([
-	'sap/ui/base/Object',
-	'./FilterOperator',
-	"sap/base/Log"
-],
-	function(BaseObject, FilterOperator, Log) {
+	"./FilterOperator",
+	"sap/base/Log",
+	"sap/ui/base/Object",
+	"sap/ui/core/Configuration"
+], function(FilterOperator, Log, BaseObject, Configuration) {
 	"use strict";
 
 	/**
@@ -608,7 +608,7 @@ sap.ui.define([
 			return NaN;
 		}
 		if (typeof a == "string" && typeof b == "string") {
-			return a.localeCompare(b);
+			return a.localeCompare(b, Configuration.getLanguageTag());
 		}
 		if (a < b) {
 			return -1;

@@ -4,13 +4,13 @@
 /* ============================ */
 
 .sapMListFocus .sapMLIBFocused {
-	outline: 1px dotted @sapUiContentFocusColor;
-	outline-offset: -2px;
+	outline: @sapUiContentFocusWidth @sapUiContentFocusStyle @sapUiContentFocusColor;
+	outline-offset: -0.125rem;
 }
 
 .sapMInputDescriptionText {
 	padding-left: 0.5rem;
-	font-size: @sapMFontMediumSize;
+	font-size: @sapFontSize;
 	line-height: normal;
 	color: @sapUiFieldTextColor;
 	font-family: @sapUiFontFamily;

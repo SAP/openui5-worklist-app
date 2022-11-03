@@ -1,15 +1,16 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
 	'sap/ui/Device',
 	'sap/m/library',
 	"sap/ui/dom/getScrollbarSize",
-	"sap/ui/core/IconPool"
+	"sap/ui/core/IconPool",
+	"sap/ui/core/Configuration"
 ],
-	function(Device, library, getScrollbarSize, IconPool) {
+	function(Device, library, getScrollbarSize, IconPool, Configuration) {
 		"use strict";
 
 		// shortcut for sap.m.PlacementType
@@ -27,7 +28,7 @@ sap.ui.define([
 		 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 		 *
 		 * @param {sap.ui.core.RenderManager} rm The RenderManager that can be used for writing to the Render-Output-Buffer
-		 * @param {sap.ui.core.Control} oControl An object representation of the control that should be rendered
+		 * @param {sap.m.Popover} oControl An object representation of the control that should be rendered
 		 */
 		PopoverRenderer.render = function(oRm, oControl) {
 			oRm.openStart("div", oControl);
@@ -62,7 +63,7 @@ sap.ui.define([
 		};
 
 		PopoverRenderer.isButtonFooter = function(footer) {
-			if (footer instanceof sap.m.Bar) {
+			if (footer && footer.isA("sap.m.Bar")) {
 				var aContentLeft = footer.getContentLeft(),
 					aContentRight = footer.getContentRight(),
 					aContentMiddle = footer.getContentMiddle(),
@@ -71,7 +72,7 @@ sap.ui.define([
 					bMiddleTwoButtons = false;
 
 				if (aContentMiddle && aContentMiddle.length === 2) {
-					if ((aContentMiddle[0] instanceof sap.m.Button) && (aContentMiddle[1] instanceof sap.m.Button)) {
+					if ((aContentMiddle[0] && aContentMiddle[0].isA("sap.m.Button")) && (aContentMiddle[1] && aContentMiddle[1].isA("sap.m.Button"))) {
 						bMiddleTwoButtons = true;
 					}
 				}
@@ -148,7 +149,7 @@ sap.ui.define([
 
 			// Note: If this property should become public in the future, the property will have to be set on a level
 			// that will encapsulate the header and the footer of the popover as well.
-			if (sap.ui.getCore().getConfiguration().getAccessibility()
+			if (Configuration.getAccessibility()
 				&& oControl.getProperty("ariaRoleApplication")) {
 				oRm.attr("role", "application");
 			}
@@ -160,7 +161,7 @@ sap.ui.define([
 				.class("sapMPopoverScroll");
 
 			if (!oControl.getHorizontalScrolling()) {
-				oRm.style(sap.ui.getCore().getConfiguration().getRTL() ? "margin-left" : "margin-right", getScrollbarSize().width + "px");
+				oRm.style(Configuration.getRTL() ? "margin-left" : "margin-right", getScrollbarSize().width + "px");
 			}
 
 			oRm.openEnd();

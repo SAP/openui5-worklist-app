@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -157,7 +157,7 @@ sap.ui.define([
 	 * Renders the text of a passed <code>TabStripItem</code>.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer
-	 * @param {sap.m.TabStripItem} oItem <code>TabStripItem</code> instance which text to be rendered
+	 * @param {string} sItemText item text to be rendered
 	 */
 	TabStripRenderer.renderItemText = function (oRm, sItemText) {
 
@@ -299,7 +299,7 @@ sap.ui.define([
 	 * Returns the accessibility attributes for a given <code>TabStripItem</code>.
 	 *
 	 * @param {sap.m.TabStripItem} oItem The <code>TabStripItem</code> to prepare accessibility attributes for
-	 * @param {sap.ui.core.Control} oTabStripParent The <code>TabStrip</code> parent control
+	 * @param {sap.m.TabStrip} oTabStrip The <code>TabStrip</code> parent control
 	 * @param {sap.m.TabStripItem} oSelectedItem The <code>TabStripItem</code> that is currently selected
 	 * @returns {Object} The accessibility attributes for given <code>TabStripItem</code>
 	 * @private
@@ -316,7 +316,7 @@ sap.ui.define([
 		mAccAttributes["describedby"] = sDescribedBy;
 		mAccAttributes["posinset"] = iIndex + 1;
 		mAccAttributes["setsize"] = aItems.length;
-		mAccAttributes["labelledby"] = getTabTextDomId(oItem) + "-addText " + getTabTextDomId(oItem) + "-text";
+
 		if (oTabStripParent && oTabStripParent.getRenderer && oTabStripParent.getRenderer().getContentDomId) {
 			mAccAttributes["controls"] = oTabStripParent.getRenderer().getContentDomId(oTabStripParent);
 		}

@@ -1,12 +1,12 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 //Provides the locale object sap.ui.core.LocaleData
-sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', './Locale', 'sap/base/assert', 'sap/base/util/LoaderExtensions'],
-	function(extend, BaseObject, CalendarType, Locale, assert, LoaderExtensions) {
+sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', './Locale', 'sap/base/assert', 'sap/base/util/LoaderExtensions', "sap/ui/core/Configuration"],
+	function(extend, BaseObject, CalendarType, Locale, assert, LoaderExtensions, Configuration) {
 	"use strict";
 
 	/**
@@ -18,7 +18,7 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 	 *
 	 * @extends sap.ui.base.Object
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @public
 	 * @alias sap.ui.core.LocaleData
 	 */
@@ -27,7 +27,9 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 		constructor: function(oLocale) {
 			this.oLocale = oLocale;
 			BaseObject.apply(this);
-			this.mData = getData(oLocale);
+			var oDataLoaded = getData(oLocale);
+			this.mData = oDataLoaded.mData;
+			this.sCLDRLocaleId = oDataLoaded.sCLDRLocaleId;
 		},
 
 		/**
@@ -114,7 +116,7 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 		/**
 		 * Get locale specific language names.
 		 *
-		 * @returns {object} map of locale specific language names
+		 * @returns {Object<string, string>} map of locale specific language names
 		 * @public
 		 */
 		getLanguages: function() {
@@ -124,7 +126,7 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 		/**
 		 * Get locale specific script names.
 		 *
-		 * @returns {object} map of locale specific script names
+		 * @returns {Object.<string, string>} map of locale specific script names
 		 * @public
 		 */
 		getScripts: function() {
@@ -134,7 +136,7 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 		/**
 		 * Get locale specific territory names.
 		 *
-		 * @returns {object} map of locale specific territory names
+		 * @returns {Object.<string, string>} map of locale specific territory names
 		 * @public
 		 */
 		getTerritories: function() {
@@ -155,7 +157,7 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 		},
 
 		/**
-		 * Get stand alone month names in width "narrow", "abbreviated" or "wide".
+		 * Get standalone month names in width "narrow", "abbreviated" or "wide".
 		 *
 		 * @param {string} sWidth the required width for the month names
 		 * @param {sap.ui.core.CalendarType} [sCalendarType] the type of calendar. If it's not set, it falls back to the calendar type either set in configuration or calculated from locale.
@@ -181,7 +183,7 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 		},
 
 		/**
-		 * Get stand alone day names in width "narrow", "abbreviated" or "wide".
+		 * Get standalone day names in width "narrow", "abbreviated" or "wide".
 		 *
 		 * @param {string} sWidth the required width for the day names
 		 * @param {sap.ui.core.CalendarType} [sCalendarType] the type of calendar. If it's not set, it falls back to the calendar type either set in configuration or calculated from locale.
@@ -207,7 +209,7 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 		},
 
 		/**
-		 * Get stand alone quarter names in width "narrow", "abbreviated" or "wide".
+		 * Get standalone quarter names in width "narrow", "abbreviated" or "wide".
 		 *
 		 * @param {string} sWidth the required width for the quarter names
 		 * @param {sap.ui.core.CalendarType} [sCalendarType] the type of calendar. If it's not set, it falls back to the calendar type either set in configuration or calculated from locale.
@@ -285,7 +287,7 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 		},
 
 		/**
-		 * Get combined datetime pattern with given date and and time style.
+		 * Get combined datetime pattern with given date and time style.
 		 *
 		 * @param {string} sDateStyle the required style for the date part
 		 * @param {string} sTimeStyle the required style for the time part
@@ -300,6 +302,75 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 				sDatePattern = this.getDatePattern(sDateStyle, sCalendarType),
 				sTimePattern = this.getTimePattern(sTimeStyle, sCalendarType);
 			return sDateTimePattern.replace("{0}", sTimePattern).replace("{1}", sDatePattern);
+		},
+
+		/**
+		 * Get combined pattern with datetime and timezone for the given date and time style.
+		 *
+		 * @example
+		 * // locale de
+		 * oLocaleData.getCombinedDateTimeWithTimezonePattern("long", "long");
+		 * // "d. MMMM y 'um' HH:mm:ss z VV"
+		 *
+		 * // locale en_GB
+		 * oLocaleData.getCombinedDateTimeWithTimezonePattern("long", "long");
+		 * // "d MMMM y 'at' HH:mm:ss z VV"
+		 *
+		 * @param {string} sDateStyle The required style for the date part
+		 * @param {string} sTimeStyle The required style for the time part
+		 * @param {sap.ui.core.CalendarType} [sCalendarType] The type of calendar. If it's not set,
+		 *   it falls back to the calendar type either set in the configuration or calculated from
+		 *   the locale.
+		 * @returns {string} the combined pattern with datetime and timezone
+		 * @private
+		 * @ui5-restricted sap.ui.core.format.DateFormat
+		 * @since 1.101
+		 */
+		getCombinedDateTimeWithTimezonePattern: function(sDateStyle, sTimeStyle, sCalendarType) {
+			return this.applyTimezonePattern(this.getCombinedDateTimePattern(sDateStyle, sTimeStyle, sCalendarType));
+		},
+
+		/**
+		 * Applies the timezone to the pattern
+		 *
+		 * @param {string} sPattern pattern, e.g. <code>y</code>
+		 * @returns {string} applied timezone, e.g. <code>y VV</code>
+		 * @private
+		 * @ui5-restricted sap.ui.core.format.DateFormat
+		 * @since 1.101
+		 */
+		applyTimezonePattern: function(sPattern) {
+			var aPatterns = [sPattern];
+			var aMissingTokens = [{
+				group: "Timezone",
+				length: 2,
+				field: "zone",
+				symbol: "V"
+			}];
+			this._appendItems(aPatterns, aMissingTokens);
+			return aPatterns[0];
+		},
+
+		/**
+		 * Retrieves all timezone translations.
+		 *
+		 * E.g. for locale "en"
+		 * <pre>
+		 * {
+		 *  "America/New_York": "Americas, New York"
+		 *  ...
+		 * }
+		 * </pre>
+		 *
+		 * @return {Object<string, string>} the mapping, with 'key' being the IANA timezone ID, and 'value' being the translation.
+		 * @ui5-restricted sap.ui.core.format.DateFormat, sap.ui.export
+		 * @private
+		 */
+		getTimezoneTranslations: function() {
+			this.mTimezoneTranslations = this.mTimezoneTranslations || _resolveTimezoneTranslationStructure(this._get("timezoneNames"));
+
+			// retrieve a copy such that the original object won't be modified.
+			return Object.assign({}, this.mTimezoneTranslations);
 		},
 
 		/**
@@ -675,7 +746,7 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 							}
 						}
 					}
-					// if neither symbol or group matched, add it to the missing tokens and add distance
+					// if neither symbol nor group matched, add it to the missing tokens and add distance
 					aMissingTokens.push(oToken);
 					iDistance += 50 - i;
 				}
@@ -1090,7 +1161,7 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 		 * Returns the currency symbols available for this locale.
 		 * Currency symbols get accumulated by custom currency symbols.
 		 *
-		 * @returns {object} the map of all currency symbols available in this locale, e.g.
+		 * @returns {Object.<string, string>} the map of all currency symbols available in this locale, e.g.
 		 * {
 		 *     "AUD": "A$",
 		 *     "BRL": "R$",
@@ -1519,6 +1590,7 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 		 *
 		 * Call:
 		 * <code>getUnitFromMapping("my")</code> would result in <code>"my-custom-unit"</code>
+		 * @param {string} sMapping mapping identifier
 		 * @return {string} unit from the mapping
 		 * @public
 		 * @since 1.54
@@ -1595,7 +1667,7 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 		 * @since 1.92.0
 		 */
 		firstDayStartsFirstWeek: function() {
-			return this._get("weekData-algorithm") === "FIRSTDAY_STARTS_FIRSTWEEK";
+			return this.oLocale.getLanguage() === "en" && this.oLocale.getRegion() === "US";
 		},
 
 		/**
@@ -1945,15 +2017,70 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 	var mLocaleDatas = {};
 
 	/**
+	 * Creates a flat map from an object structure which contains a link to the parent ("_parent").
+	 * The values should contain the parent(s) and the element joined by <code>", "</code>.
+	 * The keys are the keys of the object structure joined by "/" excluding "_parent".
+	 *
+	 * E.g. input
+	 * <code>
+	 * {
+	 *     a: {
+	 *         a1: {
+	 *             a11: "A11",
+	 *             _parent: "A1"
+	 *         },
+	 *         _parent: "A"
+	 *     }
+	 * }
+	 * </code>
+	 *
+	 * output:
+	 * <code>
+	 * {
+	 *     "a/a1/a11": "A, A1, A11"
+	 * }
+	 * </code>
+	 *
+	 * @param {object} oNode the node which will be processed
+	 * @param {string} [sKey=""] the key inside the node which should be processed
+	 * @param {object} [oResult={}] the result which is passed through the recursion
+	 * @param {string[]} [aParentTranslations=[]] the list of parent translations, e.g. ["A", "A1"]
+	 * @returns {Object<string, string>} object map with key being the keys joined by "/" and the values joined by ", ".
+	 * @private
+	 */
+	function _resolveTimezoneTranslationStructure (oNode, sKey, oResult, aParentTranslations) {
+		aParentTranslations = aParentTranslations ? aParentTranslations.slice() : [];
+		oResult = oResult || {};
+
+		sKey = sKey || "";
+		Object.keys(oNode).forEach(function (sChildKey) {
+			var vChildNode = oNode[sChildKey];
+			if (typeof vChildNode === "object") {
+				var aParentTranslationForChild = aParentTranslations.slice();
+				var sParent = vChildNode["_parent"];
+				if (sParent) {
+					aParentTranslationForChild.push(sParent);
+				}
+				_resolveTimezoneTranslationStructure(vChildNode, sKey + sChildKey + "/", oResult, aParentTranslationForChild);
+			} else if (typeof vChildNode === "string" && sChildKey !== "_parent") {
+				var sParents = aParentTranslations.length ? aParentTranslations.join(", ") + ", " : "";
+				oResult[sKey + sChildKey] = sParents + vChildNode;
+			}
+		});
+		return oResult;
+	}
+
+	/**
 	 * Returns the corresponding calendar name in CLDR of the given calendar type, or the calendar type
 	 * from the configuration, in case sCalendarType is undefined.
 	 *
 	 * @param {sap.ui.core.CalendarType} sCalendarType the type defined in {@link sap.ui.core.CalendarType}.
+	 * @returns {string} calendar name
 	 * @private
 	 */
 	function getCLDRCalendarName(sCalendarType) {
 		if (!sCalendarType) {
-			sCalendarType = sap.ui.getCore().getConfiguration().getCalendarType();
+			sCalendarType = Configuration.getCalendarType();
 		}
 		return "ca-" + sCalendarType.toLowerCase();
 	}
@@ -1971,8 +2098,8 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 		/*
 		 * Merge a CLDR delta file and a CLDR fallback file.
 		 *
-		 * Note: the contract of this method reg. null values differs from both,
-		 * jQuery.extend as well as jQuery.sap.extend.
+		 * Note: this function can't be replaced by sap/base/util/extend or sap/base/util/merge
+		 * as its contract for null values differs from those modules.
 		 */
 		function merge(obj, fallbackObj) {
 			var name, value, fallbackValue;
@@ -2047,7 +2174,13 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 			sLanguage = "sr_Latn";
 		}
 
-		var sId = sLanguage + "_" + sRegion; // the originally requested locale; this is the key under which the result (even a fallback one) will be stored in the end
+		// sId is the originally requested locale.
+		// this is the key under which the result (even a fallback one) will be stored in the end
+		var sId = sLanguage + "_" + sRegion;
+
+		// the locale of the loaded json file
+		var sCLDRLocaleId = sId;
+
 		// first try: load CLDR data for specific language / region combination
 		if ( sLanguage && sRegion ) {
 			mData = getOrLoad(sId);
@@ -2055,11 +2188,22 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 		// second try: load data for language only
 		if ( !mData && sLanguage ) {
 			mData = getOrLoad(sLanguage);
+			sCLDRLocaleId = sLanguage;
 		}
 		// last try: load data for default language "en" (english)
-		mLocaleDatas[sId] = mData || getOrLoad("en");
+		if (!mData) {
+			mData = getOrLoad("en");
+			sCLDRLocaleId = "en";
+		}
 
-		return mLocaleDatas[sId];
+		// store in cache
+		mLocaleDatas[sId] = mData;
+
+		sCLDRLocaleId = sCLDRLocaleId.replace(/_/g, "-");
+		return {
+			mData: mData,
+			sCLDRLocaleId: sCLDRLocaleId
+		};
 	}
 
 
@@ -2072,7 +2216,7 @@ sap.ui.define(['sap/base/util/extend', 'sap/ui/base/Object', './CalendarType', '
 	var CustomLocaleData = LocaleData.extend("sap.ui.core.CustomLocaleData", {
 		constructor: function(oLocale) {
 			LocaleData.apply(this, arguments);
-			this.mCustomData = sap.ui.getCore().getConfiguration().getFormatSettings().getCustomLocaleData();
+			this.mCustomData = Configuration.getFormatSettings().getCustomLocaleData();
 		},
 
 		/**

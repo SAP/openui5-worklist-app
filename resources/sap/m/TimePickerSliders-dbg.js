@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -10,14 +10,14 @@ sap.ui.define([
 	'sap/ui/model/type/Date',
 	'sap/ui/model/odata/type/ODataType',
 	'sap/ui/core/format/DateFormat',
-	'./TimePickerSlidersRenderer',
 	'./TimePickerSlider',
+	'./TimePickerSlidersRenderer',
 	'./VisibleItem',
 	'sap/ui/core/LocaleData',
 	'sap/ui/Device',
 	'sap/ui/core/Locale',
-	'./TimePickerSlidersRenderer',
-	"sap/ui/thirdparty/jquery"
+	"sap/ui/thirdparty/jquery",
+	"sap/ui/core/Configuration"
 ],
 	function(
 		coreLibrary,
@@ -25,14 +25,14 @@ sap.ui.define([
 		SimpleDateType,
 		ODataType,
 		DateFormat,
-		SlidersRenderer,
 		TimePickerSlider,
+		TimePickerSlidersRenderer,
 		VisibleItem,
 		LocaleData,
 		Device,
 		Locale,
-		TimePickerSlidersRenderer,
-		jQuery
+		jQuery,
+		Configuration
 	) {
 		"use strict";
 
@@ -50,7 +50,7 @@ sap.ui.define([
 		 * @extends sap.ui.core.Control
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
@@ -149,7 +149,9 @@ sap.ui.define([
 						}
 					}
 				}
-			}
+			},
+
+			renderer: TimePickerSlidersRenderer
 		});
 
 		/**
@@ -158,7 +160,7 @@ sap.ui.define([
 		 * @private
 		 */
 		TimePickerSliders.prototype.init = function () {
-			var oLocale = sap.ui.getCore().getConfiguration().getFormatSettings().getFormatLocale(),
+			var oLocale = Configuration.getFormatSettings().getFormatLocale(),
 				oLocaleData = LocaleData.getInstance(oLocale),
 				aPeriods = oLocaleData.getDayPeriods("abbreviated"),
 				sDefaultDisplayFormat = oLocaleData.getTimePattern("medium");
@@ -685,7 +687,7 @@ sap.ui.define([
 		 */
 		TimePickerSliders.prototype._getLocaleBasedPattern = function (sPlaceholder) {
 			return LocaleData.getInstance(
-				sap.ui.getCore().getConfiguration().getFormatSettings().getFormatLocale()
+				Configuration.getFormatSettings().getFormatLocale()
 			).getTimePattern(sPlaceholder);
 		};
 
@@ -909,7 +911,7 @@ sap.ui.define([
 			}
 
 			if (!sCalendarType) {
-				sCalendarType = sap.ui.getCore().getConfiguration().getCalendarType();
+				sCalendarType = Configuration.getCalendarType();
 			}
 
 			return this._getFormatterInstance(sPattern, bRelative, sCalendarType);
@@ -1089,8 +1091,9 @@ sap.ui.define([
 		 *  00:00:00 with displayFormat "mm:HH:ss" -> 00:24:00
 		 *  0:00:00 with displayFormat "H:mm:ss" -> 24:00:00
 		 *  00:0:00 with displayFormat "mm:H:ss" -> 00:24:00
-		 * @param iIndexHH index of the HH in the displayFormat
-		 * @param iIndexH index of the H in the displayFormat
+		 * @param {string} sValue Value to replace the zeroes in
+		 * @param {int} iIndexOfHH index of the HH in the displayFormat
+		 * @param {int} iIndexOfH index of the H in the displayFormat
 		 * @private
 		 */
 		TimePickerSliders._replaceZeroHoursWith24 = function (sValue, iIndexOfHH, iIndexOfH) {
@@ -1113,8 +1116,9 @@ sap.ui.define([
 		 *  00:24:00 with displayFormat "mm:HH:ss" -> 00:00:00
 		 *  24:00:00 with displayFormat "H:mm:ss" -> 0:00:00
 		 *  00:24:00 with displayFormat "mm:H:ss" -> 00:0:00
-		 * @param iIndexHH index of the HH in the displayFormat
-		 * @param iIndexH index of the H in the displayFormat
+		 * @param {string} sValue Value to replace the 24 with zeroes in
+		 * @param {int} iIndexOfHH index of the HH in the displayFormat
+		 * @param {int} iIndexOfH index of the H in the displayFormat
 		 * @private
 		 */
 		TimePickerSliders._replace24HoursWithZero = function (sValue, iIndexOfHH, iIndexOfH) {

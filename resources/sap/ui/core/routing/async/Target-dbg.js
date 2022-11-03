@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -8,8 +8,9 @@ sap.ui.define([
 	"sap/ui/base/ManagedObjectMetadata",
 	"sap/ui/core/ComponentContainer",
 	"sap/ui/core/Placeholder",
-	"sap/ui/core/library"
-], function(Log, ManagedObjectMetadata, ComponentContainer, Placeholder, coreLib) {
+	"sap/ui/core/library",
+	"sap/ui/core/Configuration"
+], function(Log, ManagedObjectMetadata, ComponentContainer, Placeholder, coreLib, Configuration) {
 	"use strict";
 
 	// shortcut for sap.ui.core.ComponentLifecycle
@@ -478,7 +479,7 @@ sap.ui.define([
 					});
 				}
 
-				if (oPlaceholderConfig.placeholder && sap.ui.getCore().getConfiguration().getPlaceholder()) {
+				if (oPlaceholderConfig.placeholder && Configuration.getPlaceholder()) {
 					pPlaceholder = this.showPlaceholder(oPlaceholderConfig);
 				}
 			}

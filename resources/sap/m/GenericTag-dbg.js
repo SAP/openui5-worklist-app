@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -12,7 +12,7 @@ sap.ui.define([
 	"sap/ui/core/library",
 	"sap/ui/core/Icon",
 	"./GenericTagRenderer"
-], function(Control, KeyCodes, library, coreLibrary, Icon /* ,  GenericTagRenderer */) {
+], function(Control, KeyCodes, library, coreLibrary, Icon, GenericTagRenderer) {
 	"use strict";
 
 	//shortcut for sap.m.GenericTagValueState
@@ -26,10 +26,10 @@ sap.ui.define([
 
 		// map of the icon types, relative to the status message
 		Icons = {
-			Error: "sap-icon://message-error",
-			Warning: "sap-icon://message-warning",
-			Success: "sap-icon://message-success",
-			Information: "sap-icon://hint"
+			Error: "sap-icon://error",
+			Warning: "sap-icon://alert",
+			Success: "sap-icon://sys-enter-2",
+			Information: "sap-icon://information"
 		};
 
 	/**
@@ -53,13 +53,12 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.62.0
 	 * @alias sap.m.GenericTag
-	 * @ui5-metamodel This control will also be described in the UI5 (legacy) design time meta model.
 	 */
 	var GenericTag = Control.extend("sap.m.GenericTag", /** @lends sap.m.GenericTag.prototype */ {
 		metadata: {
@@ -91,6 +90,13 @@ sap.ui.define([
 				valueState: {type : "sap.m.GenericTagValueState", defaultValue : GenericTagValueState.None }
 			},
 			defaultAggregation: "value",
+			associations : {
+				/**
+				 * Association to controls / ids which label this control (see WAI-ARIA attribute aria-labelledBy).
+	 			 * @since 1.97.0
+				 */
+				ariaLabelledBy: {type : "sap.ui.core.Control", multiple : true, singularName : "ariaLabelledBy"}
+			},
 			aggregations: {
 				/**
 				 * Numeric value rendered by the control.
@@ -111,7 +117,9 @@ sap.ui.define([
 				 */
 				press: {}
 			}
-		}
+		},
+
+		renderer: GenericTagRenderer
 	});
 
 	/**
@@ -290,7 +298,8 @@ sap.ui.define([
 	};
 
 	/**
-	 * @private used for OverflowToolbar functionality
+	 * Used for OverflowToolbar functionality.
+	 * @private
 	 */
 
 	GenericTag.prototype._onBeforeEnterOverflow = function(oControl) {
@@ -298,7 +307,8 @@ sap.ui.define([
 	};
 
 	/**
-	 * @private used for OverflowToolbar functionality
+	 * Used for OverflowToolbar functionality.
+	 * @private
 	 */
 
 	GenericTag.prototype._onAfterExitOverflow = function(oControl) {

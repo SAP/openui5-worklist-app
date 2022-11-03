@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -90,7 +90,7 @@ sap.ui.define(['sap/m/InstanceManager', 'sap/f/FlexibleColumnLayout', 'sap/ui/ba
 				bCloseDialogs = bCloseDialogs || bNavigationOccurred;
 			}
 
-			if (bCloseDialogs) {
+			if (bCloseDialogs || bBack) {
 				this._closeDialogs();
 			}
 		};
@@ -120,21 +120,21 @@ sap.ui.define(['sap/m/InstanceManager', 'sap/f/FlexibleColumnLayout', 'sap/ui/ba
 		 * @private
 		 */
 		TargetHandler.prototype._getDirection = function(oDirectionInfo) {
-			var iTargetViewLevel = oDirectionInfo.viewLevel,
+			var iTargetLevel = oDirectionInfo.level,
 				oHistory = History.getInstance(),
 				bBack = false;
 
 			if (oDirectionInfo.direction === "Backwards") {
 				bBack = true;
-			} else if (isNaN(iTargetViewLevel) || isNaN(this._iCurrentViewLevel) || iTargetViewLevel === this._iCurrentViewLevel) {
+			} else if (isNaN(iTargetLevel) || isNaN(this._iCurrentLevel) || iTargetLevel === this._iCurrentLevel) {
 				if (oDirectionInfo.askHistory) {
 					bBack = oHistory.getDirection() === "Backwards";
 				}
 			} else {
-				bBack = iTargetViewLevel < this._iCurrentViewLevel;
+				bBack = iTargetLevel < this._iCurrentLevel;
 			}
 
-			this._iCurrentViewLevel = iTargetViewLevel;
+			this._iCurrentLevel = iTargetLevel;
 
 			return bBack;
 		};

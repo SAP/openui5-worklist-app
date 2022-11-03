@@ -1,10 +1,10 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
-sap.ui.define(["sap/ui/Device", "sap/m/library"], function(Device, library) {
+sap.ui.define(["sap/ui/Device", "sap/m/library", "sap/ui/core/Configuration"], function(Device, library, Configuration) {
 		"use strict";
 
 		// shortcut for sap.m.SwitchType
@@ -29,7 +29,7 @@ sap.ui.define(["sap/ui/Device", "sap/m/library"], function(Device, library) {
 		 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the Render-Output-Buffer.
-		 * @param {sap.ui.core.Control} oSwitch An object representation of the control that should be rendered.
+		 * @param {sap.m.Switch} oSwitch An object representation of the control that should be rendered.
 		 */
 		SwitchRenderer.render = function(oRm, oSwitch) {
 			var bState = oSwitch.getState(),
@@ -37,8 +37,8 @@ sap.ui.define(["sap/ui/Device", "sap/m/library"], function(Device, library) {
 				sTooltip = oSwitch.getTooltip_AsString(),
 				bEnabled = oSwitch.getEnabled(),
 				sName = oSwitch.getName(),
-				bAccessibilityEnabled = sap.ui.getCore().getConfiguration().getAccessibility(),
-				bAnimate = sap.ui.getCore().getConfiguration().getAnimation(),
+				bAccessibilityEnabled = Configuration.getAccessibility(),
+				bAnimate = Configuration.getAnimation(),
 				CSS_CLASS = SwitchRenderer.CSS_CLASS;
 
 			oRm.openStart("div", oSwitch);
@@ -183,7 +183,7 @@ sap.ui.define(["sap/ui/Device", "sap/m/library"], function(Device, library) {
 		 * To be overwritten by subclasses.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-		 * @param {sap.ui.core.Control} oSwitch An object representation of the control that should be rendered.
+		 * @param {sap.m.Switch} oSwitch An object representation of the control that should be rendered.
 		 */
 		SwitchRenderer.writeAccessibilityState = function(oRm, oSwitch) {
 			var mAriaLabelledby = oSwitch.getAriaLabelledBy(),
@@ -212,7 +212,7 @@ sap.ui.define(["sap/ui/Device", "sap/m/library"], function(Device, library) {
 		 * To be overwritten by subclasses.
 		 *
 		 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-		 * @param {sap.ui.core.Control} oSwitch An object representation of the control that should be rendered.
+		 * @param {sap.m.Switch} oSwitch An object representation of the control that should be rendered.
 		 * @param {object} mOptions
 		 */
 		SwitchRenderer.renderInvisibleElement = function(oRm, oSwitch, mOptions) {

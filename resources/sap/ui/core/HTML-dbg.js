@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -44,11 +44,10 @@ sap.ui.define([
 	 * @extends sap.ui.core.Control
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @alias sap.ui.core.HTML
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var HTML = Control.extend("sap.ui.core.HTML", /** @lends sap.ui.core.HTML.prototype */ {
 		metadata : {
@@ -83,8 +82,8 @@ sap.ui.define([
 				 * @SecSink {,XSS} The content of the 'content' property is rendered 1:1 to allow the full
 				 * flexibility of HTML in UI5 applications. Applications therefore must ensure, that they don't
 				 * set malicious content (e.g. derived from user input). UI5 does not provide an HTML validation
-				 * function. jQuery.sap.encodeHTML will encode any HTML relevant character, but this is in
-				 * nearly all cases not what applications want here.
+				 * function. {@link sap/base/security/encodeXML encodeXML} will encode any HTML relevant character,
+				 * but this is in nearly all cases not what applications want here.
 				 */
 				content : {type : "string", group : "Misc", defaultValue : null},
 
@@ -143,7 +142,7 @@ sap.ui.define([
 
 	/**
 	 * @param {string} [sSuffix=''] Suffix of the Element to be retrieved or empty
-	 * @return {Element} The element's DOM reference or null
+	 * @returns {Element|null} The element's DOM reference or <code>null</code>
 	 * @public
 	 */
 	HTML.prototype.getDomRef = function(sSuffix) {

@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -8,10 +8,10 @@
 * Provides a private class <code>sap.f.semantic.SemanticContainer</code>.
 */
 sap.ui.define([
-	"sap/ui/base/Object",
+	"sap/ui/base/EventProvider",
 	"./SemanticConfiguration",
 	"sap/base/Log"
-], function(BaseObject, SemanticConfiguration, Log) {
+], function(EventProvider, SemanticConfiguration, Log) {
 	"use strict";
 
 	/**
@@ -22,14 +22,15 @@ sap.ui.define([
 	* @private
 	* @since 1.46.0
 	* @alias sap.f.semantic.SemanticContainer
-	* @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	*/
-	var SemanticContainer = BaseObject.extend("sap.f.semantic.SemanticContainer", {
+	var SemanticContainer = EventProvider.extend("sap.f.semantic.SemanticContainer", {
 		constructor : function(oContainer, oParent) {
 			if (!oContainer) {
 				Log.error("SemanticContainer :: missing argument - container reference", this);
 				return;
 			}
+
+			EventProvider.apply(this, arguments);
 
 			this._oContainer = oContainer;
 			this._oParent = oParent;
@@ -75,7 +76,7 @@ sap.ui.define([
 	* defined in <code>sap.f.semantic.SemanticConfiguration</code>.
 	*
 	* @param {sap.f.semantic.SemanticControl} oControl
-	* @returns {String}
+	* @returns {int}
 	*/
 	SemanticContainer.prototype._getControlOrder = function(oControl) {
 		var sType = (oControl._getType && oControl._getType()) || oControl.getMetadata().getName();
@@ -89,7 +90,7 @@ sap.ui.define([
 	* The constraints might be <code>IconOnly</code> and <code>Navigation</code>.
 	*
 	* @param {sap.f.semantic.SemanticControl | sap.m.Button} oControl
-	* @returns {String}
+	* @returns {string}
 	*/
 	SemanticContainer.prototype._getConstraints = function(oControl) {
 		return SemanticConfiguration.getConstraints(oControl.getMetadata().getName());
@@ -130,7 +131,7 @@ sap.ui.define([
 	/**
 	* Calls container`s method.
 	*
-	* @param {String} sMethod the method to be called
+	* @param {string} sMethod the method to be called
 	* @returns {Object | Array<T>}
 	*/
 	SemanticContainer.prototype._callContainerAggregationMethod = function(sMethod) {
@@ -141,9 +142,9 @@ sap.ui.define([
 	* Sorts the <code>SemanticControl</code> instances by the order
 	* defined in the <code>sap.f.semantic.SemanticConfiguration</code>.
 	*
-	* @param {String} oControlA
-	* @param {String} oControlB
-	* @returns {Number}
+	* @param {sap.f.semantic.SemanticControl} oControlA
+	* @param {sap.f.semantic.SemanticControl} oControlB
+	* @returns {int}
 	*/
 	SemanticContainer.prototype._sortControlByOrder = function(oControlA, oControlB) {
 		return this._getControlOrder(oControlA) - this._getControlOrder(oControlB);

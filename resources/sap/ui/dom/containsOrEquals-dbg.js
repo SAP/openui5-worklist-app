@@ -1,9 +1,9 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
-sap.ui.define(['sap/ui/thirdparty/jquery'], function(jQuery) {
+sap.ui.define([], function() {
 	"use strict";
 
 	/**
@@ -25,7 +25,7 @@ sap.ui.define(['sap/ui/thirdparty/jquery'], function(jQuery) {
 	 */
 	var fnContainsOrEquals = function(oDomRefContainer, oDomRefChild) {
 		if (oDomRefChild && oDomRefContainer && oDomRefChild != document && oDomRefChild != window) {
-			return (oDomRefContainer === oDomRefChild) || jQuery.contains(oDomRefContainer, oDomRefChild);
+			return oDomRefContainer.contains(oDomRefChild); //native a.contains(b) also returns true if a === b
 		}
 		return false;
 	};

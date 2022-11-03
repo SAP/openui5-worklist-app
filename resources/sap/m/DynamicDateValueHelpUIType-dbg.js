@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -20,12 +20,11 @@ sap.ui.define(['sap/ui/core/Element'],
 		 * @extends sap.ui.core.Element
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @public
 		 * @since 1.92
 		 * @alias sap.m.DynamicDateValueHelpUIType
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 * @experimental Since 1.92. This class is experimental and provides only limited functionality. Also the API might be changed in future.
 		 */
 		var DynamicDateValueHelpUIType = Element.extend("sap.m.DynamicDateValueHelpUIType", /** @lends sap.m.DynamicDateValueHelpUIType.prototype */ {
@@ -39,9 +38,14 @@ sap.ui.define(['sap/ui/core/Element'],
 					type: { type: "string" },
 
 					/**
-					 * A text for an additional label describing the interactive UI.
+					 * A text for an additional label that describes the interactive UI and is placed before the UI element.
 					 */
 					text: { type: "string" },
+
+					/**
+					 * A text for an additional label that describes the interactive UI and is placed after the UI element.
+					 */
+					additionalText: { type: "string" },
 
 					/**
 					 * Describes the options in a radio button group.

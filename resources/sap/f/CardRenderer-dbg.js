@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -28,7 +28,7 @@ sap.ui.define([
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm the RenderManager that can be used for writing to the Render-Output-Buffer
-	 * @param {sap.ui.core.Control} oCard an object representation of the control that should be rendered
+	 * @param {sap.f.Card} oCard an object representation of the control that should be rendered
 	 */
 	CardRenderer.render = function (oRm, oCard) {
 		var oHeader = oCard.getCardHeader(),
@@ -63,7 +63,7 @@ sap.ui.define([
 	/**
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oCard An object representation of the control that should be rendered.
+	 * @param {sap.f.Card} oCard An object representation of the control that should be rendered.
 	 */
 	CardRenderer.renderContainerAttributes = function (oRm, oCard) {
 		var sHeight = oCard.getHeight(),
@@ -108,7 +108,7 @@ sap.ui.define([
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oCard An object representation of the control that should be rendered.
+	 * @param {sap.f.Card} oCard An object representation of the control that should be rendered.
 	 */
 	CardRenderer.renderContentSection = function (oRm, oCard) {
 		var oContent = oCard.getCardContent();
@@ -134,7 +134,7 @@ sap.ui.define([
 	 *
 	 * @protected
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer.
-	 * @param {sap.ui.core.Control} oCard An object representation of the control that should be rendered.
+	 * @param {sap.f.Card} oCard An object representation of the control that should be rendered.
 	 */
 	CardRenderer.renderFooterSection = function (oRm, oCard) {
 

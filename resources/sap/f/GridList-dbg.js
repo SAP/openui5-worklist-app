@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define([
@@ -93,7 +93,7 @@ sap.ui.define([
 	 * @see {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_Layout MDN web docs: CSS Grid Layout}
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @extends sap.m.ListBase
 	 * @implements sap.ui.layout.cssgrid.IGridConfigurable
@@ -102,51 +102,54 @@ sap.ui.define([
 	 * @constructor
 	 * @public
 	 * @alias sap.f.GridList
-	 * @ui5-metamodel This control/element will also be described in the UI5 (legacy) designtime metamodel
 	 */
-	var GridList = ListBase.extend("sap.f.GridList", { metadata : {
-		library: "sap.f",
-		interfaces: [
-			"sap.ui.layout.cssgrid.IGridConfigurable",
-			"sap.f.dnd.IGridDroppable"
-		],
-		aggregations: {
+	var GridList = ListBase.extend("sap.f.GridList", {
+		metadata : {
+			library: "sap.f",
+			interfaces: [
+				"sap.ui.layout.cssgrid.IGridConfigurable",
+				"sap.f.dnd.IGridDroppable"
+			],
+			aggregations: {
 
-			/**
-			 * Defines a custom grid layout
-			 */
-			customLayout: { type: "sap.ui.layout.cssgrid.GridLayoutBase", multiple: false }
-		},
-		events: {
-			/**
-			 * Fires if the border of the visualizations is reached
-			 * so that an application can react on this.
-			 */
-			borderReached: {
-				parameters: {
+				/**
+				 * Defines a custom grid layout
+				 */
+				customLayout: { type: "sap.ui.layout.cssgrid.GridLayoutBase", multiple: false }
+			},
+			events: {
+				/**
+				 * Fires if the border of the visualizations is reached
+				 * so that an application can react on this.
+				 */
+				borderReached: {
+					parameters: {
 
-					/**
-					 * Event that leads to the focus change.
-					 */
-					event: { type: "jQuery.Event" },
-					/**
-					 * The navigation direction that is used to reach the border.
-					 */
-					direction: {type: "sap.f.NavigationDirection"},
+						/**
+						 * Event that leads to the focus change.
+						 */
+						event: { type: "jQuery.Event" },
+						/**
+						 * The navigation direction that is used to reach the border.
+						 */
+						direction: {type: "sap.f.NavigationDirection"},
 
-					/**
-					 * The row index, from which the border is reached.
-					 */
-					row: {type: "int"},
+						/**
+						 * The row index, from which the border is reached.
+						 */
+						row: {type: "int"},
 
-					/**
-					 * The the column index, from which the border is reached.
-					 */
-					column: {type: "int"}
+						/**
+						 * The the column index, from which the border is reached.
+						 */
+						column: {type: "int"}
+					}
 				}
 			}
-		}
-	}});
+		},
+
+		renderer: GridListRenderer
+	});
 
 	/**
 	 * =================== START of lifecycle methods & delegate handling ===================
@@ -256,7 +259,7 @@ sap.ui.define([
 			return aAcc;
 		}, []);
 
-		return GridNavigationMatrix.create(this.getItemsContainerDomRef(), aItemsDomRefs, this._getActiveLayoutSizes());
+		return GridNavigationMatrix.create(this.getItemsContainerDomRef(), aItemsDomRefs);
 	};
 
 	/**
@@ -373,16 +376,6 @@ sap.ui.define([
 	 */
 	GridList.prototype.onLayoutDataChange = function (oEvent) {
 		GridLayoutBase.setItemStyles(oEvent.srcControl);
-	};
-
-	GridList.prototype._getActiveLayoutSizes = function () {
-		var oGridDomRef = this.getItemsContainerDomRef(),
-			mGridStyles = window.getComputedStyle(oGridDomRef);
-		return {
-			gap: parseFloat(mGridStyles.rowGap),
-			rows: mGridStyles.gridTemplateRows.split(/\s+/),
-			columns: mGridStyles.gridTemplateColumns.split(/\s+/)
-		};
 	};
 
 	return GridList;

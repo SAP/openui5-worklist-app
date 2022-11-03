@@ -1,13 +1,13 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 /**
  * Defines miscellaneous support rules.
  */
-sap.ui.define(["sap/ui/support/library", "./CoreHelper.support", "sap/ui/thirdparty/jquery", "sap/ui/dom/jquery/control"], // jQuery Plugin "control"
-	function(SupportLib, CoreHelper, jQuery) {
+sap.ui.define(["sap/ui/core/Element", "sap/ui/support/library", "./CoreHelper.support", "sap/ui/thirdparty/jquery"],
+	function(Element, SupportLib, CoreHelper, jQuery) {
 	"use strict";
 
 	// support rules can get loaded within a ui5 version which does not have module "sap/base/Log" yet
@@ -40,10 +40,10 @@ sap.ui.define(["sap/ui/support/library", "./CoreHelper.support", "sap/ui/thirdpa
 		resolution: "Avoid CSS manipulations with custom CSS values as this could lead to rendering issues ",
 		resolutionurls: [{
 			text: 'CSS Styling Issues',
-			href: 'https://openui5.hana.ondemand.com/#/topic/9d87f925dfbb4e99b9e2963693aa00ef'
+			href: 'https://sdk.openui5.org/topic/9d87f925dfbb4e99b9e2963693aa00ef'
 		}, {
 			text: 'General Guidelines',
-			href: 'https://openui5.hana.ondemand.com/#/topic/5e08ff90b7434990bcb459513d8c52c4'
+			href: 'https://sdk.openui5.org/topic/5e08ff90b7434990bcb459513d8c52c4'
 		}],
 		check: function (issueManager, oCoreFacade, oScope) {
 			var cssFilesMessage = "Following stylesheet file(s) contain 'custom' CSS that could affects (overwrites) UI5 controls' own styles: \n",
@@ -97,10 +97,10 @@ sap.ui.define(["sap/ui/support/library", "./CoreHelper.support", "sap/ui/thirdpa
 		resolution: "Avoid CSS manipulations with custom CSS values as this could lead to rendering issues ",
 		resolutionurls: [{
 			text: 'CSS Styling Issues',
-			href: 'https://openui5.hana.ondemand.com/#/topic/9d87f925dfbb4e99b9e2963693aa00ef'
+			href: 'https://sdk.openui5.org/topic/9d87f925dfbb4e99b9e2963693aa00ef'
 		}, {
 			text: 'General Guidelines',
-			href: 'https://openui5.hana.ondemand.com/#/topic/5e08ff90b7434990bcb459513d8c52c4'
+			href: 'https://sdk.openui5.org/topic/5e08ff90b7434990bcb459513d8c52c4'
 		}],
 		check: function (issueManager, oCoreFacade, oScope) {
 			var controlCustomCssHashMap = {},
@@ -116,7 +116,7 @@ sap.ui.define(["sap/ui/support/library", "./CoreHelper.support", "sap/ui/thirdpa
 						var hasUI5Parent = CoreHelper.nodeHasUI5ParentControl(node, oScope);
 						if (hasUI5Parent) {
 							// jQuery Plugin "control"
-							var ui5Control = jQuery(node).control()[0];
+							var ui5Control = Element.closestTo(node);
 
 							if (!controlCustomCssHashMap.hasOwnProperty(ui5Control.getId())) {
 								controlCustomCssHashMap[ui5Control.getId()] =  "";
@@ -156,7 +156,7 @@ sap.ui.define(["sap/ui/support/library", "./CoreHelper.support", "sap/ui/thirdpa
 		resolution: "Use asynchronous variant of the Parameters.get API",
 		resolutionurls: [{
 			text: 'Parameters.get API Reference',
-			href: 'https://openui5.hana.ondemand.com/api/sap.ui.core.theming.Parameters#methods/sap.ui.core.theming.Parameters.get'
+			href: 'https://sdk.openui5.org/api/sap.ui.core.theming.Parameters/methods/sap.ui.core.theming.Parameters.get'
 		}],
 		check: function (issueManager, oCoreFacade, oScope) {
 			var oLoggedObjects = oScope.getLoggedObjects("LegacyParametersGet");

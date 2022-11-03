@@ -15,11 +15,7 @@
 }
 
 .sapUxAPObjectPageLayout-Std-Desktop .sapUxAPBlockContainer {
-	padding: 1rem 1rem 2rem 1rem;
-}
-
-.sapUxAPObjectPageLayout-Std-Tablet .sapUxAPBlockContainer {
-	padding-bottom: 1rem;
+	padding: 0 1rem;
 }
 
 /* responsive paddings */
@@ -37,9 +33,6 @@
 
 /* compact size */
 .sapUiSizeCompact {
-	.sapUxAPObjectPageLayout-Std-Tablet .sapUxAPBlockContainerr{
-		padding-bottom: 1rem;
-	}
 	.sapUxAPObjectPageSubSectionHeaderTitle {
 		height: 1.125rem;
 		line-height: normal;
@@ -55,7 +48,7 @@
 // Page Sub Section Focus - Experimental
 .sapUxAPObjectPageSubSection:focus {
     outline: none;
-    box-shadow: inset 0px 0px 0px 2px @sapContent_ContrastFocusColor, 0px 0px 0px 2px @sapContent_FocusColor;
+    box-shadow: inset 0px 0px 0px 2px @sapUiContentContrastFocusColor, 0px 0px 0px 2px @sapUiContentFocusColor;
 }
 
 .sapUxAPObjectPageLayout-Std-Phone .sapUxAPObjectPageSubSection .sapUiRespGrid.sapUiRespGridHSpace1 {
@@ -64,9 +57,13 @@
 }
 
 .sapUxAPObjectPageSubSection {
-    margin-bottom: 1rem;
     padding: 0;
     padding-top: 0.5rem;
+}
+
+.sapUxAPObjectPageSectionHeader:not(.sapUxAPObjectPageSectionHeaderHidden) + .sapUxAPObjectPageSectionContainer > .sapUiRespGrid >
+div[class^="sapUiRespGrid"]:first-child > .sapUxAPObjectPageSubSection:not(.sapUxAPObjectPageSubSectionPromoted) {
+	padding-top: 0;
 }
 
 // =====================================
@@ -74,11 +71,11 @@
 // =====================================
 .sapUxAPObjectPageLayout-Std-Tablet .sapUxAPBlockContainer,
 .sapUiSizeCompact .sapUxAPObjectPageLayout-Std-Phone .sapUxAPBlockContainer {
-    padding: 0.5rem 0.5rem 0rem 0rem;
+    padding: 0 0.5rem 0rem 0rem;
 }
 
 .sapUiSizeCompact .sapUxAPObjectPageLayout-Std-Desktop .sapUxAPBlockContainer {
-    padding: 0.5rem 0.5rem 0.5rem 0.5rem;
+    padding: 0 0.5rem;
 }
 
 .sapUxAPObjectPageLayout-Std-Desktop .sapUxAPBlockContainer {

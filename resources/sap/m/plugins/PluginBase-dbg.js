@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -20,13 +20,12 @@ sap.ui.define(["sap/ui/core/Element"], function(Element) {
 	 * @extends sap.ui.core.Element
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @private
 	 * @experimental Since 1.73. This class is experimental and provides only limited functionality. Also the API might be changed in future.
 	 * @since 1.73
 	 * @alias sap.m.plugins.PluginBase
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var PluginBase = Element.extend("sap.m.plugins.PluginBase", /** @lends sap.m.plugins.PluginBase.prototype */ {
 		metadata: {
@@ -95,7 +94,7 @@ sap.ui.define(["sap/ui/core/Element"], function(Element) {
 	 *
 	 * @param {sap.ui.core.Control} oControl The control instance to check for
 	 * @param {string|function} [vPlugin] The full name or the constructor of the plugin
-	 * @return {undefined|sap.m.plugins.PluginBase} The found plugin instance or undefined if not found
+	 * @return {undefined|sap.m.plugins.PluginBase} The found plugin instance or <code>undefined</code> if not found
 	 * @public
 	 * @static
 	 */
@@ -151,10 +150,11 @@ sap.ui.define(["sap/ui/core/Element"], function(Element) {
 	 * @param {string} sKey The configuration key
 	 * @param {any} [vParam1] The first parameter if the sKey configuration is a type of function
 	 * @param {any} [vParam2] The second parameter if the sKey configuration is a type of function
+	 * @param {any} [vParam3] The third parameter if the sKey configuration is a type of function
 	 * @returns {*} The plugin configuration of the control, otherwise undefined
 	 * @protected
 	 */
-	PluginBase.prototype.getConfig = function(sKey, vParam1, vParam2) {
+	PluginBase.prototype.getConfig = function(sKey, vParam1, vParam2, vParam3) {
 		var oControl = this.getControl();
 		if (!oControl) {
 			return;
@@ -165,7 +165,7 @@ sap.ui.define(["sap/ui/core/Element"], function(Element) {
 		var mPluginConfig = mPluginControlConfigs[sPluginName] || {};
 		var mControlConfig = mPluginConfig[sControlName] || {};
 		var fnReturn = function(mConfig) {
-			return (typeof mConfig[sKey] == "function") ? mConfig[sKey].call(mConfig, vParam1, vParam2) : mConfig[sKey];
+			return (typeof mConfig[sKey] == "function") ? mConfig[sKey].call(mConfig, vParam1, vParam2, vParam3) : mConfig[sKey];
 		};
 
 		if (sKey in mControlConfig) {

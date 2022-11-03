@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -15,13 +15,12 @@ sap.ui.define([
 	'sap/ui/base/EventProvider',
 	"sap/base/assert",
 	"sap/base/Log",
-	"sap/ui/dom/containsOrEquals",
 	"sap/ui/events/KeyCodes",
 	"sap/ui/thirdparty/jquery",
-	// jQuery custom selectors ":sapFocusable"
-	"sap/ui/dom/jquery/Selectors"
+	"sap/ui/core/Configuration",
+	"sap/ui/dom/jquery/Selectors" // jQuery custom selectors ":sapFocusable"
 ],
-	function(EventProvider, assert, Log, containsOrEquals, KeyCodes, jQuery) {
+	function(EventProvider, assert, Log, KeyCodes, jQuery, Configuration) {
 	"use strict";
 	/* eslint-disable no-lonely-if */
 
@@ -82,7 +81,7 @@ sap.ui.define([
 	 * @param {Element[]} aItemDomRefs Array of DOM references representing the items for the navigation
 	 * @param {boolean} [bNotInTabChain=false] Whether the selected element should be in the tab chain or not
 	 *
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @alias sap.ui.core.delegate.ItemNavigation
 	 * @public
 	 */
@@ -258,7 +257,7 @@ sap.ui.define([
 	/**
 	 * Sets the root DOM reference surrounding the items
 	 *
-	 * @param {object} oDomRef Root DOM reference
+	 * @param {Element} oDomRef Root DOM reference
 	 * @return {this} <code>this</code> to allow method chaining
 	 * @public
 	 */
@@ -466,7 +465,7 @@ sap.ui.define([
 	ItemNavigation.prototype.setTableMode = function(bTableMode, bTableList) {
 		this.bTableMode = bTableMode;
 		if (this.oConfiguration === undefined) {
-			this.oConfiguration = sap.ui.getCore().getConfiguration();
+			this.oConfiguration = Configuration;
 		}
 		this.bTableList = bTableMode ? bTableList : false;
 		return this;
@@ -788,7 +787,7 @@ sap.ui.define([
 	 * @private
 	 */
 	ItemNavigation.prototype.onsapfocusleave = function(oEvent) {
-		if (!oEvent.relatedControlId || !containsOrEquals(this.oDomRef, sap.ui.getCore().byId(oEvent.relatedControlId).getFocusDomRef())) {
+		if (!oEvent.relatedControlId || !this.oDomRef || !this.oDomRef.contains(sap.ui.getCore().byId(oEvent.relatedControlId).getFocusDomRef())) {
 
 			// entirely leaving the control handled by this ItemNavigation instance
 			var iIndex;
@@ -816,7 +815,7 @@ sap.ui.define([
 					}
 				}
 
-				if (!oEvent.relatedControlId || containsOrEquals(oParentDomRef, sap.ui.getCore().byId(oEvent.relatedControlId).getFocusDomRef())) {
+				if (!oEvent.relatedControlId || oParentDomRef.contains(sap.ui.getCore().byId(oEvent.relatedControlId).getFocusDomRef())) {
 					jQuery(this.aItemDomRefs[this.iFocusedIndex]).attr("tabindex", -1);
 				}
 			}
@@ -866,12 +865,12 @@ sap.ui.define([
 
 		};
 
-		if (containsOrEquals(this.oDomRef, oSource)) {
+		if (this.oDomRef && this.oDomRef.contains(oSource)) {
 
 			// the mouse down occured inside the main dom ref
-			for (var i = 0; i < this.aItemDomRefs.length;i++) {
+			for (var i = 0; i < this.aItemDomRefs.length; i++) {
 				var oItem = this.aItemDomRefs[i];
-				if (containsOrEquals(oItem,oSource)) {
+				if (oItem && oItem.contains(oSource)) {
 					if (!this.bTableMode) {
 
 						// the mousedown occured inside of an item
@@ -922,7 +921,7 @@ sap.ui.define([
 	 */
 	ItemNavigation.prototype.onsapnext = function(oEvent) {
 
-		if (!containsOrEquals(this.oDomRef, oEvent.target)) {
+		if (!this.oDomRef || !this.oDomRef.contains(oEvent.target)) {
 
 			// current element is not part of the navigation content
 			return;
@@ -1055,7 +1054,7 @@ sap.ui.define([
 	 */
 	ItemNavigation.prototype.onsapprevious = function(oEvent) {
 
-		if (!containsOrEquals(this.oDomRef, oEvent.target)) {
+		if (!this.oDomRef || !this.oDomRef.contains(oEvent.target)) {
 
 			// current element is not part of the navigation content
 			return;
@@ -1197,7 +1196,7 @@ sap.ui.define([
 	 */
 	ItemNavigation.prototype.onsappageup = function(oEvent) {
 
-		if (!containsOrEquals(this.oDomRef, oEvent.target)) {
+		if (!this.oDomRef || !this.oDomRef.contains(oEvent.target)) {
 
 			// current element is not part of the navigation content
 			return;
@@ -1260,7 +1259,7 @@ sap.ui.define([
 	 */
 	ItemNavigation.prototype.onsappagedown = function(oEvent) {
 
-		if (!containsOrEquals(this.oDomRef, oEvent.target)) {
+		if (!this.oDomRef || !this.oDomRef.contains(oEvent.target)) {
 
 			// current element is not part of the navigation content
 			return;
@@ -1324,7 +1323,7 @@ sap.ui.define([
 	 */
 	ItemNavigation.prototype.onsaphome = function(oEvent) {
 
-		if (!containsOrEquals(this.oDomRef, oEvent.target)) {
+		if (!this.oDomRef || !this.oDomRef.contains(oEvent.target)) {
 
 			// current element is not part of the navigation content
 			// or shift or alt key is pressed
@@ -1398,7 +1397,7 @@ sap.ui.define([
 	 */
 	ItemNavigation.prototype.onsapend = function(oEvent) {
 
-		if (!containsOrEquals(this.oDomRef, oEvent.target)) {
+		if (!this.oDomRef || !this.oDomRef.contains(oEvent.target)) {
 
 			// current element is not part of the navigation content
 			// or shift or alt key is pressed

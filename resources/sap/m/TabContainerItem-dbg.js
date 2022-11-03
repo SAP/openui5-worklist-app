@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -11,6 +11,9 @@ sap.ui.define(['sap/ui/core/Element',
 	'./library'],
 	function(Element, IconPool, TabStripItem, library) {
 		"use strict";
+
+		// shortcut for sap.m.ImageHelper
+		var ImageHelper = library.ImageHelper;
 
 		/**
 		 * Constructor for a new <code>TabContainerItem</code>.
@@ -23,13 +26,12 @@ sap.ui.define(['sap/ui/core/Element',
 		 * @extends sap.ui.core.Element
 		 *
 		 * @author SAP SE
-		 * @version 1.96.2
+		 * @version 1.108.0
 		 *
 		 * @constructor
 		 * @public
 		 * @since 1.34
 		 * @alias sap.m.TabContainerItem
-		 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 		 */
 		var TabContainerItem = Element.extend("sap.m.TabContainerItem", /** @lends sap.m.TabContainerItem.prototype */ { metadata : {
 
@@ -141,15 +143,40 @@ sap.ui.define(['sap/ui/core/Element',
 		 * @return {this} <code>this</code> to allow method chaining
 		 * @public
 		 */
-		TabContainerItem.prototype.setIcon = function(sIcon) {
-			return TabStripItem.prototype._setIcon.call(this, sIcon, true);
+		TabContainerItem.prototype.setIcon = function(sIcon, bSuppressRendering) {
+			var mProperties,
+				aCssClasses = ['sapMTabContIcon'],
+				oImage = this.getAggregation("_image"),
+				sImgId = this.getId() + "-img",
+				bDecorative = !!(this.getName() || this.getAdditionalText());
+
+			if (!sIcon) {
+				this.setProperty("icon", sIcon, bSuppressRendering);
+				if (oImage) {
+					this.destroyAggregation("_image");
+				}
+				return this;
+			}
+
+			if (this.getIcon() !== sIcon) {
+				this.setProperty("icon", sIcon, bSuppressRendering);
+
+				mProperties = {
+					src : sIcon,
+					id: sImgId,
+					decorative: bDecorative,
+					tooltip: this.getIconTooltip()
+				};
+
+				oImage = ImageHelper.getImageControl(sImgId, oImage, undefined, mProperties, aCssClasses);
+				this.setAggregation("_image", oImage, bSuppressRendering);
+			}
+			return this;
 		};
 
 		/**
 		 * Function is called when image control needs to be loaded.
 		 *
-		 * @param {string} sImgId - id to be used for the image
-		 * @param {sap.ui.core.URI} sSrc - URI indicating the image to use as image source
 		 * @return {sap.ui.core.Control} The image
 		 * @private
 		 */

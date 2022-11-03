@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 sap.ui.define(['sap/ui/Device', 'sap/ui/performance/trace/Passport', 'sap/base/Log', 'sap/ui/thirdparty/URI'],
@@ -327,7 +327,7 @@ sap.ui.define(['sap/ui/Device', 'sap/ui/performance/trace/Passport', 'sap/base/L
 					busTrx.getCurrentTransactionStep().onMessageFinished(this, tStamp);
 				}
 
-				// start jQuery.sap.trace and override xhr
+				// start injection of PASSPORT headers by intercepting XHR calls
 				Passport.setActive(true);
 
 				fopen = window.XMLHttpRequest.prototype.open;
@@ -362,9 +362,9 @@ sap.ui.define(['sap/ui/Device', 'sap/ui/performance/trace/Passport', 'sap/base/L
 						// Log.info(this.xstartTimestamp + ", " + idx + " " + arguments[0] + " " + arguments[1]);
 						this.xmethod = arguments[0];
 						this.xurl = arguments[1];
-						this.xDsrGuid = Passport.getTransactionId(); //see jquery.sap.trace, former EbbLib.js
+						this.xDsrGuid = Passport.getTransactionId(); // see sap/ui/performance/Passport, former EppLib.js
 
-						//do not set passport as this is done already in jquery.sap.trace
+						//do not set passport as this is done already in sap/ui/performance/Passport
 						//this.setRequestHeader("SAP-PASSPORT", EppLib.passportHeader(busTrx.getCurrentTransactionStep().trcLvl, busTrx.id, this.xDsrGuid));
 						//matching function isCORSRequest from FESR.js
 						var sHOST = (new URI(this.xurl)).host();

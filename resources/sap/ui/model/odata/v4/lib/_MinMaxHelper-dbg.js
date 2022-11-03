@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -13,7 +13,7 @@ sap.ui.define([
 
 	return {
 		/**
-		 * Creates a cache that requests the mininum and maximum values together with the first
+		 * Creates a cache that requests the minimum and maximum values together with the first
 		 * request. Subsequent requests remain unchanged.
 		 *
 		 * @param {sap.ui.model.odata.v4.lib._Requestor} oRequestor
@@ -21,9 +21,8 @@ sap.ui.define([
 		 * @param {string} sResourcePath
 		 *   A resource path relative to the service URL
 		 * @param {object} oAggregation
-		 *   An object holding the information needed for data aggregation; see also
-		 *   <a href="http://docs.oasis-open.org/odata/odata-data-aggregation-ext/v4.0/">OData
-		 *   Extension for Data Aggregation Version 4.0</a>; must already be normalized by
+		 *   An object holding the information needed for data aggregation; see also "OData
+		 *   Extension for Data Aggregation Version 4.0"; must already be normalized by
 		 *   {@link _AggregationHelper.buildApply}
 		 * @param {object} mQueryOptions
 		 *   A map of key-value pairs representing the query string

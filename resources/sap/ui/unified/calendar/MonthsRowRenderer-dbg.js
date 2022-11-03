@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -122,7 +122,7 @@ sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/unified/calendar
 	/**
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the render output buffer
 	 * @param {sap.ui.unified.calendar.MonthsRow} oMonthsRow An object representation of the control that should be rendered
-	 * @param {sap.ui.core.LocaleData} oLocalDate
+	 * @param {sap.ui.core.LocaleData} oLocaleData
 	 * @param {sap.ui.unified.calendar.CalendarDate} oDate The first date of the month
 	 */
 	MonthsRowRenderer.renderHeaderLine = function(oRm, oMonthsRow, oLocaleData, oDate){
@@ -188,18 +188,19 @@ sap.ui.define(['sap/ui/unified/calendar/CalendarUtils', 'sap/ui/unified/calendar
 		CalendarUtils._checkCalendarDate(oDate);
 
 		var oHelper = {};
+		var sPrimaryCalendarType = oMonthsRow.getProperty("primaryCalendarType");
 
 		oHelper.sLocale = oMonthsRow._getLocale();
 		oHelper.oLocaleData = oMonthsRow._getLocaleData();
-		oHelper.oToday = new CalendarDate();
+		oHelper.oToday = CalendarDate.fromLocalJSDate(new Date(), sPrimaryCalendarType);
 		oHelper.sCurrentMonth = oMonthsRow._rb.getText("CALENDAR_CURRENT_MONTH");
 		oHelper.sId = oMonthsRow.getId();
 		oHelper.oFormatLong = oMonthsRow._getFormatLong();
 		if (oMonthsRow._bLongMonth || !oMonthsRow._bNamesLengthChecked) {
-			oHelper.aMonthNames = oHelper.oLocaleData.getMonthsStandAlone("wide");
+			oHelper.aMonthNames = oHelper.oLocaleData.getMonthsStandAlone("wide", sPrimaryCalendarType);
 		} else {
-			oHelper.aMonthNames = oHelper.oLocaleData.getMonthsStandAlone("abbreviated");
-			oHelper.aMonthNamesWide = oHelper.oLocaleData.getMonthsStandAlone("wide");
+			oHelper.aMonthNames = oHelper.oLocaleData.getMonthsStandAlone("abbreviated", sPrimaryCalendarType);
+			oHelper.aMonthNamesWide = oHelper.oLocaleData.getMonthsStandAlone("wide", sPrimaryCalendarType);
 		}
 
 

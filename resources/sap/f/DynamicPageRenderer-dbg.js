@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -19,7 +19,7 @@ sap.ui.define(["sap/ui/Device"], function (Device) {
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 *
 	 * @param {sap.ui.core.RenderManager} oRm The RenderManager that can be used for writing to the Render-Output-Buffer
-	 * @param {sap.ui.core.Control} oDynamicPage An object representation of the control that should be rendered
+	 * @param {sap.f.DynamicPage} oDynamicPage An object representation of the control that should be rendered
 	 */
 	DynamicPageRenderer.render = function (oRm, oDynamicPage) {
 		var oDynamicPageTitle = oDynamicPage.getTitle(),
@@ -42,13 +42,12 @@ sap.ui.define(["sap/ui/Device"], function (Device) {
 		if (oDynamicPage.getToggleHeaderOnTitleClick()) {
 			oRm.class("sapFDynamicPageTitleClickEnabled");
 		}
+		if (oDynamicPageFooter && bShowFooter) {
+			oRm.class("sapFDynamicPageFooterVisible");
+		}
 		oRm.attr("aria-roledescription", oDynamicPage._getAriaRoleDescription());
 		oRm.accessibilityState(oDynamicPage, oDynamicPage._formatLandmarkInfo(oLandmarkInfo, "Root"));
 		oRm.openEnd();
-		// Renders Dynamic Page Custom ScrollBar for Desktop mode
-		if (Device.system.desktop) {
-			oRm.renderControl(oDynamicPage._getScrollBar());
-		}
 
 		// Renders Dynamic Page Title.
 		oRm.openStart(sHeaderTag, oDynamicPage.getId() + "-header");

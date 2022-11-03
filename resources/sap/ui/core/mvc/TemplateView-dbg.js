@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -29,13 +29,12 @@ function(View, TemplateViewRenderer, ViewType, Log) {
 	 * @extends sap.ui.core.mvc.View
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @public
 	 * @deprecated Since version 1.56.0, use {@link sap.ui.core.mvc.XMLView} in combination with
 	 *             {@link topic:5ee619fc1370463ea674ee04b65ed83b XML Templating} instead.
 	 * @alias sap.ui.core.mvc.TemplateView
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var TemplateView = View.extend("sap.ui.core.mvc.TemplateView", /** @lends sap.ui.core.mvc.TemplateView.prototype */ {
 		metadata : {

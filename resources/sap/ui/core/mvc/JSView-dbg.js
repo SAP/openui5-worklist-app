@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -27,14 +27,13 @@ sap.ui.define([
 	 * @param {object} [mSettings] initial settings for the new control
 	 *
 	 * @extends sap.ui.core.mvc.View
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 * @deprecated Since 1.90. Instead use {@link topic:e6bb33d076dc4f23be50c082c271b9f0 Typed Views}
 	 * by defining the view class with {@link sap.ui.core.mvc.View.extend View.extend} and
 	 * creating the view instances with {@link sap.ui.core.mvc.View.create View.create}.
 	 *
 	 * @public
 	 * @alias sap.ui.core.mvc.JSView
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
 	var JSView = View.extend("sap.ui.core.mvc.JSView", /** @lends sap.ui.core.mvc.JSView.prototype */ {
 		metadata : {
@@ -206,7 +205,7 @@ sap.ui.define([
 		Log.warning(
 			"Do not use deprecated sap.ui.core.mvc.JSView: (View: " + (mSettings.id || mSettings.viewName) + "). " +
 			"Use typed views defined by 'sap.ui.core.mvc.View.extend()' and created by 'sap.ui.core.mvc.View.create()'. " +
-			"For further information, have a look at https://sapui5.hana.ondemand.com/#/topic/e6bb33d076dc4f23be50c082c271b9f0.",
+			"For further information, have a look at https://sdk.openui5.org/topic/e6bb33d076dc4f23be50c082c271b9f0.",
 			"sap.ui.core.mvc.JSView",
 			null,
 			function () {

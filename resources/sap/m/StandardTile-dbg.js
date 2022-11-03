@@ -1,6 +1,6 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
@@ -40,76 +40,79 @@ sap.ui.define([
 	 * @extends sap.m.Tile
 	 *
 	 * @author SAP SE
-	 * @version 1.96.2
+	 * @version 1.108.0
 	 *
 	 * @constructor
 	 * @public
 	 * @since 1.12
 	 * @deprecated as of version 1.50, replaced by {@link sap.m.GenericTile}
 	 * @alias sap.m.StandardTile
-	 * @ui5-metamodel This control/element also will be described in the UI5 (legacy) designtime metamodel
 	 */
-	var StandardTile = Tile.extend("sap.m.StandardTile", /** @lends sap.m.StandardTile.prototype */ { metadata : {
+	var StandardTile = Tile.extend("sap.m.StandardTile", /** @lends sap.m.StandardTile.prototype */ {
+		metadata : {
 
-		library : "sap.m",
-		deprecated: true,
-		properties : {
+			library : "sap.m",
+			deprecated: true,
+			properties : {
 
-			/**
-			 * Defines the title of the StandardTile.
-			 */
-			title : {type : "string", group : "Misc", defaultValue : null},
+				/**
+				 * Defines the title of the StandardTile.
+				 */
+				title : {type : "string", group : "Misc", defaultValue : null},
 
-			/**
-			 * Defines the description of the StandardTile.
-			 */
-			info : {type : "string", group : "Misc", defaultValue : null},
+				/**
+				 * Defines the description of the StandardTile.
+				 */
+				info : {type : "string", group : "Misc", defaultValue : null},
 
-			/**
-			 * Defines the icon of the StandardTile.
-			 */
-			icon : {type : "sap.ui.core.URI", group : "Misc", defaultValue : null},
+				/**
+				 * Defines the icon of the StandardTile.
+				 */
+				icon : {type : "sap.ui.core.URI", group : "Misc", defaultValue : null},
 
-			/**
-			 * Defines the active icon of the StandardTile.
-			 */
-			activeIcon : {type : "sap.ui.core.URI", group : "Misc", defaultValue : null},
+				/**
+				 * Defines the active icon of the StandardTile.
+				 */
+				activeIcon : {type : "sap.ui.core.URI", group : "Misc", defaultValue : null},
 
-			/**
-			 * Defines the number field of the StandardTile.
-			 */
-			number : {type : "string", group : "Misc", defaultValue : null},
+				/**
+				 * Defines the number field of the StandardTile.
+				 */
+				number : {type : "string", group : "Misc", defaultValue : null},
 
-			/**
-			 * Defines the number units qualifier of the StandardTile.
-			 */
-			numberUnit : {type : "string", group : "Misc", defaultValue : null},
+				/**
+				 * Defines the number units qualifier of the StandardTile.
+				 */
+				numberUnit : {type : "string", group : "Misc", defaultValue : null},
 
-			/**
-			 * Defines the color of the info text. Possible values are Error, Warning, Success and so on.
-			 */
-			infoState : {type : "sap.ui.core.ValueState", group : "Misc", defaultValue : ValueState.None},
+				/**
+				 * Defines the color of the info text. Possible values are Error, Warning, Success and so on.
+				 */
+				infoState : {type : "sap.ui.core.ValueState", group : "Misc", defaultValue : ValueState.None},
 
-			/**
-			 * Defines the type of the StandardTile.
-			 */
-			type : {type : "sap.m.StandardTileType", group : "Misc", defaultValue : StandardTileType.None},
+				/**
+				 * Defines the type of the StandardTile.
+				 */
+				type : {type : "sap.m.StandardTileType", group : "Misc", defaultValue : StandardTileType.None},
 
-			/**
-			 * By default, this is set to true but then one or more requests are sent trying to get the density perfect version of image if this version of image doesn't exist on the server.
-			 *
-			 * If bandwidth is key for the application, set this value to false.
-			 */
-			iconDensityAware : {type : "boolean", group : "Appearance", defaultValue : true}
+				/**
+				 * By default, this is set to true but then one or more requests are sent trying to get the density perfect version of image if this version of image doesn't exist on the server.
+				 *
+				 * If bandwidth is key for the application, set this value to false.
+				 */
+				iconDensityAware : {type : "boolean", group : "Appearance", defaultValue : true}
+			},
+			associations : {
+
+				/**
+				 * Association to controls / IDs, which describe this control (see WAI-ARIA attribute aria-describedby).
+				 */
+				ariaDescribedBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaDescribedBy"}
+			}
 		},
-		associations : {
 
-			/**
-			 * Association to controls / IDs, which describe this control (see WAI-ARIA attribute aria-describedby).
-			 */
-			ariaDescribedBy : {type : "sap.ui.core.Control", multiple : true, singularName : "ariaDescribedBy"}
-		}
-	}});
+		renderer: StandardTileRenderer
+	});
 
 	/**
 	 * Called when the control is destroyed.

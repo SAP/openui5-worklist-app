@@ -1,12 +1,12 @@
 /*!
  * OpenUI5
- * (c) Copyright 2009-2021 SAP SE or an SAP affiliate company.
+ * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
  * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
  */
 
 // Provides default renderer for control sap.ui.unified.ShellLayout
-sap.ui.define([],
-	function() {
+sap.ui.define(["sap/ui/core/Configuration"],
+	function(Configuration) {
 	"use strict";
 
 
@@ -20,7 +20,7 @@ sap.ui.define([],
 	/**
 	 * Renders the HTML for the given control, using the provided {@link sap.ui.core.RenderManager}.
 	 * @param {sap.ui.core.RenderManager} rm the RenderManager that can be used for writing to the Render-Output-Buffer
-	 * @param {sap.ui.core.Control} oShell an object representation of the control that should be rendered
+	 * @param {sap.ui.unified.ShellLayout} oShell an object representation of the control that should be rendered
 	 */
 	ShellLayoutRenderer.render = function(rm, oShell){
 		var id = oShell.getId();
@@ -48,7 +48,7 @@ sap.ui.define([],
 		rm.write("<hr id='", id, "-brand' class='sapUiUfdShellBrand'>");
 
 		rm.write("<header id='", id, "-hdr'  class='sapUiUfdShellHead'");
-		if (sap.ui.getCore().getConfiguration().getAccessibility()) {
+		if (Configuration.getAccessibility()) {
 			rm.writeAttribute("role", "banner");
 		}
 		rm.write("><div><div id='", id, "-hdrcntnt' class='sapUiUfdShellCntnt'>");
