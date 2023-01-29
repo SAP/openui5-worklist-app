@@ -19,6 +19,6 @@
     "karma-chrome-launcher": "^3.1.1",
     "karma-coverage": "^2.2.0",
     "karma-ui5": "^2.4.0",
-    "rimraf": "^4.1.1"
+    "rimraf": "^4.1.2"
   }
 }
