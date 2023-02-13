@@ -1,6 +1,0 @@
-/*!
- * OpenUI5
- * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
- * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
- */
-sap.ui.define(["./SearchProvider","sap/base/Log","sap/base/security/encodeURL","sap/base/util/fetch","sap/ui/thirdparty/jquery","sap/ui/core/library"],function(e,r,t,s,a){"use strict";var i=e.extend("sap.ui.core.search.OpenSearchProvider",{metadata:{library:"sap.ui.core",properties:{suggestUrl:{type:"sap.ui.core.URI",group:"Misc",defaultValue:null},suggestType:{type:"string",group:"Misc",defaultValue:"json"}}}});i.prototype.suggest=function(e,i){var n=this.getSuggestUrl();if(!n){return}n=n.replace("{searchTerms}",t(e));var u=this.getSuggestType();var o;if(u&&u.toLowerCase()==="xml"){u="xml";o=function(r){var t=a(r);var s=t.find("Text");var n=[];s.each(function(){n.push(a(this).text())});i(e,n)}}else{u="json";o=function(r){i(e,r[1])}}s(n,{headers:{Accept:s.ContentTypes[u.toUpperCase()]}}).then(function(e){if(e.ok){return e.text().then(function(e){var r;if(u==="json"){r=JSON.parse(e)}else{var t=new DOMParser;r=t.parseFromString(e,"text/xml")}o(r)})}else{throw new Error(e.statusText||e.status)}}).catch(function(e){r.fatal("The following problem occurred: "+e.message)})};return i});

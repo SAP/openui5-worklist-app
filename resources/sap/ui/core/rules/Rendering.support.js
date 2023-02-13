@@ -1,6 +1,0 @@
-/*!
- * OpenUI5
- * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
- * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
- */
-sap.ui.define(["sap/ui/support/library","sap/ui/core/RenderManager"],function(e,r){"use strict";var n=e.Categories;var t=e.Severity;var o=e.Audiences;var i={id:"semanticRenderingNotUsed",audiences:[o.Control],categories:[n.Performance],enabled:true,minversion:"-",title:"Control and renderer not migrated to modern rendering syntax",description:"Controls must use modern rendering syntax.",resolution:"Control and renderer must be migrated to modern rendering syntax. For more information consult with documentation.",resolutionurls:[{text:"Documentation: RenderManager syntax",href:"https://sdk.openui5.org/api/sap.ui.core.RenderManager"}],check:function(e,o,i){var a=i.getElements().filter(function(e){return e.isA("sap.ui.core.Control")});a.forEach(function(o){if(r.getApiVersion(o.getRenderer())<2){var i=o.getMetadata().getName();e.addIssue({severity:t.Medium,category:n.Performance,details:"The control '"+i+"' is not migrated to modern rendering syntax. "+"This means it cannot benefit from UI5's modern, DOM-based rendering engine. "+"Please consult with the referred documentation regarding the modern API of RenderManager.",context:{id:o.getId()}})}})}};return[i]},true);

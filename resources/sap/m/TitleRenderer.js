@@ -1,6 +1,0 @@
-/*!
- * OpenUI5
- * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
- * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
- */
-sap.ui.define(["sap/ui/core/Renderer","sap/ui/core/library","sap/m/HyphenationSupport"],function(e,t,i){"use strict";var a=t.TextDirection;var r=t.TitleLevel;var l={apiVersion:2};l.render=function(t,l){var s=l._getTitle(),n=l.getContent(),o=(s&&!n?s.getLevel():l.getLevel())||r.Auto,p=o==r.Auto,g=p?"div":o.toLowerCase(),T=!n?i.getTextForRender(l,"main"):"",c=l.getTextDirection(),d=e.getTextAlign(l.getTextAlign(),c),u;t.openStart(g,l);t.class("sapMTitle");t.class("sapMTitleStyle"+l.getTitleStyle());t.class(l.getWrapping()?"sapMTitleWrap":"sapMTitleNoWrap");t.class("sapUiSelectable");var v=l.getWidth();if(!v){t.class("sapMTitleMaxWidth")}else{t.style("width",v)}if(d){t.style("text-align",d)}if(l.getParent()&&l.getParent().isA("sap.m.Toolbar")){t.class("sapMTitleTB")}u=s&&!n?s.getTooltip_AsString():l.getTooltip_AsString();if(u){t.attr("title",u)}if(p){t.attr("role","heading");t.attr("aria-level",l._getAriaLevel())}if(!n){i.writeHyphenationClass(t,l)}t.openEnd();t.openStart("span",l.getId()+"-inner");t.attr("dir",c!==a.Inherit?c.toLowerCase():"auto");t.openEnd();if(n){t.renderControl(n)}else{t.text(T)}t.close("span");t.close(g)};return l},true);

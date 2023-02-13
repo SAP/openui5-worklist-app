@@ -1,6 +1,0 @@
-/*!
- * OpenUI5
- * (c) Copyright 2009-2022 SAP SE or an SAP affiliate company.
- * Licensed under the Apache License, Version 2.0 - see LICENSE.txt.
- */
-sap.ui.define(["sap/base/util/merge","sap/ui/base/DataType","./Type","./FormatException","./ParseException","./ValidateException"],function(t,e,o){"use strict";var n={format:function(t){return t},parse:function(t){return t}};var r=o.extend("sap.ui.model.SimpleType",{constructor:function(t,e){o.apply(this,arguments);this.setFormatOptions(t||{});this.setConstraints(e||{});this.sName="SimpleType"},metadata:{abstract:true}});r.prototype.getModelFormat=function(){if(this.oInputFormat){return this.oInputFormat}return n};r.prototype.getConstraints=function(){return t({},this.oConstraints)};r.prototype.setConstraints=function(t){this.oConstraints=t};r.prototype.getFormatOptions=function(){return t({},this.oFormatOptions)};r.prototype.setFormatOptions=function(t){this.oFormatOptions=t};r.prototype.getPrimitiveType=function(t){switch(t){case"any":case"boolean":case"int":case"float":case"string":case"object":return t;default:var o=e.getType(t);return o&&o.getPrimitiveType().getName()}};r.prototype.combineMessages=function(t){if(t.length===1){return t[0]}else{return t.join(". ")+"."}};return r});

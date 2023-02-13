@@ -1,1 +1,0 @@
-sap.ui.define(["./BaseController"],function(e){"use strict";return e.extend("sap.ui.demo.worklist.controller.NotFound",{onLinkPressed:function(){this.getRouter().navTo("worklist")}})});
