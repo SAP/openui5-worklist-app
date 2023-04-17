@@ -1,0 +1,1 @@
+{"version":3,"file":"CalendarWeekNumbering.js","names":["sap","ui","define","CalendarWeekNumbering","Default","ISO_8601","MiddleEastern","WesternTraditional"],"sources":["CalendarWeekNumbering-dbg.js"],"mappings":";;;;;AAOAA,IAAIC,GAAGC,OAAO,GAAI,WACjB,aAeA,IAAIC,EAAwB,CAW3BC,QAAU,UAWVC,SAAW,WAWXC,cAAgB,gBAYhBC,mBAAqB,sBAGtB,OAAOJ,CACR,EAAkB"}

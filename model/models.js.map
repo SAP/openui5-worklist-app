@@ -1,0 +1,1 @@
+{"version":3,"file":"models.js","names":["sap","ui","define","JSONModel","Device","createDeviceModel","oModel","setDefaultBindingMode"],"sources":["models-dbg.js"],"mappings":"AAAAA,IAAIC,GAAGC,OAAO,CACb,8BACA,iBACE,SAAUC,EAAWC,GACvB,aAEA,MAAO,CAENC,kBAAoB,WACnB,IAAIC,EAAS,IAAIH,EAAUC,GAC3BE,EAAOC,sBAAsB,UAC7B,OAAOD,CACR,EAGF"}
