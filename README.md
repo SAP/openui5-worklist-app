@@ -2,6 +2,10 @@
 [![Build Status](https://github.com/SAP/openui5-worklist-app/actions/workflows/github-ci.yml/badge.svg)](https://github.com/SAP/openui5-worklist-app/actions/workflows/github-ci.yml)
 ![OpenUI5 logo](http://openui5.org/images/OpenUI5_new_big_side.png)
 
+# DEPRECATED
+
+**⚠️ This project has been deprecated in favor of [OpenUI5 Sample App](https://github.com/SAP/openui5-sample-app).**
+
 # openui5-worklist-app
 OpenUI5 worklist app using the UI5 Build and Development Tooling.
 
